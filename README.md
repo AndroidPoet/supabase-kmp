@@ -12,16 +12,16 @@
 
 # Supabase KMP
 
-A lightweight, type-safe Kotlin Multiplatform SDK for [Supabase](https://supabase.com) — coroutine-first, modular, and built for every platform Kotlin runs on.
+Kotlin Multiplatform SDK for [Supabase](https://supabase.com) — type-safe, coroutine-first, modular client for every platform Kotlin runs on.
 
 ## Features
 
 - **Type-safe Result monad** — `SupabaseResult<T>` with `map`, `flatMap`, `recover` — no exceptions leak to callers
 - **Value class IDs** — `UserId`, `BucketId`, `SessionId`, `ChannelId` prevent mixups at compile time
-- **PostgREST filter DSL** — `eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `like`, `ilike`, `in`, `is`, `textSearch`, and more
+- **PostgREST filter DSL** — `eq`, `neq`, `gt`, `like`, `ilike`, `in`, `is`, `textSearch`, `contains`, and more
 - **OAuth (17 providers) + MFA** — TOTP and phone-based multi-factor auth with PKCE flow support
-- **Session management** — Auto-refresh, token persistence, and session state observation
-- **Realtime WebSocket** — Phoenix protocol with auto-reconnection, channel subscriptions, and presence
+- **Session management** — Auto-refresh, token persistence, `SessionState` observation via `StateFlow`
+- **Realtime WebSocket** — Phoenix protocol with auto-reconnection, exponential backoff, presence
 - **Edge Functions** — Invoke Supabase Edge Functions with typed request/response
 - **Koin DI** — First-class dependency injection modules for every component
 - **15 platform targets** — Android, iOS, macOS, tvOS, watchOS, JVM, Linux, Windows, and WasmJs
@@ -63,28 +63,35 @@ kotlin {
 
 ## Usage
 
-### Initialize the Client
+### Create a Client
 
 ```kotlin
-// With Koin DI
+// Direct instantiation
+val client = Supabase.create(
+    projectUrl = "https://your-project.supabase.co",
+    apiKey = "your-anon-key",
+) {
+    logging = true
+}
+
+// Or with Koin DI
 startKoin {
     modules(
         supabaseModule(
-            SupabaseConfig(
-                url = "https://your-project.supabase.co",
-                anonKey = "your-anon-key",
-            )
+            projectUrl = "https://your-project.supabase.co",
+            apiKey = "your-anon-key",
+            config = SupabaseConfig(),
         ),
-        authModule,
+        authModule(),
         databaseModule,
         storageModule,
-        realtimeModule,
+        realtimeModule(),
         functionsModule,
     )
 }
 
-val auth: SupabaseAuth by inject()
-val database: SupabaseDatabase by inject()
+val auth: AuthClient by inject()
+val database: DatabaseClient by inject()
 ```
 
 ### Database — PostgREST with Filter DSL
@@ -94,13 +101,14 @@ val database: SupabaseDatabase by inject()
 data class Todo(val id: String, val title: String, val done: Boolean)
 
 // Select with filters
-val todos: SupabaseResult<List<Todo>> = database.from("todos")
-    .select {
-        eq("done", false)
-        gt("priority", 3)
-        order("created_at", ascending = false)
-        limit(25)
-    }
+val todos: SupabaseResult<List<Todo>> = database.selectTyped<Todo>(
+    table = "todos",
+) {
+    eq("done", "false")
+    gt("priority", "3")
+    order("created_at", ascending = false)
+    limit(25)
+}
 
 todos.onSuccess { items ->
     println("Got ${items.size} todos")
@@ -109,125 +117,202 @@ todos.onSuccess { items ->
 }
 
 // Insert
-val result = database.from("todos")
-    .insert(Todo(id = "1", title = "Ship it", done = false))
+val result = database.insertTyped(
+    table = "todos",
+    value = Todo(id = "1", title = "Ship it", done = false),
+)
 
 // Update with filters
-database.from("todos")
-    .update(mapOf("done" to true)) {
-        eq("id", "1")
-    }
+database.update(table = "todos", body = """{"done": true}""") {
+    eq("id", "1")
+}
 
 // RPC call
-val stats = database.rpc("get_dashboard_stats", args = mapOf("user_id" to userId))
+val stats = database.rpc("get_dashboard_stats", params = """{"user_id": "123"}""")
 ```
 
 ### Auth — Sign In with Session Management
 
 ```kotlin
+val auth: AuthClient by inject()
+val sessionManager: SessionManager by inject()
+
 // Email/password sign-up
-val session = auth.signUp(
+auth.signUpWithEmail(
     email = "user@example.com",
     password = "secure-password",
-)
+).onSuccess { session ->
+    sessionManager.saveSession(session)
+}
 
 // Email/password sign-in
-val session = auth.signInWithPassword(
+auth.signInWithEmail(
     email = "user@example.com",
     password = "secure-password",
+).onSuccess { session ->
+    sessionManager.saveSession(session)
+}
+
+// OAuth — get URL for the provider, open in browser
+val oauthUrl = auth.getOAuthSignInUrl(
+    provider = OAuthProvider.GOOGLE,
+    redirectTo = "myapp://callback",
 )
 
-// OAuth (17 providers)
-auth.signInWithOAuth(provider = OAuthProvider.GOOGLE)
-
-// OTP (magic link)
-auth.signInWithOtp(email = "user@example.com")
+// After OAuth callback, exchange the code
+val pkce = auth.generatePkceParams()
+auth.exchangeCodeForSession(authCode = "code-from-callback", codeVerifier = pkce.codeVerifier)
 
 // MFA enrollment
-val factor = auth.mfa.enroll(factorType = FactorType.TOTP)
-auth.mfa.verify(factorId = factor.id, code = "123456")
+val accessToken = sessionManager.accessToken!!
+auth.mfaEnroll(factorType = MfaFactorType.TOTP, accessToken = accessToken).onSuccess { factor ->
+    // Show factor.totp?.qrCode to user, then verify:
+    auth.mfaVerify(
+        factorId = factor.id,
+        challengeId = "challenge-id",
+        code = "123456",
+        accessToken = accessToken,
+    )
+}
 
 // Observe session state
-auth.sessionFlow.collect { session ->
-    println("User: ${session?.user?.id}")
+sessionManager.sessionState.collect { state ->
+    when (state) {
+        is SessionState.Authenticated -> println("User: ${state.session.user.id}")
+        is SessionState.Expired -> println("Session expired, refreshing...")
+        SessionState.NotAuthenticated -> println("Signed out")
+        SessionState.Loading -> println("Loading...")
+    }
 }
 ```
 
 ### Storage — File Upload & Download
 
 ```kotlin
-val storage: SupabaseStorage by inject()
+val storage: StorageClient by inject()
 
 // Upload a file
-val result = storage.from("avatars")
-    .upload(path = "user123/avatar.png", data = imageBytes, contentType = "image/png")
+storage.upload(
+    bucket = "avatars",
+    path = "user123/avatar.png",
+    data = imageBytes,
+    contentType = "image/png",
+).onSuccess { key ->
+    println("Uploaded: $key")
+}
 
 // Get a signed URL
-val url = storage.from("avatars")
-    .createSignedUrl(path = "user123/avatar.png", expiresIn = 3600)
+storage.createSignedUrl(
+    bucket = "avatars",
+    path = "user123/avatar.png",
+    expiresIn = 3600,
+).onSuccess { url ->
+    println("Signed URL: $url")
+}
 
-// Download
-val bytes = storage.from("avatars")
-    .download(path = "user123/avatar.png")
+// Get public URL (no auth needed)
+val publicUrl = storage.getPublicUrl(bucket = "avatars", path = "user123/avatar.png")
 
-// List files in a bucket
-val files = storage.from("avatars").list(path = "user123/")
+// List files
+storage.list(bucket = "avatars", prefix = "user123/").onSuccess { files ->
+    files.forEach { println(it.name) }
+}
 ```
 
 ### Realtime — WebSocket Subscriptions
 
 ```kotlin
-val realtime: SupabaseRealtime by inject()
+val realtime: RealtimeClient by inject()
+
+// Connect and observe connection state
+realtime.connect()
+realtime.connectionState.collect { state ->
+    when (state) {
+        is ConnectionState.Connected -> println("Connected")
+        is ConnectionState.Reconnecting -> println("Reconnecting attempt ${state.attempt}...")
+        is ConnectionState.Failed -> println("Failed: ${state.reason}")
+        else -> {}
+    }
+}
 
 // Subscribe to table changes
-realtime.channel("todos")
-    .on("todos", event = RealtimeEvent.INSERT) { payload ->
-        println("New todo: ${payload.new}")
+val subscription = realtime.channel("todos")
+    .onPostgresChange(table = "todos", event = PostgresChangeEvent.INSERT) { record ->
+        println("New todo: $record")
+    }
+    .onPostgresChange(table = "todos", event = PostgresChangeEvent.DELETE) { record ->
+        println("Deleted: $record")
     }
     .subscribe()
 
 // Presence
 realtime.channel("room:lobby")
-    .onPresenceSync { state ->
+    .onPresence { state ->
         println("Online users: ${state.size}")
     }
     .subscribe()
+
+// Broadcast
+subscription.broadcast(event = "cursor", payload = buildJsonObject {
+    put("x", 100)
+    put("y", 200)
+})
+
+// Unsubscribe
+subscription.unsubscribe()
+realtime.disconnect()
 ```
 
 ### Edge Functions
 
 ```kotlin
-val functions: SupabaseFunctions by inject()
+val functions: FunctionsClient by inject()
 
-val response = functions.invoke(
+// Invoke a function
+functions.invoke(
     functionName = "hello-world",
-    body = mapOf("name" to "Kotlin"),
-)
-
-response.onSuccess { data ->
+    body = """{"name": "Kotlin"}""",
+).onSuccess { data ->
     println("Response: $data")
 }
+
+// Typed response
+functions.invokeTyped<WelcomeResponse>(
+    functionName = "hello-world",
+    body = """{"name": "Kotlin"}""",
+).onSuccess { response ->
+    println("Message: ${response.message}")
+}
+
+// Binary body
+functions.invokeWithBody(
+    functionName = "process-image",
+    body = imageBytes,
+    contentType = "image/png",
+)
 ```
 
 ## Architecture
 
 ```
-┌───────────────────────────────────────────────────────────────────────┐
-│                             Your App                                  │
-├──────────┬───────────┬───────────┬───────────┬───────────┬───────────┤
-│ supabase-│ supabase- │ supabase- │ supabase- │ supabase- │ supabase- │
-│ auth     │ database  │ storage   │ realtime  │ functions │ client    │
-│          │           │           │           │           │           │
-│ OAuth    │ PostgREST │ Buckets   │ WebSocket │ Invoke    │ HttpClient│
-│ MFA/PKCE │ Filter DSL│ Upload    │ Phoenix   │ Typed Req │ Auth State│
-│ Session  │ RPC       │ SignedURL │ Presence  │ Response  │ Koin DI   │
-├──────────┴───────────┴───────────┴───────────┼───────────┤           │
-│                                               │   Ktor    │           │
-│                                               │  Engines  │           │
-├───────────────────────────────────────────────┴───────────┤           │
-│                      supabase-core                        │           │
-│  SupabaseResult · Value IDs · Filter DSL · Error Types    │           │
-└───────────────────────────────────────────────────────────┴───────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                              Your App                               │
+├──────────┬───────────┬───────────┬───────────┬───────────┬─────────┤
+│ supabase │ supabase  │ supabase  │ supabase  │ supabase  │supabase │
+│ auth     │ database  │ storage   │ realtime  │ functions │ client  │
+│          │           │           │           │           │         │
+│ OAuth    │ PostgREST │ Buckets   │ WebSocket │ Invoke    │ HTTP    │
+│ MFA/PKCE │ Filter DSL│ Upload    │ Phoenix   │ Typed Req │ Auth    │
+│ Session  │ RPC       │ SignedURL │ Presence  │ Response  │ Koin DI │
+│ Manager  │ Typed Ext │ Public URL│ Reconnect │ Binary    │ Config  │
+├──────────┴───────────┴───────────┼───────────┤           │         │
+│                                   │   Ktor    │           │         │
+│                                   │  Engines  │           │         │
+├───────────────────────────────────┴───────────┤           │         │
+│                 supabase-core                  │           │         │
+│  SupabaseResult · Value IDs · Filter DSL      │           │         │
+│  Error Types · Response Models                │           │         │
+└────────────────────────────────────────────────┴───────────┴─────────┘
 ```
 
 ## Modules
@@ -235,12 +320,12 @@ response.onSuccess { data ->
 | Module | Artifact | Description |
 |--------|----------|-------------|
 | **supabase-core** | `io.github.androidpoet:supabase-core` | Result monad, error types, value class IDs, filter DSL |
-| **supabase-client** | `io.github.androidpoet:supabase-client` | HTTP transport, platform engines, Koin module |
-| **supabase-auth** | `io.github.androidpoet:supabase-auth` | Auth (email, phone, OTP, OAuth, MFA, PKCE), session management |
+| **supabase-client** | `io.github.androidpoet:supabase-client` | HTTP transport, platform engines, auth state, Koin module |
+| **supabase-auth** | `io.github.androidpoet:supabase-auth` | Email, phone, OTP, OAuth (17 providers), MFA, PKCE, session management |
 | **supabase-database** | `io.github.androidpoet:supabase-database` | PostgREST CRUD, RPC, typed filter extensions |
-| **supabase-storage** | `io.github.androidpoet:supabase-storage` | Bucket management, file upload/download, signed URLs |
-| **supabase-realtime** | `io.github.androidpoet:supabase-realtime` | WebSocket (Phoenix protocol), auto-reconnect, presence |
-| **supabase-functions** | `io.github.androidpoet:supabase-functions` | Edge function invocation |
+| **supabase-storage** | `io.github.androidpoet:supabase-storage` | Bucket CRUD, file upload/download, signed & public URLs |
+| **supabase-realtime** | `io.github.androidpoet:supabase-realtime` | WebSocket (Phoenix protocol), auto-reconnect, broadcast, presence |
+| **supabase-functions** | `io.github.androidpoet:supabase-functions` | Edge function invocation with typed responses |
 
 ## Targets
 
@@ -260,11 +345,14 @@ response.onSuccess { data ->
 
 | | supabase-kmp | supabase-kt (official) |
 |--|--|--|
-| Codebase | ~3K LOC | ~26K LOC |
-| Error handling | Result monad | Exceptions |
-| Type safety | Value class IDs | String IDs |
-| DI | Koin modules | None |
-| Dependencies | 3 core | 7+ |
+| **Codebase** | ~3K LOC | ~26K LOC |
+| **Error handling** | `SupabaseResult<T>` monad | Thrown exceptions |
+| **Type safety** | Value class IDs | String IDs |
+| **DI** | Koin modules | Manual composition |
+| **Dependencies** | 3 core | 7+ |
+| **Session mgmt** | `SessionManager` + `StateFlow` | Built-in (heavier) |
+| **Reconnection** | Exponential backoff | Exponential backoff |
+| **Targets** | 15 | 15+ |
 
 ## Tech Stack
 
@@ -274,7 +362,6 @@ response.onSuccess { data ->
 | Networking | [Ktor 3.1.1](https://ktor.io/) |
 | Serialization | [kotlinx.serialization 1.8.0](https://github.com/Kotlin/kotlinx.serialization) |
 | Coroutines | [kotlinx.coroutines 1.10.1](https://github.com/Kotlin/kotlinx.coroutines) |
-| Date/Time | [kotlinx-datetime 0.6.2](https://github.com/Kotlin/kotlinx-datetime) |
 | DI | [Koin 4.0.2](https://insert-koin.io/) |
 | Publishing | [vanniktech maven-publish 0.30.0](https://github.com/vanniktech/gradle-maven-publish-plugin) |
 
@@ -286,6 +373,9 @@ response.onSuccess { data ->
 
 # Run tests
 ./gradlew jvmTest
+
+# Full build (all platforms)
+./gradlew build --no-configuration-cache
 
 # Publish to Maven Central (CI only)
 ./gradlew publishAllPublicationsToMavenCentral --no-configuration-cache
