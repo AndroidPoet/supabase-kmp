@@ -91,6 +91,38 @@ public inline fun <T> SupabaseResult<T>.onFailure(
 }
 
 /**
+ * Executes the given [action] if this result is an [SupabaseResult.Failure] of a specific [SupabaseErrorCategory].
+ */
+public inline fun <T> SupabaseResult<T>.onFailureCategory(
+    category: SupabaseErrorCategory,
+    action: (SupabaseError) -> Unit,
+): SupabaseResult<T> = apply {
+    if (this is SupabaseResult.Failure && error.category == category) {
+        action(error)
+    }
+}
+
+/** Helper for Conflict errors (e.g., UserAlreadyExists, UniquenessViolation) */
+public inline fun <T> SupabaseResult<T>.onConflict(
+    action: (SupabaseError) -> Unit,
+): SupabaseResult<T> = onFailureCategory(SupabaseErrorCategory.Conflict, action)
+
+/** Helper for NotFound errors (e.g., TableNotFound, UserNotFound) */
+public inline fun <T> SupabaseResult<T>.onNotFound(
+    action: (SupabaseError) -> Unit,
+): SupabaseResult<T> = onFailureCategory(SupabaseErrorCategory.NotFound, action)
+
+/** Helper for Unauthorized errors (e.g., InvalidCredentials, AccessDenied) */
+public inline fun <T> SupabaseResult<T>.onUnauthorized(
+    action: (SupabaseError) -> Unit,
+): SupabaseResult<T> = onFailureCategory(SupabaseErrorCategory.Unauthorized, action)
+
+/** Helper for RateLimited errors */
+public inline fun <T> SupabaseResult<T>.onRateLimited(
+    action: (SupabaseError) -> Unit,
+): SupabaseResult<T> = onFailureCategory(SupabaseErrorCategory.RateLimited, action)
+
+/**
  * Attempts to recover from a failure by producing a new success value.
  */
 public inline fun <T> SupabaseResult<T>.recover(
