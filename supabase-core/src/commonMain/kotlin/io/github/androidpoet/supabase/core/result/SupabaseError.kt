@@ -125,7 +125,6 @@ public val SupabaseError.category: SupabaseErrorCategory
  */
 public fun SupabaseError.isUniquenessViolation(): Boolean =
     code == SupabaseErrorCodes.Database.UNIQUENESS_VIOLATION
-...
 
 public fun SupabaseError.isForeignKeyViolation(): Boolean =
     code == SupabaseErrorCodes.Database.FOREIGN_KEY_VIOLATION

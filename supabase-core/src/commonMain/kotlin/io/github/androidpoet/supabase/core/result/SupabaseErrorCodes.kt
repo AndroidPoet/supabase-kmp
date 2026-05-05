@@ -150,6 +150,17 @@ public object SupabaseErrorCodes {
     /**
      * Supabase Realtime error codes.
      */
+    public object Realtime {
+        public const val CHANNEL_RATE_LIMIT_REACHED: String = "ChannelRateLimitReached"
+        public const val CONNECTION_RATE_LIMIT_REACHED: String = "ConnectionRateLimitReached"
+        public const val ERROR_AUTHORIZING_WEBSOCKET: String = "ErrorAuthorizingWebsocket"
+        public const val DATABASE_CONNECTION_ISSUE: String = "DatabaseConnectionIssue"
+        public const val CLIENT_JOIN_RATE_LIMIT_REACHED: String = "ClientJoinRateLimitReached"
+        public const val AUTH_EXPIRED: String = "AuthExpired"
+        public const val INVALID_TOPIC: String = "InvalidTopic"
+        public const val PAYLOAD_TOO_LARGE: String = "PayloadTooLarge"
+    }
+
     /**
      * Supabase Edge Functions error codes.
      */
