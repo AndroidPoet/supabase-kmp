@@ -2,6 +2,12 @@
 
 Jetchat-style realtime chat sample backed by Supabase.
 
+## UI preview
+
+![Jetchat animation reference](images/jetchat.gif)
+
+![Jetchat screenshots reference](images/screenshots.png)
+
 ## Features
 
 - Compose chat UI with bubbles and message composer
