@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
 @Serializable
+/** Auth session returned by GoTrue sign-in and refresh endpoints. */
 public data class Session(
     @SerialName("access_token") val accessToken: String,
     @SerialName("refresh_token") val refreshToken: String,
@@ -14,6 +15,7 @@ public data class Session(
 )
 
 @Serializable
+/** Supabase user profile from GoTrue. */
 public data class User(
     val id: String,
     val email: String? = null,
@@ -26,6 +28,7 @@ public data class User(
 )
 
 @Serializable
+/** Request body for creating a new account with email or phone. */
 public data class SignUpRequest(
     val email: String? = null,
     val phone: String? = null,
@@ -34,6 +37,7 @@ public data class SignUpRequest(
 )
 
 @Serializable
+/** Request body for password sign-in using email or phone. */
 public data class SignInRequest(
     val email: String? = null,
     val phone: String? = null,
@@ -41,12 +45,14 @@ public data class SignInRequest(
 )
 
 @Serializable
+/** Request body for sending OTP to email or phone. */
 public data class OtpRequest(
     val email: String? = null,
     val phone: String? = null,
 )
 
 @Serializable
+/** Request body for verifying a previously issued OTP token. */
 public data class OtpVerifyRequest(
     val email: String? = null,
     val phone: String? = null,
@@ -55,6 +61,7 @@ public data class OtpVerifyRequest(
 )
 
 @Serializable
+/** Supported OTP verification contexts in GoTrue. */
 public enum class OtpType {
     @SerialName("sms") SMS,
     @SerialName("email") EMAIL,
@@ -65,11 +72,13 @@ public enum class OtpType {
 }
 
 @Serializable
+/** Request body for exchanging a refresh token for a new session. */
 public data class RefreshTokenRequest(
     @SerialName("refresh_token") val refreshToken: String,
 )
 
 @Serializable
+/** Request body for updating user profile fields. */
 public data class UserUpdateRequest(
     val email: String? = null,
     val phone: String? = null,
@@ -77,9 +86,8 @@ public data class UserUpdateRequest(
     val data: JsonObject? = null,
 )
 
-// ── OAuth ────────────────────────────────────────────────────────────
-
 @Serializable
+/** Supported OAuth providers for browser-based sign-in. */
 public enum class OAuthProvider(@SerialName("value") public val value: String) {
     @SerialName("google") GOOGLE("google"),
     @SerialName("apple") APPLE("apple"),
@@ -101,14 +109,14 @@ public enum class OAuthProvider(@SerialName("value") public val value: String) {
 }
 
 @Serializable
+/** OAuth initiation response containing a provider redirect URL. */
 public data class OAuthResponse(
     @SerialName("url") public val url: String,
     @SerialName("provider") public val provider: String,
 )
 
-// ── PKCE ─────────────────────────────────────────────────────────────
-
 @Serializable
+/** PKCE parameters used during OAuth code exchange. */
 public data class PkceParams(
     public val codeVerifier: String,
     public val codeChallenge: String,
@@ -116,20 +124,21 @@ public data class PkceParams(
 )
 
 @Serializable
+/** Request body for exchanging auth code + code verifier for a session. */
 public data class ExchangeCodeRequest(
     @SerialName("auth_code") public val authCode: String,
     @SerialName("code_verifier") public val codeVerifier: String,
 )
 
-// ── MFA ──────────────────────────────────────────────────────────────
-
 @Serializable
+/** Supported MFA factor types. */
 public enum class MfaFactorType {
     @SerialName("totp") TOTP,
     @SerialName("phone") PHONE,
 }
 
 @Serializable
+/** Request body for enrolling a new MFA factor. */
 public data class MfaEnrollRequest(
     @SerialName("factor_type") public val factorType: MfaFactorType,
     @SerialName("friendly_name") public val friendlyName: String? = null,
@@ -138,6 +147,7 @@ public data class MfaEnrollRequest(
 )
 
 @Serializable
+/** Response payload after creating an MFA factor. */
 public data class MfaEnrollResponse(
     @SerialName("id") public val id: String,
     @SerialName("type") public val type: MfaFactorType,
@@ -147,6 +157,7 @@ public data class MfaEnrollResponse(
 )
 
 @Serializable
+/** TOTP details returned by factor enrollment. */
 public data class MfaTotpDetails(
     @SerialName("qr_code") public val qrCode: String,
     @SerialName("secret") public val secret: String,
@@ -154,11 +165,13 @@ public data class MfaTotpDetails(
 )
 
 @Serializable
+/** Request body for creating an MFA challenge. */
 public data class MfaChallengeRequest(
     @SerialName("factor_id") public val factorId: String,
 )
 
 @Serializable
+/** Challenge details returned by MFA challenge creation. */
 public data class MfaChallengeResponse(
     @SerialName("id") public val id: String,
     @SerialName("factor_id") public val factorId: String,
@@ -166,6 +179,7 @@ public data class MfaChallengeResponse(
 )
 
 @Serializable
+/** Request body for verifying an MFA challenge code. */
 public data class MfaVerifyRequest(
     @SerialName("factor_id") public val factorId: String,
     @SerialName("challenge_id") public val challengeId: String,
@@ -173,6 +187,7 @@ public data class MfaVerifyRequest(
 )
 
 @Serializable
+/** Response payload after successful MFA verification. */
 public data class MfaVerifyResponse(
     @SerialName("access_token") public val accessToken: String,
     @SerialName("refresh_token") public val refreshToken: String,
@@ -182,17 +197,20 @@ public data class MfaVerifyResponse(
 )
 
 @Serializable
+/** Response payload after removing an MFA factor. */
 public data class MfaUnenrollResponse(
     @SerialName("id") public val id: String,
 )
 
 @Serializable
+/** Current authenticator assurance level of the active session. */
 public enum class AuthenticatorAssuranceLevel {
     @SerialName("aal1") AAL1,
     @SerialName("aal2") AAL2,
 }
 
 @Serializable
+/** Grouped MFA factors by type for the current user. */
 public data class MfaListFactorsResponse(
     @SerialName("all") public val all: List<MfaFactor>,
     @SerialName("totp") public val totp: List<MfaFactor>,
@@ -200,6 +218,7 @@ public data class MfaListFactorsResponse(
 )
 
 @Serializable
+/** A single enrolled MFA factor. */
 public data class MfaFactor(
     @SerialName("id") public val id: String,
     @SerialName("friendly_name") public val friendlyName: String? = null,

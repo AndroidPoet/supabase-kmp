@@ -381,6 +381,12 @@ functions.invokeWithBody(
 ./gradlew publishAllPublicationsToMavenCentral --no-configuration-cache
 ```
 
+## Documentation
+
+- GitBook-ready pages: [`docs/`](docs/)
+- GitBook config: [`.gitbook.yaml`](.gitbook.yaml)
+- Publishing guide: [`docs/guides/gitbook-publishing.md`](docs/guides/gitbook-publishing.md)
+
 ## License
 
 ```

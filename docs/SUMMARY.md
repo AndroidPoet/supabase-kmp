@@ -1,0 +1,24 @@
+# Table of contents
+
+- [Supabase KMP Documentation](README.md)
+- Guides
+  - [Getting Started](guides/getting-started.md)
+  - [Authentication Guide](guides/authentication.md)
+  - [Database Guide](guides/database.md)
+  - [Storage Guide](guides/storage.md)
+  - [Realtime Guide](guides/realtime.md)
+  - [Functions Guide](guides/functions.md)
+  - [Contributing](guides/contributing.md)
+  - [GitBook Publishing](guides/gitbook-publishing.md)
+- Concepts
+  - [Architecture](concepts/architecture.md)
+  - [Error Handling](concepts/error-handling.md)
+- API Reference
+  - [API Overview](api/overview.md)
+  - [Core](api/core.md)
+  - [Client](api/client.md)
+  - [Auth](api/auth.md)
+  - [Database](api/database.md)
+  - [Storage](api/storage.md)
+  - [Realtime](api/realtime.md)
+  - [Functions](api/functions.md)
