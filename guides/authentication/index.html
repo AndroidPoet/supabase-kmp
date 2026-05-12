@@ -536,10 +536,43 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#emailpassword-sign-in-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Email/password sign-in example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#oauth-pkce-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OAuth + PKCE example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#session-lifecycle" class="md-nav__link">
     <span class="md-ellipsis">
       
         Session lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#restore-on-app-startup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Restore on app startup
       
     </span>
   </a>
@@ -765,10 +798,43 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#emailpassword-sign-in-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Email/password sign-in example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#oauth-pkce-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OAuth + PKCE example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#session-lifecycle" class="md-nav__link">
     <span class="md-ellipsis">
       
         Session lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#restore-on-app-startup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Restore on app startup
       
     </span>
   </a>
@@ -816,6 +882,37 @@
 <li>PKCE authorization code exchange</li>
 <li>MFA (TOTP, phone)</li>
 </ul>
+<h2 id="emailpassword-sign-in-example">Email/password sign-in example<a class="headerlink" href="#emailpassword-sign-in-example" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="kd">val</span><span class="w"> </span><span class="nv">auth</span><span class="p">:</span><span class="w"> </span><span class="n">AuthClient</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">inject</span><span class="p">()</span>
+<span class="kd">val</span><span class="w"> </span><span class="nv">sessionManager</span><span class="p">:</span><span class="w"> </span><span class="n">SessionManager</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">inject</span><span class="p">()</span>
+
+<span class="kd">val</span><span class="w"> </span><span class="nv">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">auth</span><span class="p">.</span><span class="na">signInWithEmail</span><span class="p">(</span>
+<span class="w">    </span><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;user@example.com&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;super-secure-password&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">result</span><span class="p">.</span><span class="na">onSuccess</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">session</span><span class="w"> </span><span class="o">-&gt;</span>
+<span class="w">    </span><span class="n">sessionManager</span><span class="p">.</span><span class="na">saveSession</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+<span class="p">}.</span><span class="na">onFailure</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="o">-&gt;</span>
+<span class="w">    </span><span class="n">println</span><span class="p">(</span><span class="s">&quot;Sign-in failed: </span><span class="si">${</span><span class="n">error</span><span class="p">.</span><span class="na">message</span><span class="si">}</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<h2 id="oauth-pkce-example">OAuth + PKCE example<a class="headerlink" href="#oauth-pkce-example" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="kd">val</span><span class="w"> </span><span class="nv">pkce</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">auth</span><span class="p">.</span><span class="na">generatePkceParams</span><span class="p">()</span>
+
+<span class="kd">val</span><span class="w"> </span><span class="nv">oauthUrl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">auth</span><span class="p">.</span><span class="na">getOAuthSignInUrl</span><span class="p">(</span>
+<span class="w">    </span><span class="n">provider</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">OAuthProvider</span><span class="p">.</span><span class="na">GITHUB</span><span class="p">,</span>
+<span class="w">    </span><span class="n">redirectTo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;myapp://auth/callback&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">codeChallenge</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pkce</span><span class="p">.</span><span class="na">codeChallenge</span><span class="p">,</span>
+<span class="w">    </span><span class="n">codeChallengeMethod</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pkce</span><span class="p">.</span><span class="na">codeChallengeMethod</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1">// Open oauthUrl in browser, then receive callback code</span>
+<span class="kd">val</span><span class="w"> </span><span class="nv">exchange</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">auth</span><span class="p">.</span><span class="na">exchangeCodeForSession</span><span class="p">(</span>
+<span class="w">    </span><span class="n">authCode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;code-from-callback&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">codeVerifier</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pkce</span><span class="p">.</span><span class="na">codeVerifier</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
 <h2 id="session-lifecycle">Session lifecycle<a class="headerlink" href="#session-lifecycle" title="Permanent link">&para;</a></h2>
 <p><code>SessionManager</code> is responsible for:</p>
 <ul>
@@ -824,6 +921,24 @@
 <li>auto-refresh scheduling</li>
 <li>exposing <code>SessionState</code> via <code>StateFlow</code></li>
 </ul>
+<h2 id="restore-on-app-startup">Restore on app startup<a class="headerlink" href="#restore-on-app-startup" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="kd">val</span><span class="w"> </span><span class="nv">restored</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sessionManager</span><span class="p">.</span><span class="na">restoreSession</span><span class="p">()</span>
+
+<span class="n">restored</span><span class="p">.</span><span class="na">onSuccess</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">println</span><span class="p">(</span><span class="s">&quot;Session restored&quot;</span><span class="p">)</span>
+<span class="p">}.</span><span class="na">onFailure</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">println</span><span class="p">(</span><span class="s">&quot;No active session&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="n">sessionManager</span><span class="p">.</span><span class="na">sessionState</span><span class="p">.</span><span class="na">collect</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">state</span><span class="w"> </span><span class="o">-&gt;</span>
+<span class="w">    </span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="n">state</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">is</span><span class="w"> </span><span class="n">SessionState</span><span class="p">.</span><span class="na">Authenticated</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">println</span><span class="p">(</span><span class="s">&quot;User: </span><span class="si">${</span><span class="n">state</span><span class="p">.</span><span class="na">session</span><span class="p">.</span><span class="na">user</span><span class="p">.</span><span class="na">id</span><span class="si">}</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="n">SessionState</span><span class="p">.</span><span class="na">NotAuthenticated</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">println</span><span class="p">(</span><span class="s">&quot;Signed out&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="n">SessionState</span><span class="p">.</span><span class="na">Loading</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">println</span><span class="p">(</span><span class="s">&quot;Loading&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="k">is</span><span class="w"> </span><span class="n">SessionState</span><span class="p">.</span><span class="na">Expired</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">println</span><span class="p">(</span><span class="s">&quot;Expired&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
 <h2 id="best-practices">Best practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Save new session immediately after sign-in</li>

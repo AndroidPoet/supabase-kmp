@@ -671,10 +671,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#create-client-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create client example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#feature-clients" class="md-nav__link">
     <span class="md-ellipsis">
       
         Feature clients
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#koin-wiring-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Koin wiring example
       
     </span>
   </a>
@@ -765,10 +787,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#create-client-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create client example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#feature-clients" class="md-nav__link">
     <span class="md-ellipsis">
       
         Feature clients
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#koin-wiring-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Koin wiring example
       
     </span>
   </a>
@@ -812,6 +856,12 @@
 <li><code>Supabase.create(...)</code></li>
 <li><code>supabaseModule(...)</code></li>
 </ul>
+<h2 id="create-client-example">Create client example<a class="headerlink" href="#create-client-example" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="kd">val</span><span class="w"> </span><span class="nv">client</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Supabase</span><span class="p">.</span><span class="na">create</span><span class="p">(</span>
+<span class="w">    </span><span class="n">projectUrl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;https://your-project.supabase.co&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">apiKey</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;your-anon-key&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
 <h2 id="feature-clients">Feature clients<a class="headerlink" href="#feature-clients" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>AuthClient</code></li>
@@ -820,10 +870,23 @@
 <li><code>RealtimeClient</code></li>
 <li><code>FunctionsClient</code></li>
 </ul>
+<h2 id="koin-wiring-example">Koin wiring example<a class="headerlink" href="#koin-wiring-example" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="n">startKoin</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">modules</span><span class="p">(</span>
+<span class="w">        </span><span class="n">supabaseModule</span><span class="p">(</span><span class="n">projectUrl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;https://your-project.supabase.co&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">apiKey</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;your-anon-key&quot;</span><span class="p">),</span>
+<span class="w">        </span><span class="n">authModule</span><span class="p">(),</span>
+<span class="w">        </span><span class="n">databaseModule</span><span class="p">,</span>
+<span class="w">        </span><span class="n">storageModule</span><span class="p">,</span>
+<span class="w">        </span><span class="n">realtimeModule</span><span class="p">(),</span>
+<span class="w">        </span><span class="n">functionsModule</span><span class="p">,</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
 <h2 id="common-api-contract">Common API contract<a class="headerlink" href="#common-api-contract" title="Permanent link">&para;</a></h2>
 <ul>
 <li>All async results use <code>SupabaseResult&lt;T&gt;</code></li>
 <li>Public models are serialization-ready</li>
+<li>Feature modules remain independent and composable</li>
 </ul>
 
 

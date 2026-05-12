@@ -601,6 +601,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#upload-and-list-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Upload and list example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#signed-and-public-urls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Signed and public URLs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#production-notes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -776,6 +798,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#upload-and-list-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Upload and list example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#signed-and-public-urls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Signed and public URLs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#production-notes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -825,6 +869,33 @@
 <li><code>createSignedUrl</code></li>
 <li><code>getPublicUrl</code></li>
 </ul>
+<h2 id="upload-and-list-example">Upload and list example<a class="headerlink" href="#upload-and-list-example" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="kd">val</span><span class="w"> </span><span class="nv">upload</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">storage</span><span class="p">.</span><span class="na">upload</span><span class="p">(</span>
+<span class="w">    </span><span class="n">bucket</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;avatars&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;users/u1/profile.png&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">imageBytes</span><span class="p">,</span>
+<span class="w">    </span><span class="n">contentType</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;image/png&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">upsert</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">upload</span><span class="p">.</span><span class="na">onSuccess</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">-&gt;</span>
+<span class="w">    </span><span class="n">println</span><span class="p">(</span><span class="s">&quot;Uploaded: </span><span class="si">$</span><span class="n">key</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kd">val</span><span class="w"> </span><span class="nv">files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">storage</span><span class="p">.</span><span class="na">list</span><span class="p">(</span><span class="n">bucket</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;avatars&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">prefix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;users/u1/&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="signed-and-public-urls">Signed and public URLs<a class="headerlink" href="#signed-and-public-urls" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="kd">val</span><span class="w"> </span><span class="nv">signed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">storage</span><span class="p">.</span><span class="na">createSignedUrl</span><span class="p">(</span>
+<span class="w">    </span><span class="n">bucket</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;avatars&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;users/u1/profile.png&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">expiresIn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">3600</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kd">val</span><span class="w"> </span><span class="nv">publicUrl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">storage</span><span class="p">.</span><span class="na">getPublicUrl</span><span class="p">(</span>
+<span class="w">    </span><span class="n">bucket</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;public-assets&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;logos/logo.png&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
 <h2 id="production-notes">Production notes<a class="headerlink" href="#production-notes" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Prefer signed URLs for private assets</li>

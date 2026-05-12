@@ -574,10 +574,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#filters-dsl" class="md-nav__link">
+  <a href="#read-with-filter-dsl" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Filters DSL
+        Read with filter DSL
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#insert-and-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Insert and update
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rpc-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RPC example
       
     </span>
   </a>
@@ -776,10 +798,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#filters-dsl" class="md-nav__link">
+  <a href="#read-with-filter-dsl" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Filters DSL
+        Read with filter DSL
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#insert-and-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Insert and update
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rpc-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RPC example
       
     </span>
   </a>
@@ -824,12 +868,38 @@
 <li><code>updateTyped&lt;T&gt;</code></li>
 <li><code>rpcTyped&lt;T&gt;</code></li>
 </ul>
-<h2 id="filters-dsl">Filters DSL<a class="headerlink" href="#filters-dsl" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><span class="kd">val</span><span class="w"> </span><span class="nv">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">database</span><span class="p">.</span><span class="na">selectTyped</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;users&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">eq</span><span class="p">(</span><span class="s">&quot;active&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="p">)</span>
+<h2 id="read-with-filter-dsl">Read with filter DSL<a class="headerlink" href="#read-with-filter-dsl" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="nd">@Serializable</span>
+<span class="kd">data</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">Todo</span><span class="p">(</span>
+<span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">id</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span>
+<span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">title</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span>
+<span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">done</span><span class="p">:</span><span class="w"> </span><span class="kt">Boolean</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kd">val</span><span class="w"> </span><span class="nv">todos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">database</span><span class="p">.</span><span class="na">selectTyped</span><span class="o">&lt;</span><span class="n">Todo</span><span class="o">&gt;</span><span class="p">(</span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;todos&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">eq</span><span class="p">(</span><span class="s">&quot;done&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span>
 <span class="w">    </span><span class="n">order</span><span class="p">(</span><span class="s">&quot;created_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">ascending</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
-<span class="w">    </span><span class="n">limit</span><span class="p">(</span><span class="m">50</span><span class="p">)</span>
+<span class="w">    </span><span class="n">limit</span><span class="p">(</span><span class="m">20</span><span class="p">)</span>
 <span class="p">}</span>
+</code></pre></div>
+<h2 id="insert-and-update">Insert and update<a class="headerlink" href="#insert-and-update" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="n">database</span><span class="p">.</span><span class="na">insertTyped</span><span class="p">(</span>
+<span class="w">    </span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;todos&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Todo</span><span class="p">(</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Ship docs&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">done</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">database</span><span class="p">.</span><span class="na">update</span><span class="p">(</span>
+<span class="w">    </span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;todos&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">body</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;&quot;{&quot;done&quot;:true}&quot;&quot;&quot;</span><span class="p">,</span>
+<span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">eq</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<h2 id="rpc-example">RPC example<a class="headerlink" href="#rpc-example" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="kd">val</span><span class="w"> </span><span class="nv">stats</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">database</span><span class="p">.</span><span class="na">rpc</span><span class="p">(</span>
+<span class="w">    </span><span class="n">function</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;get_dashboard_stats&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">params</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;&quot;{&quot;user_id&quot;:&quot;123&quot;}&quot;&quot;&quot;</span><span class="p">,</span>
+<span class="p">)</span>
 </code></pre></div>
 
 

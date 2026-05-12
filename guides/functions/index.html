@@ -644,10 +644,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#typical-patterns" class="md-nav__link">
+  <a href="#json-invocation-example" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Typical patterns
+        JSON invocation example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#typed-invocation-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Typed invocation example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#raw-body-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raw body example
       
     </span>
   </a>
@@ -754,10 +776,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#typical-patterns" class="md-nav__link">
+  <a href="#json-invocation-example" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Typical patterns
+        JSON invocation example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#typed-invocation-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Typed invocation example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#raw-body-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raw body example
       
     </span>
   </a>
@@ -793,12 +837,28 @@
 <li>typed decode with <code>invokeTyped&lt;T&gt;</code></li>
 <li>optional region routing using <code>FunctionRegion</code></li>
 </ul>
-<h2 id="typical-patterns">Typical patterns<a class="headerlink" href="#typical-patterns" title="Permanent link">&para;</a></h2>
-<ul>
-<li>auth-required callable endpoints</li>
-<li>lightweight server-side validation</li>
-<li>orchestration over multiple Supabase services</li>
-</ul>
+<h2 id="json-invocation-example">JSON invocation example<a class="headerlink" href="#json-invocation-example" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="kd">val</span><span class="w"> </span><span class="nv">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">functions</span><span class="p">.</span><span class="na">invoke</span><span class="p">(</span>
+<span class="w">    </span><span class="n">function</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;send-welcome-email&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">body</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;&quot;{&quot;user_id&quot;:&quot;u1&quot;}&quot;&quot;&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<h2 id="typed-invocation-example">Typed invocation example<a class="headerlink" href="#typed-invocation-example" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="nd">@Serializable</span>
+<span class="kd">data</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">Health</span><span class="p">(</span><span class="kd">val</span><span class="w"> </span><span class="nv">ok</span><span class="p">:</span><span class="w"> </span><span class="kt">Boolean</span><span class="p">)</span>
+
+<span class="kd">val</span><span class="w"> </span><span class="nv">health</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">functions</span><span class="p">.</span><span class="na">invokeTyped</span><span class="o">&lt;</span><span class="n">Health</span><span class="o">&gt;</span><span class="p">(</span>
+<span class="w">    </span><span class="n">function</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;health&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<h2 id="raw-body-example">Raw body example<a class="headerlink" href="#raw-body-example" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="kd">val</span><span class="w"> </span><span class="nv">binary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">functions</span><span class="p">.</span><span class="na">invokeWithBody</span><span class="p">(</span>
+<span class="w">    </span><span class="n">function</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;process-image&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">body</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pngBytes</span><span class="p">,</span>
+<span class="w">    </span><span class="n">contentType</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;image/png&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">region</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FunctionRegion</span><span class="p">.</span><span class="na">AWS_AP_SOUTH_1</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
 
 
 

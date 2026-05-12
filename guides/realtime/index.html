@@ -617,6 +617,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#basic-subscription-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic subscription example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#presence-broadcast-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Presence + broadcast example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#connection-model" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -754,6 +776,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#basic-subscription-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic subscription example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#presence-broadcast-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Presence + broadcast example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#connection-model" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -794,6 +838,32 @@
 <li><code>subscribe()</code></li>
 <li><code>unsubscribe()</code> and <code>disconnect()</code> on cleanup</li>
 </ol>
+<h2 id="basic-subscription-example">Basic subscription example<a class="headerlink" href="#basic-subscription-example" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="n">realtime</span><span class="p">.</span><span class="na">connect</span><span class="p">()</span>
+
+<span class="kd">val</span><span class="w"> </span><span class="nv">sub</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">realtime</span><span class="p">.</span><span class="na">channel</span><span class="p">(</span><span class="s">&quot;todos&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="na">onPostgresChange</span><span class="p">(</span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;todos&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">event</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PostgresChangeEvent</span><span class="p">.</span><span class="na">INSERT</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">record</span><span class="w"> </span><span class="o">-&gt;</span>
+<span class="w">        </span><span class="n">println</span><span class="p">(</span><span class="s">&quot;Inserted: </span><span class="si">$</span><span class="n">record</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">.</span><span class="na">onBroadcast</span><span class="p">(</span><span class="s">&quot;cursor&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">payload</span><span class="w"> </span><span class="o">-&gt;</span>
+<span class="w">        </span><span class="n">println</span><span class="p">(</span><span class="s">&quot;Broadcast payload: </span><span class="si">$</span><span class="n">payload</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">.</span><span class="na">subscribe</span><span class="p">()</span>
+</code></pre></div>
+<h2 id="presence-broadcast-example">Presence + broadcast example<a class="headerlink" href="#presence-broadcast-example" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="n">sub</span><span class="p">.</span><span class="na">track</span><span class="p">(</span><span class="n">buildJsonObject</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">put</span><span class="p">(</span><span class="s">&quot;userId&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;u1&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">put</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ranbir&quot;</span><span class="p">)</span>
+<span class="p">})</span>
+
+<span class="n">sub</span><span class="p">.</span><span class="na">broadcast</span><span class="p">(</span>
+<span class="w">    </span><span class="n">event</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;cursor&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">payload</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">buildJsonObject</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">put</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="m">120</span><span class="p">)</span>
+<span class="w">        </span><span class="n">put</span><span class="p">(</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="m">340</span><span class="p">)</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="p">)</span>
+</code></pre></div>
 <h2 id="connection-model">Connection model<a class="headerlink" href="#connection-model" title="Permanent link">&para;</a></h2>
 <p>Observe <code>connectionState</code>:</p>
 <ul>
