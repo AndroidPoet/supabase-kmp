@@ -9,8 +9,33 @@
 - typed decode with `invokeTyped<T>`
 - optional region routing using `FunctionRegion`
 
-## Typical patterns
+## JSON invocation example
 
-- auth-required callable endpoints
-- lightweight server-side validation
-- orchestration over multiple Supabase services
+```kotlin
+val result = functions.invoke(
+    function = "send-welcome-email",
+    body = """{"user_id":"u1"}""",
+)
+```
+
+## Typed invocation example
+
+```kotlin
+@Serializable
+data class Health(val ok: Boolean)
+
+val health = functions.invokeTyped<Health>(
+    function = "health",
+)
+```
+
+## Raw body example
+
+```kotlin
+val binary = functions.invokeWithBody(
+    function = "process-image",
+    body = pngBytes,
+    contentType = "image/png",
+    region = FunctionRegion.AWS_AP_SOUTH_1,
+)
+```

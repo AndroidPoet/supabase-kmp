@@ -19,12 +19,44 @@ Use extension helpers for serialization-safe usage:
 - `updateTyped<T>`
 - `rpcTyped<T>`
 
-## Filters DSL
+## Read with filter DSL
 
 ```kotlin
-val users = database.selectTyped<User>("users") {
-    eq("active", "true")
+@Serializable
+data class Todo(
+    val id: String,
+    val title: String,
+    val done: Boolean,
+)
+
+val todos = database.selectTyped<Todo>(table = "todos") {
+    eq("done", "false")
     order("created_at", ascending = false)
-    limit(50)
+    limit(20)
 }
+```
+
+## Insert and update
+
+```kotlin
+database.insertTyped(
+    table = "todos",
+    value = Todo(id = "1", title = "Ship docs", done = false),
+)
+
+database.update(
+    table = "todos",
+    body = """{"done":true}""",
+) {
+    eq("id", "1")
+}
+```
+
+## RPC example
+
+```kotlin
+val stats = database.rpc(
+    function = "get_dashboard_stats",
+    params = """{"user_id":"123"}""",
+)
 ```
