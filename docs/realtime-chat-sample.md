@@ -7,6 +7,15 @@ This sample mirrors the structure used in modern Compose chat apps (UI state + u
 - realtime message delivery
 - typing/presence signals
 
+## UI inspiration (from official Jetchat sample)
+
+![Jetchat demo](assets/images/chat-sample/jetchat.gif)
+
+![Jetchat screenshots](assets/images/chat-sample/screenshots.png)
+
+Source assets:
+- https://github.com/android/compose-samples/tree/main/Jetchat/screenshots
+
 ## 1) Data model (Supabase)
 
 Use three core tables:
