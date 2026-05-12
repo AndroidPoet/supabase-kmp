@@ -31,6 +31,8 @@ This documentation is intentionally comprehensive and split into practical track
 ## Repository
 
 - GitHub: https://github.com/AndroidPoet/supabase-kmp
+- Main project README: https://github.com/AndroidPoet/supabase-kmp/blob/main/README.md
+- Docs site (GitHub Pages): https://androidpoet.github.io/supabase-kmp/
 
 ## Documentation systems in this repo
 
