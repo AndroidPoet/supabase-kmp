@@ -1,6 +1,6 @@
 # Storage API
 
-## Key types
+## Main types
 
 - `StorageClient`
 - `Bucket`
@@ -8,4 +8,7 @@
 
 ## Operations
 
-Bucket lifecycle, object transfer, listing, and URL creation.
+- bucket lifecycle
+- object upload/download/list
+- object move/delete
+- signed/public URL generation

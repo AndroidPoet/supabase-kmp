@@ -1,11 +1,23 @@
 # Realtime Guide
 
-`RealtimeClient` manages a websocket connection to Supabase Realtime.
+`RealtimeClient` manages websocket lifecycle and channels.
 
-## Features
+## Workflow
 
-- Connection state flow (`ConnectionState`)
-- Postgres change callbacks
-- Broadcast send/receive
-- Presence tracking
-- Automatic reconnect with backoff
+1. `connect()`
+2. create channel via `channel("topic")`
+3. register callbacks (`onPostgresChange`, `onPresence`, `onBroadcast`)
+4. `subscribe()`
+5. `unsubscribe()` and `disconnect()` on cleanup
+
+## Connection model
+
+Observe `connectionState`:
+
+- `Disconnected`
+- `Connecting`
+- `Connected`
+- `Reconnecting`
+- `Failed`
+
+Reconnect uses backoff and re-joins active channels.

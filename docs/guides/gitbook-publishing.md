@@ -1,20 +1,20 @@
 # GitBook Publishing
 
-This repo is ready for GitBook free plan publishing.
+This project is synced from GitHub.
 
-## Steps
+- Source repo: https://github.com/AndroidPoet/supabase-kmp
+- Primary docs path: `docs/`
+- Navigation file: `docs/SUMMARY.md`
+- GitBook config: `.gitbook.yaml`
 
-1. Create a free GitBook workspace at https://www.gitbook.com/.
-2. In GitBook, create a new space and choose **Git Sync**.
-3. Connect your GitHub account and select this repository.
-4. Set the default branch to `main`.
-5. Confirm GitBook root files:
-   - `.gitbook.yaml`
-   - `docs/README.md`
-   - `docs/SUMMARY.md`
-6. Trigger first sync.
+## Publish flow
 
-## Ongoing workflow
+1. Push docs changes to `main`
+2. GitBook sync imports updated files
+3. Validate navigation and page rendering
+4. Publish site
 
-- Update docs in `docs/` as part of normal PRs.
-- GitBook will auto-sync on merges to `main`.
+## Site links
+
+- GitBook app: https://app.gitbook.com/o/97PT9eIDGlW5baPvlBto/sites/site_yQK3T
+- Published URL: https://ranbirs-organization-1.gitbook.io/supabase-kmp/

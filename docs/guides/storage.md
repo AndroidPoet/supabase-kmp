@@ -1,15 +1,25 @@
 # Storage Guide
 
-`StorageClient` supports buckets and objects.
+## Buckets
 
-## Bucket APIs
+- `listBuckets`
+- `getBucket`
+- `createBucket`
+- `emptyBucket`
+- `deleteBucket`
 
-- List/create/delete buckets
-- Empty bucket content
+## Objects
 
-## Object APIs
+- `upload`
+- `download`
+- `list`
+- `move`
+- `remove`
+- `createSignedUrl`
+- `getPublicUrl`
 
-- Upload/download files
-- Move and remove objects
-- List by prefix
-- Generate signed URLs and public URLs
+## Production notes
+
+- Prefer signed URLs for private assets
+- Keep content types explicit
+- Use `upsert=true` only when overwrite behavior is intended

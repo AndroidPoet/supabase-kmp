@@ -1,14 +1,26 @@
 # Authentication Guide
 
-## Core flows
+## Supported flows
 
-- Email/password sign-up and sign-in
-- OTP sign-in and verification
-- OAuth provider redirect flow
-- PKCE code verifier/challenge flow
-- MFA enrollment, challenge, and verification
+- Email/password sign-up + sign-in
+- Phone sign-in
+- OTP send + verify
+- OAuth URL flow
+- PKCE authorization code exchange
+- MFA (TOTP, phone)
 
-## Session handling
+## Session lifecycle
 
-Use `SessionManager` to persist and auto-refresh sessions.
-Observe `sessionState` to react to auth lifecycle transitions.
+`SessionManager` is responsible for:
+
+- persisting session tokens
+- restoring session at startup
+- auto-refresh scheduling
+- exposing `SessionState` via `StateFlow`
+
+## Best practices
+
+- Save new session immediately after sign-in
+- Restore on app launch
+- Never hardcode service-role keys in client apps
+- Clear session on explicit sign-out

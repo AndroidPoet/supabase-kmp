@@ -1,14 +1,27 @@
 # Error Handling
 
-All feature clients return `SupabaseResult<T>`.
+All public client calls return `SupabaseResult<T>`.
 
-## Pattern
+## Why this model
 
-- `Success(value)` when the request succeeds
-- `Failure(error)` when API/transport/serialization fails
+- Keeps flow explicit in async code
+- Avoids hidden exception paths
+- Makes retry/fallback logic composable
+
+## Main types
+
+- `SupabaseResult.Success<T>(value)`
+- `SupabaseResult.Failure(error)`
+- `SupabaseError` with category + code
 
 ## Recommended usage
 
-- Use `map`, `flatMap`, and `recover` for composition
-- Use `onFailureCategory` for category-specific handling
-- Convert to throwable only at app boundaries
+```kotlin
+val result = database.select(table = "todos")
+
+result
+  .map { response -> response.data }
+  .onFailure { error -> logger.error(error.message) }
+```
+
+Use category-aware handlers for user-safe messaging and retry behavior.

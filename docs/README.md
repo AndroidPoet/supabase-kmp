@@ -1,21 +1,20 @@
 # Supabase KMP Documentation
 
-Supabase KMP is a Kotlin Multiplatform SDK for Supabase with modular clients for Auth, Database, Storage, Realtime, and Edge Functions.
+Kotlin Multiplatform SDK for Supabase with modular clients for Auth, Database, Storage, Realtime, and Edge Functions.
 
-## What you get
+- GitHub repository: https://github.com/AndroidPoet/supabase-kmp
+- API style: `SupabaseResult<T>` (no exception-first public API)
+- Platforms: Android, Apple targets, JVM, Linux, Windows, WasmJs
 
-- Type-safe async APIs with `SupabaseResult<T>`
-- Kotlin Multiplatform support across mobile, desktop, server, and Wasm
-- Modular dependency graph so you only include what you need
-- Koin modules for fast dependency injection setup
+## Start here
 
-## Quick links
+1. [Getting Started](guides/getting-started.md)
+2. [Architecture](concepts/architecture.md)
+3. [Module Overview](reference/module-overview.md)
+4. [Production Checklist](operations/production-checklist.md)
 
-- [Getting Started](guides/getting-started.md)
-- [Architecture](concepts/architecture.md)
-- [API Overview](api/overview.md)
-- [Contributing](guides/contributing.md)
+## Learning paths
 
-## Versioning
-
-Docs track the current `main` branch and should be updated with API changes.
+- App developers: Getting Started -> Authentication -> Database -> Storage
+- Realtime apps: Getting Started -> Realtime -> Error Handling -> Troubleshooting
+- Contributors: Architecture -> Contributing -> Testing Strategy

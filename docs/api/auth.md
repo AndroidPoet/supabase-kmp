@@ -1,9 +1,15 @@
 # Auth API
 
-## Key types
+## Main types
 
 - `AuthClient`
 - `SessionManager`
 - `SessionStorage`
 - `SessionState`
-- Auth request/response models in `auth.models`
+
+## Features
+
+- email/phone auth
+- OTP verification
+- OAuth URL + PKCE exchange
+- MFA enrollment/challenge/verify/list

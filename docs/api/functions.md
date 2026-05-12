@@ -1,11 +1,13 @@
 # Functions API
 
-## Key types
+## Main types
 
 - `FunctionsClient`
 - `FunctionRegion`
-- `FunctionsClientExt` typed helpers
+- `FunctionsClientExt`
 
 ## Operations
 
-Invoke Edge Functions with JSON or raw payloads and custom headers.
+- invoke with JSON payload
+- invoke raw body
+- decode typed responses

@@ -1,9 +1,9 @@
 # API Overview
 
-## Entry points
+## Primary entry points
 
 - `Supabase.create(...)`
-- `supabaseModule(...)` for Koin
+- `supabaseModule(...)`
 
 ## Feature clients
 
@@ -13,4 +13,7 @@
 - `RealtimeClient`
 - `FunctionsClient`
 
-See module pages for method-level references and usage patterns.
+## Common API contract
+
+- All async results use `SupabaseResult<T>`
+- Public models are serialization-ready

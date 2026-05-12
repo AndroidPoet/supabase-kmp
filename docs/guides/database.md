@@ -1,15 +1,30 @@
 # Database Guide
 
-`DatabaseClient` wraps PostgREST endpoints.
+`DatabaseClient` wraps PostgREST.
 
-## Common operations
+## Core operations
 
-- `select(...)` and `selectTyped<T>(...)`
-- `insert(...)` and `insertTyped<T>(...)`
-- `update(...)` and `updateTyped<T>(...)`
-- `delete(...)`
-- `rpc(...)` and `rpcTyped<T>(...)`
+- `select`
+- `insert`
+- `update`
+- `delete`
+- `rpc`
+
+## Typed helpers
+
+Use extension helpers for serialization-safe usage:
+
+- `selectTyped<T>`
+- `insertTyped<T>`
+- `updateTyped<T>`
+- `rpcTyped<T>`
 
 ## Filters DSL
 
-Use `filters { ... }` or the lambda overloads to build PostgREST params.
+```kotlin
+val users = database.selectTyped<User>("users") {
+    eq("active", "true")
+    order("created_at", ascending = false)
+    limit(50)
+}
+```

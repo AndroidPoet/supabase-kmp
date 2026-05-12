@@ -1,16 +1,22 @@
 # Getting Started
 
-## Install
+## Prerequisites
 
-Add modules in `commonMain`:
+- Kotlin Multiplatform project
+- Supabase project URL and anon key
+- Coroutines + serialization in common source sets
+
+## Install dependencies
 
 ```kotlin
-implementation(libs.supabase.client)
-implementation(libs.supabase.auth)
-implementation(libs.supabase.database)
-implementation(libs.supabase.storage)
-implementation(libs.supabase.realtime)
-implementation(libs.supabase.functions)
+commonMain.dependencies {
+    implementation(libs.supabase.client)
+    implementation(libs.supabase.auth)
+    implementation(libs.supabase.database)
+    implementation(libs.supabase.storage)
+    implementation(libs.supabase.realtime)
+    implementation(libs.supabase.functions)
+}
 ```
 
 ## Create a client
@@ -22,6 +28,23 @@ val client = Supabase.create(
 )
 ```
 
-## Dependency Injection
+## Add feature clients with Koin
 
-Use `supabaseModule(...)` plus feature modules (`authModule`, `databaseModule`, etc.) when using Koin.
+```kotlin
+startKoin {
+    modules(
+        supabaseModule(projectUrl = "https://your-project.supabase.co", apiKey = "your-anon-key"),
+        authModule(),
+        databaseModule,
+        storageModule,
+        realtimeModule(),
+        functionsModule,
+    )
+}
+```
+
+## Next steps
+
+- Implement sign-in with [Authentication Guide](authentication.md)
+- Read data with [Database Guide](database.md)
+- Upload files with [Storage Guide](storage.md)

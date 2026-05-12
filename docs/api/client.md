@@ -1,14 +1,14 @@
 # Client API
 
-## Key types
+## Main types
 
 - `Supabase`
 - `SupabaseClient`
 - `SupabaseConfig`
-- `SupabaseClientExt` typed helpers
+- `SupabaseClientExt`
 
 ## Responsibilities
 
-- Build project-scoped base endpoints
-- Attach headers and auth tokens
-- Execute HTTP operations used by feature modules
+- Build base service URLs
+- Attach auth + project headers
+- Provide HTTP verbs consumed by feature modules

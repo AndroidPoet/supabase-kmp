@@ -2,9 +2,15 @@
 
 `FunctionsClient` invokes Supabase Edge Functions.
 
-## Invocation modes
+## Invocation options
 
-- JSON payload invocation
-- Raw body invocation with explicit content type
-- Optional region routing via `FunctionRegion`
-- Typed deserialization via `invokeTyped<T>(...)`
+- JSON payload with `invoke`
+- raw body with `invokeWithBody`
+- typed decode with `invokeTyped<T>`
+- optional region routing using `FunctionRegion`
+
+## Typical patterns
+
+- auth-required callable endpoints
+- lightweight server-side validation
+- orchestration over multiple Supabase services

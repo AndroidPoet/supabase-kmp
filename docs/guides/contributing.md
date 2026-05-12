@@ -1,17 +1,22 @@
 # Contributing
 
-## Local checks
+## Local quality checks
 
 ```bash
-./gradlew test
+./gradlew jvmTest
+./gradlew build --no-configuration-cache
 ```
 
-## Coding standards
+## Contribution standards
 
-- Keep public APIs documented with KDoc.
-- Prefer explicit error propagation with `SupabaseResult`.
-- Add tests for new DSL behavior and parser logic.
+- Document all public APIs with KDoc
+- Add tests for behavior changes
+- Keep module boundaries clean
+- Update `docs/` when user-facing behavior changes
 
-## Pull requests
+## Pull request checklist
 
-Include API impact notes and update docs when behavior changes.
+- [ ] API behavior explained
+- [ ] tests added/updated
+- [ ] docs updated
+- [ ] changelog/release notes prepared if needed
