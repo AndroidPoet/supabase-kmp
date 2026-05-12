@@ -386,6 +386,25 @@ functions.invokeWithBody(
 - GitBook-ready pages: [`docs/`](docs/)
 - GitBook config: [`.gitbook.yaml`](.gitbook.yaml)
 - Publishing guide: [`docs/guides/gitbook-publishing.md`](docs/guides/gitbook-publishing.md)
+- MkDocs config: [`mkdocs.yml`](mkdocs.yml)
+- MkDocs deps: [`requirements-docs.txt`](requirements-docs.txt)
+
+### Build Docs Locally (MkDocs)
+
+```bash
+python -m pip install -r requirements-docs.txt
+mkdocs serve
+```
+
+### Publish Docs to GitHub Pages (MkDocs)
+
+- Automated via GitHub Actions workflow:
+  - [`.github/workflows/docs-mkdocs.yml`](.github/workflows/docs-mkdocs.yml)
+- Manual publish:
+
+```bash
+mkdocs gh-deploy --force
+```
 
 ## License
 
