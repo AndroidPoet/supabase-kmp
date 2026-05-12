@@ -38,6 +38,7 @@ nav:
   - Database Guide: guides/database.md
   - Storage Guide: guides/storage.md
   - Realtime Guide: guides/realtime.md
+  - Realtime Chat Sample: realtime-chat-sample.md
   - Functions Guide: guides/functions.md
   - API Overview: api/overview.md
   - Deep Dive: deep-dive.md
