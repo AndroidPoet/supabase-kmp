@@ -1,5 +1,4 @@
 package io.github.androidpoet.supabase.storage
-
 import io.github.androidpoet.supabase.client.SupabaseClient
 import io.github.androidpoet.supabase.client.defaultJson
 import io.github.androidpoet.supabase.client.deserialize
@@ -12,23 +11,13 @@ import io.github.androidpoet.supabase.storage.models.MoveRequest
 import io.github.androidpoet.supabase.storage.models.SignedUrlRequest
 import io.github.androidpoet.supabase.storage.models.SignedUrlResponse
 import kotlinx.serialization.encodeToString
-
-/**
- * Internal implementation of [StorageClient] backed by [SupabaseClient].
- *
- * All requests target the Supabase Storage v1 endpoints, with the project URL
- * resolved by the underlying client.
- */
 internal class StorageClientImpl(
     private val client: SupabaseClient,
 ) : StorageClient {
-
     override suspend fun listBuckets(): SupabaseResult<List<Bucket>> =
         client.get("/storage/v1/bucket").deserialize()
-
     override suspend fun getBucket(id: String): SupabaseResult<Bucket> =
         client.get("/storage/v1/bucket/$id").deserialize()
-
     override suspend fun createBucket(
         id: String,
         name: String,
@@ -47,13 +36,10 @@ internal class StorageClientImpl(
         )
         return client.post("/storage/v1/bucket", body = body).deserialize()
     }
-
     override suspend fun deleteBucket(id: String): SupabaseResult<Unit> =
         client.delete("/storage/v1/bucket/$id").map { }
-
     override suspend fun emptyBucket(id: String): SupabaseResult<Unit> =
         client.post("/storage/v1/bucket/$id/empty").map { }
-
     override suspend fun upload(
         bucket: String,
         path: String,
@@ -71,10 +57,8 @@ internal class StorageClientImpl(
             headers = headers,
         )
     }
-
     override suspend fun download(bucket: String, path: String): SupabaseResult<String> =
         client.get("/storage/v1/object/$bucket/$path")
-
     override suspend fun list(
         bucket: String,
         prefix: String,
@@ -91,7 +75,6 @@ internal class StorageClientImpl(
         val body = defaultJson.encodeToString(bodyMap)
         return client.post("/storage/v1/object/list/$bucket", body = body).deserialize()
     }
-
     override suspend fun move(
         bucket: String,
         fromPath: String,
@@ -106,7 +89,6 @@ internal class StorageClientImpl(
         )
         return client.post("/storage/v1/object/move", body = body).map { }
     }
-
     override suspend fun remove(bucket: String, paths: List<String>): SupabaseResult<Unit> {
         val body = defaultJson.encodeToString(mapOf("prefixes" to paths))
         return client.post(
@@ -114,7 +96,6 @@ internal class StorageClientImpl(
             body = body,
         ).map { }
     }
-
     override suspend fun createSignedUrl(
         bucket: String,
         path: String,
@@ -125,7 +106,6 @@ internal class StorageClientImpl(
             .deserialize<SignedUrlResponse>()
             .map { it.signedUrl }
     }
-
     override fun getPublicUrl(bucket: String, path: String): String =
         "${client.projectUrl}/storage/v1/object/public/$bucket/$path"
 }

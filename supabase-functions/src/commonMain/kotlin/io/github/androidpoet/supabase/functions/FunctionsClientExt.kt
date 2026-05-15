@@ -1,15 +1,7 @@
 package io.github.androidpoet.supabase.functions
-
 import io.github.androidpoet.supabase.client.defaultJson
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
-
-/**
- * Invokes an Edge Function and deserializes the JSON response into [T].
- *
- * This is a convenience wrapper around [FunctionsClient.invoke] for callers
- * that expect structured JSON responses from their Edge Functions.
- */
 public suspend inline fun <reified T> FunctionsClient.invokeTyped(
     functionName: String,
     body: String? = null,

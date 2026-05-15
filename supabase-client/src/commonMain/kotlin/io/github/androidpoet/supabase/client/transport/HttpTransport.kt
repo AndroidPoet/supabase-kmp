@@ -1,5 +1,4 @@
 package io.github.androidpoet.supabase.client.transport
-
 import io.github.androidpoet.supabase.client.SupabaseConfig
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
@@ -21,27 +20,15 @@ import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
-
 private const val CLIENT_VERSION = "supabase-kmp/0.1.0"
-
-/**
- * Low-level HTTP transport layer for Supabase API communication.
- *
- * Wraps a Ktor [HttpClient] configured with content negotiation, optional
- * logging, and the project's default authentication headers. Higher-level
- * modules (database, auth, storage) delegate all network I/O here.
- */
 internal class HttpTransport(
     private val config: SupabaseConfig,
     engineFactory: HttpClientEngineFactory<*>,
     private val projectUrl: String,
     private val apiKey: String,
 ) {
-    /** Mutable access token — when set, overrides the anon key in Authorization. */
     private var accessToken: String? = null
-
     private val errorJson = Json { ignoreUnknownKeys = true }
-
     internal val httpClient: HttpClient = HttpClient(engineFactory) {
         install(ContentNegotiation) {
             json(
@@ -52,13 +39,11 @@ internal class HttpTransport(
                 },
             )
         }
-
         if (config.logging) {
             install(Logging) {
                 level = config.logLevel
             }
         }
-
         defaultRequest {
             header("apikey", apiKey)
             header("Authorization", "Bearer ${accessToken ?: apiKey}")
@@ -66,9 +51,6 @@ internal class HttpTransport(
             config.headers.forEach { (key, value) -> header(key, value) }
         }
     }
-
-    // ── HTTP verbs ──────────────────────────────────────────────────────
-
     suspend fun get(
         url: String,
         queryParams: List<Pair<String, String>> = emptyList(),
@@ -77,11 +59,9 @@ internal class HttpTransport(
         httpClient.get(url) {
             queryParams.forEach { (k, v) -> this.url.parameters.append(k, v) }
             headers.forEach { (k, v) -> header(k, v) }
-            // Re-apply Authorization in case accessToken changed after client init
             header("Authorization", "Bearer ${accessToken ?: apiKey}")
         }
     }
-
     suspend fun post(
         url: String,
         body: String? = null,
@@ -94,7 +74,6 @@ internal class HttpTransport(
             header("Authorization", "Bearer ${accessToken ?: apiKey}")
         }
     }
-
     suspend fun patch(
         url: String,
         body: String? = null,
@@ -107,7 +86,6 @@ internal class HttpTransport(
             header("Authorization", "Bearer ${accessToken ?: apiKey}")
         }
     }
-
     suspend fun delete(
         url: String,
         headers: Map<String, String> = emptyMap(),
@@ -117,7 +95,6 @@ internal class HttpTransport(
             header("Authorization", "Bearer ${accessToken ?: apiKey}")
         }
     }
-
     suspend fun postRaw(
         url: String,
         body: ByteArray,
@@ -131,25 +108,15 @@ internal class HttpTransport(
             header("Authorization", "Bearer ${accessToken ?: apiKey}")
         }
     }
-
-    // ── Token management ────────────────────────────────────────────────
-
     fun setAccessToken(token: String) {
         accessToken = token
     }
-
     fun clearAccessToken() {
         accessToken = null
     }
-
-    // ── Lifecycle ───────────────────────────────────────────────────────
-
     fun close() {
         httpClient.close()
     }
-
-    // ── Internals ───────────────────────────────────────────────────────
-
     private suspend inline fun execute(
         crossinline request: suspend () -> io.ktor.client.statement.HttpResponse,
     ): SupabaseResult<String> =
@@ -167,7 +134,6 @@ internal class HttpTransport(
                 SupabaseError(message = e.message ?: "Unknown network error"),
             )
         }
-
     private fun parseError(body: String, statusCode: Int): SupabaseError =
         try {
             errorJson.decodeFromString<SupabaseError>(body)

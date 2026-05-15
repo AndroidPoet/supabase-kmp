@@ -1,5 +1,4 @@
 package io.github.androidpoet.supabase.auth
-
 import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevel
 import io.github.androidpoet.supabase.auth.models.ExchangeCodeRequest
 import io.github.androidpoet.supabase.auth.models.MfaChallengeResponse
@@ -31,17 +30,9 @@ import io.github.androidpoet.supabase.core.result.map
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonObject
 import kotlin.random.Random
-
-/**
- * Internal implementation of [AuthClient] backed by [SupabaseClient].
- *
- * All requests target the GoTrue Auth v1 endpoints, with the project URL
- * resolved by the underlying client.
- */
 internal class AuthClientImpl(
     private val client: SupabaseClient,
 ) : AuthClient {
-
     override suspend fun signUpWithEmail(
         email: String,
         password: String,
@@ -50,7 +41,6 @@ internal class AuthClientImpl(
         val body = defaultJson.encodeToString(SignUpRequest(email = email, password = password, data = data))
         return client.post("/auth/v1/signup", body = body).deserialize()
     }
-
     override suspend fun signInWithEmail(
         email: String,
         password: String,
@@ -58,7 +48,6 @@ internal class AuthClientImpl(
         val body = defaultJson.encodeToString(SignInRequest(email = email, password = password))
         return client.post("/auth/v1/token?grant_type=password", body = body).deserialize()
     }
-
     override suspend fun signInWithPhone(
         phone: String,
         password: String,
@@ -66,7 +55,6 @@ internal class AuthClientImpl(
         val body = defaultJson.encodeToString(SignInRequest(phone = phone, password = password))
         return client.post("/auth/v1/token?grant_type=password", body = body).deserialize()
     }
-
     override suspend fun signInWithOtp(
         email: String?,
         phone: String?,
@@ -74,7 +62,6 @@ internal class AuthClientImpl(
         val body = defaultJson.encodeToString(OtpRequest(email = email, phone = phone))
         return client.post("/auth/v1/otp", body = body).map { }
     }
-
     override suspend fun verifyOtp(
         email: String?,
         phone: String?,
@@ -86,18 +73,15 @@ internal class AuthClientImpl(
         )
         return client.post("/auth/v1/verify", body = body).deserialize()
     }
-
     override suspend fun refreshToken(refreshToken: String): SupabaseResult<Session> {
         val body = defaultJson.encodeToString(RefreshTokenRequest(refreshToken = refreshToken))
         return client.post("/auth/v1/token?grant_type=refresh_token", body = body).deserialize()
     }
-
     override suspend fun getUser(accessToken: String): SupabaseResult<User> =
         client.get(
             endpoint = "/auth/v1/user",
             headers = bearerHeaders(accessToken),
         ).deserialize()
-
     override suspend fun updateUser(
         accessToken: String,
         updates: UserUpdateRequest,
@@ -109,15 +93,11 @@ internal class AuthClientImpl(
             headers = bearerHeaders(accessToken),
         ).deserialize()
     }
-
     override suspend fun signOut(accessToken: String): SupabaseResult<Unit> =
         client.post(
             endpoint = "/auth/v1/logout",
             headers = bearerHeaders(accessToken),
         ).map { }
-
-    // ── OAuth ────────────────────────────────────────────────────────
-
     override fun getOAuthSignInUrl(
         provider: OAuthProvider,
         redirectTo: String?,
@@ -128,7 +108,6 @@ internal class AuthClientImpl(
         append(client.projectUrl)
         append("/auth/v1/authorize?provider=")
         append(provider.value)
-
         if (redirectTo != null) {
             append("&redirect_to=")
             append(urlEncode(redirectTo))
@@ -150,9 +129,6 @@ internal class AuthClientImpl(
             append(urlEncode(value))
         }
     }
-
-    // ── PKCE ─────────────────────────────────────────────────────────
-
     override fun generatePkceParams(sha256: ((ByteArray) -> ByteArray)?): PkceParams {
         val verifier = buildString(PKCE_VERIFIER_LENGTH) {
             repeat(PKCE_VERIFIER_LENGTH) {
@@ -175,7 +151,6 @@ internal class AuthClientImpl(
             )
         }
     }
-
     override suspend fun exchangeCodeForSession(
         authCode: String,
         codeVerifier: String,
@@ -185,9 +160,6 @@ internal class AuthClientImpl(
         )
         return client.post("/auth/v1/token?grant_type=pkce", body = body).deserialize()
     }
-
-    // ── MFA ──────────────────────────────────────────────────────────
-
     override suspend fun mfaEnroll(
         factorType: MfaFactorType,
         friendlyName: String?,
@@ -209,7 +181,6 @@ internal class AuthClientImpl(
             headers = bearerHeaders(accessToken),
         ).deserialize()
     }
-
     override suspend fun mfaChallenge(
         factorId: String,
         accessToken: String,
@@ -218,7 +189,6 @@ internal class AuthClientImpl(
             endpoint = "/auth/v1/factors/$factorId/challenge",
             headers = bearerHeaders(accessToken),
         ).deserialize()
-
     override suspend fun mfaVerify(
         factorId: String,
         challengeId: String,
@@ -238,7 +208,6 @@ internal class AuthClientImpl(
             headers = bearerHeaders(accessToken),
         ).deserialize()
     }
-
     override suspend fun mfaUnenroll(
         factorId: String,
         accessToken: String,
@@ -247,7 +216,6 @@ internal class AuthClientImpl(
             endpoint = "/auth/v1/factors/$factorId",
             headers = bearerHeaders(accessToken),
         ).deserialize()
-
     override suspend fun mfaListFactors(
         accessToken: String,
     ): SupabaseResult<MfaListFactorsResponse> {
@@ -255,7 +223,6 @@ internal class AuthClientImpl(
             endpoint = "/auth/v1/user",
             headers = bearerHeaders(accessToken),
         ).deserialize()
-
         return when (userResult) {
             is SupabaseResult.Success -> {
                 val factors = userResult.value.factors.orEmpty()
@@ -270,7 +237,6 @@ internal class AuthClientImpl(
             is SupabaseResult.Failure -> SupabaseResult.Failure(userResult.error)
         }
     }
-
     override suspend fun mfaGetAuthenticatorAssuranceLevel(
         accessToken: String,
     ): SupabaseResult<AuthenticatorAssuranceLevel> {
@@ -278,7 +244,6 @@ internal class AuthClientImpl(
             endpoint = "/auth/v1/user",
             headers = bearerHeaders(accessToken),
         ).deserialize()
-
         return when (userResult) {
             is SupabaseResult.Success -> {
                 val factors = userResult.value.factors.orEmpty()
@@ -293,16 +258,8 @@ internal class AuthClientImpl(
             is SupabaseResult.Failure -> SupabaseResult.Failure(userResult.error)
         }
     }
-
-    // ── Helpers ──────────────────────────────────────────────────────
-
     private fun bearerHeaders(token: String): Map<String, String> =
         mapOf("Authorization" to "Bearer $token")
-
-    /**
-     * Minimal percent-encoding for URL query values.
-     * Encodes everything except unreserved characters (RFC 3986).
-     */
     private fun urlEncode(value: String): String = buildString {
         for (char in value) {
             when {
@@ -317,10 +274,6 @@ internal class AuthClientImpl(
             }
         }
     }
-
-    /**
-     * Base64url encoding without padding (RFC 4648 §5).
-     */
     private fun base64UrlEncode(bytes: ByteArray): String {
         val table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
         return buildString {
@@ -345,14 +298,9 @@ internal class AuthClientImpl(
             }
         }
     }
-
     private companion object {
-        /** Characters allowed in a PKCE code verifier (RFC 7636 §4.1). */
         const val PKCE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
-
-        /** Minimum verifier length per spec (43 characters). */
         const val PKCE_VERIFIER_LENGTH = 43
-
         val HEX_CHARS = "0123456789ABCDEF".toCharArray()
     }
 }
