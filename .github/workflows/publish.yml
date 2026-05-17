@@ -3,6 +3,7 @@ name: Publish
 on:
   release:
     types: [created]
+  workflow_dispatch:
 
 jobs:
   publish:
@@ -17,11 +18,11 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Publish to Maven Central
-        run: ./gradlew publishAllPublicationsToMavenCentral --no-configuration-cache
+      - name: Publish and release to Maven Central
+        run: ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache
         env:
-          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.OSSRH_USERNAME }}
-          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.OSSRH_PASSWORD }}
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME || secrets.OSSRH_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD || secrets.OSSRH_PASSWORD }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
