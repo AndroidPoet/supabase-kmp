@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/Kotlin-2.1.10-blue.svg?logo=kotlin" alt="Kotlin">
   <img src="https://img.shields.io/badge/Ktor-3.1.1-blue.svg" alt="Ktor">
   <img src="https://img.shields.io/badge/Platform-Android%20%7C%20iOS%20%7C%20macOS%20%7C%20tvOS%20%7C%20watchOS%20%7C%20JVM%20%7C%20Linux%20%7C%20Windows%20%7C%20WasmJs-green.svg" alt="Platforms">
-  <img src="https://img.shields.io/badge/Maven%20Central-0.2.0-blue.svg" alt="Maven Central">
+  <img src="https://img.shields.io/badge/Maven%20Central-0.3.0-blue.svg" alt="Maven Central">
   <img src="https://img.shields.io/badge/License-MIT-orange.svg" alt="License">
 </p>
 
@@ -31,9 +31,8 @@ Kotlin Multiplatform SDK for [Supabase](https://supabase.com) — type-safe, cor
 Add the dependencies you need to your `build.gradle.kts`:
 
 ```kotlin
-// Version catalog (gradle/libs.versions.toml)
 [versions]
-supabase-kmp = "0.2.0"
+supabase-kmp = "0.3.0"
 
 [libraries]
 supabase-core = { module = "io.github.androidpoet:supabase-core", version.ref = "supabase-kmp" }
@@ -46,16 +45,15 @@ supabase-functions = { module = "io.github.androidpoet:supabase-functions", vers
 ```
 
 ```kotlin
-// build.gradle.kts
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation(libs.supabase.client)     // includes supabase-core
-            implementation(libs.supabase.auth)       // optional
-            implementation(libs.supabase.database)   // optional
-            implementation(libs.supabase.storage)    // optional
-            implementation(libs.supabase.realtime)   // optional
-            implementation(libs.supabase.functions)  // optional
+            implementation(libs.supabase.client)
+            implementation(libs.supabase.auth)
+            implementation(libs.supabase.database)
+            implementation(libs.supabase.storage)
+            implementation(libs.supabase.realtime)
+            implementation(libs.supabase.functions)
         }
     }
 }
@@ -66,7 +64,6 @@ kotlin {
 ### Create a Client
 
 ```kotlin
-// Direct instantiation
 val client = Supabase.create(
     projectUrl = "https://your-project.supabase.co",
     apiKey = "your-anon-key",
@@ -87,7 +84,6 @@ val functions = createFunctionsClient(client)
 @Serializable
 data class Todo(val id: String, val title: String, val done: Boolean)
 
-// Select with filters
 val todos: SupabaseResult<List<Todo>> = database.selectTyped<Todo>(
     table = "todos",
 ) {
@@ -103,18 +99,15 @@ todos.onSuccess { items ->
     println("Error: ${error.message}")
 }
 
-// Insert
 val result = database.insertTyped(
     table = "todos",
     value = Todo(id = "1", title = "Ship it", done = false),
 )
 
-// Update with filters
 database.update(table = "todos", body = """{"done": true}""") {
     eq("id", "1")
 }
 
-// RPC call
 val stats = database.rpc("get_dashboard_stats", params = """{"user_id": "123"}""")
 ```
 
@@ -124,7 +117,6 @@ val stats = database.rpc("get_dashboard_stats", params = """{"user_id": "123"}""
 val auth = createAuthClient(client)
 val sessionManager = createSessionManager(authClient = auth, supabaseClient = client)
 
-// Email/password sign-up
 auth.signUpWithEmail(
     email = "user@example.com",
     password = "secure-password",
@@ -132,7 +124,6 @@ auth.signUpWithEmail(
     sessionManager.saveSession(session)
 }
 
-// Email/password sign-in
 auth.signInWithEmail(
     email = "user@example.com",
     password = "secure-password",
@@ -140,20 +131,16 @@ auth.signInWithEmail(
     sessionManager.saveSession(session)
 }
 
-// OAuth — get URL for the provider, open in browser
 val oauthUrl = auth.getOAuthSignInUrl(
     provider = OAuthProvider.GOOGLE,
     redirectTo = "myapp://callback",
 )
 
-// After OAuth callback, exchange the code
 val pkce = auth.generatePkceParams()
 auth.exchangeCodeForSession(authCode = "code-from-callback", codeVerifier = pkce.codeVerifier)
 
-// MFA enrollment
 val accessToken = sessionManager.accessToken!!
 auth.mfaEnroll(factorType = MfaFactorType.TOTP, accessToken = accessToken).onSuccess { factor ->
-    // Show factor.totp?.qrCode to user, then verify:
     auth.mfaVerify(
         factorId = factor.id,
         challengeId = "challenge-id",
@@ -162,7 +149,6 @@ auth.mfaEnroll(factorType = MfaFactorType.TOTP, accessToken = accessToken).onSuc
     )
 }
 
-// Observe session state
 sessionManager.sessionState.collect { state ->
     when (state) {
         is SessionState.Authenticated -> println("User: ${state.session.user.id}")
@@ -178,7 +164,6 @@ sessionManager.sessionState.collect { state ->
 ```kotlin
 val storage = createStorageClient(client)
 
-// Upload a file
 storage.upload(
     bucket = "avatars",
     path = "user123/avatar.png",
@@ -188,7 +173,6 @@ storage.upload(
     println("Uploaded: $key")
 }
 
-// Get a signed URL
 storage.createSignedUrl(
     bucket = "avatars",
     path = "user123/avatar.png",
@@ -197,10 +181,8 @@ storage.createSignedUrl(
     println("Signed URL: $url")
 }
 
-// Get public URL (no auth needed)
 val publicUrl = storage.getPublicUrl(bucket = "avatars", path = "user123/avatar.png")
 
-// List files
 storage.list(bucket = "avatars", prefix = "user123/").onSuccess { files ->
     files.forEach { println(it.name) }
 }
@@ -211,7 +193,6 @@ storage.list(bucket = "avatars", prefix = "user123/").onSuccess { files ->
 ```kotlin
 val realtime = createRealtimeClient(client)
 
-// Connect and observe connection state
 realtime.connect()
 realtime.connectionState.collect { state ->
     when (state) {
@@ -222,7 +203,6 @@ realtime.connectionState.collect { state ->
     }
 }
 
-// Subscribe to table changes
 val subscription = realtime.channel("todos")
     .onPostgresChange(table = "todos", event = PostgresChangeEvent.INSERT) { record ->
         println("New todo: $record")
@@ -232,20 +212,17 @@ val subscription = realtime.channel("todos")
     }
     .subscribe()
 
-// Presence
 realtime.channel("room:lobby")
     .onPresence { state ->
         println("Online users: ${state.size}")
     }
     .subscribe()
 
-// Broadcast
 subscription.broadcast(event = "cursor", payload = buildJsonObject {
     put("x", 100)
     put("y", 200)
 })
 
-// Unsubscribe
 subscription.unsubscribe()
 realtime.disconnect()
 ```
@@ -255,7 +232,6 @@ realtime.disconnect()
 ```kotlin
 val functions = createFunctionsClient(client)
 
-// Invoke a function
 functions.invoke(
     functionName = "hello-world",
     body = """{"name": "Kotlin"}""",
@@ -263,7 +239,6 @@ functions.invoke(
     println("Response: $data")
 }
 
-// Typed response
 functions.invokeTyped<WelcomeResponse>(
     functionName = "hello-world",
     body = """{"name": "Kotlin"}""",
@@ -271,7 +246,6 @@ functions.invokeTyped<WelcomeResponse>(
     println("Message: ${response.message}")
 }
 
-// Binary body
 functions.invokeWithBody(
     functionName = "process-image",
     body = imageBytes,
