@@ -18,9 +18,13 @@ android {
 
         val supabaseUrl = (project.findProperty("SUPABASE_URL") as String?) ?: ""
         val supabaseAnonKey = (project.findProperty("SUPABASE_ANON_KEY") as String?) ?: ""
+        val supabaseStorageBucket = (project.findProperty("SUPABASE_STORAGE_BUCKET") as String?) ?: "public"
+        val supabaseFunctionName = (project.findProperty("SUPABASE_FUNCTION_NAME") as String?) ?: "hello-world"
 
         buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"$supabaseAnonKey\"")
+        buildConfigField("String", "SUPABASE_STORAGE_BUCKET", "\"$supabaseStorageBucket\"")
+        buildConfigField("String", "SUPABASE_FUNCTION_NAME", "\"$supabaseFunctionName\"")
     }
 
     buildFeatures {
@@ -46,8 +50,11 @@ android {
 
 dependencies {
     implementation(project(":supabase-client"))
+    implementation(project(":supabase-auth"))
     implementation(project(":supabase-database"))
+    implementation(project(":supabase-storage"))
     implementation(project(":supabase-realtime"))
+    implementation(project(":supabase-functions"))
     implementation(project(":supabase-core"))
 
     implementation("androidx.core:core-ktx:1.15.0")

@@ -9,12 +9,16 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import io.github.androidpoet.supabase.auth.createAuthClient
+import io.github.androidpoet.supabase.auth.session.createSessionManager
 import io.github.androidpoet.supabase.client.Supabase
 import io.github.androidpoet.supabase.database.createDatabaseClient
+import io.github.androidpoet.supabase.functions.createFunctionsClient
 import io.github.androidpoet.supabase.realtime.RealtimeConfig
 import io.github.androidpoet.supabase.realtime.createRealtimeClient
-import io.github.androidpoet.supabase.sample.chat.data.ChatRepository
-import io.github.androidpoet.supabase.sample.chat.ui.ChatScreen
+import io.github.androidpoet.supabase.sample.chat.data.DemoRepository
+import io.github.androidpoet.supabase.sample.chat.ui.DemoScreen
+import io.github.androidpoet.supabase.storage.createStorageClient
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,26 +37,53 @@ class MainActivity : ComponentActivity() {
                             projectUrl = BuildConfig.SUPABASE_URL,
                             apiKey = BuildConfig.SUPABASE_ANON_KEY,
                         )
+                        val auth = createAuthClient(supabaseClient)
                         val database = createDatabaseClient(supabaseClient)
+                        val storage = createStorageClient(supabaseClient)
                         val realtime = createRealtimeClient(supabaseClient, RealtimeConfig())
+                        val functions = createFunctionsClient(supabaseClient)
+                        val sessionManager = createSessionManager(auth, supabaseClient)
 
-                        val vm: ChatViewModel = viewModel(
-                            factory = ChatViewModelFactory(
-                                ChatRepository(
+                        val vm: DemoViewModel = viewModel(
+                            factory = DemoViewModelFactory(
+                                DemoRepository(
+                                    auth = auth,
+                                    sessionManager = sessionManager,
                                     database = database,
+                                    storage = storage,
                                     realtime = realtime,
+                                    functions = functions,
+                                    defaultBucket = BuildConfig.SUPABASE_STORAGE_BUCKET,
+                                    defaultFunctionName = BuildConfig.SUPABASE_FUNCTION_NAME,
                                 ),
                             ),
                         )
                         val state by vm.state.collectAsStateWithLifecycle()
 
-                        ChatScreen(
+                        DemoScreen(
                             state = state,
-                            onUserIdChanged = vm::setUserId,
+                            onTabSelected = vm::selectTab,
+                            onAuthEmailChanged = vm::setAuthEmail,
+                            onAuthPasswordChanged = vm::setAuthPassword,
+                            onSignUp = vm::signUp,
+                            onSignIn = vm::signIn,
+                            onGetCurrentUser = vm::getCurrentUser,
+                            onSignOut = vm::signOut,
                             onRoomChanged = vm::setRoom,
-                            onComposerChanged = vm::updateComposer,
-                            onSend = vm::send,
+                            onUserIdChanged = vm::setUserId,
+                            onChatComposerChanged = vm::setChatComposer,
+                            onSendMessage = vm::sendMessage,
                             onLoadOlder = vm::loadOlder,
+                            onBucketChanged = vm::setBucket,
+                            onStoragePathChanged = vm::setStoragePath,
+                            onStorageContentChanged = vm::setStorageContent,
+                            onUploadTextFile = vm::uploadTextFile,
+                            onListFiles = vm::listFiles,
+                            onBuildUrls = vm::buildUrls,
+                            onFunctionNameChanged = vm::setFunctionName,
+                            onFunctionBodyChanged = vm::setFunctionBody,
+                            onInvokeFunction = vm::invokeFunction,
+                            onInvokeFunctionTyped = vm::invokeFunctionTyped,
                         )
                     }
                 }

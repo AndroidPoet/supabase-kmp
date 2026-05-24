@@ -18,9 +18,11 @@ fun MissingConfigScreen() {
     ) {
         Text("Supabase Chat Sample", style = MaterialTheme.typography.headlineSmall)
         Text("Missing Supabase config.")
-        Text("Set SUPABASE_URL and SUPABASE_ANON_KEY in ~/.gradle/gradle.properties or local gradle.properties.")
+        Text("Set these in ~/.gradle/gradle.properties or local gradle.properties:")
         Text("Example:")
         Text("SUPABASE_URL=https://your-project.supabase.co")
         Text("SUPABASE_ANON_KEY=your-anon-key")
+        Text("SUPABASE_STORAGE_BUCKET=public")
+        Text("SUPABASE_FUNCTION_NAME=hello-world")
     }
 }
