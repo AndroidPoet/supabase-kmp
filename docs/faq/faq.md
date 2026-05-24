@@ -10,7 +10,7 @@ It covers core app-facing products: Auth, Database, Storage, Realtime, and Funct
 
 ## How are dependencies wired?
 
-The SDK no longer ships a DI container module. Use the provided factory functions and wire instances in your app.
+Use the provided factory functions and compose instances in your app.
 
 ## How do I publish docs updates?
 
