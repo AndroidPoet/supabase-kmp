@@ -84,6 +84,15 @@ val functions = createFunctionsClient(client)
 @Serializable
 data class Todo(val id: String, val title: String, val done: Boolean)
 
+@Serializable
+data class TodoPatch(val done: Boolean)
+
+@Serializable
+data class DashboardStatsRequest(val user_id: String)
+
+@Serializable
+data class DashboardStats(val total: Int)
+
 val todos: SupabaseResult<List<Todo>> = database.selectTyped<Todo>(
     table = "todos",
 ) {
@@ -104,11 +113,17 @@ val result = database.insertTyped(
     value = Todo(id = "1", title = "Ship it", done = false),
 )
 
-database.update(table = "todos", body = """{"done": true}""") {
+database.updateTyped(
+    table = "todos",
+    value = TodoPatch(done = true),
+) {
     eq("id", "1")
 }
 
-val stats = database.rpc("get_dashboard_stats", params = """{"user_id": "123"}""")
+val stats: SupabaseResult<DashboardStats> = database.rpcTyped<DashboardStatsRequest, DashboardStats>(
+    function = "get_dashboard_stats",
+    request = DashboardStatsRequest(user_id = "123"),
+)
 ```
 
 ### Auth — Sign In with Session Management
@@ -264,7 +279,7 @@ functions.invokeWithBody(
 │          │           │           │           │           │         │
 │ OAuth    │ PostgREST │ Buckets   │ WebSocket │ Invoke    │ HTTP    │
 │ MFA/PKCE │ Filter DSL│ Upload    │ Phoenix   │ Typed Req │ Auth    │
-│ Session  │ RPC       │ SignedURL │ Presence  │ Response  │ Koin DI │
+│ Session  │ RPC       │ SignedURL │ Presence  │ Response  │ Factory │
 │ Manager  │ Typed Ext │ Public URL│ Reconnect │ Binary    │ Config  │
 ├──────────┴───────────┴───────────┼───────────┤           │         │
 │                                   │   Ktor    │           │         │
@@ -281,7 +296,7 @@ functions.invokeWithBody(
 | Module | Artifact | Description |
 |--------|----------|-------------|
 | **supabase-core** | `io.github.androidpoet:supabase-core` | Result monad, error types, value class IDs, filter DSL |
-| **supabase-client** | `io.github.androidpoet:supabase-client` | HTTP transport, platform engines, auth state, Koin module |
+| **supabase-client** | `io.github.androidpoet:supabase-client` | HTTP transport, platform engines, auth state, factory wiring |
 | **supabase-auth** | `io.github.androidpoet:supabase-auth` | Email, phone, OTP, OAuth (17 providers), MFA, PKCE, session management |
 | **supabase-database** | `io.github.androidpoet:supabase-database` | PostgREST CRUD, RPC, typed filter extensions |
 | **supabase-storage** | `io.github.androidpoet:supabase-storage` | Bucket CRUD, file upload/download, signed & public URLs |
@@ -323,7 +338,6 @@ functions.invokeWithBody(
 | Networking | [Ktor 3.1.1](https://ktor.io/) |
 | Serialization | [kotlinx.serialization 1.8.0](https://github.com/Kotlin/kotlinx.serialization) |
 | Coroutines | [kotlinx.coroutines 1.10.1](https://github.com/Kotlin/kotlinx.coroutines) |
-| DI | None (manual wiring) |
 | Publishing | [vanniktech maven-publish 0.30.0](https://github.com/vanniktech/gradle-maven-publish-plugin) |
 
 ## Build
