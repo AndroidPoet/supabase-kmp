@@ -23,7 +23,7 @@ Kotlin Multiplatform SDK for [Supabase](https://supabase.com) — type-safe, cor
 - **Session management** — Auto-refresh, token persistence, `SessionState` observation via `StateFlow`
 - **Realtime WebSocket** — Phoenix protocol with auto-reconnection, exponential backoff, presence
 - **Edge Functions** — Invoke Supabase Edge Functions with typed request/response
-- **Koin DI** — First-class dependency injection modules for every component
+- **Manual composition** — Explicit factory helpers for each feature module
 - **15 platform targets** — Android, iOS, macOS, tvOS, watchOS, JVM, Linux, Windows, and WasmJs
 
 ## Setup
@@ -74,24 +74,11 @@ val client = Supabase.create(
     logging = true
 }
 
-// Or with Koin DI
-startKoin {
-    modules(
-        supabaseModule(
-            projectUrl = "https://your-project.supabase.co",
-            apiKey = "your-anon-key",
-            config = SupabaseConfig(),
-        ),
-        authModule(),
-        databaseModule,
-        storageModule,
-        realtimeModule(),
-        functionsModule,
-    )
-}
-
-val auth: AuthClient by inject()
-val database: DatabaseClient by inject()
+val auth = createAuthClient(client)
+val database = createDatabaseClient(client)
+val storage = createStorageClient(client)
+val realtime = createRealtimeClient(client)
+val functions = createFunctionsClient(client)
 ```
 
 ### Database — PostgREST with Filter DSL
@@ -134,8 +121,8 @@ val stats = database.rpc("get_dashboard_stats", params = """{"user_id": "123"}""
 ### Auth — Sign In with Session Management
 
 ```kotlin
-val auth: AuthClient by inject()
-val sessionManager: SessionManager by inject()
+val auth = createAuthClient(client)
+val sessionManager = createSessionManager(authClient = auth, supabaseClient = client)
 
 // Email/password sign-up
 auth.signUpWithEmail(
@@ -189,7 +176,7 @@ sessionManager.sessionState.collect { state ->
 ### Storage — File Upload & Download
 
 ```kotlin
-val storage: StorageClient by inject()
+val storage = createStorageClient(client)
 
 // Upload a file
 storage.upload(
@@ -222,7 +209,7 @@ storage.list(bucket = "avatars", prefix = "user123/").onSuccess { files ->
 ### Realtime — WebSocket Subscriptions
 
 ```kotlin
-val realtime: RealtimeClient by inject()
+val realtime = createRealtimeClient(client)
 
 // Connect and observe connection state
 realtime.connect()
@@ -266,7 +253,7 @@ realtime.disconnect()
 ### Edge Functions
 
 ```kotlin
-val functions: FunctionsClient by inject()
+val functions = createFunctionsClient(client)
 
 // Invoke a function
 functions.invoke(
@@ -348,7 +335,7 @@ functions.invokeWithBody(
 | **Codebase** | ~3K LOC | ~26K LOC |
 | **Error handling** | `SupabaseResult<T>` monad | Thrown exceptions |
 | **Type safety** | Value class IDs | String IDs |
-| **DI** | Koin modules | Manual composition |
+| **DI** | Factory functions | Manual composition |
 | **Dependencies** | 3 core | 7+ |
 | **Session mgmt** | `SessionManager` + `StateFlow` | Built-in (heavier) |
 | **Reconnection** | Exponential backoff | Exponential backoff |
@@ -362,7 +349,7 @@ functions.invokeWithBody(
 | Networking | [Ktor 3.1.1](https://ktor.io/) |
 | Serialization | [kotlinx.serialization 1.8.0](https://github.com/Kotlin/kotlinx.serialization) |
 | Coroutines | [kotlinx.coroutines 1.10.1](https://github.com/Kotlin/kotlinx.coroutines) |
-| DI | [Koin 4.0.2](https://insert-koin.io/) |
+| DI | None (manual wiring) |
 | Publishing | [vanniktech maven-publish 0.30.0](https://github.com/vanniktech/gradle-maven-publish-plugin) |
 
 ## Build

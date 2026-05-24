@@ -24,13 +24,13 @@ No feature module should depend on another feature module's internals.
 3. Feature clients return `SupabaseResult<T>`
 4. App composes results with `map`/`flatMap`/`recover`
 
-## DI strategy
+## Composition strategy
 
-Koin modules provide ready-to-wire defaults:
+Use explicit factory functions and wire dependencies in your app:
 
-- `supabaseModule(...)`
-- `authModule(...)`
-- `databaseModule`
-- `storageModule`
-- `realtimeModule(...)`
-- `functionsModule`
+- `createAuthClient(...)`
+- `createSessionManager(...)`
+- `createDatabaseClient(...)`
+- `createStorageClient(...)`
+- `createRealtimeClient(...)`
+- `createFunctionsClient(...)`

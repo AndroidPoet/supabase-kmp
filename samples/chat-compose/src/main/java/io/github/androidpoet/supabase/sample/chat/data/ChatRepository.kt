@@ -6,9 +6,9 @@ import io.github.androidpoet.supabase.core.result.map
 import io.github.androidpoet.supabase.database.DatabaseClient
 import io.github.androidpoet.supabase.database.insertTyped
 import io.github.androidpoet.supabase.database.selectTyped
-import io.github.androidpoet.supabase.realtime.PostgresChangeEvent
 import io.github.androidpoet.supabase.realtime.RealtimeClient
 import io.github.androidpoet.supabase.realtime.RealtimeSubscription
+import io.github.androidpoet.supabase.realtime.models.PostgresChangeEvent
 import kotlinx.serialization.json.JsonObject
 
 class ChatRepository(
@@ -48,7 +48,7 @@ class ChatRepository(
             ) { payload: JsonObject ->
                 val record = payload["record"]
                 if (record != null) {
-                    onInserted(defaultJson.decodeFromJsonElement(record))
+                    onInserted(defaultJson.decodeFromJsonElement(ChatMessage.serializer(), record))
                 }
             }
             .subscribe()

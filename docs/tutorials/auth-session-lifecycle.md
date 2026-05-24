@@ -6,7 +6,7 @@ Build a robust startup auth flow with automatic refresh and explicit logout hand
 
 ## Flow
 
-1. Initialize DI and `SessionManager`
+1. Initialize `AuthClient` and `SessionManager`
 2. `restoreSession()` on launch
 3. Subscribe to `sessionState`
 4. Route app shell based on authenticated vs unauthenticated state

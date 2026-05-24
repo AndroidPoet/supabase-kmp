@@ -28,19 +28,14 @@ val client = Supabase.create(
 )
 ```
 
-## Add feature clients with Koin
+## Add feature clients manually
 
 ```kotlin
-startKoin {
-    modules(
-        supabaseModule(projectUrl = "https://your-project.supabase.co", apiKey = "your-anon-key"),
-        authModule(),
-        databaseModule,
-        storageModule,
-        realtimeModule(),
-        functionsModule,
-    )
-}
+val auth = createAuthClient(client)
+val database = createDatabaseClient(client)
+val storage = createStorageClient(client)
+val realtime = createRealtimeClient(client)
+val functions = createFunctionsClient(client)
 ```
 
 ## Next steps

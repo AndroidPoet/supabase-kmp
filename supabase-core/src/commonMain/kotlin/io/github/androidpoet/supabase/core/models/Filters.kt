@@ -40,11 +40,17 @@ public class FilterBuilder {
     public fun `in`(column: String, values: List<String>) {
         params += column to "in.(${values.joinToString(",")})"
     }
+    public fun match(values: Map<String, String>) {
+        values.forEach { (column, value) -> eq(column, value) }
+    }
     public fun contains(column: String, value: String) {
         params += column to "cs.$value"
     }
     public fun containedBy(column: String, value: String) {
         params += column to "cd.$value"
+    }
+    public fun overlaps(column: String, value: String) {
+        params += column to "ov.$value"
     }
     public fun rangeGt(column: String, value: String) {
         params += column to "sr.$value"
@@ -66,6 +72,9 @@ public class FilterBuilder {
         for ((key, value) in inner) {
             params += key to "not.$value"
         }
+    }
+    public fun not(column: String, operator: String, value: String) {
+        params += column to "not.$operator.$value"
     }
     public fun or(block: FilterBuilder.() -> Unit) {
         val inner = FilterBuilder().apply(block).build()
@@ -93,6 +102,7 @@ public class FilterBuilder {
         column: String,
         ascending: Boolean = true,
         nullsFirst: Boolean? = null,
+        referencedTable: String? = null,
     ) {
         val dir = if (ascending) "asc" else "desc"
         val nulls = when (nullsFirst) {
@@ -100,14 +110,30 @@ public class FilterBuilder {
             false -> ".nullslast"
             null -> ""
         }
-        params += "order" to "$column.$dir$nulls"
+        val key = if (referencedTable == null) "order" else "$referencedTable.order"
+        params += key to "$column.$dir$nulls"
     }
-    public fun limit(count: Int) {
-        params += "limit" to count.toString()
+    public fun limit(count: Int, referencedTable: String? = null) {
+        val key = if (referencedTable == null) "limit" else "$referencedTable.limit"
+        params += key to count.toString()
     }
-    public fun range(from: Int, to: Int) {
-        params += "offset" to from.toString()
-        params += "limit" to (to - from + 1).toString()
+    public fun range(from: Int, to: Int, referencedTable: String? = null) {
+        val offsetKey = if (referencedTable == null) "offset" else "$referencedTable.offset"
+        val limitKey = if (referencedTable == null) "limit" else "$referencedTable.limit"
+        params += offsetKey to from.toString()
+        params += limitKey to (to - from + 1).toString()
+    }
+    public fun strictlyLeft(column: String, value: String) {
+        rangeLt(column, value)
+    }
+    public fun strictlyRight(column: String, value: String) {
+        rangeGt(column, value)
+    }
+    public fun notExtendRight(column: String, value: String) {
+        rangeLte(column, value)
+    }
+    public fun notExtendLeft(column: String, value: String) {
+        rangeGte(column, value)
     }
     public fun build(): List<Pair<String, String>> = params.toList()
 }

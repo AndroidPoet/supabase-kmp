@@ -13,12 +13,14 @@ import io.ktor.client.request.header
 import io.ktor.client.request.headers
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 private const val CLIENT_VERSION = "supabase-kmp/0.1.0"
 internal class HttpTransport(
@@ -28,6 +30,7 @@ internal class HttpTransport(
     private val apiKey: String,
 ) {
     private var accessToken: String? = null
+    internal val accessTokenOrNull: String? get() = accessToken
     private val errorJson = Json { ignoreUnknownKeys = true }
     internal val httpClient: HttpClient = HttpClient(engineFactory) {
         install(ContentNegotiation) {
@@ -74,6 +77,18 @@ internal class HttpTransport(
             header("Authorization", "Bearer ${accessToken ?: apiKey}")
         }
     }
+    suspend fun put(
+        url: String,
+        body: String? = null,
+        headers: Map<String, String> = emptyMap(),
+    ): SupabaseResult<String> = execute {
+        httpClient.put(url) {
+            contentType(ContentType.Application.Json)
+            body?.let { setBody(it) }
+            headers.forEach { (k, v) -> header(k, v) }
+            header("Authorization", "Bearer ${accessToken ?: apiKey}")
+        }
+    }
     suspend fun patch(
         url: String,
         body: String? = null,
@@ -108,6 +123,19 @@ internal class HttpTransport(
             header("Authorization", "Bearer ${accessToken ?: apiKey}")
         }
     }
+    suspend fun putRaw(
+        url: String,
+        body: ByteArray,
+        contentType: String,
+        headers: Map<String, String> = emptyMap(),
+    ): SupabaseResult<String> = execute {
+        httpClient.put(url) {
+            contentType(ContentType.parse(contentType))
+            setBody(body)
+            headers.forEach { (k, v) -> header(k, v) }
+            header("Authorization", "Bearer ${accessToken ?: apiKey}")
+        }
+    }
     fun setAccessToken(token: String) {
         accessToken = token
     }
@@ -129,7 +157,8 @@ internal class HttpTransport(
                 val error = parseError(text, response.status.value)
                 SupabaseResult.Failure(error)
             }
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+            if (e is CancellationException) throw e
             SupabaseResult.Failure(
                 SupabaseError(message = e.message ?: "Unknown network error"),
             )

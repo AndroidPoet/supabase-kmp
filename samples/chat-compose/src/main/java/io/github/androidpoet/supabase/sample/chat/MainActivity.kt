@@ -9,17 +9,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import io.github.androidpoet.supabase.client.SupabaseConfig
-import io.github.androidpoet.supabase.client.di.supabaseModule
-import io.github.androidpoet.supabase.database.DatabaseClient
-import io.github.androidpoet.supabase.database.di.databaseModule
-import io.github.androidpoet.supabase.realtime.RealtimeClient
+import io.github.androidpoet.supabase.client.Supabase
+import io.github.androidpoet.supabase.database.createDatabaseClient
 import io.github.androidpoet.supabase.realtime.RealtimeConfig
-import io.github.androidpoet.supabase.realtime.di.realtimeModule
+import io.github.androidpoet.supabase.realtime.createRealtimeClient
 import io.github.androidpoet.supabase.sample.chat.data.ChatRepository
 import io.github.androidpoet.supabase.sample.chat.ui.ChatScreen
-import org.koin.core.context.GlobalContext
-import org.koin.core.context.startKoin
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,10 +29,12 @@ class MainActivity : ComponentActivity() {
                     if (!configured) {
                         MissingConfigScreen()
                     } else {
-                        ensureKoin()
-                        val koin = GlobalContext.get().koin
-                        val database = koin.get<DatabaseClient>()
-                        val realtime = koin.get<RealtimeClient>()
+                        val supabaseClient = Supabase.create(
+                            projectUrl = BuildConfig.SUPABASE_URL,
+                            apiKey = BuildConfig.SUPABASE_ANON_KEY,
+                        )
+                        val database = createDatabaseClient(supabaseClient)
+                        val realtime = createRealtimeClient(supabaseClient, RealtimeConfig())
 
                         val vm: ChatViewModel = viewModel(
                             factory = ChatViewModelFactory(
@@ -60,21 +57,6 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-        }
-    }
-
-    private fun ensureKoin() {
-        if (GlobalContext.getOrNull() != null) return
-        startKoin {
-            modules(
-                supabaseModule(
-                    projectUrl = BuildConfig.SUPABASE_URL,
-                    apiKey = BuildConfig.SUPABASE_ANON_KEY,
-                    config = SupabaseConfig(),
-                ),
-                databaseModule,
-                realtimeModule(RealtimeConfig()),
-            )
         }
     }
 }

@@ -1,4 +1,7 @@
 package io.github.androidpoet.supabase.core.result
+
+import kotlinx.coroutines.CancellationException
+
 public sealed interface SupabaseResult<out T> {
     public data class Success<out T>(public val value: T) : SupabaseResult<T>
     public data class Failure(public val error: SupabaseError) : SupabaseResult<Nothing>
@@ -22,7 +25,8 @@ public sealed interface SupabaseResult<out T> {
                 Success(block())
             } catch (e: SupabaseException) {
                 Failure(e.error)
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
+                if (e is CancellationException) throw e
                 Failure(SupabaseError(message = e.message ?: "Unknown error"))
             }
     }
@@ -57,6 +61,15 @@ public inline fun <T> SupabaseResult<T>.onFailureCategory(
         action(error)
     }
 }
+public inline fun <T, C> SupabaseResult<T>.onFailureCategory(
+    category: C,
+    classifier: (SupabaseError) -> C,
+    action: (SupabaseError) -> Unit,
+): SupabaseResult<T> = apply {
+    if (this is SupabaseResult.Failure && classifier(error) == category) {
+        action(error)
+    }
+}
 public inline fun <T> SupabaseResult<T>.onConflict(
     action: (SupabaseError) -> Unit,
 ): SupabaseResult<T> = onFailureCategory(SupabaseErrorCategory.Conflict, action)
@@ -69,6 +82,12 @@ public inline fun <T> SupabaseResult<T>.onUnauthorized(
 public inline fun <T> SupabaseResult<T>.onRateLimited(
     action: (SupabaseError) -> Unit,
 ): SupabaseResult<T> = onFailureCategory(SupabaseErrorCategory.RateLimited, action)
+public inline fun <T> SupabaseResult<T>.mapError(
+    transform: (SupabaseError) -> SupabaseError,
+): SupabaseResult<T> = when (this) {
+    is SupabaseResult.Success -> this
+    is SupabaseResult.Failure -> SupabaseResult.Failure(transform(error))
+}
 public inline fun <T> SupabaseResult<T>.recover(
     transform: (SupabaseError) -> T,
 ): SupabaseResult<T> = when (this) {
@@ -81,3 +100,21 @@ public inline fun <T> SupabaseResult<T>.getOrElse(
     is SupabaseResult.Success -> value
     is SupabaseResult.Failure -> defaultValue(error)
 }
+
+public fun <T> SupabaseResult<T>.toKotlinResult(): Result<T> = when (this) {
+    is SupabaseResult.Success -> Result.success(value)
+    is SupabaseResult.Failure -> Result.failure(error.toException())
+}
+
+public inline fun <T> Result<T>.toSupabaseResult(
+    mapThrowable: (Throwable) -> SupabaseError = { throwable ->
+        val supabaseException = throwable as? SupabaseException
+        supabaseException?.error ?: SupabaseError(message = throwable.message ?: "Unknown error")
+    },
+): SupabaseResult<T> = fold(
+    onSuccess = { SupabaseResult.Success(it) },
+    onFailure = { throwable ->
+        if (throwable is CancellationException) throw throwable
+        SupabaseResult.Failure(mapThrowable(throwable))
+    },
+)

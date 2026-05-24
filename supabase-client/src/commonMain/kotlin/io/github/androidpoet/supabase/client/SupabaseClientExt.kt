@@ -1,6 +1,7 @@
 package io.github.androidpoet.supabase.client
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 public val defaultJson: Json = Json {
     ignoreUnknownKeys = true
@@ -26,7 +27,8 @@ public inline fun <reified T> SupabaseResult<String>.deserialize(): SupabaseResu
     when (this) {
         is SupabaseResult.Success -> try {
             SupabaseResult.Success(defaultJson.decodeFromString<T>(value))
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+            if (e is CancellationException) throw e
             SupabaseResult.Failure(
                 SupabaseError(message = "Deserialization failed: ${e.message}"),
             )

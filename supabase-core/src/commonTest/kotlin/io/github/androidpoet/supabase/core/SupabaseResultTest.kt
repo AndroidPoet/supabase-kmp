@@ -5,9 +5,14 @@ import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.core.result.flatMap
 import io.github.androidpoet.supabase.core.result.getOrElse
 import io.github.androidpoet.supabase.core.result.map
+import io.github.androidpoet.supabase.core.result.mapError
 import io.github.androidpoet.supabase.core.result.onFailure
+import io.github.androidpoet.supabase.core.result.onFailureCategory
 import io.github.androidpoet.supabase.core.result.onSuccess
 import io.github.androidpoet.supabase.core.result.recover
+import io.github.androidpoet.supabase.core.result.toKotlinResult
+import io.github.androidpoet.supabase.core.result.toSupabaseResult
+import kotlinx.coroutines.CancellationException
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -118,5 +123,85 @@ class SupabaseResultTest {
         }
         assertTrue(result.isFailure)
         assertEquals("boom", result.errorOrNull()?.message)
+    }
+
+    @Test
+    fun test_catching_rethrowsCancellationException() {
+        assertFailsWith<CancellationException> {
+            SupabaseResult.catching<Int> {
+                throw CancellationException("cancel")
+            }
+        }
+    }
+
+    @Test
+    fun test_onFailureCategory_supportsCustomClassifier() {
+        var called = false
+        val result: SupabaseResult<Int> = SupabaseResult.Failure(error)
+
+        result.onFailureCategory(
+            category = "pgrst",
+            classifier = { if (it.code?.startsWith("PGRST") == true) "pgrst" else "other" },
+        ) {
+            called = true
+        }
+
+        assertTrue(called)
+    }
+
+    @Test
+    fun test_mapError_transformsFailureOnly() {
+        val transformed = SupabaseResult.Failure(error).mapError {
+            it.copy(message = "mapped")
+        }
+        val successUnchanged = SupabaseResult.Success(1).mapError {
+            it.copy(message = "ignored")
+        }
+
+        assertEquals("mapped", transformed.errorOrNull()?.message)
+        assertEquals(1, successUnchanged.getOrNull())
+    }
+
+    @Test
+    fun test_toKotlinResult_mapsSuccess() {
+        val result = SupabaseResult.Success(5).toKotlinResult()
+        assertTrue(result.isSuccess)
+        assertEquals(5, result.getOrNull())
+    }
+
+    @Test
+    fun test_toKotlinResult_mapsFailureToSupabaseException() {
+        val result = SupabaseResult.Failure(error).toKotlinResult()
+        val exception = result.exceptionOrNull()
+        assertIs<SupabaseException>(exception)
+        assertEquals(error, exception.error)
+    }
+
+    @Test
+    fun test_toSupabaseResult_mapsKotlinSuccess() {
+        val result = Result.success("ok").toSupabaseResult()
+        assertTrue(result.isSuccess)
+        assertEquals("ok", result.getOrNull())
+    }
+
+    @Test
+    fun test_toSupabaseResult_mapsSupabaseExceptionFailure() {
+        val result = Result.failure<String>(SupabaseException(error)).toSupabaseResult()
+        assertTrue(result.isFailure)
+        assertEquals(error, result.errorOrNull())
+    }
+
+    @Test
+    fun test_toSupabaseResult_mapsGenericFailure() {
+        val result = Result.failure<String>(IllegalArgumentException("bad")).toSupabaseResult()
+        assertTrue(result.isFailure)
+        assertEquals("bad", result.errorOrNull()?.message)
+    }
+
+    @Test
+    fun test_toSupabaseResult_rethrowsCancellationException() {
+        assertFailsWith<CancellationException> {
+            Result.failure<String>(CancellationException("stop")).toSupabaseResult()
+        }
     }
 }

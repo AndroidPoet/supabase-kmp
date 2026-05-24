@@ -3,7 +3,11 @@
 ## Primary entry points
 
 - `Supabase.create(...)`
-- `supabaseModule(...)`
+- `createAuthClient(...)`
+- `createDatabaseClient(...)`
+- `createStorageClient(...)`
+- `createRealtimeClient(...)`
+- `createFunctionsClient(...)`
 
 ## Create client example
 
@@ -22,19 +26,14 @@ val client = Supabase.create(
 - `RealtimeClient`
 - `FunctionsClient`
 
-## Koin wiring example
+## Manual wiring example
 
 ```kotlin
-startKoin {
-    modules(
-        supabaseModule(projectUrl = "https://your-project.supabase.co", apiKey = "your-anon-key"),
-        authModule(),
-        databaseModule,
-        storageModule,
-        realtimeModule(),
-        functionsModule,
-    )
-}
+val auth = createAuthClient(client)
+val database = createDatabaseClient(client)
+val storage = createStorageClient(client)
+val realtime = createRealtimeClient(client)
+val functions = createFunctionsClient(client)
 ```
 
 ## Common API contract

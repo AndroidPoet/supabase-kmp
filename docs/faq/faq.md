@@ -8,9 +8,9 @@ No. This is an independent Kotlin Multiplatform SDK.
 
 It covers core app-facing products: Auth, Database, Storage, Realtime, and Functions.
 
-## Can I use it without Koin?
+## How are dependencies wired?
 
-Yes. DI modules are optional.
+The SDK no longer ships a DI container module. Use the provided factory functions and wire instances in your app.
 
 ## How do I publish docs updates?
 

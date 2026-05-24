@@ -7,6 +7,8 @@ public data class RealtimeMessage(
     public val topic: String,
     public val event: String,
     public val payload: JsonObject,
+    @SerialName("join_ref")
+    public val joinRef: String? = null,
     public val ref: String? = null,
 )
 @Serializable

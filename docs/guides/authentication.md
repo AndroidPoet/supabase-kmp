@@ -12,8 +12,8 @@
 ## Email/password sign-in example
 
 ```kotlin
-val auth: AuthClient by inject()
-val sessionManager: SessionManager by inject()
+val auth = createAuthClient(client)
+val sessionManager = createSessionManager(authClient = auth, supabaseClient = client)
 
 val result = auth.signInWithEmail(
     email = "user@example.com",

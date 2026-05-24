@@ -9,6 +9,12 @@ public class RealtimeChannelBuilder internal constructor(
     internal val postgresCallbacks: MutableList<PostgresCallbackConfig> = mutableListOf()
     internal val broadcastCallbacks: MutableMap<String, suspend (JsonObject) -> Unit> = mutableMapOf()
     internal var presenceCallback: (suspend (PresenceState) -> Unit)? = null
+    internal var receiveOwnBroadcasts: Boolean = false
+    internal var acknowledgeBroadcasts: Boolean = false
+    internal var presenceKey: String = ""
+    internal var privateChannel: Boolean = false
+    internal var replaySinceMs: Long? = null
+    internal var replayLimit: Int? = null
     public fun onPostgresChange(
         schema: String = "public",
         table: String? = null,
@@ -34,6 +40,30 @@ public class RealtimeChannelBuilder internal constructor(
         callback: suspend (PresenceState) -> Unit,
     ): RealtimeChannelBuilder = apply {
         presenceCallback = callback
+    }
+    public fun configureBroadcast(
+        receiveOwnBroadcasts: Boolean = false,
+        acknowledgeBroadcasts: Boolean = false,
+    ): RealtimeChannelBuilder = apply {
+        this.receiveOwnBroadcasts = receiveOwnBroadcasts
+        this.acknowledgeBroadcasts = acknowledgeBroadcasts
+    }
+    public fun configureBroadcastReplay(
+        sinceMs: Long,
+        limit: Int? = null,
+    ): RealtimeChannelBuilder = apply {
+        replaySinceMs = sinceMs
+        replayLimit = limit
+    }
+    public fun configurePresence(
+        key: String = "",
+    ): RealtimeChannelBuilder = apply {
+        presenceKey = key
+    }
+    public fun setPrivate(
+        enabled: Boolean = true,
+    ): RealtimeChannelBuilder = apply {
+        privateChannel = enabled
     }
     public suspend fun subscribe(): RealtimeSubscription =
         client.subscribe(this)

@@ -19,7 +19,16 @@ public data class User(
     @SerialName("updated_at") val updatedAt: String? = null,
     @SerialName("app_metadata") val appMetadata: JsonObject? = null,
     @SerialName("user_metadata") val userMetadata: JsonObject? = null,
+    val identities: List<UserIdentity>? = null,
     val factors: List<MfaFactor>? = null,
+)
+
+@Serializable
+public data class UserIdentity(
+    val id: String,
+    val provider: String? = null,
+    @SerialName("user_id") val userId: String? = null,
+    @SerialName("identity_data") val identityData: JsonObject? = null,
 )
 @Serializable
 public data class SignUpRequest(
@@ -35,16 +44,49 @@ public data class SignInRequest(
     val password: String,
 )
 @Serializable
+public data class IdTokenRequest(
+    @SerialName("id_token") val idToken: String,
+    val provider: String,
+    @SerialName("access_token") val accessToken: String? = null,
+    val nonce: String? = null,
+    @SerialName("captcha_token") val captchaToken: String? = null,
+    @SerialName("link_identity") val linkIdentity: Boolean? = null,
+)
+
+@Serializable
+public data class AnonymousSignInRequest(
+    val data: JsonObject? = null,
+    @SerialName("captcha_token") val captchaToken: String? = null,
+)
+@Serializable
 public data class OtpRequest(
     val email: String? = null,
     val phone: String? = null,
+    @SerialName("create_user") val createUser: Boolean? = null,
+    @SerialName("captcha_token") val captchaToken: String? = null,
+    @SerialName("email_redirect_to") val emailRedirectTo: String? = null,
 )
 @Serializable
 public data class OtpVerifyRequest(
     val email: String? = null,
     val phone: String? = null,
-    val token: String,
+    val token: String? = null,
     val type: OtpType,
+    @SerialName("token_hash") val tokenHash: String? = null,
+    @SerialName("captcha_token") val captchaToken: String? = null,
+)
+
+public sealed interface OtpVerifyResult {
+    public data class Authenticated(public val session: Session) : OtpVerifyResult
+    public data object VerifiedNoSession : OtpVerifyResult
+}
+@Serializable
+public data class ResendOtpRequest(
+    val type: OtpType,
+    val email: String? = null,
+    val phone: String? = null,
+    @SerialName("captcha_token") val captchaToken: String? = null,
+    @SerialName("redirect_to") val redirectTo: String? = null,
 )
 @Serializable
 public enum class OtpType {
@@ -64,7 +106,33 @@ public data class UserUpdateRequest(
     val email: String? = null,
     val phone: String? = null,
     val password: String? = null,
+    @SerialName("current_password") val currentPassword: String? = null,
     val data: JsonObject? = null,
+    val nonce: String? = null,
+)
+@Serializable
+public enum class SignOutScope {
+    @SerialName("global") GLOBAL,
+    @SerialName("local") LOCAL,
+    @SerialName("others") OTHERS,
+}
+
+@Serializable
+public data class LinkIdentityResponse(
+    @SerialName("url") public val url: String,
+    @SerialName("provider") public val provider: String? = null,
+)
+
+@Serializable
+public data class SsoRequest(
+    @SerialName("domain") public val domain: String? = null,
+    @SerialName("provider_id") public val providerId: String? = null,
+    @SerialName("redirect_to") public val redirectTo: String? = null,
+)
+
+@Serializable
+public data class SsoResponse(
+    @SerialName("url") public val url: String,
 )
 @Serializable
 public enum class OAuthProvider(@SerialName("value") public val value: String) {

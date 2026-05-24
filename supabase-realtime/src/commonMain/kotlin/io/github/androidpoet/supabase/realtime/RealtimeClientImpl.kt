@@ -2,6 +2,7 @@ package io.github.androidpoet.supabase.realtime
 import io.github.androidpoet.supabase.client.SupabaseClient
 import io.github.androidpoet.supabase.realtime.models.PostgresChangeEvent
 import io.github.androidpoet.supabase.realtime.models.PresenceState
+import io.github.androidpoet.supabase.realtime.models.RealtimeChannel
 import io.github.androidpoet.supabase.realtime.models.RealtimeMessage
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.WebSockets
@@ -11,6 +12,7 @@ import io.ktor.websocket.WebSocketSession
 import io.ktor.websocket.close
 import io.ktor.websocket.readText
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -48,6 +50,7 @@ internal class RealtimeClientImpl(
     private var reconnectJob: Job? = null
     private var refCounter = 0
     private var reconnectAttempt = 0
+    private var authTokenOverride: String? = null
     private var intentionalDisconnect = false
     private val _connectionState = MutableStateFlow<ConnectionState>(ConnectionState.Disconnected)
     override val connectionState: StateFlow<ConnectionState> = _connectionState.asStateFlow()
@@ -57,6 +60,58 @@ internal class RealtimeClientImpl(
     internal fun nextRef(): String = (++refCounter).toString()
     override fun channel(name: String): RealtimeChannelBuilder =
         RealtimeChannelBuilder(channelName = name, client = this)
+    override fun getSubscription(name: String): RealtimeSubscription? =
+        activeSubscriptions["realtime:$name"]
+    override fun getSubscriptionByTopic(topic: String): RealtimeSubscription? =
+        activeSubscriptions[topic]
+    override fun getSubscriptions(): Set<RealtimeSubscription> =
+        activeSubscriptions.values.toSet()
+    override fun activeChannels(): Set<String> =
+        activeSubscriptions.values.mapTo(mutableSetOf()) { it.channel }
+    override fun activeChannelDetails(): Set<RealtimeChannel> =
+        activeSubscriptions.values.mapTo(mutableSetOf()) { RealtimeChannel(name = it.channel, topic = it.topic) }
+    override suspend fun removeSubscription(subscription: RealtimeSubscription) {
+        subscription.unsubscribe()
+    }
+    override suspend fun removeSubscriptions(subscriptions: List<RealtimeSubscription>) {
+        subscriptions.forEach { subscription ->
+            subscription.unsubscribe()
+        }
+    }
+    override suspend fun removeChannel(subscription: RealtimeSubscription) {
+        removeSubscription(subscription)
+    }
+    override suspend fun removeSubscriptionByTopic(topic: String) {
+        activeSubscriptions[topic]?.unsubscribe()
+    }
+    override suspend fun removeChannelsByTopic(topics: List<String>) {
+        topics.forEach { topic ->
+            activeSubscriptions[topic]?.unsubscribe()
+        }
+    }
+    override suspend fun removeChannel(name: String) {
+        val topic = "realtime:$name"
+        activeSubscriptions[topic]?.unsubscribe()
+    }
+    override suspend fun removeAllChannels() {
+        activeSubscriptions.values.toList().forEach { it.unsubscribe() }
+    }
+    override suspend fun setAuth(token: String?) {
+        authTokenOverride = token
+        if (session == null) return
+        val accessToken = currentAccessToken()
+        activeSubscriptions.values.forEach { subscription ->
+            sendMessage(
+                RealtimeMessage(
+                    topic = subscription.topic,
+                    event = "access_token",
+                    payload = buildJsonObject { put("access_token", JsonPrimitive(accessToken)) },
+                    joinRef = subscription.joinRef,
+                    ref = nextRef(),
+                ),
+            )
+        }
+    }
     override suspend fun connect() {
         if (session != null) return
         intentionalDisconnect = false
@@ -65,7 +120,8 @@ internal class RealtimeClientImpl(
             establishConnection()
             reconnectAttempt = 0
             _connectionState.value = ConnectionState.Connected
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+            if (e is CancellationException) throw e
             session = null
             if (config.autoReconnect && !intentionalDisconnect) {
                 scheduleReconnect()
@@ -101,18 +157,25 @@ internal class RealtimeClientImpl(
             postgresCallbacks = builder.postgresCallbacks.toList(),
             broadcastCallbacks = builder.broadcastCallbacks.toMap(),
             presenceCallback = builder.presenceCallback,
+            receiveOwnBroadcasts = builder.receiveOwnBroadcasts,
+            acknowledgeBroadcasts = builder.acknowledgeBroadcasts,
+            presenceKey = builder.presenceKey,
+            privateChannel = builder.privateChannel,
+            replaySinceMs = builder.replaySinceMs,
+            replayLimit = builder.replayLimit,
         )
         activeSubscriptions[topic] = subscription
-        sendJoinMessage(topic, builder.postgresCallbacks)
+        sendJoinMessage(subscription)
         return subscription
     }
     internal suspend fun leaveChannel(topic: String) {
-        activeSubscriptions.remove(topic)
+        val subscription = activeSubscriptions.remove(topic)
         sendMessage(
             RealtimeMessage(
                 topic = topic,
                 event = "phx_leave",
                 payload = buildJsonObject {},
+                joinRef = subscription?.joinRef,
                 ref = nextRef(),
             ),
         )
@@ -141,7 +204,8 @@ internal class RealtimeClientImpl(
                         dispatchToSubscription(message)
                     }
                 }
-            } catch (_: Exception) {
+            } catch (e: Throwable) {
+                if (e is CancellationException) throw e
             } finally {
                 if (!intentionalDisconnect) {
                     session = null
@@ -199,7 +263,8 @@ internal class RealtimeClientImpl(
             reconnectAttempt = 0
             _connectionState.value = ConnectionState.Connected
             rejoinActiveChannels()
-        } catch (_: Exception) {
+        } catch (e: Throwable) {
+            if (e is CancellationException) throw e
             session = null
             scope?.cancel()
             scope = null
@@ -208,13 +273,20 @@ internal class RealtimeClientImpl(
     }
     private suspend fun rejoinActiveChannels() {
         for ((_, subscription) in activeSubscriptions) {
-            sendJoinMessage(subscription.topic, subscription.postgresCallbacks)
+            sendJoinMessage(subscription)
         }
     }
     private suspend fun sendJoinMessage(
-        topic: String,
-        postgresCallbacks: List<PostgresCallbackConfig>,
+        subscription: ChannelSubscriptionImpl,
     ) {
+        val topic = subscription.topic
+        val postgresCallbacks = subscription.postgresCallbacks
+        val receiveOwnBroadcasts = subscription.receiveOwnBroadcasts
+        val acknowledgeBroadcasts = subscription.acknowledgeBroadcasts
+        val presenceKey = subscription.presenceKey
+        val privateChannel = subscription.privateChannel
+        val replaySinceMs = subscription.replaySinceMs
+        val replayLimit = subscription.replayLimit
         val postgresConfigs = postgresCallbacks.map { config ->
             buildJsonObject {
                 put("event", config.event.toWireValue())
@@ -226,23 +298,35 @@ internal class RealtimeClientImpl(
         val joinPayload = buildJsonObject {
             put("config", buildJsonObject {
                 put("broadcast", buildJsonObject {
-                    put("self", JsonPrimitive(false))
+                    put("self", JsonPrimitive(receiveOwnBroadcasts))
+                    put("ack", JsonPrimitive(acknowledgeBroadcasts))
+                    if (replaySinceMs != null) {
+                        put("replay", buildJsonObject {
+                            put("since", JsonPrimitive(replaySinceMs))
+                            replayLimit?.let { put("limit", JsonPrimitive(it)) }
+                        })
+                    }
                 })
                 put("presence", buildJsonObject {
-                    put("key", JsonPrimitive(""))
+                    put("enabled", JsonPrimitive(presenceKey.isNotEmpty() || subscription.hasPresenceTracking))
+                    put("key", JsonPrimitive(presenceKey))
                 })
                 if (postgresConfigs.isNotEmpty()) {
                     put("postgres_changes", kotlinx.serialization.json.JsonArray(postgresConfigs))
                 }
+                put("private", JsonPrimitive(privateChannel))
             })
-            put("access_token", JsonPrimitive(supabaseClient.apiKey))
+            put("access_token", JsonPrimitive(currentAccessToken()))
         }
+        val joinRef = nextRef()
+        subscription.joinRef = joinRef
         sendMessage(
             RealtimeMessage(
                 topic = topic,
                 event = "phx_join",
                 payload = joinPayload,
-                ref = nextRef(),
+                joinRef = joinRef,
+                ref = joinRef,
             ),
         )
     }
@@ -255,6 +339,9 @@ internal class RealtimeClientImpl(
         val subscription = activeSubscriptions[message.topic] ?: return
         subscription.handleMessage(message)
     }
+
+    private fun currentAccessToken(): String =
+        authTokenOverride ?: supabaseClient.accessTokenOrNull ?: supabaseClient.apiKey
 }
 internal class ChannelSubscriptionImpl(
     override val channel: String,
@@ -263,11 +350,23 @@ internal class ChannelSubscriptionImpl(
     internal val postgresCallbacks: List<PostgresCallbackConfig>,
     private val broadcastCallbacks: Map<String, suspend (JsonObject) -> Unit>,
     private val presenceCallback: (suspend (PresenceState) -> Unit)?,
+    internal val receiveOwnBroadcasts: Boolean,
+    internal val acknowledgeBroadcasts: Boolean,
+    internal val presenceKey: String,
+    internal val privateChannel: Boolean,
+    internal val replaySinceMs: Long?,
+    internal val replayLimit: Int?,
 ) : RealtimeSubscription {
     private val eventFlow = MutableSharedFlow<RealtimeEvent>(extraBufferCapacity = 64)
+    private val _status = MutableStateFlow(RealtimeSubscription.Status.SUBSCRIBING)
+    internal var joinRef: String? = null
+    internal val hasPresenceTracking: Boolean = presenceCallback != null
+    override val status: StateFlow<RealtimeSubscription.Status> = _status.asStateFlow()
     override fun asFlow(): Flow<RealtimeEvent> = eventFlow
     override suspend fun unsubscribe() {
+        _status.value = RealtimeSubscription.Status.UNSUBSCRIBING
         client.leaveChannel(topic)
+        _status.value = RealtimeSubscription.Status.UNSUBSCRIBED
     }
     override suspend fun broadcast(event: String, payload: JsonObject) {
         client.sendMessage(
@@ -279,6 +378,7 @@ internal class ChannelSubscriptionImpl(
                     put("event", event)
                     put("payload", payload)
                 },
+                joinRef = joinRef,
                 ref = client.nextRef(),
             ),
         )
@@ -293,6 +393,7 @@ internal class ChannelSubscriptionImpl(
                     put("event", "track")
                     put("payload", state)
                 },
+                joinRef = joinRef,
                 ref = client.nextRef(),
             ),
         )
@@ -306,6 +407,7 @@ internal class ChannelSubscriptionImpl(
                     put("type", "presence")
                     put("event", "untrack")
                 },
+                joinRef = joinRef,
                 ref = client.nextRef(),
             ),
         )
@@ -318,6 +420,7 @@ internal class ChannelSubscriptionImpl(
             "presence_state" -> handlePresenceState(message.payload)
             "phx_reply" -> handleSystemReply(message.payload)
             "phx_error" -> {
+                _status.value = RealtimeSubscription.Status.ERROR
                 val event = RealtimeEvent.SystemEvent(
                     status = "error",
                     message = message.payload.toString(),
@@ -390,6 +493,11 @@ internal class ChannelSubscriptionImpl(
     }
     private suspend fun handleSystemReply(payload: JsonObject) {
         val status = payload["status"]?.jsonPrimitive?.content ?: "ok"
+        _status.value = if (status == "ok") {
+            RealtimeSubscription.Status.SUBSCRIBED
+        } else {
+            RealtimeSubscription.Status.ERROR
+        }
         val response = payload["response"]
         val event = RealtimeEvent.SystemEvent(
             status = status,

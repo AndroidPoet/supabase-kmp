@@ -91,9 +91,19 @@ class FiltersTest {
         assertEquals(listOf("order" to "name.asc.nullsfirst"), result)
     }
     @Test
+    fun test_order_withReferencedTable() {
+        val result = filters { order("created_at", referencedTable = "profiles") }
+        assertEquals(listOf("profiles.order" to "created_at.asc"), result)
+    }
+    @Test
     fun test_limit_producesCorrectParam() {
         val result = filters { limit(25) }
         assertEquals(listOf("limit" to "25"), result)
+    }
+    @Test
+    fun test_limit_withReferencedTable() {
+        val result = filters { limit(5, referencedTable = "profiles") }
+        assertEquals(listOf("profiles.limit" to "5"), result)
     }
     @Test
     fun test_range_producesOffsetAndLimit() {
@@ -101,6 +111,13 @@ class FiltersTest {
         assertEquals(2, result.size)
         assertEquals("offset" to "10", result[0])
         assertEquals("limit" to "10", result[1])
+    }
+    @Test
+    fun test_range_withReferencedTable() {
+        val result = filters { range(0, 9, referencedTable = "profiles") }
+        assertEquals(2, result.size)
+        assertEquals("profiles.offset" to "0", result[0])
+        assertEquals("profiles.limit" to "10", result[1])
     }
     @Test
     fun test_multipleFilters_accumulate() {
@@ -143,6 +160,51 @@ class FiltersTest {
         val result = filters { containedBy("tags", "{a,b,c}") }
         assertEquals(listOf("tags" to "cd.{a,b,c}"), result)
     }
+
+    @Test
+    fun test_overlaps_producesCorrectParam() {
+        val result = filters { overlaps("tags", "{b,c}") }
+        assertEquals(listOf("tags" to "ov.{b,c}"), result)
+    }
+
+    @Test
+    fun test_match_producesEqParamsForAllValues() {
+        val result = filters { match(mapOf("a" to "1", "b" to "2")) }
+        assertEquals(2, result.size)
+        assertTrue(result.contains("a" to "eq.1"))
+        assertTrue(result.contains("b" to "eq.2"))
+    }
+
+    @Test
+    fun test_not_operatorOverload_producesCorrectParam() {
+        val result = filters { not("status", "eq", "archived") }
+        assertEquals(listOf("status" to "not.eq.archived"), result)
+    }
+
+    @Test
+    fun test_strictlyLeft_aliasesRangeLt() {
+        val result = filters { strictlyLeft("period", "(1,10)") }
+        assertEquals(listOf("period" to "sl.(1,10)"), result)
+    }
+
+    @Test
+    fun test_strictlyRight_aliasesRangeGt() {
+        val result = filters { strictlyRight("period", "(1,10)") }
+        assertEquals(listOf("period" to "sr.(1,10)"), result)
+    }
+
+    @Test
+    fun test_notExtendRight_aliasesRangeLte() {
+        val result = filters { notExtendRight("period", "(1,10)") }
+        assertEquals(listOf("period" to "nxr.(1,10)"), result)
+    }
+
+    @Test
+    fun test_notExtendLeft_aliasesRangeGte() {
+        val result = filters { notExtendLeft("period", "(1,10)") }
+        assertEquals(listOf("period" to "nxl.(1,10)"), result)
+    }
+
     @Test
     fun test_filterBuilder_buildReturnsImmutableCopy() {
         val builder = FilterBuilder()
