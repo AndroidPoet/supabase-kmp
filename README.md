@@ -324,7 +324,6 @@ functions.invokeWithBody(
 | **Codebase** | ~3K LOC | ~26K LOC |
 | **Error handling** | `SupabaseResult<T>` monad | Thrown exceptions |
 | **Type safety** | Value class IDs | String IDs |
-| **DI** | Factory functions | Manual composition |
 | **Dependencies** | 3 core | 7+ |
 | **Session mgmt** | `SessionManager` + `StateFlow` | Built-in (heavier) |
 | **Reconnection** | Exponential backoff | Exponential backoff |
