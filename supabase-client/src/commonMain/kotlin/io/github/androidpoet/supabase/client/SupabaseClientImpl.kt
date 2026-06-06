@@ -35,23 +35,24 @@ internal class SupabaseClientImpl(
         transport.patch(url = "$projectUrl$endpoint", body = body, headers = headers)
     override suspend fun delete(
         endpoint: String,
+        body: String?,
         headers: Map<String, String>,
     ): SupabaseResult<String> =
-        transport.delete(url = "$projectUrl$endpoint", headers = headers)
+        transport.delete(url = "$projectUrl$endpoint", body = body, headers = headers)
     override suspend fun postRaw(
         url: String,
         body: ByteArray,
         contentType: String,
         headers: Map<String, String>,
     ): SupabaseResult<String> =
-        transport.postRaw(url = url, body = body, contentType = contentType, headers = headers)
+        transport.postRaw(url = "$projectUrl$url", body = body, contentType = contentType, headers = headers)
     override suspend fun putRaw(
         url: String,
         body: ByteArray,
         contentType: String,
         headers: Map<String, String>,
     ): SupabaseResult<String> =
-        transport.putRaw(url = url, body = body, contentType = contentType, headers = headers)
+        transport.putRaw(url = "$projectUrl$url", body = body, contentType = contentType, headers = headers)
     override fun setAccessToken(token: String) {
         transport.setAccessToken(token)
     }

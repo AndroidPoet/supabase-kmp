@@ -104,6 +104,12 @@ private class FakeSubscription : RealtimeSubscription {
 
     override suspend fun unsubscribe() = Unit
 
+    override suspend fun send(
+        type: RealtimeSubscription.SendType,
+        event: String,
+        payload: kotlinx.serialization.json.JsonObject?,
+    ) = Unit
+
     override suspend fun broadcast(event: String, payload: kotlinx.serialization.json.JsonObject) = Unit
 
     override suspend fun track(state: kotlinx.serialization.json.JsonObject) = Unit

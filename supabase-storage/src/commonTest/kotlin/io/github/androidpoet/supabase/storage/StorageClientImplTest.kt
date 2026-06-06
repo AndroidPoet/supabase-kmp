@@ -3,14 +3,22 @@ package io.github.androidpoet.supabase.storage
 import io.github.androidpoet.supabase.client.SupabaseClient
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
+import io.github.androidpoet.supabase.storage.models.VectorData
+import io.github.androidpoet.supabase.storage.models.VectorDataType
+import io.github.androidpoet.supabase.storage.models.VectorDistanceMetric
+import io.github.androidpoet.supabase.storage.models.VectorMetadataConfiguration
+import io.github.androidpoet.supabase.storage.models.VectorObject
+import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-import kotlinx.coroutines.runBlocking
 
 class StorageClientImplTest {
     @Test
-    fun test_listBuckets_includesQueryParams() = runBlocking {
+    fun test_listBuckets_includesQueryParams() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -37,7 +45,7 @@ class StorageClientImplTest {
     }
 
     @Test
-    fun test_createSignedUrls_usesBatchSignEndpoint() = runBlocking {
+    fun test_createSignedUrls_usesBatchSignEndpoint() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -54,7 +62,34 @@ class StorageClientImplTest {
     }
 
     @Test
-    fun test_createSignedUrl_withDownload_addsDownloadQuery() = runBlocking {
+    fun test_listV2_postsOptionsToListV2Endpoint() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = StorageClientImpl(client)
+
+        val result = sut.listV2(
+            bucket = "avatars",
+            prefix = "folder/",
+            cursor = "cursor-1",
+            limit = 50,
+            withDelimiter = true,
+            sortBy = "created_at",
+            sortOrder = SortOrder.DESC,
+        )
+
+        assertTrue(result is SupabaseResult.Success)
+        assertEquals("/storage/v1/object/list-v2/avatars", client.lastPostEndpoint)
+        assertEquals(
+            """{"prefix":"folder/","cursor":"cursor-1","limit":50,"with_delimiter":true,"sortBy":{"column":"created_at","order":"desc"}}""",
+            client.lastPostBody,
+        )
+        assertEquals(true, result.value.hasNext)
+        assertEquals("nested", result.value.folders.first().name)
+        assertEquals("avatar.png", result.value.objects.first().name)
+        assertEquals("cursor-2", result.value.nextCursor)
+    }
+
+    @Test
+    fun test_createSignedUrl_withDownload_addsDownloadQuery() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -71,7 +106,7 @@ class StorageClientImplTest {
     }
 
     @Test
-    fun test_createSignedUrl_returnsResolvedAbsoluteUrl() = runBlocking {
+    fun test_createSignedUrl_returnsResolvedAbsoluteUrl() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -86,7 +121,7 @@ class StorageClientImplTest {
     }
 
     @Test
-    fun test_createUploadSignedUrl_returnsToken() = runBlocking {
+    fun test_createUploadSignedUrl_returnsToken() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -101,7 +136,7 @@ class StorageClientImplTest {
     }
 
     @Test
-    fun test_createUploadSignedUrl_withUpsert_setsUpsertHeader() = runBlocking {
+    fun test_createUploadSignedUrl_withUpsert_setsUpsertHeader() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -115,7 +150,7 @@ class StorageClientImplTest {
     }
 
     @Test
-    fun test_createUploadSignedUrlWithPath_returnsResolvedUrlAndToken() = runBlocking {
+    fun test_createUploadSignedUrlWithPath_returnsResolvedUrlAndToken() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -130,7 +165,7 @@ class StorageClientImplTest {
     }
 
     @Test
-    fun test_updateBucket_usesPutBucketEndpoint() = runBlocking {
+    fun test_updateBucket_usesPutBucketEndpoint() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -144,7 +179,7 @@ class StorageClientImplTest {
     }
 
     @Test
-    fun test_uploadToSignedUrl_usesSignedUploadPathWithToken() = runBlocking {
+    fun test_uploadToSignedUrl_usesSignedUploadPathWithToken() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -161,7 +196,7 @@ class StorageClientImplTest {
     }
 
     @Test
-    fun test_uploadToSignedUrl_withCacheControl_includesCacheControlQuery() = runBlocking {
+    fun test_uploadToSignedUrl_withCacheControl_includesCacheControlQuery() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -177,7 +212,7 @@ class StorageClientImplTest {
     }
 
     @Test
-    fun test_update_usesPutRawAndUpsertHeader() = runBlocking {
+    fun test_update_usesPutRawAndUpsertHeader() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -193,7 +228,7 @@ class StorageClientImplTest {
     }
 
     @Test
-    fun test_upload_withCacheControl_includesCacheControlQuery() = runBlocking {
+    fun test_upload_withCacheControl_includesCacheControlQuery() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -208,7 +243,7 @@ class StorageClientImplTest {
     }
 
     @Test
-    fun test_update_withCacheControl_includesCacheControlQuery() = runBlocking {
+    fun test_update_withCacheControl_includesCacheControlQuery() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -223,7 +258,7 @@ class StorageClientImplTest {
     }
 
     @Test
-    fun test_copy_usesCopyEndpoint() = runBlocking {
+    fun test_copy_usesCopyEndpoint() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -238,7 +273,7 @@ class StorageClientImplTest {
     }
 
     @Test
-    fun test_copy_includesCopyMetadataWhenProvided() = runBlocking {
+    fun test_copy_includesCopyMetadataWhenProvided() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -253,7 +288,7 @@ class StorageClientImplTest {
     }
 
     @Test
-    fun test_removeWithResult_returnsDeletedFileEntries() = runBlocking {
+    fun test_removeWithResult_returnsDeletedFileEntries() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -266,7 +301,7 @@ class StorageClientImplTest {
     }
 
     @Test
-    fun test_move_allowsDestinationBucket() = runBlocking {
+    fun test_move_allowsDestinationBucket() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -283,7 +318,7 @@ class StorageClientImplTest {
     }
 
     @Test
-    fun test_deleteObject_usesDeleteObjectEndpoint() = runBlocking {
+    fun test_deleteObject_usesDeleteObjectEndpoint() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -294,7 +329,7 @@ class StorageClientImplTest {
     }
 
     @Test
-    fun test_downloadPublic_usesPublicEndpoint() = runBlocking {
+    fun test_downloadPublic_usesPublicEndpoint() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -304,7 +339,7 @@ class StorageClientImplTest {
     }
 
     @Test
-    fun test_download_usesAuthenticatedEndpoint() = runBlocking {
+    fun test_download_usesAuthenticatedEndpoint() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -314,7 +349,7 @@ class StorageClientImplTest {
     }
 
     @Test
-    fun test_download_withDownloadFileName_appendsDownloadQuery() = runBlocking {
+    fun test_download_withDownloadFileName_appendsDownloadQuery() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -342,7 +377,7 @@ class StorageClientImplTest {
     }
 
     @Test
-    fun test_info_usesAuthenticatedInfoEndpoint() = runBlocking {
+    fun test_info_usesAuthenticatedInfoEndpoint() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -354,7 +389,7 @@ class StorageClientImplTest {
     }
 
     @Test
-    fun test_infoPublic_usesPublicInfoEndpoint() = runBlocking {
+    fun test_infoPublic_usesPublicInfoEndpoint() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -366,7 +401,7 @@ class StorageClientImplTest {
     }
 
     @Test
-    fun test_exists_returnsTrueWhenInfoExists() = runBlocking {
+    fun test_exists_returnsTrueWhenInfoExists() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -377,7 +412,7 @@ class StorageClientImplTest {
     }
 
     @Test
-    fun test_exists_returnsFalseWhenInfoNotFound() = runBlocking {
+    fun test_exists_returnsFalseWhenInfoNotFound() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -388,7 +423,7 @@ class StorageClientImplTest {
     }
 
     @Test
-    fun test_list_includesSortOrderAndSearchInBody() = runBlocking {
+    fun test_list_includesSortOrderAndSearchInBody() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -406,7 +441,7 @@ class StorageClientImplTest {
     }
 
     @Test
-    fun test_createSignedUrl_withTransform_includesTransformPayload() = runBlocking {
+    fun test_createSignedUrl_withTransform_includesTransformPayload() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
 
@@ -535,6 +570,176 @@ class StorageClientImplTest {
             url,
         )
     }
+
+    @Test
+    fun test_analyticsBucketMethods_useIcebergEndpoints() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = StorageClientImpl(client)
+
+        val created = sut.createAnalyticsBucket("events")
+        val listed = sut.listAnalyticsBuckets(
+            limit = 10,
+            offset = 2,
+            sortColumn = "created_at",
+            sortOrder = SortOrder.DESC,
+            search = "event",
+        )
+        val deleted = sut.deleteAnalyticsBucket("events")
+
+        assertTrue(created is SupabaseResult.Success)
+        assertEquals("events", created.value.name)
+        assertTrue(listed is SupabaseResult.Success)
+        assertEquals("events", listed.value.first().name)
+        assertEquals("/storage/v1/iceberg/bucket/events", client.lastDeleteEndpoint)
+        assertTrue(deleted is SupabaseResult.Success)
+    }
+
+    @Test
+    fun test_analyticsCatalog_namespaceMethods_useIcebergRestCatalogEndpoints() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = StorageClientImpl(client)
+        val catalog = sut.analyticsCatalog("events")
+
+        val namespaces = catalog.listNamespaces(pageSize = 10)
+        assertTrue(namespaces is SupabaseResult.Success)
+        assertEquals("/storage/v1/iceberg/v1/catalog-prefix/namespaces?pageSize=10", client.lastGetEndpoint)
+
+        val created = catalog.createNamespace(
+            namespace = listOf("prod", "events"),
+            properties = mapOf("owner" to "data-team"),
+        )
+        assertTrue(created is SupabaseResult.Success)
+        assertTrue(client.lastPostBody?.contains("\"namespace\":[\"prod\",\"events\"]") == true)
+
+        val metadata = catalog.loadNamespaceMetadata(listOf("prod", "events"))
+        val updated = catalog.updateNamespaceProperties(
+            namespace = listOf("prod", "events"),
+            removals = listOf("old"),
+            updates = mapOf("owner" to "platform"),
+        )
+        val dropped = catalog.dropNamespace(listOf("prod", "events"))
+
+        assertTrue(metadata is SupabaseResult.Success)
+        assertTrue(updated is SupabaseResult.Success)
+        assertTrue(client.lastPostBody?.contains("\"removals\":[\"old\"]") == true)
+        assertEquals("/storage/v1/iceberg/v1/catalog-prefix/namespaces/prod%1Fevents", client.lastDeleteEndpoint)
+        assertTrue(dropped is SupabaseResult.Success)
+    }
+
+    @Test
+    fun test_analyticsCatalog_tableMethods_useIcebergRestCatalogEndpoints() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = StorageClientImpl(client)
+        val catalog = sut.analyticsCatalog("events")
+        val tableRequest = buildJsonObject {
+            put("name", "clicks")
+            put("schema", buildJsonObject { put("type", "struct") })
+        }
+
+        val tables = catalog.listTables(namespace = listOf("prod"), pageToken = "p1", pageSize = 20)
+        assertTrue(tables is SupabaseResult.Success)
+        assertEquals("/storage/v1/iceberg/v1/catalog-prefix/namespaces/prod/tables?pageToken=p1&pageSize=20", client.lastGetEndpoint)
+
+        val created = catalog.createTable(namespace = listOf("prod"), request = tableRequest)
+        val loaded = catalog.loadTable(namespace = listOf("prod"), name = "clicks", snapshots = "all")
+        val updated = catalog.updateTable(namespace = listOf("prod"), name = "clicks", request = buildJsonObject { put("updates", "[]") })
+        val registered = catalog.registerTable(namespace = listOf("prod"), request = buildJsonObject { put("name", "external") })
+        val renamed = catalog.renameTable(buildJsonObject { put("source", "clicks") })
+        val dropped = catalog.dropTable(namespace = listOf("prod"), name = "clicks", purge = true)
+
+        assertTrue(created is SupabaseResult.Success)
+        assertEquals("clicks", created.value["name"]?.toString()?.trim('"'))
+        assertTrue(loaded is SupabaseResult.Success)
+        assertTrue(updated is SupabaseResult.Success)
+        assertTrue(registered is SupabaseResult.Success)
+        assertEquals("/storage/v1/iceberg/v1/catalog-prefix/tables/rename", client.lastPostEndpoint)
+        assertTrue(renamed is SupabaseResult.Success)
+        assertEquals("/storage/v1/iceberg/v1/catalog-prefix/namespaces/prod/tables/clicks?purgeRequested=true", client.lastDeleteEndpoint)
+        assertTrue(dropped is SupabaseResult.Success)
+    }
+
+    @Test
+    fun test_vectorBucketAndIndexMethods_useVectorActionEndpoints() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = StorageClientImpl(client)
+
+        val createBucket = sut.createVectorBucket("embeddings")
+        val bucket = sut.getVectorBucket("embeddings")
+        val buckets = sut.listVectorBuckets(prefix = "emb", maxResults = 10, nextToken = "n1")
+        val createIndex = sut.createVectorIndex(
+            vectorBucketName = "embeddings",
+            indexName = "documents",
+            dataType = VectorDataType.FLOAT32,
+            dimension = 1536,
+            distanceMetric = VectorDistanceMetric.COSINE,
+            metadataConfiguration = VectorMetadataConfiguration(nonFilterableMetadataKeys = listOf("raw_text")),
+        )
+        val index = sut.getVectorIndex("embeddings", "documents")
+        val indexes = sut.listVectorIndexes("embeddings", prefix = "doc", maxResults = 5)
+        val deleteIndex = sut.deleteVectorIndex("embeddings", "documents")
+        val deleteBucket = sut.deleteVectorBucket("embeddings")
+
+        assertTrue(createBucket is SupabaseResult.Success)
+        assertTrue(bucket is SupabaseResult.Success)
+        assertEquals("embeddings", bucket.value.vectorBucketName)
+        assertTrue(buckets is SupabaseResult.Success)
+        assertEquals("embeddings", buckets.value.vectorBuckets.first().vectorBucketName)
+        assertTrue(createIndex is SupabaseResult.Success)
+        assertTrue(index is SupabaseResult.Success)
+        assertEquals("documents", index.value.indexName)
+        assertEquals(VectorDistanceMetric.COSINE, index.value.distanceMetric)
+        assertTrue(indexes is SupabaseResult.Success)
+        assertEquals("documents", indexes.value.indexes.first().indexName)
+        assertTrue(deleteIndex is SupabaseResult.Success)
+        assertEquals("/storage/v1/vector/DeleteVectorBucket", client.lastPostEndpoint)
+        assertTrue(client.lastPostBody?.contains("\"vectorBucketName\":\"embeddings\"") == true)
+        assertTrue(deleteBucket is SupabaseResult.Success)
+    }
+
+    @Test
+    fun test_vectorDataMethods_useVectorActionEndpointsAndPayloads() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = StorageClientImpl(client)
+        val vector = VectorObject(
+            key = "doc-1",
+            data = VectorData(float32 = listOf(0.1, 0.2)),
+            metadata = buildJsonObject { put("category", "docs") },
+        )
+
+        val putResult = sut.putVectors("embeddings", "documents", listOf(vector))
+        val getResult = sut.getVectors("embeddings", "documents", keys = listOf("doc-1"), returnData = true, returnMetadata = true)
+        val listResult = sut.listVectors("embeddings", "documents", maxResults = 10, segmentCount = 2, segmentIndex = 1)
+        val queryResult = sut.queryVectors(
+            vectorBucketName = "embeddings",
+            indexName = "documents",
+            queryVector = VectorData(float32 = listOf(0.1, 0.2)),
+            topK = 5,
+            filter = buildJsonObject { put("category", "docs") },
+            returnDistance = true,
+            returnMetadata = true,
+        )
+        val deleteResult = sut.deleteVectors("embeddings", "documents", keys = listOf("doc-1"))
+
+        assertTrue(putResult is SupabaseResult.Success)
+        assertTrue(getResult is SupabaseResult.Success)
+        assertEquals("doc-1", getResult.value.first().key)
+        assertTrue(listResult is SupabaseResult.Success)
+        assertEquals("cursor-2", listResult.value.nextToken)
+        assertTrue(queryResult is SupabaseResult.Success)
+        assertEquals(VectorDistanceMetric.COSINE, queryResult.value.distanceMetric)
+        assertEquals("/storage/v1/vector/DeleteVectors", client.lastPostEndpoint)
+        assertTrue(client.lastPostBody?.contains("\"keys\":[\"doc-1\"]") == true)
+        assertTrue(deleteResult is SupabaseResult.Success)
+    }
+
+    @Test
+    fun test_putVectors_rejectsInvalidBatchSize() = runTest {
+        val sut = StorageClientImpl(FakeSupabaseClient())
+
+        assertFailsWith<IllegalArgumentException> {
+            sut.putVectors("embeddings", "documents", emptyList())
+        }
+    }
 }
 
 private class FakeSupabaseClient : SupabaseClient {
@@ -565,6 +770,15 @@ private class FakeSupabaseClient : SupabaseClient {
                 SupabaseResult.Failure(SupabaseError(message = "not found", code = "404"))
             endpoint.contains("/object/info/") -> SupabaseResult.Success("""{"name":"a.png"}""")
             endpoint == "/storage/v1/bucket" -> SupabaseResult.Success("""[]""")
+            endpoint == "/storage/v1/iceberg/v1/config" ->
+                SupabaseResult.Success("""{"overrides":{"prefix":"catalog-prefix"}}""")
+            endpoint.startsWith("/storage/v1/iceberg/bucket") ->
+                SupabaseResult.Success("""[{"name":"events","type":"ANALYTICS","format":"iceberg","created_at":"2026-01-01T00:00:00Z","updated_at":"2026-01-01T00:00:00Z"}]""")
+            endpoint.contains("/storage/v1/iceberg/v1/catalog-prefix/namespaces") &&
+                endpoint.contains("/tables") ->
+                SupabaseResult.Success("""{"identifiers":[{"namespace":["prod"],"name":"clicks"}]}""")
+            endpoint.contains("/storage/v1/iceberg/v1/catalog-prefix/namespaces") ->
+                SupabaseResult.Success("""{"namespaces":[["prod","events"]]}""")
             else -> SupabaseResult.Success("ok")
         }
     }
@@ -588,11 +802,47 @@ private class FakeSupabaseClient : SupabaseClient {
             endpoint.contains("/upload/sign/") ->
                 SupabaseResult.Success("""{"url":"/upload/sign/path","token":"upload-token-123"}""")
 
+            endpoint.contains("/object/list-v2/") ->
+                SupabaseResult.Success(
+                    """{"hasNext":true,"nextCursor":"cursor-2","folders":[{"name":"nested","key":"folder/nested/"}],"objects":[{"name":"avatar.png","key":"folder/avatar.png","id":"file-1","updated_at":"2026-01-01T00:00:00Z","created_at":"2026-01-01T00:00:00Z","last_accessed_at":"2026-01-01T00:00:00Z","metadata":{"size":123}}]}""",
+                )
+
             endpoint.contains("/object/list/") ->
                 SupabaseResult.Success("""[]""")
 
             endpoint.contains("/object/remove/") ->
                 SupabaseResult.Success("""[{"name":"a.png"}]""")
+
+            endpoint == "/storage/v1/iceberg/bucket" && body?.contains("\"name\":\"events\"") == true ->
+                SupabaseResult.Success("""{"name":"events","type":"ANALYTICS","format":"iceberg","created_at":"2026-01-01T00:00:00Z","updated_at":"2026-01-01T00:00:00Z"}""")
+            endpoint.contains("/storage/v1/iceberg/v1/catalog-prefix/namespaces") &&
+                endpoint.contains("/tables") ->
+                SupabaseResult.Success("""{"name":"clicks","metadata":{"format-version":2}}""")
+            endpoint.contains("/storage/v1/iceberg/v1/catalog-prefix/namespaces") ->
+                SupabaseResult.Success("""{"namespace":["prod","events"],"properties":{"owner":"data-team"},"updated":["owner"],"removed":["old"]}""")
+            endpoint == "/storage/v1/iceberg/v1/catalog-prefix/tables/rename" ->
+                SupabaseResult.Success("""{}""")
+
+            endpoint == "/storage/v1/vector/GetVectorBucket" ->
+                SupabaseResult.Success("""{"vectorBucket":{"vectorBucketName":"embeddings","creationTime":1893456000}}""")
+
+            endpoint == "/storage/v1/vector/ListVectorBuckets" ->
+                SupabaseResult.Success("""{"vectorBuckets":[{"vectorBucketName":"embeddings"}],"nextToken":"n2"}""")
+
+            endpoint == "/storage/v1/vector/GetIndex" ->
+                SupabaseResult.Success("""{"index":{"indexName":"documents","vectorBucketName":"embeddings","dataType":"float32","dimension":1536,"distanceMetric":"cosine","creationTime":1893456000}}""")
+
+            endpoint == "/storage/v1/vector/ListIndexes" ->
+                SupabaseResult.Success("""{"indexes":[{"indexName":"documents"}],"nextToken":"n2"}""")
+
+            endpoint == "/storage/v1/vector/GetVectors" ->
+                SupabaseResult.Success("""{"vectors":[{"key":"doc-1","data":{"float32":[0.1,0.2]},"metadata":{"category":"docs"}}]}""")
+
+            endpoint == "/storage/v1/vector/ListVectors" ->
+                SupabaseResult.Success("""{"vectors":[{"key":"doc-1"}],"nextToken":"cursor-2"}""")
+
+            endpoint == "/storage/v1/vector/QueryVectors" ->
+                SupabaseResult.Success("""{"vectors":[{"key":"doc-1","distance":0.01,"metadata":{"category":"docs"}}],"distanceMetric":"cosine"}""")
 
             else -> SupabaseResult.Success("""{}""")
         }
@@ -619,6 +869,7 @@ private class FakeSupabaseClient : SupabaseClient {
 
     override suspend fun delete(
         endpoint: String,
+        body: String?,
         headers: Map<String, String>,
     ): SupabaseResult<String> {
         lastDeleteEndpoint = endpoint

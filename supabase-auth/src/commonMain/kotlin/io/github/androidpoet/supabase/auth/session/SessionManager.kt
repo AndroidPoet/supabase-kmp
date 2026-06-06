@@ -10,5 +10,9 @@ public interface SessionManager {
     public suspend fun clearSession()
     public suspend fun refreshSession(): SupabaseResult<Session>
     public suspend fun restoreSession(): SupabaseResult<Session>
+    public suspend fun initialize(): SupabaseResult<Session>
+    public fun startAutoRefresh()
+    public fun stopAutoRefresh()
+    public fun dispose()
     public fun close()
 }

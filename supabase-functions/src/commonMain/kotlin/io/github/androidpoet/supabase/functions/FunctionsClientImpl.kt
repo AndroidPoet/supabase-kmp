@@ -4,6 +4,12 @@ import io.github.androidpoet.supabase.core.result.SupabaseResult
 internal class FunctionsClientImpl(
     private val client: SupabaseClient,
 ) : FunctionsClient {
+    private var authToken: String? = null
+
+    override fun setAuth(token: String) {
+        authToken = token
+    }
+
     override suspend fun invoke(
         functionName: String,
         body: String?,
@@ -36,9 +42,10 @@ internal class FunctionsClientImpl(
         extra: Map<String, String>,
         region: FunctionRegion?,
     ): Map<String, String> = buildMap {
-        putAll(extra)
+        authToken?.let { put("Authorization", "Bearer $it") }
         if (region != null) {
             put("x-region", region.value)
         }
+        putAll(extra)
     }
 }

@@ -1,7 +1,75 @@
 package io.github.androidpoet.supabase.storage
 import io.github.androidpoet.supabase.core.result.SupabaseResult
+import io.github.androidpoet.supabase.storage.models.AnalyticsBucket
 import io.github.androidpoet.supabase.storage.models.Bucket
 import io.github.androidpoet.supabase.storage.models.FileObject
+import io.github.androidpoet.supabase.storage.models.ObjectListV2Result
+import io.github.androidpoet.supabase.storage.models.VectorBucket
+import io.github.androidpoet.supabase.storage.models.VectorBucketListResponse
+import io.github.androidpoet.supabase.storage.models.VectorData
+import io.github.androidpoet.supabase.storage.models.VectorDataType
+import io.github.androidpoet.supabase.storage.models.VectorDistanceMetric
+import io.github.androidpoet.supabase.storage.models.VectorIndex
+import io.github.androidpoet.supabase.storage.models.VectorIndexListResponse
+import io.github.androidpoet.supabase.storage.models.VectorListResponse
+import io.github.androidpoet.supabase.storage.models.VectorMatch
+import io.github.androidpoet.supabase.storage.models.VectorMetadataConfiguration
+import io.github.androidpoet.supabase.storage.models.VectorObject
+import io.github.androidpoet.supabase.storage.models.VectorQueryResponse
+import kotlinx.serialization.json.JsonObject
+public interface AnalyticsCatalogClient {
+    public suspend fun loadConfig(): SupabaseResult<JsonObject>
+    public suspend fun listNamespaces(
+        parent: List<String>? = null,
+        pageToken: String? = null,
+        pageSize: Int? = null,
+    ): SupabaseResult<JsonObject>
+    public suspend fun createNamespace(
+        namespace: List<String>,
+        properties: Map<String, String> = emptyMap(),
+    ): SupabaseResult<JsonObject>
+    public suspend fun dropNamespace(namespace: List<String>): SupabaseResult<Unit>
+    public suspend fun loadNamespaceMetadata(namespace: List<String>): SupabaseResult<JsonObject>
+    public suspend fun updateNamespaceProperties(
+        namespace: List<String>,
+        removals: List<String>? = null,
+        updates: Map<String, String>? = null,
+    ): SupabaseResult<JsonObject>
+    public suspend fun listTables(
+        namespace: List<String>,
+        pageToken: String? = null,
+        pageSize: Int? = null,
+    ): SupabaseResult<JsonObject>
+    public suspend fun createTable(
+        namespace: List<String>,
+        request: JsonObject,
+    ): SupabaseResult<JsonObject>
+    public suspend fun updateTable(
+        namespace: List<String>,
+        name: String,
+        request: JsonObject,
+    ): SupabaseResult<JsonObject>
+    public suspend fun commitTable(
+        namespace: List<String>,
+        name: String,
+        request: JsonObject,
+    ): SupabaseResult<JsonObject>
+    public suspend fun dropTable(
+        namespace: List<String>,
+        name: String,
+        purge: Boolean = false,
+    ): SupabaseResult<Unit>
+    public suspend fun loadTable(
+        namespace: List<String>,
+        name: String,
+        snapshots: String? = null,
+    ): SupabaseResult<JsonObject>
+    public suspend fun registerTable(
+        namespace: List<String>,
+        request: JsonObject,
+    ): SupabaseResult<JsonObject>
+    public suspend fun renameTable(request: JsonObject): SupabaseResult<Unit>
+}
 public interface StorageClient {
     public suspend fun listBuckets(
         limit: Int? = null,
@@ -70,6 +138,15 @@ public interface StorageClient {
         sortOrder: SortOrder = SortOrder.ASC,
         search: String? = null,
     ): SupabaseResult<List<FileObject>>
+    public suspend fun listV2(
+        bucket: String,
+        prefix: String? = null,
+        cursor: String? = null,
+        limit: Int? = null,
+        withDelimiter: Boolean? = null,
+        sortBy: String? = null,
+        sortOrder: SortOrder = SortOrder.ASC,
+    ): SupabaseResult<ObjectListV2Result>
     public suspend fun move(
         bucket: String,
         fromPath: String,
@@ -164,6 +241,82 @@ public interface StorageClient {
         path: String,
         transform: ImageTransformOptions? = null,
     ): String
+    public suspend fun createAnalyticsBucket(name: String): SupabaseResult<AnalyticsBucket>
+    public suspend fun listAnalyticsBuckets(
+        limit: Int? = null,
+        offset: Int? = null,
+        sortColumn: String? = null,
+        sortOrder: SortOrder? = null,
+        search: String? = null,
+    ): SupabaseResult<List<AnalyticsBucket>>
+    public suspend fun deleteAnalyticsBucket(name: String): SupabaseResult<Unit>
+    public fun analyticsCatalog(bucketName: String): AnalyticsCatalogClient
+    public suspend fun createVectorBucket(vectorBucketName: String): SupabaseResult<Unit>
+    public suspend fun getVectorBucket(vectorBucketName: String): SupabaseResult<VectorBucket>
+    public suspend fun listVectorBuckets(
+        prefix: String? = null,
+        maxResults: Int? = null,
+        nextToken: String? = null,
+    ): SupabaseResult<VectorBucketListResponse>
+    public suspend fun deleteVectorBucket(vectorBucketName: String): SupabaseResult<Unit>
+    public suspend fun createVectorIndex(
+        vectorBucketName: String,
+        indexName: String,
+        dataType: VectorDataType,
+        dimension: Int,
+        distanceMetric: VectorDistanceMetric,
+        metadataConfiguration: VectorMetadataConfiguration? = null,
+    ): SupabaseResult<Unit>
+    public suspend fun getVectorIndex(
+        vectorBucketName: String,
+        indexName: String,
+    ): SupabaseResult<VectorIndex>
+    public suspend fun listVectorIndexes(
+        vectorBucketName: String,
+        prefix: String? = null,
+        maxResults: Int? = null,
+        nextToken: String? = null,
+    ): SupabaseResult<VectorIndexListResponse>
+    public suspend fun deleteVectorIndex(
+        vectorBucketName: String,
+        indexName: String,
+    ): SupabaseResult<Unit>
+    public suspend fun putVectors(
+        vectorBucketName: String,
+        indexName: String,
+        vectors: List<VectorObject>,
+    ): SupabaseResult<Unit>
+    public suspend fun getVectors(
+        vectorBucketName: String,
+        indexName: String,
+        keys: List<String>,
+        returnData: Boolean? = null,
+        returnMetadata: Boolean? = null,
+    ): SupabaseResult<List<VectorMatch>>
+    public suspend fun listVectors(
+        vectorBucketName: String,
+        indexName: String,
+        maxResults: Int? = null,
+        nextToken: String? = null,
+        returnData: Boolean? = null,
+        returnMetadata: Boolean? = null,
+        segmentCount: Int? = null,
+        segmentIndex: Int? = null,
+    ): SupabaseResult<VectorListResponse>
+    public suspend fun queryVectors(
+        vectorBucketName: String,
+        indexName: String,
+        queryVector: VectorData,
+        topK: Int? = null,
+        filter: JsonObject? = null,
+        returnDistance: Boolean? = null,
+        returnMetadata: Boolean? = null,
+    ): SupabaseResult<VectorQueryResponse>
+    public suspend fun deleteVectors(
+        vectorBucketName: String,
+        indexName: String,
+        keys: List<String>,
+    ): SupabaseResult<Unit>
 }
 
 public data class UploadSignedUrl(

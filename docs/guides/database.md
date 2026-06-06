@@ -29,6 +29,15 @@ data class Todo(
     val done: Boolean,
 )
 
+@Serializable
+data class TodoPatch(val done: Boolean)
+
+@Serializable
+data class DashboardStatsRequest(val user_id: String)
+
+@Serializable
+data class DashboardStats(val total: Int)
+
 val todos = database.selectTyped<Todo>(table = "todos") {
     eq("done", "false")
     order("created_at", ascending = false)
@@ -44,9 +53,9 @@ database.insertTyped(
     value = Todo(id = "1", title = "Ship docs", done = false),
 )
 
-database.update(
+database.updateTyped(
     table = "todos",
-    body = """{"done":true}""",
+    value = TodoPatch(done = true),
 ) {
     eq("id", "1")
 }
@@ -55,8 +64,8 @@ database.update(
 ## RPC example
 
 ```kotlin
-val stats = database.rpc(
+val stats: SupabaseResult<DashboardStats> = database.rpcTyped<DashboardStatsRequest, DashboardStats>(
     function = "get_dashboard_stats",
-    params = """{"user_id":"123"}""",
+    request = DashboardStatsRequest(user_id = "123"),
 )
 ```

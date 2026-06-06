@@ -1,7 +1,7 @@
 package io.github.androidpoet.supabase.functions
 
 import io.github.androidpoet.supabase.core.result.SupabaseResult
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -9,7 +9,7 @@ import kotlin.test.assertTrue
 
 class FunctionsClientExtTest {
     @Test
-    fun test_invokeTyped_requestEncodesAndDecodes() = runBlocking {
+    fun test_invokeTyped_requestEncodesAndDecodes() = runTest {
         val client = FakeFunctionsClient()
 
         val result = client.invokeTyped<Req, Res>(
@@ -23,7 +23,7 @@ class FunctionsClientExtTest {
     }
 
     @Test
-    fun test_invokeWithBodyTyped_decodesResponse() = runBlocking {
+    fun test_invokeWithBodyTyped_decodesResponse() = runTest {
         val client = FakeFunctionsClient()
 
         val result = client.invokeWithBodyTyped<Res>(
@@ -36,7 +36,7 @@ class FunctionsClientExtTest {
     }
 
     @Test
-    fun test_invokeUnit_mapsSuccessToUnit() = runBlocking {
+    fun test_invokeUnit_mapsSuccessToUnit() = runTest {
         val client = FakeFunctionsClient()
         val result = client.invokeUnit(functionName = "ping")
         assertTrue(result is SupabaseResult.Success)
@@ -51,6 +51,8 @@ private data class Res(val value: String)
 
 private class FakeFunctionsClient : FunctionsClient {
     var lastInvokeBody: String? = null
+
+    override fun setAuth(token: String) = Unit
 
     override suspend fun invoke(
         functionName: String,
@@ -75,4 +77,3 @@ private class FakeFunctionsClient : FunctionsClient {
     ): SupabaseResult<String> =
         SupabaseResult.Success("""{"value":"binary-ok"}""")
 }
-

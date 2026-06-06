@@ -6,11 +6,15 @@ import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.core.result.SupabaseErrorCategory
 import io.github.androidpoet.supabase.core.result.category
 import io.github.androidpoet.supabase.core.result.map
+import io.github.androidpoet.supabase.storage.models.AnalyticsBucket
+import io.github.androidpoet.supabase.storage.models.AnalyticsBucketCreateRequest
 import io.github.androidpoet.supabase.storage.models.Bucket
 import io.github.androidpoet.supabase.storage.models.CreateBucketRequest
 import io.github.androidpoet.supabase.storage.models.FileObject
 import io.github.androidpoet.supabase.storage.models.MoveRequest
 import io.github.androidpoet.supabase.storage.models.ObjectListRequest
+import io.github.androidpoet.supabase.storage.models.ObjectListV2Request
+import io.github.androidpoet.supabase.storage.models.ObjectListV2Result
 import io.github.androidpoet.supabase.storage.models.ObjectSortByRequest
 import io.github.androidpoet.supabase.storage.models.SignedUrlRequest
 import io.github.androidpoet.supabase.storage.models.SignedUrlItemResponse
@@ -19,7 +23,41 @@ import io.github.androidpoet.supabase.storage.models.SignedUrlTransformRequest
 import io.github.androidpoet.supabase.storage.models.SignedUrlResponse
 import io.github.androidpoet.supabase.storage.models.UpdateBucketRequest
 import io.github.androidpoet.supabase.storage.models.UploadSignedUrlResponse
+import io.github.androidpoet.supabase.storage.models.VectorBucket
+import io.github.androidpoet.supabase.storage.models.VectorBucketCreateRequest
+import io.github.androidpoet.supabase.storage.models.VectorBucketListRequest
+import io.github.androidpoet.supabase.storage.models.VectorBucketListResponse
+import io.github.androidpoet.supabase.storage.models.VectorBucketRequest
+import io.github.androidpoet.supabase.storage.models.VectorBucketResponse
+import io.github.androidpoet.supabase.storage.models.VectorData
+import io.github.androidpoet.supabase.storage.models.VectorDataType
+import io.github.androidpoet.supabase.storage.models.VectorDeleteRequest
+import io.github.androidpoet.supabase.storage.models.VectorDistanceMetric
+import io.github.androidpoet.supabase.storage.models.VectorGetRequest
+import io.github.androidpoet.supabase.storage.models.VectorIndex
+import io.github.androidpoet.supabase.storage.models.VectorIndexCreateRequest
+import io.github.androidpoet.supabase.storage.models.VectorIndexListRequest
+import io.github.androidpoet.supabase.storage.models.VectorIndexListResponse
+import io.github.androidpoet.supabase.storage.models.VectorIndexRequest
+import io.github.androidpoet.supabase.storage.models.VectorIndexResponse
+import io.github.androidpoet.supabase.storage.models.VectorListRequest
+import io.github.androidpoet.supabase.storage.models.VectorListResponse
+import io.github.androidpoet.supabase.storage.models.VectorMatch
+import io.github.androidpoet.supabase.storage.models.VectorMetadataConfiguration
+import io.github.androidpoet.supabase.storage.models.VectorObject
+import io.github.androidpoet.supabase.storage.models.VectorPutRequest
+import io.github.androidpoet.supabase.storage.models.VectorQueryRequest
+import io.github.androidpoet.supabase.storage.models.VectorQueryResponse
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
+import kotlinx.serialization.json.putJsonObject
 internal class StorageClientImpl(
     private val client: SupabaseClient,
 ) : StorageClient {
@@ -181,6 +219,28 @@ internal class StorageClientImpl(
             ),
         )
         return client.post("/storage/v1/object/list/$bucket", body = body).deserialize()
+    }
+    override suspend fun listV2(
+        bucket: String,
+        prefix: String?,
+        cursor: String?,
+        limit: Int?,
+        withDelimiter: Boolean?,
+        sortBy: String?,
+        sortOrder: SortOrder,
+    ): SupabaseResult<ObjectListV2Result> {
+        val body = defaultJson.encodeToString(
+            ObjectListV2Request(
+                prefix = prefix,
+                cursor = cursor,
+                limit = limit,
+                withDelimiter = withDelimiter,
+                sortBy = sortBy?.let {
+                    ObjectSortByRequest(column = it, order = sortOrder.name.lowercase())
+                },
+            ),
+        )
+        return client.post("/storage/v1/object/list-v2/$bucket", body = body).deserialize()
     }
     override suspend fun move(
         bucket: String,
@@ -406,6 +466,234 @@ internal class StorageClientImpl(
         return if (transformQuery.isBlank()) base else "$base?$transformQuery"
     }
 
+    override suspend fun createAnalyticsBucket(name: String): SupabaseResult<AnalyticsBucket> {
+        val body = defaultJson.encodeToString(AnalyticsBucketCreateRequest(name = name))
+        return client.post("/storage/v1/iceberg/bucket", body = body).deserialize()
+    }
+
+    override suspend fun listAnalyticsBuckets(
+        limit: Int?,
+        offset: Int?,
+        sortColumn: String?,
+        sortOrder: SortOrder?,
+        search: String?,
+    ): SupabaseResult<List<AnalyticsBucket>> {
+        val query = buildList {
+            limit?.let { add("limit" to it.toString()) }
+            offset?.let { add("offset" to it.toString()) }
+            sortColumn?.let { add("sortColumn" to it) }
+            sortOrder?.let { add("sortOrder" to it.name.lowercase()) }
+            search?.let { add("search" to it) }
+        }
+        val endpoint = if (query.isEmpty()) {
+            "/storage/v1/iceberg/bucket"
+        } else {
+            "/storage/v1/iceberg/bucket?${query.joinToString("&") { (k, v) -> "${encodeQueryComponent(k)}=${encodeQueryComponent(v)}" }}"
+        }
+        return client.get(endpoint).deserialize()
+    }
+
+    override suspend fun deleteAnalyticsBucket(name: String): SupabaseResult<Unit> =
+        client.delete("/storage/v1/iceberg/bucket/$name").map { }
+
+    override fun analyticsCatalog(bucketName: String): AnalyticsCatalogClient {
+        validateAnalyticsBucketName(bucketName)
+        return AnalyticsCatalogClientImpl(client = client, bucketName = bucketName)
+    }
+
+    override suspend fun createVectorBucket(vectorBucketName: String): SupabaseResult<Unit> {
+        val body = defaultJson.encodeToString(VectorBucketCreateRequest(vectorBucketName = vectorBucketName))
+        return client.post("/storage/v1/vector/CreateVectorBucket", body = body).map { }
+    }
+
+    override suspend fun getVectorBucket(vectorBucketName: String): SupabaseResult<VectorBucket> {
+        val body = defaultJson.encodeToString(VectorBucketRequest(vectorBucketName = vectorBucketName))
+        return client.post("/storage/v1/vector/GetVectorBucket", body = body)
+            .deserialize<VectorBucketResponse>()
+            .map { it.vectorBucket }
+    }
+
+    override suspend fun listVectorBuckets(
+        prefix: String?,
+        maxResults: Int?,
+        nextToken: String?,
+    ): SupabaseResult<VectorBucketListResponse> {
+        val body = defaultJson.encodeToString(
+            VectorBucketListRequest(
+                prefix = prefix,
+                maxResults = maxResults,
+                nextToken = nextToken,
+            ),
+        )
+        return client.post("/storage/v1/vector/ListVectorBuckets", body = body).deserialize()
+    }
+
+    override suspend fun deleteVectorBucket(vectorBucketName: String): SupabaseResult<Unit> {
+        val body = defaultJson.encodeToString(VectorBucketRequest(vectorBucketName = vectorBucketName))
+        return client.post("/storage/v1/vector/DeleteVectorBucket", body = body).map { }
+    }
+
+    override suspend fun createVectorIndex(
+        vectorBucketName: String,
+        indexName: String,
+        dataType: VectorDataType,
+        dimension: Int,
+        distanceMetric: VectorDistanceMetric,
+        metadataConfiguration: VectorMetadataConfiguration?,
+    ): SupabaseResult<Unit> {
+        val body = defaultJson.encodeToString(
+            VectorIndexCreateRequest(
+                vectorBucketName = vectorBucketName,
+                indexName = indexName,
+                dataType = dataType,
+                dimension = dimension,
+                distanceMetric = distanceMetric,
+                metadataConfiguration = metadataConfiguration,
+            ),
+        )
+        return client.post("/storage/v1/vector/CreateIndex", body = body).map { }
+    }
+
+    override suspend fun getVectorIndex(
+        vectorBucketName: String,
+        indexName: String,
+    ): SupabaseResult<VectorIndex> {
+        val body = defaultJson.encodeToString(
+            VectorIndexRequest(vectorBucketName = vectorBucketName, indexName = indexName),
+        )
+        return client.post("/storage/v1/vector/GetIndex", body = body)
+            .deserialize<VectorIndexResponse>()
+            .map { it.index }
+    }
+
+    override suspend fun listVectorIndexes(
+        vectorBucketName: String,
+        prefix: String?,
+        maxResults: Int?,
+        nextToken: String?,
+    ): SupabaseResult<VectorIndexListResponse> {
+        val body = defaultJson.encodeToString(
+            VectorIndexListRequest(
+                vectorBucketName = vectorBucketName,
+                prefix = prefix,
+                maxResults = maxResults,
+                nextToken = nextToken,
+            ),
+        )
+        return client.post("/storage/v1/vector/ListIndexes", body = body).deserialize()
+    }
+
+    override suspend fun deleteVectorIndex(
+        vectorBucketName: String,
+        indexName: String,
+    ): SupabaseResult<Unit> {
+        val body = defaultJson.encodeToString(
+            VectorIndexRequest(vectorBucketName = vectorBucketName, indexName = indexName),
+        )
+        return client.post("/storage/v1/vector/DeleteIndex", body = body).map { }
+    }
+
+    override suspend fun putVectors(
+        vectorBucketName: String,
+        indexName: String,
+        vectors: List<VectorObject>,
+    ): SupabaseResult<Unit> {
+        require(vectors.size in 1..500) { "Vector batch size must be between 1 and 500 items" }
+        val body = defaultJson.encodeToString(
+            VectorPutRequest(vectorBucketName = vectorBucketName, indexName = indexName, vectors = vectors),
+        )
+        return client.post("/storage/v1/vector/PutVectors", body = body).map { }
+    }
+
+    override suspend fun getVectors(
+        vectorBucketName: String,
+        indexName: String,
+        keys: List<String>,
+        returnData: Boolean?,
+        returnMetadata: Boolean?,
+    ): SupabaseResult<List<VectorMatch>> {
+        val body = defaultJson.encodeToString(
+            VectorGetRequest(
+                vectorBucketName = vectorBucketName,
+                indexName = indexName,
+                keys = keys,
+                returnData = returnData,
+                returnMetadata = returnMetadata,
+            ),
+        )
+        return client.post("/storage/v1/vector/GetVectors", body = body)
+            .deserialize<VectorMatchesResponse>()
+            .map { it.vectors }
+    }
+
+    override suspend fun listVectors(
+        vectorBucketName: String,
+        indexName: String,
+        maxResults: Int?,
+        nextToken: String?,
+        returnData: Boolean?,
+        returnMetadata: Boolean?,
+        segmentCount: Int?,
+        segmentIndex: Int?,
+    ): SupabaseResult<VectorListResponse> {
+        if (segmentCount != null) {
+            require(segmentCount in 1..16) { "segmentCount must be between 1 and 16" }
+            if (segmentIndex != null) {
+                require(segmentIndex in 0 until segmentCount) {
+                    "segmentIndex must be between 0 and ${segmentCount - 1}"
+                }
+            }
+        }
+        val body = defaultJson.encodeToString(
+            VectorListRequest(
+                vectorBucketName = vectorBucketName,
+                indexName = indexName,
+                maxResults = maxResults,
+                nextToken = nextToken,
+                returnData = returnData,
+                returnMetadata = returnMetadata,
+                segmentCount = segmentCount,
+                segmentIndex = segmentIndex,
+            ),
+        )
+        return client.post("/storage/v1/vector/ListVectors", body = body).deserialize()
+    }
+
+    override suspend fun queryVectors(
+        vectorBucketName: String,
+        indexName: String,
+        queryVector: VectorData,
+        topK: Int?,
+        filter: JsonObject?,
+        returnDistance: Boolean?,
+        returnMetadata: Boolean?,
+    ): SupabaseResult<VectorQueryResponse> {
+        val body = defaultJson.encodeToString(
+            VectorQueryRequest(
+                vectorBucketName = vectorBucketName,
+                indexName = indexName,
+                queryVector = queryVector,
+                topK = topK,
+                filter = filter,
+                returnDistance = returnDistance,
+                returnMetadata = returnMetadata,
+            ),
+        )
+        return client.post("/storage/v1/vector/QueryVectors", body = body).deserialize()
+    }
+
+    override suspend fun deleteVectors(
+        vectorBucketName: String,
+        indexName: String,
+        keys: List<String>,
+    ): SupabaseResult<Unit> {
+        require(keys.size in 1..500) { "Keys batch size must be between 1 and 500 items" }
+        val body = defaultJson.encodeToString(
+            VectorDeleteRequest(vectorBucketName = vectorBucketName, indexName = indexName, keys = keys),
+        )
+        return client.post("/storage/v1/vector/DeleteVectors", body = body).map { }
+    }
+
     private fun resolveStorageUrl(pathOrUrl: String): String =
         if (pathOrUrl.startsWith("http://") || pathOrUrl.startsWith("https://")) {
             pathOrUrl
@@ -478,4 +766,226 @@ internal class StorageClientImpl(
         if (fileName == null) return "$url${separator}download"
         return "$url${separator}download=${encodeQueryComponent(fileName)}"
     }
+}
+
+@Serializable
+private data class VectorMatchesResponse(
+    val vectors: List<VectorMatch>,
+)
+
+internal class AnalyticsCatalogClientImpl(
+    private val client: SupabaseClient,
+    private val bucketName: String,
+) : AnalyticsCatalogClient {
+    private var resolvedPrefix: String? = null
+
+    override suspend fun loadConfig(): SupabaseResult<JsonObject> =
+        client.get(
+            endpoint = "/storage/v1/iceberg/v1/config",
+            queryParams = listOf("warehouse" to bucketName),
+        ).toJsonObject()
+
+    override suspend fun listNamespaces(
+        parent: List<String>?,
+        pageToken: String?,
+        pageSize: Int?,
+    ): SupabaseResult<JsonObject> {
+        val prefix = resolvePrefix()
+        val query = buildList {
+            parent?.let { add("parent" to it.joinToString("\u001F")) }
+            pageToken?.let { add("pageToken" to it) }
+            pageSize?.let { add("pageSize" to it.toString()) }
+        }
+        return client.get(appendQuery("$prefix/namespaces", query)).toJsonObject()
+    }
+
+    override suspend fun createNamespace(
+        namespace: List<String>,
+        properties: Map<String, String>,
+    ): SupabaseResult<JsonObject> {
+        val prefix = resolvePrefix()
+        val body = defaultJson.encodeToString(
+            buildJsonObject {
+                putJsonArray("namespace") {
+                    namespace.forEach { add(JsonPrimitive(it)) }
+                }
+                if (properties.isNotEmpty()) {
+                    putJsonObject("properties") {
+                        properties.forEach { (key, value) -> put(key, value) }
+                    }
+                }
+            },
+        )
+        return client.post("$prefix/namespaces", body = body).toJsonObject()
+    }
+
+    override suspend fun dropNamespace(namespace: List<String>): SupabaseResult<Unit> =
+        client.delete("${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}").map { }
+
+    override suspend fun loadNamespaceMetadata(namespace: List<String>): SupabaseResult<JsonObject> =
+        client.get("${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}").toJsonObject()
+
+    override suspend fun updateNamespaceProperties(
+        namespace: List<String>,
+        removals: List<String>?,
+        updates: Map<String, String>?,
+    ): SupabaseResult<JsonObject> {
+        val body = defaultJson.encodeToString(
+            buildJsonObject {
+                removals?.let {
+                    putJsonArray("removals") {
+                        it.forEach { value -> add(JsonPrimitive(value)) }
+                    }
+                }
+                updates?.let {
+                    putJsonObject("updates") {
+                        it.forEach { (key, value) -> put(key, value) }
+                    }
+                }
+            },
+        )
+        return client.post(
+            endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/properties",
+            body = body,
+        ).toJsonObject()
+    }
+
+    override suspend fun listTables(
+        namespace: List<String>,
+        pageToken: String?,
+        pageSize: Int?,
+    ): SupabaseResult<JsonObject> {
+        val query = buildList {
+            pageToken?.let { add("pageToken" to it) }
+            pageSize?.let { add("pageSize" to it.toString()) }
+        }
+        return client.get(
+            endpoint = appendQuery("${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables", query),
+        ).toJsonObject()
+    }
+
+    override suspend fun createTable(namespace: List<String>, request: JsonObject): SupabaseResult<JsonObject> =
+        client.post(
+            endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables",
+            body = defaultJson.encodeToString(request),
+        ).toJsonObject()
+
+    override suspend fun updateTable(
+        namespace: List<String>,
+        name: String,
+        request: JsonObject,
+    ): SupabaseResult<JsonObject> =
+        client.post(
+            endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables/${encodePathSegment(name)}",
+            body = defaultJson.encodeToString(request),
+        ).toJsonObject()
+
+    override suspend fun commitTable(
+        namespace: List<String>,
+        name: String,
+        request: JsonObject,
+    ): SupabaseResult<JsonObject> =
+        updateTable(namespace = namespace, name = name, request = request)
+
+    override suspend fun dropTable(
+        namespace: List<String>,
+        name: String,
+        purge: Boolean,
+    ): SupabaseResult<Unit> =
+        client.delete(
+            endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables/${encodePathSegment(name)}?purgeRequested=$purge",
+        ).map { }
+
+    override suspend fun loadTable(
+        namespace: List<String>,
+        name: String,
+        snapshots: String?,
+    ): SupabaseResult<JsonObject> {
+        val query = buildList {
+            snapshots?.let { add("snapshots" to it) }
+        }
+        return client.get(
+            endpoint = appendQuery(
+                "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables/${encodePathSegment(name)}",
+                query,
+            ),
+        ).toJsonObject()
+    }
+
+    override suspend fun registerTable(namespace: List<String>, request: JsonObject): SupabaseResult<JsonObject> =
+        client.post(
+            endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/register",
+            body = defaultJson.encodeToString(request),
+        ).toJsonObject()
+
+    override suspend fun renameTable(request: JsonObject): SupabaseResult<Unit> =
+        client.post(
+            endpoint = "${resolvePrefix()}/tables/rename",
+            body = defaultJson.encodeToString(request),
+        ).map { }
+
+    private suspend fun resolvePrefix(): String {
+        resolvedPrefix?.let { return it }
+        val prefix = when (val config = loadConfig()) {
+            is SupabaseResult.Success -> config.value.extractIcebergPrefix()
+            is SupabaseResult.Failure -> null
+        } ?: bucketName
+        return "/storage/v1/iceberg/v1/$prefix".also { resolvedPrefix = it }
+    }
+
+    private fun JsonObject.extractIcebergPrefix(): String? =
+        this["overrides"]?.jsonObject?.get("prefix")?.jsonPrimitive?.contentOrNull()
+            ?: this["defaults"]?.jsonObject?.get("prefix")?.jsonPrimitive?.contentOrNull()
+
+    private fun JsonPrimitive.contentOrNull(): String? =
+        runCatching { content }.getOrNull()
+
+    private fun appendQuery(endpoint: String, params: List<Pair<String, String>>): String {
+        if (params.isEmpty()) return endpoint
+        val qs = params.joinToString("&") { (key, value) ->
+            "${encodePathSegment(key)}=${encodePathSegment(value)}"
+        }
+        return "$endpoint?$qs"
+    }
+}
+
+private fun SupabaseResult<String>.toJsonObject(): SupabaseResult<JsonObject> =
+    when (this) {
+        is SupabaseResult.Failure -> SupabaseResult.Failure(error)
+        is SupabaseResult.Success -> SupabaseResult.Success(defaultJson.parseToJsonElement(value).jsonObject)
+    }
+
+private fun validateAnalyticsBucketName(value: String) {
+    require(value.isNotBlank()) { "bucketName cannot be blank" }
+    require(value.all { it.isLetterOrDigit() || it == '-' || it == '_' || it == '.' }) {
+        "Invalid bucket name: $value"
+    }
+}
+
+private fun List<String>.toIcebergPath(): String =
+    joinToString("%1F") { encodePathSegment(it) }
+
+private fun encodePathSegment(value: String): String {
+    val bytes = value.encodeToByteArray()
+    val out = StringBuilder(bytes.size)
+    bytes.forEach { b ->
+        val c = b.toInt().toChar()
+        if (
+            (c in 'a'..'z') ||
+            (c in 'A'..'Z') ||
+            (c in '0'..'9') ||
+            c == '-' ||
+            c == '_' ||
+            c == '.' ||
+            c == '~'
+        ) {
+            out.append(c)
+        } else {
+            val v = b.toInt() and 0xff
+            out.append('%')
+            out.append("0123456789ABCDEF"[v ushr 4])
+            out.append("0123456789ABCDEF"[v and 0x0f])
+        }
+    }
+    return out.toString()
 }

@@ -31,8 +31,20 @@ public class FilterBuilder {
     public fun like(column: String, pattern: String) {
         params += column to "like.$pattern"
     }
+    public fun likeAllOf(column: String, patterns: List<String>) {
+        params += column to "like(all).{${patterns.joinToString(",")}}"
+    }
+    public fun likeAnyOf(column: String, patterns: List<String>) {
+        params += column to "like(any).{${patterns.joinToString(",")}}"
+    }
     public fun ilike(column: String, pattern: String) {
         params += column to "ilike.$pattern"
+    }
+    public fun ilikeAllOf(column: String, patterns: List<String>) {
+        params += column to "ilike(all).{${patterns.joinToString(",")}}"
+    }
+    public fun ilikeAnyOf(column: String, patterns: List<String>) {
+        params += column to "ilike(any).{${patterns.joinToString(",")}}"
     }
     public fun `is`(column: String, value: String) {
         params += column to "is.$value"

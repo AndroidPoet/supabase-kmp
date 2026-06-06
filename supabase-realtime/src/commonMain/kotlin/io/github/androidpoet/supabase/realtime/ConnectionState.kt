@@ -3,6 +3,7 @@ public sealed interface ConnectionState {
     public data object Disconnected : ConnectionState
     public data object Connecting : ConnectionState
     public data object Connected : ConnectionState
+    public data object Disconnecting : ConnectionState
     public data class Reconnecting(
         public val attempt: Int,
         public val nextRetryMs: Long,

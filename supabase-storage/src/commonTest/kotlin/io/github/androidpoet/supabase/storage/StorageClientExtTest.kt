@@ -1,16 +1,31 @@
 package io.github.androidpoet.supabase.storage
 
 import io.github.androidpoet.supabase.core.result.SupabaseResult
+import io.github.androidpoet.supabase.storage.models.AnalyticsBucket
 import io.github.androidpoet.supabase.storage.models.Bucket
 import io.github.androidpoet.supabase.storage.models.FileObject
-import kotlinx.coroutines.runBlocking
+import io.github.androidpoet.supabase.storage.models.ObjectListV2Result
+import io.github.androidpoet.supabase.storage.models.VectorBucket
+import io.github.androidpoet.supabase.storage.models.VectorBucketListResponse
+import io.github.androidpoet.supabase.storage.models.VectorData
+import io.github.androidpoet.supabase.storage.models.VectorDataType
+import io.github.androidpoet.supabase.storage.models.VectorDistanceMetric
+import io.github.androidpoet.supabase.storage.models.VectorIndex
+import io.github.androidpoet.supabase.storage.models.VectorIndexListResponse
+import io.github.androidpoet.supabase.storage.models.VectorListResponse
+import io.github.androidpoet.supabase.storage.models.VectorMatch
+import io.github.androidpoet.supabase.storage.models.VectorMetadataConfiguration
+import io.github.androidpoet.supabase.storage.models.VectorObject
+import io.github.androidpoet.supabase.storage.models.VectorQueryResponse
+import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.JsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class StorageClientExtTest {
     @Test
-    fun test_createSignedDownloadUrl_addsDownloadParam() = runBlocking {
+    fun test_createSignedDownloadUrl_addsDownloadParam() = runTest {
         val client = FakeStorageClient()
 
         val result = client.createSignedDownloadUrl(
@@ -24,7 +39,7 @@ class StorageClientExtTest {
     }
 
     @Test
-    fun test_createSignedDownloadUrl_encodesFileName() = runBlocking {
+    fun test_createSignedDownloadUrl_encodesFileName() = runTest {
         val client = FakeStorageClient()
 
         val result = client.createSignedDownloadUrl(
@@ -42,7 +57,7 @@ class StorageClientExtTest {
     }
 
     @Test
-    fun test_createSignedDownloadUrl_passesDownloadOptionsToCoreApi() = runBlocking {
+    fun test_createSignedDownloadUrl_passesDownloadOptionsToCoreApi() = runTest {
         val client = FakeStorageClient()
 
         client.createSignedDownloadUrl(
@@ -57,7 +72,7 @@ class StorageClientExtTest {
     }
 
     @Test
-    fun test_createSignedDownloadUrl_transformOverload_passesTransform() = runBlocking {
+    fun test_createSignedDownloadUrl_transformOverload_passesTransform() = runTest {
         val client = FakeStorageClient()
 
         client.createSignedDownloadUrl(
@@ -71,7 +86,7 @@ class StorageClientExtTest {
     }
 
     @Test
-    fun test_createSignedRenderUrl_setsDownloadFalseAndPassesTransform() = runBlocking {
+    fun test_createSignedRenderUrl_setsDownloadFalseAndPassesTransform() = runTest {
         val client = FakeStorageClient()
 
         client.createSignedRenderUrl(
@@ -86,7 +101,7 @@ class StorageClientExtTest {
     }
 
     @Test
-    fun test_createSignedDownloadUrls_vararg_routesToListOverload() = runBlocking {
+    fun test_createSignedDownloadUrls_vararg_routesToListOverload() = runTest {
         val client = FakeStorageClient()
 
         val result = client.createSignedDownloadUrls(
@@ -102,7 +117,7 @@ class StorageClientExtTest {
     }
 
     @Test
-    fun test_createSignedDownloadUrls_vararg_withFileName_routesToListOverload() = runBlocking {
+    fun test_createSignedDownloadUrls_vararg_withFileName_routesToListOverload() = runTest {
         val client = FakeStorageClient()
 
         val result = client.createSignedDownloadUrls(
@@ -120,7 +135,7 @@ class StorageClientExtTest {
     }
 
     @Test
-    fun test_createSignedRenderUrls_list_appendsTransformQuery() = runBlocking {
+    fun test_createSignedRenderUrls_list_appendsTransformQuery() = runTest {
         val client = FakeStorageClient()
 
         val result = client.createSignedRenderUrls(
@@ -138,7 +153,7 @@ class StorageClientExtTest {
     }
 
     @Test
-    fun test_createSignedRenderUrls_vararg_routesAndAppendsTransform() = runBlocking {
+    fun test_createSignedRenderUrls_vararg_routesAndAppendsTransform() = runTest {
         val client = FakeStorageClient()
 
         val result = client.createSignedRenderUrls(
@@ -160,7 +175,7 @@ class StorageClientExtTest {
     }
 
     @Test
-    fun test_createSignedDownloadUrlsByPath_returnsPathUrlMap() = runBlocking {
+    fun test_createSignedDownloadUrlsByPath_returnsPathUrlMap() = runTest {
         val client = FakeStorageClient()
 
         val result = client.createSignedDownloadUrlsByPath(
@@ -180,7 +195,7 @@ class StorageClientExtTest {
     }
 
     @Test
-    fun test_createSignedRenderUrlsByPath_returnsPathUrlMapWithTransformQuery() = runBlocking {
+    fun test_createSignedRenderUrlsByPath_returnsPathUrlMapWithTransformQuery() = runTest {
         val client = FakeStorageClient()
 
         val result = client.createSignedRenderUrlsByPath(
@@ -201,7 +216,7 @@ class StorageClientExtTest {
     }
 
     @Test
-    fun test_createSignedDownloadUrlsByPath_vararg_routesToListOverload() = runBlocking {
+    fun test_createSignedDownloadUrlsByPath_vararg_routesToListOverload() = runTest {
         val client = FakeStorageClient()
 
         val result = client.createSignedDownloadUrlsByPath(
@@ -222,7 +237,7 @@ class StorageClientExtTest {
     }
 
     @Test
-    fun test_createSignedRenderUrlsByPath_vararg_routesToListOverload() = runBlocking {
+    fun test_createSignedRenderUrlsByPath_vararg_routesToListOverload() = runTest {
         val client = FakeStorageClient()
 
         val result = client.createSignedRenderUrlsByPath(
@@ -244,7 +259,7 @@ class StorageClientExtTest {
     }
 
     @Test
-    fun test_remove_vararg_routesToListOverload() = runBlocking {
+    fun test_remove_vararg_routesToListOverload() = runTest {
         val client = FakeStorageClient()
 
         val result = client.remove(
@@ -258,7 +273,7 @@ class StorageClientExtTest {
     }
 
     @Test
-    fun test_removeWithResult_vararg_routesToListOverload() = runBlocking {
+    fun test_removeWithResult_vararg_routesToListOverload() = runTest {
         val client = FakeStorageClient()
 
         val result = client.removeWithResult(
@@ -395,6 +410,15 @@ private class FakeStorageClient : StorageClient {
     override suspend fun exists(bucket: String, path: String): SupabaseResult<Boolean> = error("not used")
     override suspend fun existsPublic(bucket: String, path: String): SupabaseResult<Boolean> = error("not used")
     override suspend fun list(bucket: String, prefix: String, limit: Int, offset: Int, sortBy: String?, sortOrder: SortOrder, search: String?): SupabaseResult<List<FileObject>> = error("not used")
+    override suspend fun listV2(
+        bucket: String,
+        prefix: String?,
+        cursor: String?,
+        limit: Int?,
+        withDelimiter: Boolean?,
+        sortBy: String?,
+        sortOrder: SortOrder,
+    ): SupabaseResult<ObjectListV2Result> = error("not used")
     override suspend fun move(bucket: String, fromPath: String, toPath: String, destinationBucket: String?): SupabaseResult<Unit> = error("not used")
     override suspend fun deleteObject(bucket: String, path: String): SupabaseResult<Unit> = error("not used")
     override suspend fun copy(bucket: String, fromPath: String, toPath: String, destinationBucket: String?, copyMetadata: Boolean?): SupabaseResult<Unit> = error("not used")
@@ -480,4 +504,45 @@ private class FakeStorageClient : StorageClient {
         return transform?.width?.let { "$base?width=$it" } ?: base
     }
     override fun getSignedDownloadUrl(bucket: String, path: String, token: String, download: Boolean, fileName: String?): String = error("not used")
+    override suspend fun createAnalyticsBucket(name: String): SupabaseResult<AnalyticsBucket> = error("not used")
+    override suspend fun listAnalyticsBuckets(limit: Int?, offset: Int?, sortColumn: String?, sortOrder: SortOrder?, search: String?): SupabaseResult<List<AnalyticsBucket>> = error("not used")
+    override suspend fun deleteAnalyticsBucket(name: String): SupabaseResult<Unit> = error("not used")
+    override fun analyticsCatalog(bucketName: String): AnalyticsCatalogClient = error("not used")
+    override suspend fun createVectorBucket(vectorBucketName: String): SupabaseResult<Unit> = error("not used")
+    override suspend fun getVectorBucket(vectorBucketName: String): SupabaseResult<VectorBucket> = error("not used")
+    override suspend fun listVectorBuckets(prefix: String?, maxResults: Int?, nextToken: String?): SupabaseResult<VectorBucketListResponse> = error("not used")
+    override suspend fun deleteVectorBucket(vectorBucketName: String): SupabaseResult<Unit> = error("not used")
+    override suspend fun createVectorIndex(
+        vectorBucketName: String,
+        indexName: String,
+        dataType: VectorDataType,
+        dimension: Int,
+        distanceMetric: VectorDistanceMetric,
+        metadataConfiguration: VectorMetadataConfiguration?,
+    ): SupabaseResult<Unit> = error("not used")
+    override suspend fun getVectorIndex(vectorBucketName: String, indexName: String): SupabaseResult<VectorIndex> = error("not used")
+    override suspend fun listVectorIndexes(vectorBucketName: String, prefix: String?, maxResults: Int?, nextToken: String?): SupabaseResult<VectorIndexListResponse> = error("not used")
+    override suspend fun deleteVectorIndex(vectorBucketName: String, indexName: String): SupabaseResult<Unit> = error("not used")
+    override suspend fun putVectors(vectorBucketName: String, indexName: String, vectors: List<VectorObject>): SupabaseResult<Unit> = error("not used")
+    override suspend fun getVectors(vectorBucketName: String, indexName: String, keys: List<String>, returnData: Boolean?, returnMetadata: Boolean?): SupabaseResult<List<VectorMatch>> = error("not used")
+    override suspend fun listVectors(
+        vectorBucketName: String,
+        indexName: String,
+        maxResults: Int?,
+        nextToken: String?,
+        returnData: Boolean?,
+        returnMetadata: Boolean?,
+        segmentCount: Int?,
+        segmentIndex: Int?,
+    ): SupabaseResult<VectorListResponse> = error("not used")
+    override suspend fun queryVectors(
+        vectorBucketName: String,
+        indexName: String,
+        queryVector: VectorData,
+        topK: Int?,
+        filter: JsonObject?,
+        returnDistance: Boolean?,
+        returnMetadata: Boolean?,
+    ): SupabaseResult<VectorQueryResponse> = error("not used")
+    override suspend fun deleteVectors(vectorBucketName: String, indexName: String, keys: List<String>): SupabaseResult<Unit> = error("not used")
 }

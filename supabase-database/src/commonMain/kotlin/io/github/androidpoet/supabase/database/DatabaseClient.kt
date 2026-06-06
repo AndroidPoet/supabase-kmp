@@ -14,6 +14,18 @@ public enum class UpsertResolution(internal val headerValue: String) {
     MERGE_DUPLICATES("merge-duplicates"),
     IGNORE_DUPLICATES("ignore-duplicates"),
 }
+public enum class ExplainFormat(internal val headerValue: String) {
+    TEXT("text"),
+    JSON("json"),
+}
+public data class ExplainOptions(
+    public val analyze: Boolean = false,
+    public val verbose: Boolean = false,
+    public val settings: Boolean = false,
+    public val buffers: Boolean = false,
+    public val wal: Boolean = false,
+    public val format: ExplainFormat = ExplainFormat.TEXT,
+)
 public interface DatabaseClient {
     public suspend fun select(
         table: String,
@@ -23,6 +35,10 @@ public interface DatabaseClient {
         single: Boolean = false,
         csv: Boolean = false,
         count: CountOption? = null,
+        stripNulls: Boolean = false,
+        explain: ExplainOptions? = null,
+        retry: Boolean = true,
+        headers: Map<String, String> = emptyMap(),
         filters: FilterBuilder.() -> Unit = {},
     ): SupabaseResult<String>
     public suspend fun insert(
@@ -36,6 +52,9 @@ public interface DatabaseClient {
         onConflict: String? = null,
         returning: ReturnOption = ReturnOption.REPRESENTATION,
         count: CountOption? = null,
+        stripNulls: Boolean = false,
+        rollback: Boolean = false,
+        headers: Map<String, String> = emptyMap(),
     ): SupabaseResult<String>
     public suspend fun update(
         table: String,
@@ -43,6 +62,11 @@ public interface DatabaseClient {
         body: String,
         returning: ReturnOption = ReturnOption.REPRESENTATION,
         count: CountOption? = null,
+        stripNulls: Boolean = false,
+        rollback: Boolean = false,
+        maxAffected: Int? = null,
+        explain: ExplainOptions? = null,
+        headers: Map<String, String> = emptyMap(),
         filters: FilterBuilder.() -> Unit = {},
     ): SupabaseResult<String>
     public suspend fun delete(
@@ -50,6 +74,11 @@ public interface DatabaseClient {
         schema: String? = null,
         returning: ReturnOption = ReturnOption.REPRESENTATION,
         count: CountOption? = null,
+        stripNulls: Boolean = false,
+        rollback: Boolean = false,
+        maxAffected: Int? = null,
+        explain: ExplainOptions? = null,
+        headers: Map<String, String> = emptyMap(),
         filters: FilterBuilder.() -> Unit = {},
     ): SupabaseResult<String>
     public suspend fun rpc(
@@ -60,6 +89,11 @@ public interface DatabaseClient {
         single: Boolean = false,
         csv: Boolean = false,
         count: CountOption? = null,
+        stripNulls: Boolean = false,
+        rollback: Boolean = false,
+        maxAffected: Int? = null,
+        explain: ExplainOptions? = null,
+        headers: Map<String, String> = emptyMap(),
     ): SupabaseResult<String>
     public suspend fun rpcGet(
         function: String,
@@ -69,5 +103,9 @@ public interface DatabaseClient {
         single: Boolean = false,
         csv: Boolean = false,
         count: CountOption? = null,
+        stripNulls: Boolean = false,
+        explain: ExplainOptions? = null,
+        retry: Boolean = true,
+        headers: Map<String, String> = emptyMap(),
     ): SupabaseResult<String>
 }

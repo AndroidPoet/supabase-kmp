@@ -11,6 +11,14 @@ import io.github.androidpoet.supabase.auth.models.MfaVerifyResponse
 import io.github.androidpoet.supabase.auth.models.OAuthProvider
 import io.github.androidpoet.supabase.auth.models.OtpType
 import io.github.androidpoet.supabase.auth.models.OtpVerifyResult
+import io.github.androidpoet.supabase.auth.models.Passkey
+import io.github.androidpoet.supabase.auth.models.PasskeyAuthenticationOptionsResponse
+import io.github.androidpoet.supabase.auth.models.PasskeyMetadata
+import io.github.androidpoet.supabase.auth.models.PasskeyRegistrationOptionsResponse
+import io.github.androidpoet.supabase.auth.models.OAuthAuthorizationDetails
+import io.github.androidpoet.supabase.auth.models.OAuthGrant
+import io.github.androidpoet.supabase.auth.models.OAuthRedirect
+import io.github.androidpoet.supabase.auth.models.OAuthResponse
 import io.github.androidpoet.supabase.auth.models.PkceParams
 import io.github.androidpoet.supabase.auth.models.Session
 import io.github.androidpoet.supabase.auth.models.SignOutScope
@@ -18,11 +26,12 @@ import io.github.androidpoet.supabase.auth.models.SsoResponse
 import io.github.androidpoet.supabase.auth.models.UserIdentity
 import io.github.androidpoet.supabase.auth.models.User
 import io.github.androidpoet.supabase.auth.models.UserUpdateRequest
+import io.github.androidpoet.supabase.auth.models.Web3Chain
 import io.github.androidpoet.supabase.auth.session.SessionManager
 import io.github.androidpoet.supabase.auth.session.SessionState
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -34,7 +43,7 @@ import kotlinx.coroutines.flow.StateFlow
 
 class AuthClientExtTest {
     @Test
-    fun test_signUp_alias_routesToEmailSignup() = runBlocking {
+    fun test_signUp_alias_routesToEmailSignup() = runTest {
         val auth = FakeAuthClient()
 
         auth.signUp(email = "a@b.com", password = "secret")
@@ -43,7 +52,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_signIn_alias_routesToEmailSignIn() = runBlocking {
+    fun test_signIn_alias_routesToEmailSignIn() = runTest {
         val auth = FakeAuthClient()
 
         auth.signIn(email = "a@b.com", password = "secret")
@@ -52,7 +61,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_signUpPhone_alias_routesToPhoneSignup() = runBlocking {
+    fun test_signUpPhone_alias_routesToPhoneSignup() = runTest {
         val auth = FakeAuthClient()
 
         auth.signUpPhone(phone = "+10000000000", password = "secret")
@@ -61,7 +70,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_forgotPassword_alias_routesToResetPassword() = runBlocking {
+    fun test_forgotPassword_alias_routesToResetPassword() = runTest {
         val auth = FakeAuthClient()
 
         val result = auth.forgotPassword(email = "a@b.com")
@@ -71,7 +80,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_resendSignUpEmailOtp_routesWithEmailType() = runBlocking {
+    fun test_resendSignUpEmailOtp_routesWithEmailType() = runTest {
         val auth = FakeAuthClient()
 
         auth.resendSignUpEmailOtp(email = "a@b.com")
@@ -81,7 +90,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_verifyEmailSignUpOtp_usesEmailOtpType() = runBlocking {
+    fun test_verifyEmailSignUpOtp_usesEmailOtpType() = runTest {
         val auth = FakeAuthClient()
 
         auth.verifyEmailSignUpOtp(email = "a@b.com", token = "123456")
@@ -90,7 +99,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_signOutGlobal_usesGlobalScope() = runBlocking {
+    fun test_signOutGlobal_usesGlobalScope() = runTest {
         val auth = FakeAuthClient()
 
         auth.signOutGlobal("token-1")
@@ -99,7 +108,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_verifyEmailSignUpOtpWithResult_usesEmailOtpType() = runBlocking {
+    fun test_verifyEmailSignUpOtpWithResult_usesEmailOtpType() = runTest {
         val auth = FakeAuthClient()
 
         auth.verifyEmailSignUpOtpWithResult(email = "a@b.com", token = "123456")
@@ -108,7 +117,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_verifyPhoneSignInOtpWithResult_usesSmsOtpType() = runBlocking {
+    fun test_verifyPhoneSignInOtpWithResult_usesSmsOtpType() = runTest {
         val auth = FakeAuthClient()
 
         auth.verifyPhoneSignInOtpWithResult(phone = "+10000000000", token = "123456")
@@ -117,7 +126,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_verifyEmailOtpWithTokenHashWithResult_routesToTokenHashApi() = runBlocking {
+    fun test_verifyEmailOtpWithTokenHashWithResult_routesToTokenHashApi() = runTest {
         val auth = FakeAuthClient()
 
         auth.verifyEmailOtpWithTokenHashWithResult(
@@ -129,7 +138,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_verifyOtpWithResultAndSaveSession_savesWhenAuthenticated() = runBlocking {
+    fun test_verifyOtpWithResultAndSaveSession_savesWhenAuthenticated() = runTest {
         val auth = FakeAuthClient().apply {
             verifyWithResultValue = OtpVerifyResult.Authenticated(
                 dummySession.copy(accessToken = "otp-result-acc", refreshToken = "otp-result-ref"),
@@ -149,7 +158,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_verifyOtpWithResultAndSaveSession_doesNotSaveWhenNoSession() = runBlocking {
+    fun test_verifyOtpWithResultAndSaveSession_doesNotSaveWhenNoSession() = runTest {
         val auth = FakeAuthClient().apply {
             verifyWithResultValue = OtpVerifyResult.VerifiedNoSession
         }
@@ -167,7 +176,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_getUserForCurrentSession_updatesStoredSessionWhenRequested() = runBlocking {
+    fun test_getUserForCurrentSession_updatesStoredSessionWhenRequested() = runTest {
         val auth = FakeAuthClient()
         val sessionManager = FakeSessionManager(
             session = auth.dummySession.copy(
@@ -187,7 +196,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_reauthenticateCurrentSession_usesCurrentAccessToken() = runBlocking {
+    fun test_reauthenticateCurrentSession_usesCurrentAccessToken() = runTest {
         val auth = FakeAuthClient()
         val sessionManager = FakeSessionManager(session = auth.dummySession.copy(accessToken = "token-reauth"))
 
@@ -198,7 +207,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_signOutCurrentSession_clearsStoredSessionOnSuccess() = runBlocking {
+    fun test_signOutCurrentSession_clearsStoredSessionOnSuccess() = runTest {
         val auth = FakeAuthClient()
         val sessionManager = FakeSessionManager(session = auth.dummySession.copy(accessToken = "token-signout"))
 
@@ -215,7 +224,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_signOutCurrentSession_withoutSession_succeedsByDefault() = runBlocking {
+    fun test_signOutCurrentSession_withoutSession_succeedsByDefault() = runTest {
         val auth = FakeAuthClient()
         val sessionManager = FakeSessionManager()
 
@@ -225,7 +234,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_signOutCurrentSession_withoutSession_canFailWhenStrict() = runBlocking {
+    fun test_signOutCurrentSession_withoutSession_canFailWhenStrict() = runTest {
         val auth = FakeAuthClient()
         val sessionManager = FakeSessionManager()
 
@@ -251,7 +260,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_importSessionFromUrl_retrievesUserAndSavesSession() = runBlocking {
+    fun test_importSessionFromUrl_retrievesUserAndSavesSession() = runTest {
         val auth = FakeAuthClient()
         val sessionManager = FakeSessionManager()
 
@@ -271,7 +280,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_exchangeCodeForSessionAndSave_savesExchangedSession() = runBlocking {
+    fun test_exchangeCodeForSessionAndSave_savesExchangedSession() = runTest {
         val auth = FakeAuthClient()
         val sessionManager = FakeSessionManager()
 
@@ -301,7 +310,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_parseCurrentSessionJwtClaims_usesSessionAccessToken() = runBlocking {
+    fun test_parseCurrentSessionJwtClaims_usesSessionAccessToken() = runTest {
         val header = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0"
         val payload = "eyJleHAiOjE3MDAwMDAwMDAsInN1YiI6InUxIn0"
         val jwt = "$header.$payload."
@@ -316,7 +325,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_unlinkIdentityAndUpdateSession_removesIdentityFromStoredSession() = runBlocking {
+    fun test_unlinkIdentityAndUpdateSession_removesIdentityFromStoredSession() = runTest {
         val auth = FakeAuthClient()
         val sessionManager = FakeSessionManager(
             session = auth.dummySession.copy(
@@ -345,7 +354,22 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_linkIdentityForCurrentSession_usesSessionAccessToken() = runBlocking {
+    fun test_getUserIdentitiesForCurrentSession_usesSessionAccessToken() = runTest {
+        val auth = FakeAuthClient()
+        auth.currentUserIdentities = listOf(
+            UserIdentity(id = "provider-user-1", identityId = "identity-1", provider = "github"),
+        )
+        val sessionManager = FakeSessionManager(session = auth.dummySession.copy(accessToken = "token-identities"))
+
+        val result = auth.getUserIdentitiesForCurrentSession(sessionManager)
+
+        assertTrue(result is SupabaseResult.Success)
+        assertEquals("token-identities", auth.lastGetIdentitiesAccessToken)
+        assertEquals("identity-1", result.value.first().identityId)
+    }
+
+    @Test
+    fun test_linkIdentityForCurrentSession_usesSessionAccessToken() = runTest {
         val auth = FakeAuthClient()
         val sessionManager = FakeSessionManager(session = auth.dummySession.copy(accessToken = "token-link"))
 
@@ -360,7 +384,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_linkIdentityWithIdTokenForCurrentSession_savesSessionOnSuccess() = runBlocking {
+    fun test_linkIdentityWithIdTokenForCurrentSession_savesSessionOnSuccess() = runTest {
         val auth = FakeAuthClient()
         val sessionManager = FakeSessionManager(session = auth.dummySession.copy(accessToken = "token-link-id"))
 
@@ -380,7 +404,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_unlinkIdentityForCurrentSession_usesSessionAccessToken() = runBlocking {
+    fun test_unlinkIdentityForCurrentSession_usesSessionAccessToken() = runTest {
         val auth = FakeAuthClient()
         val sessionManager = FakeSessionManager(
             session = auth.dummySession.copy(
@@ -404,7 +428,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_updateUserForCurrentSession_updatesStoredSession() = runBlocking {
+    fun test_updateUserForCurrentSession_updatesStoredSession() = runTest {
         val auth = FakeAuthClient()
         val sessionManager = FakeSessionManager(session = auth.dummySession.copy(accessToken = "token-update-current"))
 
@@ -420,7 +444,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_refreshCurrentSession_delegatesToSessionManager() = runBlocking {
+    fun test_refreshCurrentSession_delegatesToSessionManager() = runTest {
         val auth = FakeAuthClient()
         val sessionManager = FakeSessionManager(session = auth.dummySession).apply {
             refreshResult = SupabaseResult.Success(auth.dummySession.copy(accessToken = "refreshed-token"))
@@ -434,7 +458,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_importAuthToken_retrievesUserAndSavesSession() = runBlocking {
+    fun test_importAuthToken_retrievesUserAndSavesSession() = runTest {
         val auth = FakeAuthClient()
         val sessionManager = FakeSessionManager()
 
@@ -455,7 +479,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_retrieveSsoUrlForCurrentSession_usesSessionAccessToken() = runBlocking {
+    fun test_retrieveSsoUrlForCurrentSession_usesSessionAccessToken() = runTest {
         val auth = FakeAuthClient()
         val sessionManager = FakeSessionManager(session = auth.dummySession.copy(accessToken = "sso-token"))
 
@@ -469,7 +493,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_signInWithEmailAndSaveSession_savesReturnedSession() = runBlocking {
+    fun test_signInWithEmailAndSaveSession_savesReturnedSession() = runTest {
         val auth = FakeAuthClient()
         val sessionManager = FakeSessionManager()
 
@@ -485,7 +509,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_signUpWithEmailAndSaveSession_savesReturnedSession() = runBlocking {
+    fun test_signUpWithEmailAndSaveSession_savesReturnedSession() = runTest {
         val auth = FakeAuthClient()
         val sessionManager = FakeSessionManager()
 
@@ -501,7 +525,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_signInAnonymouslyAndSaveSession_savesReturnedSession() = runBlocking {
+    fun test_signInAnonymouslyAndSaveSession_savesReturnedSession() = runTest {
         val auth = FakeAuthClient()
         val sessionManager = FakeSessionManager()
 
@@ -515,7 +539,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_refreshTokenAndSaveSession_savesReturnedSession() = runBlocking {
+    fun test_refreshTokenAndSaveSession_savesReturnedSession() = runTest {
         val auth = FakeAuthClient()
         val sessionManager = FakeSessionManager()
 
@@ -530,7 +554,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_verifyOtpAndSaveSession_savesReturnedSession() = runBlocking {
+    fun test_verifyOtpAndSaveSession_savesReturnedSession() = runTest {
         val auth = FakeAuthClient()
         val sessionManager = FakeSessionManager()
 
@@ -547,7 +571,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_signInWithPhoneAndSaveSession_savesReturnedSession() = runBlocking {
+    fun test_signInWithPhoneAndSaveSession_savesReturnedSession() = runTest {
         val auth = FakeAuthClient()
         val sessionManager = FakeSessionManager()
 
@@ -562,7 +586,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_signUpWithPhoneAndSaveSession_savesReturnedSession() = runBlocking {
+    fun test_signUpWithPhoneAndSaveSession_savesReturnedSession() = runTest {
         val auth = FakeAuthClient()
         val sessionManager = FakeSessionManager()
 
@@ -577,7 +601,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_signInWithIdTokenAndSaveSession_savesReturnedSession() = runBlocking {
+    fun test_signInWithIdTokenAndSaveSession_savesReturnedSession() = runTest {
         val auth = FakeAuthClient()
         val sessionManager = FakeSessionManager()
 
@@ -592,7 +616,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_verifyOtpWithTokenHashAndSaveSession_savesReturnedSession() = runBlocking {
+    fun test_verifyOtpWithTokenHashAndSaveSession_savesReturnedSession() = runTest {
         val auth = FakeAuthClient()
         val sessionManager = FakeSessionManager()
 
@@ -607,7 +631,7 @@ class AuthClientExtTest {
     }
 
     @Test
-    fun test_verifyOtpWithTokenHashWithResultAndSaveSession_savesWhenAuthenticated() = runBlocking {
+    fun test_verifyOtpWithTokenHashWithResultAndSaveSession_savesWhenAuthenticated() = runTest {
         val auth = FakeAuthClient().apply {
             verifyWithResultValue = OtpVerifyResult.Authenticated(
                 dummySession.copy(accessToken = "verify-hash-result-acc", refreshToken = "verify-hash-result-ref"),
@@ -623,6 +647,23 @@ class AuthClientExtTest {
 
         assertTrue(result is SupabaseResult.Success)
         assertEquals("verify-hash-result-acc", sessionManager.currentSession?.accessToken)
+    }
+
+    @Test
+    fun test_mfaChallengeAndVerify_usesChallengeIdFromChallengeResponse() = runTest {
+        val auth = FakeAuthClient()
+
+        val result = auth.mfaChallengeAndVerify(
+            factorId = "factor-1",
+            code = "123456",
+            accessToken = "token-mfa",
+        )
+
+        assertTrue(result is SupabaseResult.Success)
+        assertEquals("factor-1", auth.lastMfaChallengeFactorId)
+        assertEquals("challenge-1", auth.lastMfaVerifyChallengeId)
+        assertEquals("123456", auth.lastMfaVerifyCode)
+        assertEquals("token-mfa", auth.lastMfaVerifyAccessToken)
     }
 }
 
@@ -649,9 +690,15 @@ private class FakeAuthClient : AuthClient {
     var lastLinkIdTokenValue: String? = null
     var lastUnlinkAccessToken: String? = null
     var lastUnlinkIdentityId: String? = null
+    var lastGetIdentitiesAccessToken: String? = null
     var lastUpdateUserAccessToken: String? = null
     var lastRetrieveSsoAccessToken: String? = null
     var lastRefreshTokenInput: String? = null
+    var lastMfaChallengeFactorId: String? = null
+    var lastMfaVerifyChallengeId: String? = null
+    var lastMfaVerifyCode: String? = null
+    var lastMfaVerifyAccessToken: String? = null
+    var currentUserIdentities: List<UserIdentity> = emptyList()
 
     val dummySession = Session(
         accessToken = "a",
@@ -692,6 +739,12 @@ private class FakeAuthClient : AuthClient {
     ): SupabaseResult<Session> = SupabaseResult.Success(
         dummySession.copy(accessToken = "id-token-sign-in-acc", refreshToken = "id-token-sign-in-ref"),
     )
+    override suspend fun signInWithWeb3(
+        chain: Web3Chain,
+        message: String,
+        signature: String,
+        captchaToken: String?,
+    ): SupabaseResult<Session> = SupabaseResult.Failure(SupabaseError("not used"))
     override suspend fun signInWithOtp(
         email: String?,
         phone: String?,
@@ -757,6 +810,10 @@ private class FakeAuthClient : AuthClient {
         SupabaseResult.Success(dummySession.user.copy(email = "updated@b.com")).also {
             lastGetUserAccessToken = accessToken
         }
+    override suspend fun getUserIdentities(accessToken: String): SupabaseResult<List<UserIdentity>> =
+        SupabaseResult.Success(currentUserIdentities).also {
+            lastGetIdentitiesAccessToken = accessToken
+        }
     override suspend fun updateUser(accessToken: String, updates: UserUpdateRequest): SupabaseResult<User> =
         SupabaseResult.Success(dummySession.user.copy(email = updates.email ?: dummySession.user.email)).also {
             lastUpdateUserAccessToken = accessToken
@@ -793,7 +850,16 @@ private class FakeAuthClient : AuthClient {
         SupabaseResult.Success(SsoResponse(url = "https://example.com/sso")).also {
             lastRetrieveSsoAccessToken = accessToken
         }
-    override fun getOAuthSignInUrl(provider: OAuthProvider, redirectTo: String?, scopes: List<String>, queryParams: Map<String, String>, pkceParams: PkceParams?): String =
+    override suspend fun signInWithOAuth(
+        provider: OAuthProvider,
+        redirectTo: String?,
+        scopes: List<String>,
+        queryParams: Map<String, String>,
+        skipBrowserRedirect: Boolean,
+        pkceParams: PkceParams?,
+    ): SupabaseResult<OAuthResponse> =
+        SupabaseResult.Success(OAuthResponse(provider = provider.value, url = "https://example.com/oauth"))
+    override fun getOAuthSignInUrl(provider: OAuthProvider, redirectTo: String?, scopes: List<String>, queryParams: Map<String, String>, skipBrowserRedirect: Boolean, pkceParams: PkceParams?): String =
         "https://example.com/oauth"
     override fun generatePkceParams(sha256: ((ByteArray) -> ByteArray)?): PkceParams =
         PkceParams(codeVerifier = "v", codeChallenge = "c", codeChallengeMethod = "S256")
@@ -811,14 +877,52 @@ private class FakeAuthClient : AuthClient {
     override suspend fun mfaEnroll(factorType: MfaFactorType, friendlyName: String?, issuer: String?, phone: String?, accessToken: String): SupabaseResult<MfaEnrollResponse> =
         SupabaseResult.Failure(SupabaseError("not used"))
     override suspend fun mfaChallenge(factorId: String, accessToken: String): SupabaseResult<MfaChallengeResponse> =
-        SupabaseResult.Failure(SupabaseError("not used"))
+        SupabaseResult.Success(MfaChallengeResponse(id = "challenge-1", factorId = factorId)).also {
+            lastMfaChallengeFactorId = factorId
+        }
     override suspend fun mfaVerify(factorId: String, challengeId: String, code: String, accessToken: String): SupabaseResult<MfaVerifyResponse> =
-        SupabaseResult.Failure(SupabaseError("not used"))
+        SupabaseResult.Success(
+            MfaVerifyResponse(
+                accessToken = "mfa-acc",
+                refreshToken = "mfa-ref",
+                tokenType = "bearer",
+                expiresIn = 3600,
+                user = dummySession.user,
+            ),
+        ).also {
+            lastMfaVerifyChallengeId = challengeId
+            lastMfaVerifyCode = code
+            lastMfaVerifyAccessToken = accessToken
+        }
     override suspend fun mfaUnenroll(factorId: String, accessToken: String): SupabaseResult<MfaUnenrollResponse> =
         SupabaseResult.Failure(SupabaseError("not used"))
     override suspend fun mfaListFactors(accessToken: String): SupabaseResult<MfaListFactorsResponse> =
         SupabaseResult.Failure(SupabaseError("not used"))
     override suspend fun mfaGetAuthenticatorAssuranceLevel(accessToken: String): SupabaseResult<AuthenticatorAssuranceLevel> =
+        SupabaseResult.Failure(SupabaseError("not used"))
+    override suspend fun passkeyStartRegistration(accessToken: String): SupabaseResult<PasskeyRegistrationOptionsResponse> =
+        SupabaseResult.Failure(SupabaseError("not used"))
+    override suspend fun passkeyVerifyRegistration(accessToken: String, challengeId: String, credential: JsonObject): SupabaseResult<PasskeyMetadata> =
+        SupabaseResult.Failure(SupabaseError("not used"))
+    override suspend fun passkeyStartAuthentication(captchaToken: String?): SupabaseResult<PasskeyAuthenticationOptionsResponse> =
+        SupabaseResult.Failure(SupabaseError("not used"))
+    override suspend fun passkeyVerifyAuthentication(challengeId: String, credential: JsonObject): SupabaseResult<Session> =
+        SupabaseResult.Failure(SupabaseError("not used"))
+    override suspend fun passkeyList(accessToken: String): SupabaseResult<List<Passkey>> =
+        SupabaseResult.Failure(SupabaseError("not used"))
+    override suspend fun passkeyUpdate(accessToken: String, passkeyId: String, friendlyName: String): SupabaseResult<Passkey> =
+        SupabaseResult.Failure(SupabaseError("not used"))
+    override suspend fun passkeyDelete(accessToken: String, passkeyId: String): SupabaseResult<Unit> =
+        SupabaseResult.Failure(SupabaseError("not used"))
+    override suspend fun oauthGetAuthorizationDetails(accessToken: String, authorizationId: String): SupabaseResult<OAuthAuthorizationDetails> =
+        SupabaseResult.Failure(SupabaseError("not used"))
+    override suspend fun oauthApproveAuthorization(accessToken: String, authorizationId: String): SupabaseResult<OAuthRedirect> =
+        SupabaseResult.Failure(SupabaseError("not used"))
+    override suspend fun oauthDenyAuthorization(accessToken: String, authorizationId: String): SupabaseResult<OAuthRedirect> =
+        SupabaseResult.Failure(SupabaseError("not used"))
+    override suspend fun oauthListGrants(accessToken: String): SupabaseResult<List<OAuthGrant>> =
+        SupabaseResult.Failure(SupabaseError("not used"))
+    override suspend fun oauthRevokeGrant(accessToken: String, clientId: String): SupabaseResult<Unit> =
         SupabaseResult.Failure(SupabaseError("not used"))
 }
 
@@ -848,5 +952,9 @@ private class FakeSessionManager(
         return refreshResult
     }
     override suspend fun restoreSession(): SupabaseResult<Session> = SupabaseResult.Failure(SupabaseError("not used"))
+    override suspend fun initialize(): SupabaseResult<Session> = restoreSession()
+    override fun startAutoRefresh() = Unit
+    override fun stopAutoRefresh() = Unit
+    override fun dispose() = close()
     override fun close() = Unit
 }

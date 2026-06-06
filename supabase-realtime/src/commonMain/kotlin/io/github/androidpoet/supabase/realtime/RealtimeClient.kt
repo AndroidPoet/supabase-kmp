@@ -4,6 +4,8 @@ import kotlinx.coroutines.flow.StateFlow
 public interface RealtimeClient {
     public val connectionState: StateFlow<ConnectionState>
     public val isConnected: Boolean
+    public val isConnecting: Boolean
+    public val isDisconnecting: Boolean
     public fun channel(name: String): RealtimeChannelBuilder
     public fun getSubscription(name: String): RealtimeSubscription?
     public fun getSubscriptionByTopic(topic: String): RealtimeSubscription?

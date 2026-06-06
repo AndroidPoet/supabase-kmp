@@ -2,14 +2,14 @@ package io.github.androidpoet.supabase.functions
 
 import io.github.androidpoet.supabase.client.SupabaseClient
 import io.github.androidpoet.supabase.core.result.SupabaseResult
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class FunctionsClientImplTest {
     @Test
-    fun test_invoke_withRegion_setsRegionHeader() = runBlocking {
+    fun test_invoke_withRegion_setsRegionHeader() = runTest {
         val fake = FakeSupabaseClient()
         val sut = FunctionsClientImpl(fake)
 
@@ -25,7 +25,7 @@ class FunctionsClientImplTest {
     }
 
     @Test
-    fun test_invokeWithBody_usesAbsoluteFunctionsUrl() = runBlocking {
+    fun test_invokeWithBody_usesAbsoluteFunctionsUrl() = runTest {
         val fake = FakeSupabaseClient()
         val sut = FunctionsClientImpl(fake)
 
@@ -37,6 +37,33 @@ class FunctionsClientImplTest {
 
         assertTrue(result is SupabaseResult.Success)
         assertEquals("https://example.supabase.co/functions/v1/upload", fake.lastPostRawUrl)
+    }
+
+    @Test
+    fun test_setAuth_setsAuthorizationHeaderForInvoke() = runTest {
+        val fake = FakeSupabaseClient()
+        val sut = FunctionsClientImpl(fake)
+
+        sut.setAuth("jwt-1")
+        val result = sut.invoke(functionName = "hello")
+
+        assertTrue(result is SupabaseResult.Success)
+        assertEquals("Bearer jwt-1", fake.lastPostHeaders["Authorization"])
+    }
+
+    @Test
+    fun test_invokeHeaderOverridesSetAuthAuthorization() = runTest {
+        val fake = FakeSupabaseClient()
+        val sut = FunctionsClientImpl(fake)
+
+        sut.setAuth("jwt-1")
+        val result = sut.invoke(
+            functionName = "hello",
+            headers = mapOf("Authorization" to "Bearer invoke-jwt"),
+        )
+
+        assertTrue(result is SupabaseResult.Success)
+        assertEquals("Bearer invoke-jwt", fake.lastPostHeaders["Authorization"])
     }
 }
 
@@ -63,7 +90,7 @@ private class FakeSupabaseClient : SupabaseClient {
     override suspend fun patch(endpoint: String, body: String?, headers: Map<String, String>): SupabaseResult<String> =
         SupabaseResult.Success("{}")
 
-    override suspend fun delete(endpoint: String, headers: Map<String, String>): SupabaseResult<String> =
+    override suspend fun delete(endpoint: String, body: String?, headers: Map<String, String>): SupabaseResult<String> =
         SupabaseResult.Success("{}")
 
     override suspend fun postRaw(url: String, body: ByteArray, contentType: String, headers: Map<String, String>): SupabaseResult<String> {

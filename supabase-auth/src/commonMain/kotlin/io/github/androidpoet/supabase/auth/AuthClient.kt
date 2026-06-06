@@ -7,15 +7,25 @@ import io.github.androidpoet.supabase.auth.models.MfaListFactorsResponse
 import io.github.androidpoet.supabase.auth.models.MfaUnenrollResponse
 import io.github.androidpoet.supabase.auth.models.MfaVerifyResponse
 import io.github.androidpoet.supabase.auth.models.LinkIdentityResponse
+import io.github.androidpoet.supabase.auth.models.OAuthAuthorizationDetails
+import io.github.androidpoet.supabase.auth.models.OAuthGrant
 import io.github.androidpoet.supabase.auth.models.OAuthProvider
+import io.github.androidpoet.supabase.auth.models.OAuthRedirect
+import io.github.androidpoet.supabase.auth.models.OAuthResponse
 import io.github.androidpoet.supabase.auth.models.OtpType
 import io.github.androidpoet.supabase.auth.models.OtpVerifyResult
+import io.github.androidpoet.supabase.auth.models.Passkey
+import io.github.androidpoet.supabase.auth.models.PasskeyAuthenticationOptionsResponse
+import io.github.androidpoet.supabase.auth.models.PasskeyMetadata
+import io.github.androidpoet.supabase.auth.models.PasskeyRegistrationOptionsResponse
 import io.github.androidpoet.supabase.auth.models.PkceParams
 import io.github.androidpoet.supabase.auth.models.Session
 import io.github.androidpoet.supabase.auth.models.SignOutScope
 import io.github.androidpoet.supabase.auth.models.SsoResponse
 import io.github.androidpoet.supabase.auth.models.User
+import io.github.androidpoet.supabase.auth.models.UserIdentity
 import io.github.androidpoet.supabase.auth.models.UserUpdateRequest
+import io.github.androidpoet.supabase.auth.models.Web3Chain
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import kotlinx.serialization.json.JsonObject
 public interface AuthClient {
@@ -46,6 +56,20 @@ public interface AuthClient {
         idToken: String,
         accessToken: String? = null,
         nonce: String? = null,
+        captchaToken: String? = null,
+    ): SupabaseResult<Session>
+    public suspend fun signInWithOAuth(
+        provider: OAuthProvider,
+        redirectTo: String? = null,
+        scopes: List<String> = emptyList(),
+        queryParams: Map<String, String> = emptyMap(),
+        skipBrowserRedirect: Boolean = false,
+        pkceParams: PkceParams? = null,
+    ): SupabaseResult<OAuthResponse>
+    public suspend fun signInWithWeb3(
+        chain: Web3Chain,
+        message: String,
+        signature: String,
         captchaToken: String? = null,
     ): SupabaseResult<Session>
     public suspend fun signInWithOtp(
@@ -98,6 +122,7 @@ public interface AuthClient {
     public suspend fun reauthenticate(accessToken: String): SupabaseResult<Unit>
     public suspend fun refreshToken(refreshToken: String): SupabaseResult<Session>
     public suspend fun getUser(accessToken: String): SupabaseResult<User>
+    public suspend fun getUserIdentities(accessToken: String): SupabaseResult<List<UserIdentity>>
     public suspend fun updateUser(
         accessToken: String,
         updates: UserUpdateRequest,
@@ -136,6 +161,7 @@ public interface AuthClient {
         redirectTo: String? = null,
         scopes: List<String> = emptyList(),
         queryParams: Map<String, String> = emptyMap(),
+        skipBrowserRedirect: Boolean = false,
         pkceParams: PkceParams? = null,
     ): String
     public fun generatePkceParams(sha256: ((ByteArray) -> ByteArray)? = null): PkceParams
@@ -170,4 +196,62 @@ public interface AuthClient {
     public suspend fun mfaGetAuthenticatorAssuranceLevel(
         accessToken: String,
     ): SupabaseResult<AuthenticatorAssuranceLevel>
+
+    public suspend fun passkeyStartRegistration(
+        accessToken: String,
+    ): SupabaseResult<PasskeyRegistrationOptionsResponse>
+
+    public suspend fun passkeyVerifyRegistration(
+        accessToken: String,
+        challengeId: String,
+        credential: JsonObject,
+    ): SupabaseResult<PasskeyMetadata>
+
+    public suspend fun passkeyStartAuthentication(
+        captchaToken: String? = null,
+    ): SupabaseResult<PasskeyAuthenticationOptionsResponse>
+
+    public suspend fun passkeyVerifyAuthentication(
+        challengeId: String,
+        credential: JsonObject,
+    ): SupabaseResult<Session>
+
+    public suspend fun passkeyList(
+        accessToken: String,
+    ): SupabaseResult<List<Passkey>>
+
+    public suspend fun passkeyUpdate(
+        accessToken: String,
+        passkeyId: String,
+        friendlyName: String,
+    ): SupabaseResult<Passkey>
+
+    public suspend fun passkeyDelete(
+        accessToken: String,
+        passkeyId: String,
+    ): SupabaseResult<Unit>
+
+    public suspend fun oauthGetAuthorizationDetails(
+        accessToken: String,
+        authorizationId: String,
+    ): SupabaseResult<OAuthAuthorizationDetails>
+
+    public suspend fun oauthApproveAuthorization(
+        accessToken: String,
+        authorizationId: String,
+    ): SupabaseResult<OAuthRedirect>
+
+    public suspend fun oauthDenyAuthorization(
+        accessToken: String,
+        authorizationId: String,
+    ): SupabaseResult<OAuthRedirect>
+
+    public suspend fun oauthListGrants(
+        accessToken: String,
+    ): SupabaseResult<List<OAuthGrant>>
+
+    public suspend fun oauthRevokeGrant(
+        accessToken: String,
+        clientId: String,
+    ): SupabaseResult<Unit>
 }

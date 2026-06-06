@@ -16,6 +16,7 @@ public enum class FunctionRegion(public val value: String) {
     AP_NORTHEAST_1("ap-northeast-1"),
 }
 public interface FunctionsClient {
+    public fun setAuth(token: String)
     public suspend fun invoke(
         functionName: String,
         body: String? = null,

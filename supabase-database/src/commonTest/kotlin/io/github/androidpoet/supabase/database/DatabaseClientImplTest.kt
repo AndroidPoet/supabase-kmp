@@ -3,6 +3,7 @@ package io.github.androidpoet.supabase.database
 import io.github.androidpoet.supabase.client.SupabaseClient
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
+import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -10,7 +11,7 @@ import kotlin.test.assertTrue
 
 class DatabaseClientImplTest {
     @Test
-    fun test_select_headReturnsFailureWhenRequestFails() {
+    fun test_select_headReturnsFailureWhenRequestFails() = runTest {
         val client = FakeSupabaseClient(getResult = SupabaseResult.Failure(SupabaseError("boom")))
         val sut = DatabaseClientImpl(client)
 
@@ -22,7 +23,7 @@ class DatabaseClientImplTest {
     }
 
     @Test
-    fun test_insert_onConflictIsUrlEncodedInEndpoint() {
+    fun test_insert_onConflictIsUrlEncodedInEndpoint() = runTest {
         val client = FakeSupabaseClient()
         val sut = DatabaseClientImpl(client)
 
@@ -41,7 +42,7 @@ class DatabaseClientImplTest {
     }
 
     @Test
-    fun test_insert_columnsAreEncodedInEndpoint() {
+    fun test_insert_columnsAreEncodedInEndpoint() = runTest {
         val client = FakeSupabaseClient()
         val sut = DatabaseClientImpl(client)
 
@@ -57,7 +58,7 @@ class DatabaseClientImplTest {
     }
 
     @Test
-    fun test_select_singleUsesObjectAcceptHeader() {
+    fun test_select_singleUsesObjectAcceptHeader() = runTest {
         val client = FakeSupabaseClient()
         val sut = DatabaseClientImpl(client)
 
@@ -69,7 +70,29 @@ class DatabaseClientImplTest {
     }
 
     @Test
-    fun test_select_csvUsesTextCsvAcceptHeader() {
+    fun test_select_customHeadersAreMergedAndCoreHeadersWin() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = DatabaseClientImpl(client)
+
+        runSuspend {
+            sut.select(
+                table = "messages",
+                schema = "private",
+                headers = mapOf(
+                    "X-Trace-Id" to "trace-1",
+                    "Accept" to "text/plain",
+                    "Accept-Profile" to "wrong",
+                ),
+            ) {}
+        }
+
+        assertEquals("trace-1", client.lastGetHeaders["X-Trace-Id"])
+        assertEquals("application/json", client.lastGetHeaders["Accept"])
+        assertEquals("private", client.lastGetHeaders["Accept-Profile"])
+    }
+
+    @Test
+    fun test_select_csvUsesTextCsvAcceptHeader() = runTest {
         val client = FakeSupabaseClient()
         val sut = DatabaseClientImpl(client)
 
@@ -81,7 +104,73 @@ class DatabaseClientImplTest {
     }
 
     @Test
-    fun test_insert_upsertIgnoreDuplicatesSetsPreferResolution() {
+    fun test_select_stripNullsUsesStrippedArrayAcceptHeader() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = DatabaseClientImpl(client)
+
+        runSuspend {
+            sut.select(table = "messages", stripNulls = true) {}
+        }
+
+        assertEquals("application/vnd.pgrst.array+json;nulls=stripped", client.lastGetHeaders["Accept"])
+    }
+
+    @Test
+    fun test_select_explainUsesPlanAcceptHeader() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = DatabaseClientImpl(client)
+
+        runSuspend {
+            sut.select(
+                table = "messages",
+                explain = ExplainOptions(analyze = true, verbose = true, format = ExplainFormat.JSON),
+            ) {}
+        }
+
+        assertEquals(
+            """application/vnd.pgrst.plan+json; for="application/json"; options=analyze|verbose;""",
+            client.lastGetHeaders["Accept"],
+        )
+    }
+
+    @Test
+    fun test_select_stripNullsWithCsvThrows() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = DatabaseClientImpl(client)
+
+        assertFailsWith<IllegalArgumentException> {
+            runSuspend {
+                sut.select(table = "messages", csv = true, stripNulls = true) {}
+            }
+        }
+    }
+
+    @Test
+    fun test_select_retryEnabledByDefault() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = DatabaseClientImpl(client)
+
+        runSuspend {
+            sut.select(table = "messages") {}
+        }
+
+        assertEquals("true", client.lastGetHeaders["X-Supabase-Kmp-Retry"])
+    }
+
+    @Test
+    fun test_select_retryFalseDisablesRetry() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = DatabaseClientImpl(client)
+
+        runSuspend {
+            sut.select(table = "messages", retry = false) {}
+        }
+
+        assertEquals("false", client.lastGetHeaders["X-Supabase-Kmp-Retry"])
+    }
+
+    @Test
+    fun test_insert_upsertIgnoreDuplicatesSetsPreferResolution() = runTest {
         val client = FakeSupabaseClient()
         val sut = DatabaseClientImpl(client)
 
@@ -98,7 +187,7 @@ class DatabaseClientImplTest {
     }
 
     @Test
-    fun test_insert_defaultToNullFalse_setsMissingDefaultPreferDirective() {
+    fun test_insert_defaultToNullFalse_setsMissingDefaultPreferDirective() = runTest {
         val client = FakeSupabaseClient()
         val sut = DatabaseClientImpl(client)
 
@@ -114,7 +203,76 @@ class DatabaseClientImplTest {
     }
 
     @Test
-    fun test_select_withSchema_setsAcceptProfileHeader() {
+    fun test_insert_rollbackSetsPreferTxRollback() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = DatabaseClientImpl(client)
+
+        runSuspend {
+            sut.insert(
+                table = "messages",
+                body = "{}",
+                rollback = true,
+            )
+        }
+
+        assertTrue(client.lastPostHeaders["Prefer"]?.contains("tx=rollback") == true)
+    }
+
+    @Test
+    fun test_update_maxAffectedSetsStrictHandlingPreferDirectives() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = DatabaseClientImpl(client)
+
+        runSuspend {
+            sut.update(
+                table = "messages",
+                body = "{}",
+                maxAffected = 1,
+            ) {}
+        }
+
+        val prefer = client.lastPatchHeaders["Prefer"].orEmpty()
+        assertTrue(prefer.contains("handling=strict"))
+        assertTrue(prefer.contains("max-affected=1"))
+    }
+
+    @Test
+    fun test_update_maxAffectedZeroThrows() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = DatabaseClientImpl(client)
+
+        assertFailsWith<IllegalArgumentException> {
+            runSuspend {
+                sut.update(
+                    table = "messages",
+                    body = "{}",
+                    maxAffected = 0,
+                ) {}
+            }
+        }
+    }
+
+    @Test
+    fun test_delete_stripNullsAndExplainUsesPlanForStrippedAcceptHeader() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = DatabaseClientImpl(client)
+
+        runSuspend {
+            sut.delete(
+                table = "messages",
+                stripNulls = true,
+                explain = ExplainOptions(buffers = true),
+            ) {}
+        }
+
+        assertEquals(
+            """application/vnd.pgrst.plan+text; for="application/vnd.pgrst.array+json;nulls=stripped"; options=buffers;""",
+            client.lastDeleteHeaders["Accept"],
+        )
+    }
+
+    @Test
+    fun test_select_withSchema_setsAcceptProfileHeader() = runTest {
         val client = FakeSupabaseClient()
         val sut = DatabaseClientImpl(client)
 
@@ -126,7 +284,7 @@ class DatabaseClientImplTest {
     }
 
     @Test
-    fun test_update_withSchema_setsContentProfileHeader() {
+    fun test_update_withSchema_setsContentProfileHeader() = runTest {
         val client = FakeSupabaseClient()
         val sut = DatabaseClientImpl(client)
 
@@ -138,7 +296,7 @@ class DatabaseClientImplTest {
     }
 
     @Test
-    fun test_rpc_withSchema_setsContentProfileHeader() {
+    fun test_rpc_withSchema_setsContentProfileHeader() = runTest {
         val client = FakeSupabaseClient()
         val sut = DatabaseClientImpl(client)
 
@@ -150,7 +308,7 @@ class DatabaseClientImplTest {
     }
 
     @Test
-    fun test_update_invalidTableThrows() {
+    fun test_update_invalidTableThrows() = runTest {
         val client = FakeSupabaseClient()
         val sut = DatabaseClientImpl(client)
 
@@ -167,7 +325,7 @@ class DatabaseClientImplTest {
     }
 
     @Test
-    fun test_rpcGet_withQueryParams_buildsEncodedEndpointAndAcceptHeader() {
+    fun test_rpcGet_withQueryParams_buildsEncodedEndpointAndAcceptHeader() = runTest {
         val client = FakeSupabaseClient()
         val sut = DatabaseClientImpl(client)
 
@@ -183,7 +341,25 @@ class DatabaseClientImplTest {
     }
 
     @Test
-    fun test_rpcGet_headReturnsFailureWhenRequestFails() {
+    fun test_rpc_customHeadersAreMergedWithJsonHeaders() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = DatabaseClientImpl(client)
+
+        runSuspend {
+            sut.rpc(
+                function = "archive_messages",
+                params = "{}",
+                headers = mapOf("X-Trace-Id" to "trace-rpc", "Content-Type" to "text/plain"),
+            )
+        }
+
+        assertEquals("trace-rpc", client.lastPostHeaders["X-Trace-Id"])
+        assertEquals("application/json", client.lastPostHeaders["Content-Type"])
+        assertEquals("application/json", client.lastPostHeaders["Accept"])
+    }
+
+    @Test
+    fun test_rpcGet_headReturnsFailureWhenRequestFails() = runTest {
         val client = FakeSupabaseClient(getResult = SupabaseResult.Failure(SupabaseError("boom")))
         val sut = DatabaseClientImpl(client)
 
@@ -195,7 +371,7 @@ class DatabaseClientImplTest {
     }
 
     @Test
-    fun test_rpc_singleUsesObjectAcceptHeader() {
+    fun test_rpc_singleUsesObjectAcceptHeader() = runTest {
         val client = FakeSupabaseClient()
         val sut = DatabaseClientImpl(client)
 
@@ -207,7 +383,22 @@ class DatabaseClientImplTest {
     }
 
     @Test
-    fun test_rpcGet_csvUsesTextCsvAcceptHeader() {
+    fun test_rpc_maxAffectedAndRollbackSetPreferDirectives() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = DatabaseClientImpl(client)
+
+        runSuspend {
+            sut.rpc(function = "archive_messages", rollback = true, maxAffected = 2)
+        }
+
+        val prefer = client.lastPostHeaders["Prefer"].orEmpty()
+        assertTrue(prefer.contains("tx=rollback"))
+        assertTrue(prefer.contains("handling=strict"))
+        assertTrue(prefer.contains("max-affected=2"))
+    }
+
+    @Test
+    fun test_rpcGet_csvUsesTextCsvAcceptHeader() = runTest {
         val client = FakeSupabaseClient()
         val sut = DatabaseClientImpl(client)
 
@@ -216,6 +407,30 @@ class DatabaseClientImplTest {
         }
 
         assertEquals("text/csv", client.lastGetHeaders["Accept"])
+    }
+
+    @Test
+    fun test_rpcGet_retryEnabledByDefault() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = DatabaseClientImpl(client)
+
+        runSuspend {
+            sut.rpcGet(function = "get_many")
+        }
+
+        assertEquals("true", client.lastGetHeaders["X-Supabase-Kmp-Retry"])
+    }
+
+    @Test
+    fun test_rpcGet_stripNullsSingleUsesStrippedObjectAcceptHeader() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = DatabaseClientImpl(client)
+
+        runSuspend {
+            sut.rpcGet(function = "get_one", single = true, stripNulls = true)
+        }
+
+        assertEquals("application/vnd.pgrst.object+json;nulls=stripped", client.lastGetHeaders["Accept"])
     }
 }
 
@@ -231,6 +446,7 @@ private class FakeSupabaseClient(
     var lastGetHeaders: Map<String, String> = emptyMap()
     var lastPostHeaders: Map<String, String> = emptyMap()
     var lastPatchHeaders: Map<String, String> = emptyMap()
+    var lastDeleteHeaders: Map<String, String> = emptyMap()
 
     override suspend fun get(
         endpoint: String,
@@ -268,8 +484,12 @@ private class FakeSupabaseClient(
 
     override suspend fun delete(
         endpoint: String,
+        body: String?,
         headers: Map<String, String>,
-    ): SupabaseResult<String> = SupabaseResult.Success("{}")
+    ): SupabaseResult<String> {
+        lastDeleteHeaders = headers
+        return SupabaseResult.Success("{}")
+    }
 
     override suspend fun postRaw(
         url: String,
@@ -292,4 +512,4 @@ private class FakeSupabaseClient(
     override fun close() = Unit
 }
 
-private fun <T> runSuspend(block: suspend () -> T): T = kotlinx.coroutines.runBlocking { block() }
+private suspend fun <T> runSuspend(block: suspend () -> T): T = block()

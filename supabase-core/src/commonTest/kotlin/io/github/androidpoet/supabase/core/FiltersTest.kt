@@ -42,9 +42,29 @@ class FiltersTest {
         assertEquals(listOf("name" to "like.%john%"), result)
     }
     @Test
+    fun test_likeAllOf_producesCorrectParam() {
+        val result = filters { likeAllOf("name", listOf("O%", "%n")) }
+        assertEquals(listOf("name" to "like(all).{O%,%n}"), result)
+    }
+    @Test
+    fun test_likeAnyOf_producesCorrectParam() {
+        val result = filters { likeAnyOf("name", listOf("O%", "P%")) }
+        assertEquals(listOf("name" to "like(any).{O%,P%}"), result)
+    }
+    @Test
     fun test_ilike_producesCorrectParam() {
         val result = filters { ilike("email", "%@EXAMPLE.COM") }
         assertEquals(listOf("email" to "ilike.%@EXAMPLE.COM"), result)
+    }
+    @Test
+    fun test_ilikeAllOf_producesCorrectParam() {
+        val result = filters { ilikeAllOf("email", listOf("%@example.com", "%admin%")) }
+        assertEquals(listOf("email" to "ilike(all).{%@example.com,%admin%}"), result)
+    }
+    @Test
+    fun test_ilikeAnyOf_producesCorrectParam() {
+        val result = filters { ilikeAnyOf("email", listOf("%@example.com", "%@test.com")) }
+        assertEquals(listOf("email" to "ilike(any).{%@example.com,%@test.com}"), result)
     }
     @Test
     fun test_in_producesCorrectParam() {

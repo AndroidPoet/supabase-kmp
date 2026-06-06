@@ -7,11 +7,11 @@ import io.github.androidpoet.supabase.realtime.models.RealtimeChannel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 
 class RealtimeChannelBuilderConfigTest {
     @Test
-    fun test_builder_configValuesPropagateToSubscription() = runBlocking {
+    fun test_builder_configValuesPropagateToSubscription() = runTest {
         val client = FakeSupabaseClient()
         val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
 
@@ -33,7 +33,7 @@ class RealtimeChannelBuilderConfigTest {
     }
 
     @Test
-    fun test_removeSubscription_unsubscribesChannel() = runBlocking {
+    fun test_removeSubscription_unsubscribesChannel() = runTest {
         val client = FakeSupabaseClient()
         val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
         val subscription = realtime.channel("room-2").subscribe()
@@ -44,7 +44,7 @@ class RealtimeChannelBuilderConfigTest {
     }
 
     @Test
-    fun test_removeChannel_subscription_unsubscribesChannel() = runBlocking {
+    fun test_removeChannel_subscription_unsubscribesChannel() = runTest {
         val client = FakeSupabaseClient()
         val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
         val subscription = realtime.channel("room-2b").subscribe()
@@ -55,7 +55,7 @@ class RealtimeChannelBuilderConfigTest {
     }
 
     @Test
-    fun test_removeSubscriptions_unsubscribesAllChannels() = runBlocking {
+    fun test_removeSubscriptions_unsubscribesAllChannels() = runTest {
         val client = FakeSupabaseClient()
         val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
         val first = realtime.channel("room-2c-1").subscribe()
@@ -68,7 +68,7 @@ class RealtimeChannelBuilderConfigTest {
     }
 
     @Test
-    fun test_activeChannelDetails_returnsNameAndTopic() = runBlocking {
+    fun test_activeChannelDetails_returnsNameAndTopic() = runTest {
         val client = FakeSupabaseClient()
         val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
         realtime.channel("room-3").subscribe()
@@ -80,7 +80,7 @@ class RealtimeChannelBuilderConfigTest {
     }
 
     @Test
-    fun test_getSubscription_returnsSubscriptionForChannel() = runBlocking {
+    fun test_getSubscription_returnsSubscriptionForChannel() = runTest {
         val client = FakeSupabaseClient()
         val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
         val subscription = realtime.channel("room-4").subscribe()
@@ -89,7 +89,7 @@ class RealtimeChannelBuilderConfigTest {
     }
 
     @Test
-    fun test_getSubscriptionByTopic_returnsSubscription() = runBlocking {
+    fun test_getSubscriptionByTopic_returnsSubscription() = runTest {
         val client = FakeSupabaseClient()
         val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
         val subscription = realtime.channel("room-5").subscribe()
@@ -98,7 +98,7 @@ class RealtimeChannelBuilderConfigTest {
     }
 
     @Test
-    fun test_removeSubscriptionByTopic_unsubscribesChannel() = runBlocking {
+    fun test_removeSubscriptionByTopic_unsubscribesChannel() = runTest {
         val client = FakeSupabaseClient()
         val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
         val subscription = realtime.channel("room-topic").subscribe()
@@ -109,7 +109,7 @@ class RealtimeChannelBuilderConfigTest {
     }
 
     @Test
-    fun test_removeChannelsByTopic_unsubscribesAllMatchingChannels() = runBlocking {
+    fun test_removeChannelsByTopic_unsubscribesAllMatchingChannels() = runTest {
         val client = FakeSupabaseClient()
         val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
         val first = realtime.channel("room-t1").subscribe()
@@ -122,7 +122,7 @@ class RealtimeChannelBuilderConfigTest {
     }
 
     @Test
-    fun test_getSubscriptions_returnsAllActiveSubscriptions() = runBlocking {
+    fun test_getSubscriptions_returnsAllActiveSubscriptions() = runTest {
         val client = FakeSupabaseClient()
         val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
         val first = realtime.channel("room-a").subscribe()
@@ -133,6 +133,7 @@ class RealtimeChannelBuilderConfigTest {
         assertTrue(subscriptions.contains(first))
         assertTrue(subscriptions.contains(second))
     }
+
 }
 
 private class FakeSupabaseClient : SupabaseClient {
@@ -165,6 +166,7 @@ private class FakeSupabaseClient : SupabaseClient {
 
     override suspend fun delete(
         endpoint: String,
+        body: String?,
         headers: Map<String, String>,
     ): SupabaseResult<String> = SupabaseResult.Failure(SupabaseError("not used"))
 

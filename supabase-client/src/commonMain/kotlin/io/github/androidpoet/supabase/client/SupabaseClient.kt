@@ -26,6 +26,7 @@ public interface SupabaseClient {
     ): SupabaseResult<String>
     public suspend fun delete(
         endpoint: String,
+        body: String? = null,
         headers: Map<String, String> = emptyMap(),
     ): SupabaseResult<String>
     public suspend fun postRaw(

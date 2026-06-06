@@ -10,7 +10,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlin.test.Test
@@ -19,7 +19,7 @@ import kotlin.test.assertTrue
 
 class RealtimeClientExtTest {
     @Test
-    fun test_awaitConnected_returnsWhenStateBecomesConnected() = runBlocking {
+    fun test_awaitConnected_returnsWhenStateBecomesConnected() = runTest {
         val realtime = AwaitFakeRealtimeClient()
 
         val waiter = async { realtime.awaitConnected() }
@@ -31,7 +31,7 @@ class RealtimeClientExtTest {
     }
 
     @Test
-    fun test_awaitDisconnected_returnsWhenStateBecomesDisconnected() = runBlocking {
+    fun test_awaitDisconnected_returnsWhenStateBecomesDisconnected() = runTest {
         val realtime = AwaitFakeRealtimeClient(initial = ConnectionState.Connected)
 
         val waiter = async { realtime.awaitDisconnected() }
@@ -43,7 +43,25 @@ class RealtimeClientExtTest {
     }
 
     @Test
-    fun test_subscribe_appliesConfigureBlock() = runBlocking {
+    fun test_connectionStateBooleans_reflectCurrentState() = runTest {
+        val realtime = AwaitFakeRealtimeClient()
+
+        assertEquals(false, realtime.isConnected)
+        assertEquals(false, realtime.isConnecting)
+        assertEquals(false, realtime.isDisconnecting)
+
+        realtime.emit(ConnectionState.Connecting)
+        assertEquals(true, realtime.isConnecting)
+
+        realtime.emit(ConnectionState.Connected)
+        assertEquals(true, realtime.isConnected)
+
+        realtime.emit(ConnectionState.Disconnecting)
+        assertEquals(true, realtime.isDisconnecting)
+    }
+
+    @Test
+    fun test_subscribe_appliesConfigureBlock() = runTest {
         val realtime = RealtimeClientImpl(ExtFakeSupabaseClient(), RealtimeConfig(autoReconnect = false))
 
         val subscription = realtime.subscribe("room-x") {
@@ -57,7 +75,7 @@ class RealtimeClientExtTest {
     }
 
     @Test
-    fun test_subscribeToPostgresChanges_registersCallback() = runBlocking {
+    fun test_subscribeToPostgresChanges_registersCallback() = runTest {
         val realtime = RealtimeClientImpl(ExtFakeSupabaseClient(), RealtimeConfig(autoReconnect = false))
 
         val subscription = realtime.subscribeToPostgresChanges(
@@ -73,7 +91,7 @@ class RealtimeClientExtTest {
     }
 
     @Test
-    fun test_subscribeToBroadcast_registersEventCallback() = runBlocking {
+    fun test_subscribeToBroadcast_registersEventCallback() = runTest {
         val realtime = RealtimeClientImpl(ExtFakeSupabaseClient(), RealtimeConfig(autoReconnect = false))
         var called = false
 
@@ -99,7 +117,7 @@ class RealtimeClientExtTest {
     }
 
     @Test
-    fun test_subscribeToPresence_registersPresenceHandler() = runBlocking {
+    fun test_subscribeToPresence_registersPresenceHandler() = runTest {
         val realtime = RealtimeClientImpl(ExtFakeSupabaseClient(), RealtimeConfig(autoReconnect = false))
         var stateSize = -1
 
@@ -156,6 +174,7 @@ private class ExtFakeSupabaseClient : SupabaseClient {
 
     override suspend fun delete(
         endpoint: String,
+        body: String?,
         headers: Map<String, String>,
     ): SupabaseResult<String> = SupabaseResult.Failure(SupabaseError("not used"))
 
@@ -185,6 +204,10 @@ private class AwaitFakeRealtimeClient(
     override val connectionState: StateFlow<ConnectionState> = state
     override val isConnected: Boolean
         get() = state.value is ConnectionState.Connected
+    override val isConnecting: Boolean
+        get() = state.value is ConnectionState.Connecting
+    override val isDisconnecting: Boolean
+        get() = state.value is ConnectionState.Disconnecting
 
     override fun channel(name: String): RealtimeChannelBuilder = error("not used")
     override fun getSubscription(name: String): RealtimeSubscription? = null

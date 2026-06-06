@@ -26,6 +26,7 @@ public data class User(
 @Serializable
 public data class UserIdentity(
     val id: String,
+    @SerialName("identity_id") val identityId: String? = null,
     val provider: String? = null,
     @SerialName("user_id") val userId: String? = null,
     @SerialName("identity_data") val identityData: JsonObject? = null,
@@ -174,6 +175,7 @@ public data class ExchangeCodeRequest(
 public enum class MfaFactorType {
     @SerialName("totp") TOTP,
     @SerialName("phone") PHONE,
+    @SerialName("webauthn") WEBAUTHN,
 }
 @Serializable
 public data class MfaEnrollRequest(
@@ -234,6 +236,7 @@ public data class MfaListFactorsResponse(
     @SerialName("all") public val all: List<MfaFactor>,
     @SerialName("totp") public val totp: List<MfaFactor>,
     @SerialName("phone") public val phone: List<MfaFactor>,
+    @SerialName("webauthn") public val webauthn: List<MfaFactor> = emptyList(),
 )
 @Serializable
 public data class MfaFactor(
@@ -243,4 +246,125 @@ public data class MfaFactor(
     @SerialName("status") public val status: String,
     @SerialName("created_at") public val createdAt: String? = null,
     @SerialName("updated_at") public val updatedAt: String? = null,
+)
+
+@Serializable
+public data class PasskeyRegistrationOptionsResponse(
+    @SerialName("challenge_id") public val challengeId: String,
+    public val options: JsonObject,
+    @SerialName("expires_at") public val expiresAt: Long,
+)
+
+@Serializable
+public data class PasskeyAuthenticationOptionsResponse(
+    @SerialName("challenge_id") public val challengeId: String,
+    public val options: JsonObject,
+    @SerialName("expires_at") public val expiresAt: Long,
+)
+
+@Serializable
+public data class PasskeyMetadata(
+    public val id: String,
+    @SerialName("friendly_name") public val friendlyName: String? = null,
+    @SerialName("created_at") public val createdAt: String,
+)
+
+@Serializable
+public data class Passkey(
+    public val id: String,
+    @SerialName("friendly_name") public val friendlyName: String? = null,
+    @SerialName("created_at") public val createdAt: String,
+    @SerialName("last_used_at") public val lastUsedAt: String? = null,
+)
+
+@Serializable
+public data class OAuthAuthorizationClient(
+    public val id: String,
+    public val name: String,
+    public val uri: String,
+    @SerialName("logo_uri") public val logoUri: String,
+)
+
+@Serializable
+public data class OAuthAuthorizationUser(
+    public val id: String,
+    public val email: String,
+)
+
+@Serializable
+public data class OAuthAuthorizationDetails(
+    @SerialName("authorization_id") public val authorizationId: String? = null,
+    @SerialName("redirect_url") public val redirectUrl: String? = null,
+    @SerialName("redirect_uri") public val redirectUri: String? = null,
+    public val client: OAuthAuthorizationClient? = null,
+    public val user: OAuthAuthorizationUser? = null,
+    public val scope: String? = null,
+)
+
+@Serializable
+public data class OAuthRedirect(
+    @SerialName("redirect_url") public val redirectUrl: String,
+)
+
+@Serializable
+public data class OAuthGrant(
+    public val client: OAuthAuthorizationClient,
+    public val scopes: List<String>,
+    @SerialName("granted_at") public val grantedAt: String,
+)
+
+@Serializable
+public data class OAuthConsentRequest(
+    public val action: String,
+)
+
+@Serializable
+public enum class Web3Chain {
+    @SerialName("ethereum") ETHEREUM,
+    @SerialName("solana") SOLANA,
+}
+
+@Serializable
+public data class Web3SignInRequest(
+    public val chain: Web3Chain,
+    public val message: String,
+    public val signature: String,
+    @SerialName("gotrue_meta_security") public val gotrueMetaSecurity: GotrueMetaSecurity? = null,
+) {
+    public constructor(
+        chain: Web3Chain,
+        message: String,
+        signature: String,
+        captchaToken: String?,
+    ) : this(
+        chain = chain,
+        message = message,
+        signature = signature,
+        gotrueMetaSecurity = captchaToken?.let(::GotrueMetaSecurity),
+    )
+}
+
+@Serializable
+public data class PasskeyVerifyRequest(
+    @SerialName("challenge_id") public val challengeId: String,
+    public val credential: JsonObject,
+)
+
+@Serializable
+public data class PasskeyUpdateRequest(
+    @SerialName("friendly_name") public val friendlyName: String,
+)
+
+@Serializable
+public data class PasskeyAuthenticationOptionsRequest(
+    @SerialName("gotrue_meta_security") public val gotrueMetaSecurity: GotrueMetaSecurity? = null,
+) {
+    public constructor(captchaToken: String?) : this(
+        gotrueMetaSecurity = captchaToken?.let(::GotrueMetaSecurity),
+    )
+}
+
+@Serializable
+public data class GotrueMetaSecurity(
+    @SerialName("captcha_token") public val captchaToken: String,
 )

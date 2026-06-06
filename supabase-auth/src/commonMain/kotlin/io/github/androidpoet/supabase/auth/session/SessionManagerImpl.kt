@@ -18,7 +18,7 @@ internal class SessionManagerImpl(
     private val authClient: AuthClient,
     private val supabaseClient: SupabaseClient,
     private val storage: SessionStorage = InMemorySessionStorage(),
-    private val autoRefresh: Boolean = true,
+    autoRefresh: Boolean = true,
     private val refreshBufferSeconds: Long = 60,
 ) : SessionManager {
     private val _sessionState = MutableStateFlow<SessionState>(SessionState.NotAuthenticated)
@@ -29,6 +29,7 @@ internal class SessionManagerImpl(
         get() = currentSession?.accessToken
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var refreshJob: Job? = null
+    private var autoRefreshEnabled: Boolean = autoRefresh
     override suspend fun saveSession(session: Session) {
         storage.save(session)
         _sessionState.value = SessionState.Authenticated(session)
@@ -55,6 +56,23 @@ internal class SessionManagerImpl(
         }
         return handleRefresh(stored)
     }
+    override suspend fun initialize(): SupabaseResult<Session> =
+        restoreSession()
+
+    override fun startAutoRefresh() {
+        autoRefreshEnabled = true
+        currentSession?.let(::scheduleRefresh)
+    }
+
+    override fun stopAutoRefresh() {
+        autoRefreshEnabled = false
+        cancelRefresh()
+    }
+
+    override fun dispose() {
+        close()
+    }
+
     override fun close() {
         cancelRefresh()
         scope.cancel()
@@ -69,9 +87,9 @@ internal class SessionManagerImpl(
                 _sessionState.value = SessionState.Expired(session)
                 result
             }
-        }
+    }
     private fun scheduleRefresh(session: Session) {
-        if (!autoRefresh) return
+        if (!autoRefreshEnabled) return
         cancelRefresh()
         val delayMs = maxOf((session.expiresIn - refreshBufferSeconds) * 1000L, 0L)
         refreshJob = scope.launch {

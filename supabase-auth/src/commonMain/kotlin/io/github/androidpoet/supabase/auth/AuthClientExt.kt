@@ -3,9 +3,11 @@ package io.github.androidpoet.supabase.auth
 import io.github.androidpoet.supabase.auth.models.OtpType
 import io.github.androidpoet.supabase.auth.models.OAuthProvider
 import io.github.androidpoet.supabase.auth.models.OtpVerifyResult
+import io.github.androidpoet.supabase.auth.models.MfaVerifyResponse
 import io.github.androidpoet.supabase.auth.models.Session
 import io.github.androidpoet.supabase.auth.models.SignOutScope
 import io.github.androidpoet.supabase.auth.models.User
+import io.github.androidpoet.supabase.auth.models.UserIdentity
 import io.github.androidpoet.supabase.auth.models.LinkIdentityResponse
 import io.github.androidpoet.supabase.auth.models.UserUpdateRequest
 import io.github.androidpoet.supabase.auth.models.SsoResponse
@@ -218,6 +220,21 @@ public suspend fun AuthClient.reauthenticateCurrentSession(
         ?: return SupabaseResult.Failure(SupabaseError(message = "No active session"))
     return reauthenticate(token)
 }
+
+public suspend fun AuthClient.mfaChallengeAndVerify(
+    factorId: String,
+    code: String,
+    accessToken: String,
+): SupabaseResult<MfaVerifyResponse> =
+    when (val challenge = mfaChallenge(factorId = factorId, accessToken = accessToken)) {
+        is SupabaseResult.Failure -> SupabaseResult.Failure(challenge.error)
+        is SupabaseResult.Success -> mfaVerify(
+            factorId = factorId,
+            challengeId = challenge.value.id,
+            code = code,
+            accessToken = accessToken,
+        )
+    }
 
 public suspend fun AuthClient.signOutCurrentSession(
     sessionManager: SessionManager,
@@ -491,6 +508,14 @@ public suspend fun AuthClient.unlinkIdentityAndUpdateSession(
             result
         }
     }
+
+public suspend fun AuthClient.getUserIdentitiesForCurrentSession(
+    sessionManager: SessionManager,
+): SupabaseResult<List<UserIdentity>> {
+    val token = sessionManager.accessToken
+        ?: return SupabaseResult.Failure(SupabaseError(message = "No active session"))
+    return getUserIdentities(accessToken = token)
+}
 
 public suspend fun AuthClient.linkIdentityForCurrentSession(
     sessionManager: SessionManager,

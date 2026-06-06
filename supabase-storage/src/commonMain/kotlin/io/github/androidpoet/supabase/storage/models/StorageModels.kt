@@ -104,3 +104,242 @@ public data class ObjectListRequest(
     @SerialName("sortBy") val sortBy: ObjectSortByRequest? = null,
     val search: String? = null,
 )
+
+@Serializable
+public data class ObjectListV2Request(
+    val prefix: String? = null,
+    val cursor: String? = null,
+    val limit: Int? = null,
+    @SerialName("with_delimiter") val withDelimiter: Boolean? = null,
+    @SerialName("sortBy") val sortBy: ObjectSortByRequest? = null,
+)
+
+@Serializable
+public data class ObjectListV2Object(
+    val name: String,
+    val key: String? = null,
+    val id: String,
+    @SerialName("updated_at") val updatedAt: String,
+    @SerialName("created_at") val createdAt: String,
+    @SerialName("last_accessed_at") val lastAccessedAt: String,
+    val metadata: JsonObject? = null,
+)
+
+@Serializable
+public data class ObjectListV2Folder(
+    val name: String,
+    val key: String? = null,
+)
+
+@Serializable
+public data class ObjectListV2Result(
+    val hasNext: Boolean,
+    val folders: List<ObjectListV2Folder>,
+    val objects: List<ObjectListV2Object>,
+    val nextCursor: String? = null,
+)
+
+@Serializable
+public data class AnalyticsBucket(
+    val name: String,
+    val type: String,
+    val format: String,
+    @SerialName("created_at") val createdAt: String? = null,
+    @SerialName("updated_at") val updatedAt: String? = null,
+)
+
+@Serializable
+public data class AnalyticsBucketCreateRequest(
+    val name: String,
+)
+
+@Serializable
+public data class AnalyticsBucketDeleteResponse(
+    val message: String? = null,
+)
+
+@Serializable
+public data class VectorBucketCreateRequest(
+    val vectorBucketName: String,
+)
+
+@Serializable
+public data class VectorBucketRequest(
+    val vectorBucketName: String,
+)
+
+@Serializable
+public data class VectorBucket(
+    val vectorBucketName: String,
+    val creationTime: Long? = null,
+    val encryptionConfiguration: JsonObject? = null,
+)
+
+@Serializable
+public data class VectorBucketResponse(
+    val vectorBucket: VectorBucket,
+)
+
+@Serializable
+public data class VectorBucketListRequest(
+    val prefix: String? = null,
+    val maxResults: Int? = null,
+    val nextToken: String? = null,
+)
+
+@Serializable
+public data class VectorBucketListItem(
+    val vectorBucketName: String,
+)
+
+@Serializable
+public data class VectorBucketListResponse(
+    val vectorBuckets: List<VectorBucketListItem>,
+    val nextToken: String? = null,
+)
+
+@Serializable
+public enum class VectorDataType {
+    @SerialName("float32") FLOAT32,
+}
+
+@Serializable
+public enum class VectorDistanceMetric {
+    @SerialName("cosine") COSINE,
+    @SerialName("euclidean") EUCLIDEAN,
+    @SerialName("dotproduct") DOTPRODUCT,
+}
+
+@Serializable
+public data class VectorMetadataConfiguration(
+    val nonFilterableMetadataKeys: List<String>? = null,
+)
+
+@Serializable
+public data class VectorIndexCreateRequest(
+    val vectorBucketName: String,
+    val indexName: String,
+    val dataType: VectorDataType,
+    val dimension: Int,
+    val distanceMetric: VectorDistanceMetric,
+    val metadataConfiguration: VectorMetadataConfiguration? = null,
+)
+
+@Serializable
+public data class VectorIndexRequest(
+    val vectorBucketName: String,
+    val indexName: String,
+)
+
+@Serializable
+public data class VectorIndex(
+    val indexName: String,
+    val vectorBucketName: String,
+    val dataType: VectorDataType,
+    val dimension: Int,
+    val distanceMetric: VectorDistanceMetric,
+    val metadataConfiguration: VectorMetadataConfiguration? = null,
+    val creationTime: Long? = null,
+)
+
+@Serializable
+public data class VectorIndexResponse(
+    val index: VectorIndex,
+)
+
+@Serializable
+public data class VectorIndexListRequest(
+    val vectorBucketName: String,
+    val prefix: String? = null,
+    val maxResults: Int? = null,
+    val nextToken: String? = null,
+)
+
+@Serializable
+public data class VectorIndexListItem(
+    val indexName: String,
+)
+
+@Serializable
+public data class VectorIndexListResponse(
+    val indexes: List<VectorIndexListItem>,
+    val nextToken: String? = null,
+)
+
+@Serializable
+public data class VectorData(
+    val float32: List<Double>,
+)
+
+@Serializable
+public data class VectorObject(
+    val key: String,
+    val data: VectorData,
+    val metadata: JsonObject? = null,
+)
+
+@Serializable
+public data class VectorMatch(
+    val key: String,
+    val data: VectorData? = null,
+    val metadata: JsonObject? = null,
+    val distance: Double? = null,
+)
+
+@Serializable
+public data class VectorPutRequest(
+    val vectorBucketName: String,
+    val indexName: String,
+    val vectors: List<VectorObject>,
+)
+
+@Serializable
+public data class VectorGetRequest(
+    val vectorBucketName: String,
+    val indexName: String,
+    val keys: List<String>,
+    val returnData: Boolean? = null,
+    val returnMetadata: Boolean? = null,
+)
+
+@Serializable
+public data class VectorDeleteRequest(
+    val vectorBucketName: String,
+    val indexName: String,
+    val keys: List<String>,
+)
+
+@Serializable
+public data class VectorListRequest(
+    val vectorBucketName: String,
+    val indexName: String,
+    val maxResults: Int? = null,
+    val nextToken: String? = null,
+    val returnData: Boolean? = null,
+    val returnMetadata: Boolean? = null,
+    val segmentCount: Int? = null,
+    val segmentIndex: Int? = null,
+)
+
+@Serializable
+public data class VectorListResponse(
+    val vectors: List<VectorMatch>,
+    val nextToken: String? = null,
+)
+
+@Serializable
+public data class VectorQueryRequest(
+    val vectorBucketName: String,
+    val indexName: String,
+    val queryVector: VectorData,
+    val topK: Int? = null,
+    val filter: JsonObject? = null,
+    val returnDistance: Boolean? = null,
+    val returnMetadata: Boolean? = null,
+)
+
+@Serializable
+public data class VectorQueryResponse(
+    val vectors: List<VectorMatch>,
+    val distanceMetric: VectorDistanceMetric? = null,
+)

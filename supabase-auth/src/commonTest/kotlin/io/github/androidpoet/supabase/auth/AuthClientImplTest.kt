@@ -3,10 +3,12 @@ package io.github.androidpoet.supabase.auth
 import io.github.androidpoet.supabase.auth.models.OAuthProvider
 import io.github.androidpoet.supabase.auth.models.OtpVerifyResult
 import io.github.androidpoet.supabase.auth.models.SignOutScope
+import io.github.androidpoet.supabase.auth.models.UserIdentity
+import io.github.androidpoet.supabase.auth.models.Web3Chain
 import io.github.androidpoet.supabase.client.SupabaseClient
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlin.test.Test
@@ -16,7 +18,7 @@ import kotlin.test.assertTrue
 
 class AuthClientImplTest {
     @Test
-    fun test_signInWithIdToken_usesIdTokenGrantPayload() = runBlocking {
+    fun test_signInWithIdToken_usesIdTokenGrantPayload() = runTest {
         val client = FakeSupabaseClient()
         val sut = AuthClientImpl(client)
 
@@ -37,7 +39,50 @@ class AuthClientImplTest {
     }
 
     @Test
-    fun test_signInAnonymously_usesDataAndCaptchaPayload() = runBlocking {
+    fun test_signInWithWeb3_usesWeb3GrantPayload() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = AuthClientImpl(client)
+
+        val result = sut.signInWithWeb3(
+            chain = Web3Chain.ETHEREUM,
+            message = "example siwe message",
+            signature = "0xsignature",
+            captchaToken = "captcha-web3",
+        )
+
+        assertTrue(result is SupabaseResult.Success)
+        assertEquals("/auth/v1/token?grant_type=web3", client.lastPostEndpoint)
+        assertTrue(client.lastPostBody?.contains("\"chain\":\"ethereum\"") == true)
+        assertTrue(client.lastPostBody?.contains("\"message\":\"example siwe message\"") == true)
+        assertTrue(client.lastPostBody?.contains("\"signature\":\"0xsignature\"") == true)
+        assertTrue(client.lastPostBody?.contains("\"captcha_token\":\"captcha-web3\"") == true)
+        assertEquals("web3-acc", result.value.accessToken)
+    }
+
+    @Test
+    fun test_signInWithOAuth_returnsProviderUrlWithOptions() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = AuthClientImpl(client)
+
+        val result = sut.signInWithOAuth(
+            provider = OAuthProvider.GITHUB,
+            redirectTo = "myapp://callback",
+            scopes = listOf("repo", "user"),
+            queryParams = mapOf("prompt" to "consent"),
+            skipBrowserRedirect = true,
+        )
+
+        assertTrue(result is SupabaseResult.Success)
+        assertEquals("github", result.value.provider)
+        assertTrue(result.value.url.startsWith("https://example.supabase.co/auth/v1/authorize?provider=github"))
+        assertTrue(result.value.url.contains("redirect_to=myapp%3A%2F%2Fcallback"))
+        assertTrue(result.value.url.contains("scopes=repo%20user"))
+        assertTrue(result.value.url.contains("skip_http_redirect=true"))
+        assertTrue(result.value.url.contains("prompt=consent"))
+    }
+
+    @Test
+    fun test_signInAnonymously_usesDataAndCaptchaPayload() = runTest {
         val client = FakeSupabaseClient()
         val sut = AuthClientImpl(client)
 
@@ -52,7 +97,7 @@ class AuthClientImplTest {
     }
 
     @Test
-    fun test_verifyOtpWithTokenHash_usesVerifyPayload() = runBlocking {
+    fun test_verifyOtpWithTokenHash_usesVerifyPayload() = runTest {
         val client = FakeSupabaseClient()
         val sut = AuthClientImpl(client)
 
@@ -68,7 +113,7 @@ class AuthClientImplTest {
     }
 
     @Test
-    fun test_signInWithOtp_withOptions_usesOtpPayloadFields() = runBlocking {
+    fun test_signInWithOtp_withOptions_usesOtpPayloadFields() = runTest {
         val client = FakeSupabaseClient()
         val sut = AuthClientImpl(client)
 
@@ -87,7 +132,7 @@ class AuthClientImplTest {
     }
 
     @Test
-    fun test_verifyOtpWithResult_returnsVerifiedNoSessionWhenNoAccessToken() = runBlocking {
+    fun test_verifyOtpWithResult_returnsVerifiedNoSessionWhenNoAccessToken() = runTest {
         val client = FakeSupabaseClient()
         client.verifyResponse = "{}"
         val sut = AuthClientImpl(client)
@@ -105,7 +150,7 @@ class AuthClientImplTest {
     }
 
     @Test
-    fun test_verifyOtp_withCaptchaToken_usesVerifyPayload() = runBlocking {
+    fun test_verifyOtp_withCaptchaToken_usesVerifyPayload() = runTest {
         val client = FakeSupabaseClient()
         val sut = AuthClientImpl(client)
 
@@ -121,7 +166,7 @@ class AuthClientImplTest {
     }
 
     @Test
-    fun test_verifyOtpWithTokenHashWithResult_returnsAuthenticatedWhenSessionPayloadPresent() = runBlocking {
+    fun test_verifyOtpWithTokenHashWithResult_returnsAuthenticatedWhenSessionPayloadPresent() = runTest {
         val client = FakeSupabaseClient()
         val sut = AuthClientImpl(client)
 
@@ -138,7 +183,7 @@ class AuthClientImplTest {
     }
 
     @Test
-    fun test_signOut_scopeBuildsEndpoint() = runBlocking {
+    fun test_signOut_scopeBuildsEndpoint() = runTest {
         val client = FakeSupabaseClient()
         val sut = AuthClientImpl(client)
 
@@ -149,7 +194,7 @@ class AuthClientImplTest {
     }
 
     @Test
-    fun test_linkIdentity_buildsAuthorizeEndpoint() = runBlocking {
+    fun test_linkIdentity_buildsAuthorizeEndpoint() = runTest {
         val client = FakeSupabaseClient()
         val sut = AuthClientImpl(client)
 
@@ -169,7 +214,7 @@ class AuthClientImplTest {
     }
 
     @Test
-    fun test_linkIdentityWithIdToken_usesBearerAndLinkIdentityPayload() = runBlocking {
+    fun test_linkIdentityWithIdToken_usesBearerAndLinkIdentityPayload() = runTest {
         val client = FakeSupabaseClient()
         val sut = AuthClientImpl(client)
 
@@ -191,7 +236,7 @@ class AuthClientImplTest {
 
     @Test
     fun test_retrieveSsoUrl_requiresDomainOrProviderId() {
-        runBlocking {
+        runTest {
             val client = FakeSupabaseClient()
             val sut = AuthClientImpl(client)
 
@@ -203,7 +248,7 @@ class AuthClientImplTest {
 
     @Test
     fun test_retrieveSsoUrl_rejectsBothDomainAndProviderId() {
-        runBlocking {
+        runTest {
             val client = FakeSupabaseClient()
             val sut = AuthClientImpl(client)
 
@@ -218,7 +263,7 @@ class AuthClientImplTest {
     }
 
     @Test
-    fun test_reauthenticate_usesAuthorizedEndpoint() = runBlocking {
+    fun test_reauthenticate_usesAuthorizedEndpoint() = runTest {
         val client = FakeSupabaseClient()
         val sut = AuthClientImpl(client)
 
@@ -230,7 +275,37 @@ class AuthClientImplTest {
     }
 
     @Test
-    fun test_retrieveSsoUrl_withoutAccessToken_usesNoAuthorizationHeader() = runBlocking {
+    fun test_getUserIdentities_returnsUserIdentities() = runTest {
+        val client = FakeSupabaseClient()
+        client.userResponse =
+            """{"id":"u1","identities":[{"id":"provider-user-1","identity_id":"identity-1","provider":"github","user_id":"u1"}]}"""
+        val sut = AuthClientImpl(client)
+
+        val result = sut.getUserIdentities("token-identities")
+
+        assertTrue(result is SupabaseResult.Success)
+        assertEquals("/auth/v1/user", client.lastGetEndpoint)
+        assertEquals("Bearer token-identities", client.lastGetHeaders["Authorization"])
+        assertEquals(
+            listOf(UserIdentity(id = "provider-user-1", identityId = "identity-1", provider = "github", userId = "u1")),
+            result.value,
+        )
+    }
+
+    @Test
+    fun test_getUserIdentities_returnsEmptyListWhenUserHasNoIdentities() = runTest {
+        val client = FakeSupabaseClient()
+        client.userResponse = """{"id":"u1"}"""
+        val sut = AuthClientImpl(client)
+
+        val result = sut.getUserIdentities("token-identities")
+
+        assertTrue(result is SupabaseResult.Success)
+        assertEquals(emptyList(), result.value)
+    }
+
+    @Test
+    fun test_retrieveSsoUrl_withoutAccessToken_usesNoAuthorizationHeader() = runTest {
         val client = FakeSupabaseClient()
         val sut = AuthClientImpl(client)
 
@@ -245,7 +320,7 @@ class AuthClientImplTest {
     }
 
     @Test
-    fun test_updateUser_includesNonceAndBearerHeader() = runBlocking {
+    fun test_updateUser_includesNonceAndBearerHeader() = runTest {
         val client = FakeSupabaseClient()
         val sut = AuthClientImpl(client)
 
@@ -264,6 +339,122 @@ class AuthClientImplTest {
         assertTrue(client.lastPatchBody?.contains("\"nonce\":\"nonce-xyz\"") == true)
         assertTrue(result is SupabaseResult.Success)
     }
+
+    @Test
+    fun test_passkeyStartRegistration_usesBearerAndRegistrationOptionsEndpoint() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = AuthClientImpl(client)
+
+        val result = sut.passkeyStartRegistration(accessToken = "token-passkey")
+
+        assertTrue(result is SupabaseResult.Success)
+        assertEquals("/auth/v1/passkeys/registration/options", client.lastPostEndpoint)
+        assertEquals("Bearer token-passkey", client.lastPostHeaders["Authorization"])
+        assertEquals("challenge-reg", result.value.challengeId)
+    }
+
+    @Test
+    fun test_passkeyVerifyRegistration_sendsChallengeAndCredential() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = AuthClientImpl(client)
+
+        val result = sut.passkeyVerifyRegistration(
+            accessToken = "token-passkey",
+            challengeId = "challenge-reg",
+            credential = buildJsonObject { put("id", "credential-id") },
+        )
+
+        assertTrue(result is SupabaseResult.Success)
+        assertEquals("/auth/v1/passkeys/registration/verify", client.lastPostEndpoint)
+        assertEquals("Bearer token-passkey", client.lastPostHeaders["Authorization"])
+        assertTrue(client.lastPostBody?.contains("\"challenge_id\":\"challenge-reg\"") == true)
+        assertTrue(client.lastPostBody?.contains("\"credential\":{\"id\":\"credential-id\"}") == true)
+        assertEquals("passkey1", result.value.id)
+    }
+
+    @Test
+    fun test_passkeyStartAuthentication_sendsCaptchaPayload() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = AuthClientImpl(client)
+
+        val result = sut.passkeyStartAuthentication(captchaToken = "captcha-passkey")
+
+        assertTrue(result is SupabaseResult.Success)
+        assertEquals("/auth/v1/passkeys/authentication/options", client.lastPostEndpoint)
+        assertTrue(client.lastPostBody?.contains("\"captcha_token\":\"captcha-passkey\"") == true)
+        assertEquals("challenge-auth", result.value.challengeId)
+    }
+
+    @Test
+    fun test_passkeyVerifyAuthentication_sendsCredentialAndDecodesSession() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = AuthClientImpl(client)
+
+        val result = sut.passkeyVerifyAuthentication(
+            challengeId = "challenge-auth",
+            credential = buildJsonObject { put("id", "credential-id") },
+        )
+
+        assertTrue(result is SupabaseResult.Success)
+        assertEquals("/auth/v1/passkeys/authentication/verify", client.lastPostEndpoint)
+        assertTrue(client.lastPostBody?.contains("\"challenge_id\":\"challenge-auth\"") == true)
+        assertEquals("passkey-acc", result.value.accessToken)
+    }
+
+    @Test
+    fun test_passkeyListUpdateAndDelete_useExpectedEndpoints() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = AuthClientImpl(client)
+
+        val listResult = sut.passkeyList(accessToken = "token-passkey")
+        val updateResult = sut.passkeyUpdate(
+            accessToken = "token-passkey",
+            passkeyId = "passkey1",
+            friendlyName = "Laptop",
+        )
+        val deleteResult = sut.passkeyDelete(accessToken = "token-passkey", passkeyId = "passkey1")
+
+        assertTrue(listResult is SupabaseResult.Success)
+        assertEquals("passkey1", listResult.value.first().id)
+        assertTrue(updateResult is SupabaseResult.Success)
+        assertEquals("/auth/v1/passkeys/passkey1", client.lastDeleteEndpoint)
+        assertEquals("Bearer token-passkey", client.lastDeleteHeaders["Authorization"])
+        assertTrue(deleteResult is SupabaseResult.Success)
+    }
+
+    @Test
+    fun test_oauthAuthorizationServerMethods_useExpectedEndpointsAndBearerToken() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = AuthClientImpl(client)
+
+        val details = sut.oauthGetAuthorizationDetails(
+            accessToken = "token-oauth",
+            authorizationId = "authz-1",
+        )
+        val approve = sut.oauthApproveAuthorization(
+            accessToken = "token-oauth",
+            authorizationId = "authz-1",
+        )
+        val deny = sut.oauthDenyAuthorization(
+            accessToken = "token-oauth",
+            authorizationId = "authz-1",
+        )
+        val grants = sut.oauthListGrants(accessToken = "token-oauth")
+        val revoke = sut.oauthRevokeGrant(accessToken = "token-oauth", clientId = "client-1")
+
+        assertTrue(details is SupabaseResult.Success)
+        assertEquals("authz-1", details.value.authorizationId)
+        assertEquals("Example App", details.value.client?.name)
+        assertTrue(approve is SupabaseResult.Success)
+        assertEquals("https://app.example.com/callback", approve.value.redirectUrl)
+        assertTrue(deny is SupabaseResult.Success)
+        assertEquals("https://app.example.com/callback?error=access_denied", deny.value.redirectUrl)
+        assertTrue(grants is SupabaseResult.Success)
+        assertEquals("client-1", grants.value.first().client.id)
+        assertEquals("/auth/v1/user/oauth/grants?client_id=client-1", client.lastDeleteEndpoint)
+        assertEquals("Bearer token-oauth", client.lastDeleteHeaders["Authorization"])
+        assertTrue(revoke is SupabaseResult.Success)
+    }
 }
 
 private class FakeSupabaseClient : SupabaseClient {
@@ -279,8 +470,11 @@ private class FakeSupabaseClient : SupabaseClient {
     var lastPatchEndpoint: String? = null
     var lastPatchBody: String? = null
     var lastPatchHeaders: Map<String, String> = emptyMap()
+    var lastDeleteEndpoint: String? = null
+    var lastDeleteHeaders: Map<String, String> = emptyMap()
     var verifyResponse: String =
         """{"access_token":"acc","refresh_token":"ref","expires_in":3600,"token_type":"bearer","user":{"id":"u1"}}"""
+    var userResponse: String = """{"id":"u1"}"""
 
     override suspend fun get(
         endpoint: String,
@@ -289,7 +483,19 @@ private class FakeSupabaseClient : SupabaseClient {
     ): SupabaseResult<String> {
         lastGetEndpoint = endpoint
         lastGetHeaders = headers
-        return SupabaseResult.Success("""{"url":"https://example.com/link","provider":"github"}""")
+        return when {
+            endpoint == "/auth/v1/user" -> SupabaseResult.Success(userResponse)
+            endpoint == "/auth/v1/passkeys" -> SupabaseResult.Success(
+                """[{"id":"passkey1","friendly_name":"Laptop","created_at":"2026-01-01T00:00:00Z","last_used_at":"2026-01-02T00:00:00Z"}]""",
+            )
+            endpoint == "/auth/v1/oauth/authorizations/authz-1" -> SupabaseResult.Success(
+                """{"authorization_id":"authz-1","redirect_uri":"https://app.example.com/callback","client":{"id":"client-1","name":"Example App","uri":"https://app.example.com","logo_uri":"https://app.example.com/logo.png"},"user":{"id":"u1","email":"user@example.com"},"scope":"openid email"}""",
+            )
+            endpoint == "/auth/v1/user/oauth/grants" -> SupabaseResult.Success(
+                """[{"client":{"id":"client-1","name":"Example App","uri":"https://app.example.com","logo_uri":"https://app.example.com/logo.png"},"scopes":["openid","email"],"granted_at":"2026-01-01T00:00:00Z"}]""",
+            )
+            else -> SupabaseResult.Success("""{"url":"https://example.com/link","provider":"github"}""")
+        }
     }
 
     override suspend fun post(
@@ -303,8 +509,29 @@ private class FakeSupabaseClient : SupabaseClient {
         return when {
             endpoint.startsWith("/auth/v1/logout") -> SupabaseResult.Success("{}")
             endpoint == "/auth/v1/sso" -> SupabaseResult.Success("""{"url":"https://example.com/sso"}""")
+            endpoint == "/auth/v1/passkeys/registration/options" -> SupabaseResult.Success(
+                """{"challenge_id":"challenge-reg","options":{"challenge":"abc"},"expires_at":1893456000}""",
+            )
+            endpoint == "/auth/v1/passkeys/registration/verify" -> SupabaseResult.Success(
+                """{"id":"passkey1","friendly_name":"Laptop","created_at":"2026-01-01T00:00:00Z"}""",
+            )
+            endpoint == "/auth/v1/passkeys/authentication/options" -> SupabaseResult.Success(
+                """{"challenge_id":"challenge-auth","options":{"challenge":"xyz"},"expires_at":1893456000}""",
+            )
+            endpoint == "/auth/v1/passkeys/authentication/verify" -> SupabaseResult.Success(
+                """{"access_token":"passkey-acc","refresh_token":"passkey-ref","expires_in":3600,"token_type":"bearer","user":{"id":"u1"}}""",
+            )
+            endpoint == "/auth/v1/oauth/authorizations/authz-1/consent" && body?.contains("\"action\":\"approve\"") == true -> SupabaseResult.Success(
+                """{"redirect_url":"https://app.example.com/callback"}""",
+            )
+            endpoint == "/auth/v1/oauth/authorizations/authz-1/consent" && body?.contains("\"action\":\"deny\"") == true -> SupabaseResult.Success(
+                """{"redirect_url":"https://app.example.com/callback?error=access_denied"}""",
+            )
             endpoint == "/auth/v1/token?grant_type=id_token" -> SupabaseResult.Success(
                 """{"access_token":"acc","refresh_token":"ref","expires_in":3600,"token_type":"bearer","user":{"id":"u1"}}""",
+            )
+            endpoint == "/auth/v1/token?grant_type=web3" -> SupabaseResult.Success(
+                """{"access_token":"web3-acc","refresh_token":"web3-ref","expires_in":3600,"token_type":"bearer","user":{"id":"u1"}}""",
             )
             endpoint == "/auth/v1/verify" -> SupabaseResult.Success(verifyResponse)
             else -> SupabaseResult.Success("{}")
@@ -324,13 +551,22 @@ private class FakeSupabaseClient : SupabaseClient {
         lastPatchEndpoint = endpoint
         lastPatchBody = body
         lastPatchHeaders = headers
-        return SupabaseResult.Success("""{"id":"u1"}""")
+        return if (endpoint.startsWith("/auth/v1/passkeys/")) {
+            SupabaseResult.Success("""{"id":"passkey1","friendly_name":"Laptop","created_at":"2026-01-01T00:00:00Z","last_used_at":"2026-01-02T00:00:00Z"}""")
+        } else {
+            SupabaseResult.Success("""{"id":"u1"}""")
+        }
     }
 
     override suspend fun delete(
         endpoint: String,
+        body: String?,
         headers: Map<String, String>,
-    ): SupabaseResult<String> = SupabaseResult.Success("{}")
+    ): SupabaseResult<String> {
+        lastDeleteEndpoint = endpoint
+        lastDeleteHeaders = headers
+        return SupabaseResult.Success("{}")
+    }
 
     override suspend fun postRaw(
         url: String,

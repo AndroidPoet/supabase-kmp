@@ -55,6 +55,8 @@ internal class RealtimeClientImpl(
     private val _connectionState = MutableStateFlow<ConnectionState>(ConnectionState.Disconnected)
     override val connectionState: StateFlow<ConnectionState> = _connectionState.asStateFlow()
     override val isConnected: Boolean get() = _connectionState.value is ConnectionState.Connected
+    override val isConnecting: Boolean get() = _connectionState.value is ConnectionState.Connecting
+    override val isDisconnecting: Boolean get() = _connectionState.value is ConnectionState.Disconnecting
     private val incomingMessages = MutableSharedFlow<RealtimeMessage>(extraBufferCapacity = 64)
     private val activeSubscriptions = mutableMapOf<String, ChannelSubscriptionImpl>()
     internal fun nextRef(): String = (++refCounter).toString()
@@ -135,6 +137,7 @@ internal class RealtimeClientImpl(
     }
     override suspend fun disconnect() {
         intentionalDisconnect = true
+        _connectionState.value = ConnectionState.Disconnecting
         reconnectJob?.cancel()
         reconnectJob = null
         reconnectAttempt = 0
@@ -185,11 +188,13 @@ internal class RealtimeClientImpl(
         session?.send(Frame.Text(text))
     }
     private suspend fun establishConnection() {
+        val isHttps = supabaseClient.projectUrl.startsWith("https://")
         val host = supabaseClient.projectUrl
             .removePrefix("https://")
             .removePrefix("http://")
             .trimEnd('/')
-        val url = "wss://$host/realtime/v1/websocket?apikey=${supabaseClient.apiKey}&vsn=1.0.0"
+        val wsScheme = if (isHttps) "wss" else "ws"
+        val url = "$wsScheme://$host/realtime/v1/websocket?apikey=${supabaseClient.apiKey}&vsn=1.0.0"
         val newScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         scope = newScope
         val ws = httpClient.webSocketSession(url)
@@ -368,49 +373,31 @@ internal class ChannelSubscriptionImpl(
         client.leaveChannel(topic)
         _status.value = RealtimeSubscription.Status.UNSUBSCRIBED
     }
-    override suspend fun broadcast(event: String, payload: JsonObject) {
+    override suspend fun send(type: RealtimeSubscription.SendType, event: String, payload: JsonObject?) {
         client.sendMessage(
             RealtimeMessage(
                 topic = topic,
-                event = "broadcast",
+                event = type.wireValue,
                 payload = buildJsonObject {
-                    put("type", "broadcast")
+                    put("type", type.wireValue)
                     put("event", event)
-                    put("payload", payload)
+                    if (payload != null) {
+                        put("payload", payload)
+                    }
                 },
                 joinRef = joinRef,
                 ref = client.nextRef(),
             ),
         )
+    }
+    override suspend fun broadcast(event: String, payload: JsonObject) {
+        send(RealtimeSubscription.SendType.BROADCAST, event, payload)
     }
     override suspend fun track(state: JsonObject) {
-        client.sendMessage(
-            RealtimeMessage(
-                topic = topic,
-                event = "presence",
-                payload = buildJsonObject {
-                    put("type", "presence")
-                    put("event", "track")
-                    put("payload", state)
-                },
-                joinRef = joinRef,
-                ref = client.nextRef(),
-            ),
-        )
+        send(RealtimeSubscription.SendType.PRESENCE, "track", state)
     }
     override suspend fun untrack() {
-        client.sendMessage(
-            RealtimeMessage(
-                topic = topic,
-                event = "presence",
-                payload = buildJsonObject {
-                    put("type", "presence")
-                    put("event", "untrack")
-                },
-                joinRef = joinRef,
-                ref = client.nextRef(),
-            ),
-        )
+        send(RealtimeSubscription.SendType.PRESENCE, "untrack")
     }
     internal suspend fun handleMessage(message: RealtimeMessage) {
         when (message.event) {

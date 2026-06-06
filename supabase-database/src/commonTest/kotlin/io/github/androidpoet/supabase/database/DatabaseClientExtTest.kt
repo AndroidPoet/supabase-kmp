@@ -3,7 +3,7 @@ package io.github.androidpoet.supabase.database
 import io.github.androidpoet.supabase.core.models.FilterBuilder
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -11,7 +11,7 @@ import kotlin.test.assertTrue
 
 class DatabaseClientExtTest {
     @Test
-    fun test_selectHead_mapsSuccessToUnit() = runBlocking {
+    fun test_selectHead_mapsSuccessToUnit() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success(""),
         )
@@ -22,7 +22,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_selectMaybeSingleTyped_returnsDecodedEntity() = runBlocking {
+    fun test_selectMaybeSingleTyped_returnsDecodedEntity() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
         )
@@ -34,7 +34,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_selectMaybeSingleTyped_returnsNullOn406() = runBlocking {
+    fun test_selectMaybeSingleTyped_returnsNullOn406() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Failure(SupabaseError(message = "no rows", code = "406")),
         )
@@ -46,7 +46,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_upsertTyped_setsUpsertFlag() = runBlocking {
+    fun test_upsertTyped_setsUpsertFlag() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
         )
@@ -60,7 +60,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_insertUnit_mapsSuccessToUnit() = runBlocking {
+    fun test_insertUnit_mapsSuccessToUnit() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             insertResult = SupabaseResult.Success(""),
@@ -76,7 +76,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_insertUnitTyped_setsUpsertFlagAndMapsUnit() = runBlocking {
+    fun test_insertUnitTyped_setsUpsertFlagAndMapsUnit() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             insertResult = SupabaseResult.Success(""),
@@ -94,7 +94,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_deleteTyped_deserializesList() = runBlocking {
+    fun test_deleteTyped_deserializesList() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             deleteResult = SupabaseResult.Success("""[{"id":2}]"""),
@@ -107,7 +107,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_updateUnit_mapsSuccessToUnit() = runBlocking {
+    fun test_updateUnit_mapsSuccessToUnit() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             updateResult = SupabaseResult.Success(""),
@@ -123,7 +123,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_updateUnitTyped_mapsSuccessToUnit() = runBlocking {
+    fun test_updateUnitTyped_mapsSuccessToUnit() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             updateResult = SupabaseResult.Success(""),
@@ -139,7 +139,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_deleteUnit_mapsSuccessToUnit() = runBlocking {
+    fun test_deleteUnit_mapsSuccessToUnit() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             deleteResult = SupabaseResult.Success(""),
@@ -152,7 +152,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_rpcGetTyped_deserializesValue() = runBlocking {
+    fun test_rpcGetTyped_deserializesValue() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             rpcGetResult = SupabaseResult.Success("""{"id":3}"""),
@@ -168,7 +168,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_rpcGet_mapOverload_mapsParamsToPairs() = runBlocking {
+    fun test_rpcGet_mapOverload_mapsParamsToPairs() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             rpcGetResult = SupabaseResult.Success("""{"id":3}"""),
@@ -183,7 +183,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_rpcGet_mapOverload_withOptions_mapsParamsToPairs() = runBlocking {
+    fun test_rpcGet_mapOverload_withOptions_mapsParamsToPairs() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             rpcGetResult = SupabaseResult.Success(""),
@@ -200,7 +200,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_rpcGetTyped_mapOverload_deserializesValue() = runBlocking {
+    fun test_rpcGetTyped_mapOverload_deserializesValue() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             rpcGetResult = SupabaseResult.Success("""{"id":8}"""),
@@ -216,7 +216,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_rpcGetTyped_requestObject_mapsToQueryParams() = runBlocking {
+    fun test_rpcGetTyped_requestObject_mapsToQueryParams() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             rpcGetResult = SupabaseResult.Success("""{"id":13}"""),
@@ -233,7 +233,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_rpcGetSingleTyped_mapOverload_deserializesValue() = runBlocking {
+    fun test_rpcGetSingleTyped_mapOverload_deserializesValue() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             rpcGetResult = SupabaseResult.Success("""{"id":9}"""),
@@ -249,7 +249,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_rpcGetListTyped_mapOverload_deserializesList() = runBlocking {
+    fun test_rpcGetListTyped_mapOverload_deserializesList() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             rpcGetResult = SupabaseResult.Success("""[{"id":1},{"id":2}]"""),
@@ -265,7 +265,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_rpcGetCsv_mapOverload_returnsRawCsv() = runBlocking {
+    fun test_rpcGetCsv_mapOverload_returnsRawCsv() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             rpcGetResult = SupabaseResult.Success("id\n10"),
@@ -281,7 +281,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_rpcGetHead_mapOverload_mapsSuccessToUnit() = runBlocking {
+    fun test_rpcGetHead_mapOverload_mapsSuccessToUnit() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             rpcGetResult = SupabaseResult.Success(""),
@@ -298,7 +298,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_rpcListTyped_deserializesList() = runBlocking {
+    fun test_rpcListTyped_deserializesList() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             rpcResult = SupabaseResult.Success("""[{"id":4},{"id":5}]"""),
@@ -310,7 +310,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_rpcTyped_requestObject_isSerializedToParams() = runBlocking {
+    fun test_rpcTyped_requestObject_isSerializedToParams() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             rpcResult = SupabaseResult.Success("""{"id":11}"""),
@@ -327,7 +327,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_rpcSingleTyped_requestObject_isSerializedToParams() = runBlocking {
+    fun test_rpcSingleTyped_requestObject_isSerializedToParams() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             rpcResult = SupabaseResult.Success("""{"id":12}"""),
@@ -344,7 +344,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_rpcUnit_requestObject_isSerializedToParams() = runBlocking {
+    fun test_rpcUnit_requestObject_isSerializedToParams() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             rpcResult = SupabaseResult.Success("{}"),
@@ -361,7 +361,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_rpcHead_requestObject_isSerializedToParams() = runBlocking {
+    fun test_rpcHead_requestObject_isSerializedToParams() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             rpcResult = SupabaseResult.Success(""),
@@ -379,7 +379,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_rpcCsv_requestObject_isSerializedToParams() = runBlocking {
+    fun test_rpcCsv_requestObject_isSerializedToParams() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             rpcResult = SupabaseResult.Success("id\n50"),
@@ -396,7 +396,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_rpcGetListTyped_deserializesList() = runBlocking {
+    fun test_rpcGetListTyped_deserializesList() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             rpcGetResult = SupabaseResult.Success("""[{"id":6},{"id":7}]"""),
@@ -408,7 +408,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_rpcMaybeSingleTyped_returnsNullOn406() = runBlocking {
+    fun test_rpcMaybeSingleTyped_returnsNullOn406() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             rpcResult = SupabaseResult.Failure(SupabaseError(message = "no rows", code = "406")),
@@ -421,7 +421,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_rpcGetMaybeSingleTyped_returnsNullOn406() = runBlocking {
+    fun test_rpcGetMaybeSingleTyped_returnsNullOn406() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             rpcGetResult = SupabaseResult.Failure(SupabaseError(message = "no rows", code = "406")),
@@ -434,7 +434,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_rpcCsv_returnsRawCsvString() = runBlocking {
+    fun test_rpcCsv_returnsRawCsvString() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             rpcResult = SupabaseResult.Success("id\n1"),
@@ -446,7 +446,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_rpcGetCsv_returnsRawCsvString() = runBlocking {
+    fun test_rpcGetCsv_returnsRawCsvString() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             rpcGetResult = SupabaseResult.Success("id\n3"),
@@ -458,7 +458,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_rpcUnit_mapsSuccessToUnit() = runBlocking {
+    fun test_rpcUnit_mapsSuccessToUnit() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             rpcResult = SupabaseResult.Success("{}"),
@@ -470,7 +470,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_rpcGetUnit_mapsSuccessToUnit() = runBlocking {
+    fun test_rpcGetUnit_mapsSuccessToUnit() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             rpcGetResult = SupabaseResult.Success("{}"),
@@ -482,7 +482,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_rpcGetUnit_mapOverload_mapsParamsToPairs() = runBlocking {
+    fun test_rpcGetUnit_mapOverload_mapsParamsToPairs() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             rpcGetResult = SupabaseResult.Success("{}"),
@@ -498,7 +498,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_rpcGetUnit_requestObject_mapsToQueryParams() = runBlocking {
+    fun test_rpcGetUnit_requestObject_mapsToQueryParams() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             rpcGetResult = SupabaseResult.Success("{}"),
@@ -514,7 +514,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_rpcHead_mapsSuccessToUnit() = runBlocking {
+    fun test_rpcHead_mapsSuccessToUnit() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             rpcResult = SupabaseResult.Success(""),
@@ -526,7 +526,7 @@ class DatabaseClientExtTest {
     }
 
     @Test
-    fun test_rpcGetHead_mapsSuccessToUnit() = runBlocking {
+    fun test_rpcGetHead_mapsSuccessToUnit() = runTest {
         val client = FakeDatabaseClient(
             selectResult = SupabaseResult.Success("""{"id":1}"""),
             rpcGetResult = SupabaseResult.Success(""),
@@ -564,6 +564,10 @@ private class FakeDatabaseClient(
         single: Boolean,
         csv: Boolean,
         count: CountOption?,
+        stripNulls: Boolean,
+        explain: ExplainOptions?,
+        retry: Boolean,
+        headers: Map<String, String>,
         filters: FilterBuilder.() -> Unit,
     ): SupabaseResult<String> = selectResult
 
@@ -578,6 +582,9 @@ private class FakeDatabaseClient(
         onConflict: String?,
         returning: ReturnOption,
         count: CountOption?,
+        stripNulls: Boolean,
+        rollback: Boolean,
+        headers: Map<String, String>,
     ): SupabaseResult<String> {
         lastInsertUpsert = upsert
         return insertResult
@@ -589,6 +596,11 @@ private class FakeDatabaseClient(
         body: String,
         returning: ReturnOption,
         count: CountOption?,
+        stripNulls: Boolean,
+        rollback: Boolean,
+        maxAffected: Int?,
+        explain: ExplainOptions?,
+        headers: Map<String, String>,
         filters: FilterBuilder.() -> Unit,
     ): SupabaseResult<String> = updateResult
 
@@ -597,6 +609,11 @@ private class FakeDatabaseClient(
         schema: String?,
         returning: ReturnOption,
         count: CountOption?,
+        stripNulls: Boolean,
+        rollback: Boolean,
+        maxAffected: Int?,
+        explain: ExplainOptions?,
+        headers: Map<String, String>,
         filters: FilterBuilder.() -> Unit,
     ): SupabaseResult<String> = deleteResult
 
@@ -608,6 +625,11 @@ private class FakeDatabaseClient(
         single: Boolean,
         csv: Boolean,
         count: CountOption?,
+        stripNulls: Boolean,
+        rollback: Boolean,
+        maxAffected: Int?,
+        explain: ExplainOptions?,
+        headers: Map<String, String>,
     ): SupabaseResult<String> {
         lastRpcParams = params
         return rpcResult
@@ -621,6 +643,10 @@ private class FakeDatabaseClient(
         single: Boolean,
         csv: Boolean,
         count: CountOption?,
+        stripNulls: Boolean,
+        explain: ExplainOptions?,
+        retry: Boolean,
+        headers: Map<String, String>,
     ): SupabaseResult<String> {
         lastRpcGetQueryParams = queryParams
         return rpcGetResult
