@@ -9,8 +9,7 @@ import io.github.androidpoet.supabase.core.result.SupabaseResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.test.runTest
 
 class SessionManagerImplTest {
@@ -34,7 +33,7 @@ class SessionManagerImplTest {
     }
 
     @Test
-    fun test_startAndStopAutoRefresh_controlRefreshScheduling() = runBlocking {
+    fun test_startAndStopAutoRefresh_controlRefreshScheduling() = runTest {
         val client = SessionFakeSupabaseClient()
         val storage = FakeSessionStorage()
         val manager = SessionManagerImpl(
@@ -46,16 +45,14 @@ class SessionManagerImplTest {
         )
         try {
             manager.saveSession(staleSession.copy(expiresIn = 0))
-            delay(50)
             assertEquals(0, client.postCount)
 
             manager.startAutoRefresh()
-            delay(50)
+            client.awaitPostCount(1)
             assertEquals(1, client.postCount)
 
             manager.stopAutoRefresh()
             manager.saveSession(staleSession.copy(accessToken = "second-acc", expiresIn = 0))
-            delay(50)
             assertEquals(1, client.postCount)
         } finally {
             manager.close()
@@ -93,6 +90,7 @@ private class SessionFakeSupabaseClient : SupabaseClient {
     var accessTokenHeader: String? = null
     var lastPostEndpoint: String? = null
     var postCount: Int = 0
+    private val postSignals = Channel<Int>(Channel.UNLIMITED)
 
     override fun setAccessToken(token: String) {
         accessTokenHeader = "Bearer $token"
@@ -117,9 +115,16 @@ private class SessionFakeSupabaseClient : SupabaseClient {
     ): SupabaseResult<String> {
         lastPostEndpoint = endpoint
         postCount++
+        postSignals.trySend(postCount)
         return SupabaseResult.Success(
             """{"access_token":"refreshed-acc","refresh_token":"refreshed-ref","expires_in":3600,"token_type":"bearer","user":{"id":"user-1"}}""",
         )
+    }
+
+    suspend fun awaitPostCount(expectedCount: Int) {
+        while (postCount < expectedCount) {
+            postSignals.receive()
+        }
     }
 
     override suspend fun put(
