@@ -159,6 +159,99 @@ public data class AnalyticsBucketDeleteResponse(
 )
 
 @Serializable
+public data class IcebergCatalogConfig(
+    val defaults: Map<String, String> = emptyMap(),
+    val overrides: Map<String, String> = emptyMap(),
+)
+
+@Serializable
+public data class IcebergNamespaceListResponse(
+    val namespaces: List<List<String>> = emptyList(),
+    @SerialName("next-page-token") val nextPageToken: String? = null,
+    @SerialName("nextPageToken") val nextPageTokenCamelCase: String? = null,
+) {
+    public val resolvedNextPageToken: String?
+        get() = nextPageToken ?: nextPageTokenCamelCase
+}
+
+@Serializable
+public data class IcebergCreateNamespaceRequest(
+    val namespace: List<String>,
+    val properties: Map<String, String> = emptyMap(),
+)
+
+@Serializable
+public data class IcebergNamespaceMetadata(
+    val namespace: List<String>,
+    val properties: Map<String, String> = emptyMap(),
+)
+
+@Serializable
+public data class IcebergUpdateNamespacePropertiesRequest(
+    val removals: List<String>? = null,
+    val updates: Map<String, String>? = null,
+)
+
+@Serializable
+public data class IcebergUpdateNamespacePropertiesResponse(
+    val removed: List<String> = emptyList(),
+    val updated: List<String> = emptyList(),
+    val missing: List<String> = emptyList(),
+)
+
+@Serializable
+public data class IcebergTableIdentifier(
+    val namespace: List<String>,
+    val name: String,
+)
+
+@Serializable
+public data class IcebergTableListResponse(
+    val identifiers: List<IcebergTableIdentifier> = emptyList(),
+    @SerialName("next-page-token") val nextPageToken: String? = null,
+    @SerialName("nextPageToken") val nextPageTokenCamelCase: String? = null,
+) {
+    public val resolvedNextPageToken: String?
+        get() = nextPageToken ?: nextPageTokenCamelCase
+}
+
+@Serializable
+public data class IcebergTableCreateRequest(
+    val name: String,
+    val schema: JsonObject,
+    val location: String? = null,
+    val partitionSpec: JsonObject? = null,
+    val writeOrder: JsonObject? = null,
+    val properties: Map<String, String> = emptyMap(),
+)
+
+@Serializable
+public data class IcebergTableCommitRequest(
+    val requirements: List<JsonObject> = emptyList(),
+    val updates: List<JsonObject> = emptyList(),
+)
+
+@Serializable
+public data class IcebergTableRegisterRequest(
+    val name: String,
+    @SerialName("metadata-location") val metadataLocation: String,
+)
+
+@Serializable
+public data class IcebergTableRenameRequest(
+    val source: IcebergTableIdentifier,
+    val destination: IcebergTableIdentifier,
+)
+
+@Serializable
+public data class IcebergTableMetadataResponse(
+    val name: String? = null,
+    val metadata: JsonObject? = null,
+    val config: Map<String, String> = emptyMap(),
+    @SerialName("metadata-location") val metadataLocation: String? = null,
+)
+
+@Serializable
 public data class VectorBucketCreateRequest(
     val vectorBucketName: String,
 )

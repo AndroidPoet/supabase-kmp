@@ -54,6 +54,10 @@ internal class RealtimeClientImpl(
     private var intentionalDisconnect = false
     private val _connectionState = MutableStateFlow<ConnectionState>(ConnectionState.Disconnected)
     override val connectionState: StateFlow<ConnectionState> = _connectionState.asStateFlow()
+    private val _debugState = MutableStateFlow(RealtimeDebugState())
+    override val debugState: StateFlow<RealtimeDebugState> = _debugState.asStateFlow()
+    private val _debugEvents = MutableSharedFlow<RealtimeDebugEvent>(extraBufferCapacity = 64)
+    override val debugEvents: Flow<RealtimeDebugEvent> = _debugEvents
     override val isConnected: Boolean get() = _connectionState.value is ConnectionState.Connected
     override val isConnecting: Boolean get() = _connectionState.value is ConnectionState.Connecting
     override val isDisconnecting: Boolean get() = _connectionState.value is ConnectionState.Disconnecting
@@ -113,6 +117,9 @@ internal class RealtimeClientImpl(
                 ),
             )
         }
+    }
+    override suspend fun sendHeartbeat() {
+        sendHeartbeatMessage()
     }
     override suspend fun connect() {
         if (session != null) return
@@ -185,6 +192,7 @@ internal class RealtimeClientImpl(
     }
     internal suspend fun sendMessage(message: RealtimeMessage) {
         val text = json.encodeToString(message)
+        recordOutboundMessage(message)
         session?.send(Frame.Text(text))
     }
     private suspend fun establishConnection() {
@@ -205,6 +213,7 @@ internal class RealtimeClientImpl(
                     if (frame is Frame.Text) {
                         val text = frame.readText()
                         val message = json.decodeFromString<RealtimeMessage>(text)
+                        recordInboundMessage(message)
                         incomingMessages.emit(message)
                         dispatchToSubscription(message)
                     }
@@ -221,15 +230,40 @@ internal class RealtimeClientImpl(
         heartbeatJob = newScope.launch {
             while (isActive) {
                 delay(config.heartbeatIntervalMs)
-                sendMessage(
-                    RealtimeMessage(
-                        topic = "phoenix",
-                        event = "heartbeat",
-                        payload = buildJsonObject {},
-                        ref = nextRef(),
-                    ),
-                )
+                sendHeartbeatMessage()
             }
+        }
+    }
+    private suspend fun sendHeartbeatMessage() {
+        sendMessage(
+            RealtimeMessage(
+                topic = "phoenix",
+                event = "heartbeat",
+                payload = buildJsonObject {},
+                ref = nextRef(),
+            ),
+        )
+    }
+    private fun recordOutboundMessage(message: RealtimeMessage) {
+        _debugState.value = _debugState.value.copy(
+            outboundMessageCount = _debugState.value.outboundMessageCount + 1,
+            heartbeatSentCount = _debugState.value.heartbeatSentCount + if (message.isHeartbeatRequest()) 1 else 0,
+            lastOutboundRef = message.ref,
+        )
+        _debugEvents.tryEmit(RealtimeDebugEvent.OutboundMessage(message))
+        if (message.isHeartbeatRequest()) {
+            _debugEvents.tryEmit(RealtimeDebugEvent.HeartbeatSent(message.ref ?: ""))
+        }
+    }
+    private fun recordInboundMessage(message: RealtimeMessage) {
+        _debugState.value = _debugState.value.copy(
+            inboundMessageCount = _debugState.value.inboundMessageCount + 1,
+            heartbeatReceivedCount = _debugState.value.heartbeatReceivedCount + if (message.isHeartbeatReply()) 1 else 0,
+            lastInboundRef = message.ref,
+        )
+        _debugEvents.tryEmit(RealtimeDebugEvent.InboundMessage(message))
+        if (message.isHeartbeatReply()) {
+            _debugEvents.tryEmit(RealtimeDebugEvent.HeartbeatReceived(message.ref))
         }
     }
     private fun handleUnexpectedDisconnect() {
@@ -499,3 +533,9 @@ internal fun PostgresChangeEvent.toWireValue(): String = when (this) {
     PostgresChangeEvent.DELETE -> "DELETE"
     PostgresChangeEvent.ALL -> "*"
 }
+
+private fun RealtimeMessage.isHeartbeatRequest(): Boolean =
+    topic == "phoenix" && event == "heartbeat"
+
+private fun RealtimeMessage.isHeartbeatReply(): Boolean =
+    topic == "phoenix" && event == "phx_reply"

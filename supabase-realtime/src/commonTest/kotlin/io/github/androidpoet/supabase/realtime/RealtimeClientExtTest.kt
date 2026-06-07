@@ -8,8 +8,13 @@ import io.github.androidpoet.supabase.realtime.models.RealtimeChannel
 import io.github.androidpoet.supabase.realtime.models.PresenceState
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.yield
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -141,6 +146,22 @@ class RealtimeClientExtTest {
 
         assertEquals(1, stateSize)
     }
+
+    @Test
+    fun test_sendHeartbeat_recordsDebugEventAndState() = runTest {
+        val realtime = RealtimeClientImpl(ExtFakeSupabaseClient(), RealtimeConfig(autoReconnect = false))
+
+        val heartbeat = async {
+            realtime.debugEvents.filterIsInstance<RealtimeDebugEvent.HeartbeatSent>().first()
+        }
+        yield()
+        realtime.sendHeartbeat()
+
+        assertEquals("1", heartbeat.await().ref)
+        assertEquals(1, realtime.debugState.value.outboundMessageCount)
+        assertEquals(1, realtime.debugState.value.heartbeatSentCount)
+        assertEquals("1", realtime.debugState.value.lastOutboundRef)
+    }
 }
 
 private class ExtFakeSupabaseClient : SupabaseClient {
@@ -202,6 +223,8 @@ private class AwaitFakeRealtimeClient(
 ) : RealtimeClient {
     private val state = MutableStateFlow(initial)
     override val connectionState: StateFlow<ConnectionState> = state
+    override val debugState: StateFlow<RealtimeDebugState> = MutableStateFlow(RealtimeDebugState())
+    override val debugEvents: Flow<RealtimeDebugEvent> = emptyFlow()
     override val isConnected: Boolean
         get() = state.value is ConnectionState.Connected
     override val isConnecting: Boolean
@@ -223,6 +246,7 @@ private class AwaitFakeRealtimeClient(
     override suspend fun removeChannel(name: String) = Unit
     override suspend fun removeAllChannels() = Unit
     override suspend fun setAuth(token: String?) = Unit
+    override suspend fun sendHeartbeat() = Unit
     override suspend fun connect() = Unit
     override suspend fun disconnect() = Unit
 

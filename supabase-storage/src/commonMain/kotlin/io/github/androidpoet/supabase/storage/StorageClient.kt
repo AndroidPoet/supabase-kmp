@@ -3,6 +3,18 @@ import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.storage.models.AnalyticsBucket
 import io.github.androidpoet.supabase.storage.models.Bucket
 import io.github.androidpoet.supabase.storage.models.FileObject
+import io.github.androidpoet.supabase.storage.models.IcebergCatalogConfig
+import io.github.androidpoet.supabase.storage.models.IcebergCreateNamespaceRequest
+import io.github.androidpoet.supabase.storage.models.IcebergNamespaceListResponse
+import io.github.androidpoet.supabase.storage.models.IcebergNamespaceMetadata
+import io.github.androidpoet.supabase.storage.models.IcebergTableCommitRequest
+import io.github.androidpoet.supabase.storage.models.IcebergTableCreateRequest
+import io.github.androidpoet.supabase.storage.models.IcebergTableIdentifier
+import io.github.androidpoet.supabase.storage.models.IcebergTableListResponse
+import io.github.androidpoet.supabase.storage.models.IcebergTableMetadataResponse
+import io.github.androidpoet.supabase.storage.models.IcebergTableRegisterRequest
+import io.github.androidpoet.supabase.storage.models.IcebergUpdateNamespacePropertiesRequest
+import io.github.androidpoet.supabase.storage.models.IcebergUpdateNamespacePropertiesResponse
 import io.github.androidpoet.supabase.storage.models.ObjectListV2Result
 import io.github.androidpoet.supabase.storage.models.VectorBucket
 import io.github.androidpoet.supabase.storage.models.VectorBucketListResponse
@@ -19,36 +31,64 @@ import io.github.androidpoet.supabase.storage.models.VectorQueryResponse
 import kotlinx.serialization.json.JsonObject
 public interface AnalyticsCatalogClient {
     public suspend fun loadConfig(): SupabaseResult<JsonObject>
+    public suspend fun loadConfigTyped(): SupabaseResult<IcebergCatalogConfig>
     public suspend fun listNamespaces(
         parent: List<String>? = null,
         pageToken: String? = null,
         pageSize: Int? = null,
     ): SupabaseResult<JsonObject>
+    public suspend fun listNamespacesTyped(
+        parent: List<String>? = null,
+        pageToken: String? = null,
+        pageSize: Int? = null,
+    ): SupabaseResult<IcebergNamespaceListResponse>
     public suspend fun createNamespace(
         namespace: List<String>,
         properties: Map<String, String> = emptyMap(),
     ): SupabaseResult<JsonObject>
+    public suspend fun createNamespaceTyped(
+        request: IcebergCreateNamespaceRequest,
+    ): SupabaseResult<IcebergNamespaceMetadata>
     public suspend fun dropNamespace(namespace: List<String>): SupabaseResult<Unit>
     public suspend fun loadNamespaceMetadata(namespace: List<String>): SupabaseResult<JsonObject>
+    public suspend fun loadNamespaceMetadataTyped(namespace: List<String>): SupabaseResult<IcebergNamespaceMetadata>
     public suspend fun updateNamespaceProperties(
         namespace: List<String>,
         removals: List<String>? = null,
         updates: Map<String, String>? = null,
     ): SupabaseResult<JsonObject>
+    public suspend fun updateNamespacePropertiesTyped(
+        namespace: List<String>,
+        request: IcebergUpdateNamespacePropertiesRequest,
+    ): SupabaseResult<IcebergUpdateNamespacePropertiesResponse>
     public suspend fun listTables(
         namespace: List<String>,
         pageToken: String? = null,
         pageSize: Int? = null,
     ): SupabaseResult<JsonObject>
+    public suspend fun listTablesTyped(
+        namespace: List<String>,
+        pageToken: String? = null,
+        pageSize: Int? = null,
+    ): SupabaseResult<IcebergTableListResponse>
     public suspend fun createTable(
         namespace: List<String>,
         request: JsonObject,
     ): SupabaseResult<JsonObject>
+    public suspend fun createTableTyped(
+        namespace: List<String>,
+        request: IcebergTableCreateRequest,
+    ): SupabaseResult<IcebergTableMetadataResponse>
     public suspend fun updateTable(
         namespace: List<String>,
         name: String,
         request: JsonObject,
     ): SupabaseResult<JsonObject>
+    public suspend fun commitTableTyped(
+        namespace: List<String>,
+        name: String,
+        request: IcebergTableCommitRequest,
+    ): SupabaseResult<IcebergTableMetadataResponse>
     public suspend fun commitTable(
         namespace: List<String>,
         name: String,
@@ -64,11 +104,24 @@ public interface AnalyticsCatalogClient {
         name: String,
         snapshots: String? = null,
     ): SupabaseResult<JsonObject>
+    public suspend fun loadTableTyped(
+        namespace: List<String>,
+        name: String,
+        snapshots: String? = null,
+    ): SupabaseResult<IcebergTableMetadataResponse>
     public suspend fun registerTable(
         namespace: List<String>,
         request: JsonObject,
     ): SupabaseResult<JsonObject>
+    public suspend fun registerTableTyped(
+        namespace: List<String>,
+        request: IcebergTableRegisterRequest,
+    ): SupabaseResult<IcebergTableMetadataResponse>
     public suspend fun renameTable(request: JsonObject): SupabaseResult<Unit>
+    public suspend fun renameTableTyped(
+        source: IcebergTableIdentifier,
+        destination: IcebergTableIdentifier,
+    ): SupabaseResult<Unit>
 }
 public interface StorageClient {
     public suspend fun listBuckets(

@@ -26,6 +26,8 @@ SDK parity status:
 - Platform ceremonies are covered at the Supabase API boundary: OAuth returns provider URL, Web3 signs in with a caller-provided signed message, and passkeys expose start/verify endpoints. Browser redirects, wallet prompts, and Android/iOS passkey prompts remain platform/app responsibilities.
 - Auth admin uses a separate service-role module. OAuth authorization server APIs are exposed in the auth module for server/consent-page flows.
 - Storage vector buckets, analytics bucket management, and the Iceberg REST catalog wrapper are covered in the SDK.
+- Storage Iceberg REST catalog now has typed Kotlin request/response models in addition to raw JSON escape hatches.
+- Realtime exposes optional debug state/events and manual heartbeat sending for transport diagnostics while keeping websocket internals encapsulated.
 
 ## Client Initialization
 
@@ -214,5 +216,3 @@ If the target is 100% coverage of existing Kotlin SDK APIs in the sample, add th
 Optional SDK additions beyond current JS-reference parity:
 
 1. Auth: optional Android/iOS adapters for Web3 wallets and passkey credential ceremonies if we choose to ship platform UI helpers.
-2. Storage: typed Iceberg schema/table models if we want stronger Kotlin types over the raw JSON catalog API.
-3. Realtime: optional heartbeat diagnostics only if we intentionally want JS low-level control; current Kotlin SDK covers the user-facing channel flows and keeps JS `Push`/transport internals out of scope.

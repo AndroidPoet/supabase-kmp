@@ -1,8 +1,12 @@
 package io.github.androidpoet.supabase.realtime
 import io.github.androidpoet.supabase.realtime.models.RealtimeChannel
+import io.github.androidpoet.supabase.realtime.models.RealtimeMessage
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 public interface RealtimeClient {
     public val connectionState: StateFlow<ConnectionState>
+    public val debugState: StateFlow<RealtimeDebugState>
+    public val debugEvents: Flow<RealtimeDebugEvent>
     public val isConnected: Boolean
     public val isConnecting: Boolean
     public val isDisconnecting: Boolean
@@ -20,6 +24,23 @@ public interface RealtimeClient {
     public suspend fun removeChannel(name: String)
     public suspend fun removeAllChannels()
     public suspend fun setAuth(token: String? = null)
+    public suspend fun sendHeartbeat()
     public suspend fun connect()
     public suspend fun disconnect()
+}
+
+public data class RealtimeDebugState(
+    public val outboundMessageCount: Long = 0,
+    public val inboundMessageCount: Long = 0,
+    public val heartbeatSentCount: Long = 0,
+    public val heartbeatReceivedCount: Long = 0,
+    public val lastOutboundRef: String? = null,
+    public val lastInboundRef: String? = null,
+)
+
+public sealed interface RealtimeDebugEvent {
+    public data class OutboundMessage(public val message: RealtimeMessage) : RealtimeDebugEvent
+    public data class InboundMessage(public val message: RealtimeMessage) : RealtimeDebugEvent
+    public data class HeartbeatSent(public val ref: String) : RealtimeDebugEvent
+    public data class HeartbeatReceived(public val ref: String?) : RealtimeDebugEvent
 }

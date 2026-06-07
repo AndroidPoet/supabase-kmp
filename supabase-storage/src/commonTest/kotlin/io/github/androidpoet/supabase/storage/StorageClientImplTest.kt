@@ -3,6 +3,12 @@ package io.github.androidpoet.supabase.storage
 import io.github.androidpoet.supabase.client.SupabaseClient
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
+import io.github.androidpoet.supabase.storage.models.IcebergCreateNamespaceRequest
+import io.github.androidpoet.supabase.storage.models.IcebergTableCommitRequest
+import io.github.androidpoet.supabase.storage.models.IcebergTableCreateRequest
+import io.github.androidpoet.supabase.storage.models.IcebergTableIdentifier
+import io.github.androidpoet.supabase.storage.models.IcebergTableRegisterRequest
+import io.github.androidpoet.supabase.storage.models.IcebergUpdateNamespacePropertiesRequest
 import io.github.androidpoet.supabase.storage.models.VectorData
 import io.github.androidpoet.supabase.storage.models.VectorDataType
 import io.github.androidpoet.supabase.storage.models.VectorDistanceMetric
@@ -659,6 +665,74 @@ class StorageClientImplTest {
     }
 
     @Test
+    fun test_analyticsCatalogTypedMethods_decodeIcebergModels() = runTest {
+        val client = FakeSupabaseClient()
+        val sut = StorageClientImpl(client)
+        val catalog = sut.analyticsCatalog("events")
+
+        val config = catalog.loadConfigTyped()
+        val namespaces = catalog.listNamespacesTyped(pageSize = 10)
+        val namespace = catalog.createNamespaceTyped(
+            IcebergCreateNamespaceRequest(
+                namespace = listOf("prod", "events"),
+                properties = mapOf("owner" to "data-team"),
+            ),
+        )
+        val namespaceMetadata = catalog.loadNamespaceMetadataTyped(listOf("prod", "events"))
+        val namespaceUpdate = catalog.updateNamespacePropertiesTyped(
+            namespace = listOf("prod", "events"),
+            request = IcebergUpdateNamespacePropertiesRequest(
+                removals = listOf("old"),
+                updates = mapOf("owner" to "platform"),
+            ),
+        )
+        val tables = catalog.listTablesTyped(namespace = listOf("prod"))
+        val table = catalog.createTableTyped(
+            namespace = listOf("prod"),
+            request = IcebergTableCreateRequest(
+                name = "clicks",
+                schema = buildJsonObject { put("type", "struct") },
+            ),
+        )
+        val loaded = catalog.loadTableTyped(namespace = listOf("prod"), name = "clicks")
+        val committed = catalog.commitTableTyped(
+            namespace = listOf("prod"),
+            name = "clicks",
+            request = IcebergTableCommitRequest(updates = listOf(buildJsonObject { put("action", "noop") })),
+        )
+        val registered = catalog.registerTableTyped(
+            namespace = listOf("prod"),
+            request = IcebergTableRegisterRequest(name = "external", metadataLocation = "s3://bucket/metadata.json"),
+        )
+        val renamed = catalog.renameTableTyped(
+            source = IcebergTableIdentifier(namespace = listOf("prod"), name = "clicks"),
+            destination = IcebergTableIdentifier(namespace = listOf("prod"), name = "clicks_renamed"),
+        )
+
+        assertTrue(config is SupabaseResult.Success)
+        assertEquals("catalog-prefix", config.value.overrides["prefix"])
+        assertTrue(namespaces is SupabaseResult.Success)
+        assertEquals(listOf("prod", "events"), namespaces.value.namespaces.first())
+        assertTrue(namespace is SupabaseResult.Success)
+        assertEquals("data-team", namespace.value.properties["owner"])
+        assertTrue(namespaceMetadata is SupabaseResult.Success)
+        assertEquals(listOf("prod", "events"), namespaceMetadata.value.namespace)
+        assertTrue(namespaceUpdate is SupabaseResult.Success)
+        assertEquals(listOf("owner"), namespaceUpdate.value.updated)
+        assertTrue(tables is SupabaseResult.Success)
+        assertEquals("clicks", tables.value.identifiers.first().name)
+        assertTrue(table is SupabaseResult.Success)
+        assertEquals("clicks", table.value.name)
+        assertTrue(loaded is SupabaseResult.Success)
+        assertEquals(2, loaded.value.metadata?.get("format-version")?.toString()?.toInt())
+        assertTrue(committed is SupabaseResult.Success)
+        assertTrue(registered is SupabaseResult.Success)
+        assertEquals("/storage/v1/iceberg/v1/catalog-prefix/tables/rename", client.lastPostEndpoint)
+        assertTrue(client.lastPostBody?.contains("\"destination\"") == true)
+        assertTrue(renamed is SupabaseResult.Success)
+    }
+
+    @Test
     fun test_vectorBucketAndIndexMethods_useVectorActionEndpoints() = runTest {
         val client = FakeSupabaseClient()
         val sut = StorageClientImpl(client)
@@ -775,8 +849,13 @@ private class FakeSupabaseClient : SupabaseClient {
             endpoint.startsWith("/storage/v1/iceberg/bucket") ->
                 SupabaseResult.Success("""[{"name":"events","type":"ANALYTICS","format":"iceberg","created_at":"2026-01-01T00:00:00Z","updated_at":"2026-01-01T00:00:00Z"}]""")
             endpoint.contains("/storage/v1/iceberg/v1/catalog-prefix/namespaces") &&
+                endpoint.contains("/tables/clicks") ->
+                SupabaseResult.Success("""{"name":"clicks","metadata":{"format-version":2}}""")
+            endpoint.contains("/storage/v1/iceberg/v1/catalog-prefix/namespaces") &&
                 endpoint.contains("/tables") ->
                 SupabaseResult.Success("""{"identifiers":[{"namespace":["prod"],"name":"clicks"}]}""")
+            endpoint == "/storage/v1/iceberg/v1/catalog-prefix/namespaces/prod%1Fevents" ->
+                SupabaseResult.Success("""{"namespace":["prod","events"],"properties":{"owner":"data-team"}}""")
             endpoint.contains("/storage/v1/iceberg/v1/catalog-prefix/namespaces") ->
                 SupabaseResult.Success("""{"namespaces":[["prod","events"]]}""")
             else -> SupabaseResult.Success("ok")

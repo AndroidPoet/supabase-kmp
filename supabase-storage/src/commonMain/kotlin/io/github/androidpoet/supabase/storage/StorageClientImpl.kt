@@ -11,6 +11,19 @@ import io.github.androidpoet.supabase.storage.models.AnalyticsBucketCreateReques
 import io.github.androidpoet.supabase.storage.models.Bucket
 import io.github.androidpoet.supabase.storage.models.CreateBucketRequest
 import io.github.androidpoet.supabase.storage.models.FileObject
+import io.github.androidpoet.supabase.storage.models.IcebergCatalogConfig
+import io.github.androidpoet.supabase.storage.models.IcebergCreateNamespaceRequest
+import io.github.androidpoet.supabase.storage.models.IcebergNamespaceListResponse
+import io.github.androidpoet.supabase.storage.models.IcebergNamespaceMetadata
+import io.github.androidpoet.supabase.storage.models.IcebergTableCommitRequest
+import io.github.androidpoet.supabase.storage.models.IcebergTableCreateRequest
+import io.github.androidpoet.supabase.storage.models.IcebergTableIdentifier
+import io.github.androidpoet.supabase.storage.models.IcebergTableListResponse
+import io.github.androidpoet.supabase.storage.models.IcebergTableMetadataResponse
+import io.github.androidpoet.supabase.storage.models.IcebergTableRegisterRequest
+import io.github.androidpoet.supabase.storage.models.IcebergTableRenameRequest
+import io.github.androidpoet.supabase.storage.models.IcebergUpdateNamespacePropertiesRequest
+import io.github.androidpoet.supabase.storage.models.IcebergUpdateNamespacePropertiesResponse
 import io.github.androidpoet.supabase.storage.models.MoveRequest
 import io.github.androidpoet.supabase.storage.models.ObjectListRequest
 import io.github.androidpoet.supabase.storage.models.ObjectListV2Request
@@ -785,6 +798,12 @@ internal class AnalyticsCatalogClientImpl(
             queryParams = listOf("warehouse" to bucketName),
         ).toJsonObject()
 
+    override suspend fun loadConfigTyped(): SupabaseResult<IcebergCatalogConfig> =
+        client.get(
+            endpoint = "/storage/v1/iceberg/v1/config",
+            queryParams = listOf("warehouse" to bucketName),
+        ).deserialize()
+
     override suspend fun listNamespaces(
         parent: List<String>?,
         pageToken: String?,
@@ -797,6 +816,20 @@ internal class AnalyticsCatalogClientImpl(
             pageSize?.let { add("pageSize" to it.toString()) }
         }
         return client.get(appendQuery("$prefix/namespaces", query)).toJsonObject()
+    }
+
+    override suspend fun listNamespacesTyped(
+        parent: List<String>?,
+        pageToken: String?,
+        pageSize: Int?,
+    ): SupabaseResult<IcebergNamespaceListResponse> {
+        val prefix = resolvePrefix()
+        val query = buildList {
+            parent?.let { add("parent" to it.joinToString("\u001F")) }
+            pageToken?.let { add("pageToken" to it) }
+            pageSize?.let { add("pageSize" to it.toString()) }
+        }
+        return client.get(appendQuery("$prefix/namespaces", query)).deserialize()
     }
 
     override suspend fun createNamespace(
@@ -819,11 +852,22 @@ internal class AnalyticsCatalogClientImpl(
         return client.post("$prefix/namespaces", body = body).toJsonObject()
     }
 
+    override suspend fun createNamespaceTyped(
+        request: IcebergCreateNamespaceRequest,
+    ): SupabaseResult<IcebergNamespaceMetadata> =
+        client.post(
+            endpoint = "${resolvePrefix()}/namespaces",
+            body = defaultJson.encodeToString(request),
+        ).deserialize()
+
     override suspend fun dropNamespace(namespace: List<String>): SupabaseResult<Unit> =
         client.delete("${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}").map { }
 
     override suspend fun loadNamespaceMetadata(namespace: List<String>): SupabaseResult<JsonObject> =
         client.get("${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}").toJsonObject()
+
+    override suspend fun loadNamespaceMetadataTyped(namespace: List<String>): SupabaseResult<IcebergNamespaceMetadata> =
+        client.get("${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}").deserialize()
 
     override suspend fun updateNamespaceProperties(
         namespace: List<String>,
@@ -850,6 +894,15 @@ internal class AnalyticsCatalogClientImpl(
         ).toJsonObject()
     }
 
+    override suspend fun updateNamespacePropertiesTyped(
+        namespace: List<String>,
+        request: IcebergUpdateNamespacePropertiesRequest,
+    ): SupabaseResult<IcebergUpdateNamespacePropertiesResponse> =
+        client.post(
+            endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/properties",
+            body = defaultJson.encodeToString(request),
+        ).deserialize()
+
     override suspend fun listTables(
         namespace: List<String>,
         pageToken: String?,
@@ -864,11 +917,34 @@ internal class AnalyticsCatalogClientImpl(
         ).toJsonObject()
     }
 
+    override suspend fun listTablesTyped(
+        namespace: List<String>,
+        pageToken: String?,
+        pageSize: Int?,
+    ): SupabaseResult<IcebergTableListResponse> {
+        val query = buildList {
+            pageToken?.let { add("pageToken" to it) }
+            pageSize?.let { add("pageSize" to it.toString()) }
+        }
+        return client.get(
+            endpoint = appendQuery("${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables", query),
+        ).deserialize()
+    }
+
     override suspend fun createTable(namespace: List<String>, request: JsonObject): SupabaseResult<JsonObject> =
         client.post(
             endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables",
             body = defaultJson.encodeToString(request),
         ).toJsonObject()
+
+    override suspend fun createTableTyped(
+        namespace: List<String>,
+        request: IcebergTableCreateRequest,
+    ): SupabaseResult<IcebergTableMetadataResponse> =
+        client.post(
+            endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables",
+            body = defaultJson.encodeToString(request),
+        ).deserialize()
 
     override suspend fun updateTable(
         namespace: List<String>,
@@ -886,6 +962,16 @@ internal class AnalyticsCatalogClientImpl(
         request: JsonObject,
     ): SupabaseResult<JsonObject> =
         updateTable(namespace = namespace, name = name, request = request)
+
+    override suspend fun commitTableTyped(
+        namespace: List<String>,
+        name: String,
+        request: IcebergTableCommitRequest,
+    ): SupabaseResult<IcebergTableMetadataResponse> =
+        client.post(
+            endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables/${encodePathSegment(name)}",
+            body = defaultJson.encodeToString(request),
+        ).deserialize()
 
     override suspend fun dropTable(
         namespace: List<String>,
@@ -912,16 +998,50 @@ internal class AnalyticsCatalogClientImpl(
         ).toJsonObject()
     }
 
+    override suspend fun loadTableTyped(
+        namespace: List<String>,
+        name: String,
+        snapshots: String?,
+    ): SupabaseResult<IcebergTableMetadataResponse> {
+        val query = buildList {
+            snapshots?.let { add("snapshots" to it) }
+        }
+        return client.get(
+            endpoint = appendQuery(
+                "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables/${encodePathSegment(name)}",
+                query,
+            ),
+        ).deserialize()
+    }
+
     override suspend fun registerTable(namespace: List<String>, request: JsonObject): SupabaseResult<JsonObject> =
         client.post(
             endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/register",
             body = defaultJson.encodeToString(request),
         ).toJsonObject()
 
+    override suspend fun registerTableTyped(
+        namespace: List<String>,
+        request: IcebergTableRegisterRequest,
+    ): SupabaseResult<IcebergTableMetadataResponse> =
+        client.post(
+            endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/register",
+            body = defaultJson.encodeToString(request),
+        ).deserialize()
+
     override suspend fun renameTable(request: JsonObject): SupabaseResult<Unit> =
         client.post(
             endpoint = "${resolvePrefix()}/tables/rename",
             body = defaultJson.encodeToString(request),
+        ).map { }
+
+    override suspend fun renameTableTyped(
+        source: IcebergTableIdentifier,
+        destination: IcebergTableIdentifier,
+    ): SupabaseResult<Unit> =
+        client.post(
+            endpoint = "${resolvePrefix()}/tables/rename",
+            body = defaultJson.encodeToString(IcebergTableRenameRequest(source = source, destination = destination)),
         ).map { }
 
     private suspend fun resolvePrefix(): String {
