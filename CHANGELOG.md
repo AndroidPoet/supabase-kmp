@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.2
+
+- Added typed Iceberg REST catalog models and typed Analytics Catalog methods while keeping raw JSON methods available.
+- Added Realtime debug state, debug events, and manual heartbeat sending for transport diagnostics.
+- Verified Storage and Realtime common metadata, JVM, Wasm test compilation, and Android unit tests.
+
 ## 0.3.1
 
 - Added Supabase JavaScript SDK parity coverage tracking.

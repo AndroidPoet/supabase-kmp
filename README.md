@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/Kotlin-2.1.10-blue.svg?logo=kotlin" alt="Kotlin">
   <img src="https://img.shields.io/badge/Ktor-3.1.1-blue.svg" alt="Ktor">
   <img src="https://img.shields.io/badge/Platform-Android%20%7C%20iOS%20%7C%20macOS%20%7C%20tvOS%20%7C%20watchOS%20%7C%20JVM%20%7C%20Linux%20%7C%20Windows%20%7C%20WasmJs-green.svg" alt="Platforms">
-  <img src="https://img.shields.io/badge/Maven%20Central-0.3.1-blue.svg" alt="Maven Central">
+  <img src="https://img.shields.io/badge/Maven%20Central-0.3.2-blue.svg" alt="Maven Central">
   <img src="https://img.shields.io/badge/License-MIT-orange.svg" alt="License">
 </p>
 
@@ -32,7 +32,7 @@ Add the dependencies you need to your `build.gradle.kts`:
 
 ```kotlin
 [versions]
-supabase-kmp = "0.3.1"
+supabase-kmp = "0.3.2"
 
 [libraries]
 supabase-core = { module = "io.github.androidpoet:supabase-core", version.ref = "supabase-kmp" }
