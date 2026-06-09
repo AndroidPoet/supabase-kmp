@@ -29,6 +29,17 @@ public sealed interface SupabaseResult<out T> {
                 if (e is CancellationException) throw e
                 Failure(SupabaseError(message = e.message ?: "Unknown error"))
             }
+
+        public suspend inline fun <T> suspendCatching(
+            crossinline block: suspend () -> T,
+        ): SupabaseResult<T> = try {
+            Success(block())
+        } catch (e: SupabaseException) {
+            Failure(e.error)
+        } catch (e: Throwable) {
+            if (e is CancellationException) throw e
+            Failure(SupabaseError(message = e.message ?: "Unknown error"))
+        }
     }
 }
 public inline fun <T, R> SupabaseResult<T>.map(
@@ -99,6 +110,67 @@ public inline fun <T> SupabaseResult<T>.getOrElse(
 ): T = when (this) {
     is SupabaseResult.Success -> value
     is SupabaseResult.Failure -> defaultValue(error)
+}
+
+public inline fun <T, R> SupabaseResult<T>.fold(
+    onSuccess: (T) -> R,
+    onFailure: (SupabaseError) -> R,
+): R = when (this) {
+    is SupabaseResult.Success -> onSuccess(value)
+    is SupabaseResult.Failure -> onFailure(error)
+}
+
+public suspend inline fun <T> SupabaseResult<T>.onSuccessSuspend(
+    crossinline action: suspend (T) -> Unit,
+): SupabaseResult<T> = apply {
+    if (this is SupabaseResult.Success) action(value)
+}
+
+public suspend inline fun <T> SupabaseResult<T>.onFailureSuspend(
+    crossinline action: suspend (SupabaseError) -> Unit,
+): SupabaseResult<T> = apply {
+    if (this is SupabaseResult.Failure) action(error)
+}
+
+public suspend inline fun <T> SupabaseResult<T>.onFailureCategorySuspend(
+    category: SupabaseErrorCategory,
+    crossinline action: suspend (SupabaseError) -> Unit,
+): SupabaseResult<T> = apply {
+    if (this is SupabaseResult.Failure && error.category == category) {
+        action(error)
+    }
+}
+
+public suspend inline fun <T, C> SupabaseResult<T>.onFailureCategorySuspend(
+    category: C,
+    crossinline classifier: (SupabaseError) -> C,
+    crossinline action: suspend (SupabaseError) -> Unit,
+): SupabaseResult<T> = apply {
+    if (this is SupabaseResult.Failure && classifier(error) == category) {
+        action(error)
+    }
+}
+
+public suspend inline fun <T, R> SupabaseResult<T>.foldSuspend(
+    crossinline onSuccess: suspend (T) -> R,
+    crossinline onFailure: suspend (SupabaseError) -> R,
+): R = when (this) {
+    is SupabaseResult.Success -> onSuccess(value)
+    is SupabaseResult.Failure -> onFailure(error)
+}
+
+public suspend inline fun <T, R> SupabaseResult<T>.mapSuspend(
+    crossinline transform: suspend (T) -> R,
+): SupabaseResult<R> = when (this) {
+    is SupabaseResult.Success -> SupabaseResult.Success(transform(value))
+    is SupabaseResult.Failure -> this
+}
+
+public suspend inline fun <T> SupabaseResult<T>.recoverSuspend(
+    crossinline transform: suspend (SupabaseError) -> T,
+): SupabaseResult<T> = when (this) {
+    is SupabaseResult.Success -> this
+    is SupabaseResult.Failure -> SupabaseResult.Success(transform(error))
 }
 
 public fun <T> SupabaseResult<T>.toKotlinResult(): Result<T> = when (this) {

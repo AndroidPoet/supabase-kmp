@@ -3,16 +3,24 @@ import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseException
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.core.result.flatMap
+import io.github.androidpoet.supabase.core.result.fold
+import io.github.androidpoet.supabase.core.result.foldSuspend
 import io.github.androidpoet.supabase.core.result.getOrElse
 import io.github.androidpoet.supabase.core.result.map
 import io.github.androidpoet.supabase.core.result.mapError
+import io.github.androidpoet.supabase.core.result.mapSuspend
 import io.github.androidpoet.supabase.core.result.onFailure
 import io.github.androidpoet.supabase.core.result.onFailureCategory
+import io.github.androidpoet.supabase.core.result.onFailureCategorySuspend
+import io.github.androidpoet.supabase.core.result.onFailureSuspend
 import io.github.androidpoet.supabase.core.result.onSuccess
+import io.github.androidpoet.supabase.core.result.onSuccessSuspend
 import io.github.androidpoet.supabase.core.result.recover
+import io.github.androidpoet.supabase.core.result.recoverSuspend
 import io.github.androidpoet.supabase.core.result.toKotlinResult
 import io.github.androidpoet.supabase.core.result.toSupabaseResult
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -203,5 +211,145 @@ class SupabaseResultTest {
         assertFailsWith<CancellationException> {
             Result.failure<String>(CancellationException("stop")).toSupabaseResult()
         }
+    }
+
+    @Test
+    fun test_suspendCatching_wrapsSuccessfulSuspend() = runTest {
+        val result = SupabaseResult.suspendCatching { 42 }
+        assertEquals(42, result.getOrNull())
+    }
+
+    @Test
+    fun test_suspendCatching_wrapsSupabaseException() = runTest {
+        val result = SupabaseResult.suspendCatching<Int> {
+            throw SupabaseException(error)
+        }
+        assertTrue(result.isFailure)
+        assertEquals(error, result.errorOrNull())
+    }
+
+    @Test
+    fun test_suspendCatching_wrapsGenericException() = runTest {
+        val result = SupabaseResult.suspendCatching<Int> {
+            throw IllegalStateException("boom")
+        }
+        assertTrue(result.isFailure)
+        assertEquals("boom", result.errorOrNull()?.message)
+    }
+
+    @Test
+    fun test_suspendCatching_rethrowsCancellationException() = runTest {
+        assertFailsWith<CancellationException> {
+            SupabaseResult.suspendCatching<Int> {
+                throw CancellationException("cancel")
+            }
+        }
+    }
+
+    @Test
+    fun test_fold_invokesOnSuccess() {
+        val value = SupabaseResult.Success(10).fold(
+            onSuccess = { it * 2 },
+            onFailure = { -1 },
+        )
+        assertEquals(20, value)
+    }
+
+    @Test
+    fun test_fold_invokesOnFailure() {
+        val value: Int = SupabaseResult.Failure(error).fold(
+            onSuccess = { 0 },
+            onFailure = { -1 },
+        )
+        assertEquals(-1, value)
+    }
+
+    @Test
+    fun test_onSuccessSuspend_invokesForSuccess() = runTest {
+        var captured = 0
+        SupabaseResult.Success(7).onSuccessSuspend { captured = it * 2 }
+        assertEquals(14, captured)
+    }
+
+    @Test
+    fun test_onFailureSuspend_invokesForFailure() = runTest {
+        var captured: SupabaseError? = null
+        SupabaseResult.Failure(error).onFailureSuspend { captured = it }
+        assertEquals(error, captured)
+    }
+
+    @Test
+    fun test_foldSuspend_invokesOnSuccess() = runTest {
+        val value = SupabaseResult.Success(10).foldSuspend(
+            onSuccess = { it * 2 },
+            onFailure = { -1 },
+        )
+        assertEquals(20, value)
+    }
+
+    @Test
+    fun test_foldSuspend_invokesOnFailure() = runTest {
+        val value: Int = SupabaseResult.Failure(error).foldSuspend(
+            onSuccess = { 0 },
+            onFailure = { -1 },
+        )
+        assertEquals(-1, value)
+    }
+
+    @Test
+    fun test_mapSuspend_transformsSuccess() = runTest {
+        val result = SupabaseResult.Success(10).mapSuspend { it * 2 }
+        assertEquals(20, result.getOrNull())
+    }
+
+    @Test
+    fun test_mapSuspend_preservesFailure() = runTest {
+        val mapped: SupabaseResult<Int> = SupabaseResult.Failure(error)
+            .mapSuspend { 0 }
+        assertTrue(mapped.isFailure)
+        assertEquals(error, mapped.errorOrNull())
+    }
+
+    @Test
+    fun test_recoverSuspend_convertsFailureToSuccess() = runTest {
+        val result: SupabaseResult<String> = SupabaseResult.Failure(error)
+            .recoverSuspend { "default" }
+        assertEquals("default", result.getOrNull())
+    }
+
+    @Test
+    fun test_recoverSuspend_leavesSuccessUntouched() = runTest {
+        val result = SupabaseResult.Success("original")
+            .recoverSuspend { "default" }
+        assertEquals("original", result.getOrNull())
+    }
+
+    @Test
+    fun test_onFailureCategorySuspend_invokesForMatchingCategory() = runTest {
+        val notFoundError = SupabaseError(message = "table not found", code = "PGRST205")
+        var called = false
+        SupabaseResult.Failure(notFoundError).onFailureCategorySuspend(
+            category = io.github.androidpoet.supabase.core.result.SupabaseErrorCategory.NotFound,
+        ) { called = true }
+        assertTrue(called)
+    }
+
+    @Test
+    fun test_onFailureCategorySuspend_withClassifier_invokesOnMatch() = runTest {
+        var called = false
+        SupabaseResult.Failure(error).onFailureCategorySuspend(
+            category = "pgrst",
+            classifier = { if (it.code?.startsWith("PGRST") == true) "pgrst" else "other" },
+        ) { called = true }
+        assertTrue(called)
+    }
+
+    @Test
+    fun test_onFailureCategorySuspend_skipsNonMatchingCategory() = runTest {
+        var called = false
+        SupabaseResult.Failure(error).onFailureCategorySuspend(
+            category = io.github.androidpoet.supabase.core.result.SupabaseErrorCategory.Conflict,
+        ) { called = true }
+        assertFalse(called)
     }
 }
