@@ -14,6 +14,7 @@ import io.github.androidpoet.supabase.auth.models.SsoResponse
 import io.github.androidpoet.supabase.auth.session.SessionManager
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 
@@ -712,6 +713,7 @@ public fun parseJwtClaims(jwt: String): SupabaseResult<JsonObject> {
             ?: return SupabaseResult.Failure(SupabaseError(message = "JWT payload is not a JSON object"))
         SupabaseResult.Success(claims)
     } catch (e: Throwable) {
+        if (e is CancellationException) throw e
         SupabaseResult.Failure(SupabaseError(message = "Failed to parse JWT claims: ${e.message}"))
     }
 }

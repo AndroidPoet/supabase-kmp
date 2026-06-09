@@ -240,6 +240,8 @@ internal class HttpTransport(
     private fun parseError(body: String, statusCode: Int): SupabaseError =
         try {
             errorJson.decodeFromString<SupabaseError>(body)
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: Exception) {
             SupabaseError(
                 message = body.ifBlank { "HTTP $statusCode" },

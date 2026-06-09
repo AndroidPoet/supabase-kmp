@@ -1,6 +1,7 @@
 package io.github.androidpoet.supabase.realtime
 
 import io.github.androidpoet.supabase.realtime.models.PresenceState
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -80,6 +81,8 @@ public inline fun <reified T> RealtimeSubscription.presenceDataFlow(
         state.values.mapNotNull { value ->
             try {
                 json.decodeFromString<T>(value.toString())
+            } catch (e: CancellationException) {
+                throw e
             } catch (_: Throwable) {
                 if (ignoreDecodeErrors) null else throw IllegalArgumentException("Failed to decode presence payload: $value")
             }
