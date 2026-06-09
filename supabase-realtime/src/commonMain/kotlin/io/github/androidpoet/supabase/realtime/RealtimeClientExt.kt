@@ -30,6 +30,24 @@ public suspend fun RealtimeClient.subscribeToPostgresChanges(
         )
     }
 
+public suspend fun RealtimeClient.subscribeToPostgresChanges(
+    channel: String,
+    schema: String = "public",
+    table: String? = null,
+    filter: String? = null,
+    event: PostgresChangeEvent = PostgresChangeEvent.ALL,
+    callback: suspend (PostgresChangeEvent, JsonObject) -> Unit,
+): RealtimeSubscription =
+    subscribe(channel) {
+        onPostgresChange(
+            schema = schema,
+            table = table,
+            filter = filter,
+            event = event,
+            callback = callback,
+        )
+    }
+
 public suspend fun RealtimeClient.subscribeToBroadcast(
     channel: String,
     event: String,

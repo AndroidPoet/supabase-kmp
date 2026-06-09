@@ -6,6 +6,7 @@ import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.realtime.models.PostgresChangeEvent
 import io.github.androidpoet.supabase.realtime.models.RealtimeChannel
 import io.github.androidpoet.supabase.realtime.models.PresenceState
+import kotlinx.serialization.json.JsonObject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.yield
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -93,6 +95,43 @@ class RealtimeClientExtTest {
 
         assertEquals(1, subscription.postgresCallbacks.size)
         assertEquals("messages", subscription.postgresCallbacks.first().table)
+    }
+
+    @Test
+    fun test_subscribeToPostgresChanges_typedCallback_receivesEventType() = runTest {
+        val realtime = RealtimeClientImpl(ExtFakeSupabaseClient(), RealtimeConfig(autoReconnect = false))
+        var capturedEvent: PostgresChangeEvent? = null
+        var capturedPayload: JsonObject? = null
+
+        val subscription = realtime.subscribeToPostgresChanges(
+            channel = "room-pg-typed",
+            table = "messages",
+            event = PostgresChangeEvent.ALL,
+        ) { event, payload ->
+            capturedEvent = event
+            capturedPayload = payload
+        } as ChannelSubscriptionImpl
+
+        assertEquals(1, subscription.postgresCallbacks.size)
+        assertTrue(subscription.postgresCallbacks.first() is PostgresCallbackConfig.Typed)
+
+        subscription.handleMessage(
+            io.github.androidpoet.supabase.realtime.models.RealtimeMessage(
+                topic = "realtime:room-pg-typed",
+                event = "postgres_changes",
+                payload = buildJsonObject {
+                    put("data", buildJsonObject {
+                        put("type", "INSERT")
+                        put("record", buildJsonObject { put("id", "1") })
+                        put("old_record", buildJsonObject {})
+                    })
+                },
+                ref = "1",
+            ),
+        )
+
+        assertEquals(PostgresChangeEvent.INSERT, capturedEvent)
+        assertEquals("1", capturedPayload?.get("id")?.jsonPrimitive?.content)
     }
 
     @Test

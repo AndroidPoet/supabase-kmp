@@ -22,7 +22,23 @@ public class RealtimeChannelBuilder internal constructor(
         event: PostgresChangeEvent = PostgresChangeEvent.ALL,
         callback: suspend (JsonObject) -> Unit,
     ): RealtimeChannelBuilder = apply {
-        postgresCallbacks += PostgresCallbackConfig(
+        postgresCallbacks += PostgresCallbackConfig.Simple(
+            schema = schema,
+            table = table,
+            filter = filter,
+            event = event,
+            callback = callback,
+        )
+    }
+
+    public fun onPostgresChange(
+        schema: String = "public",
+        table: String? = null,
+        filter: String? = null,
+        event: PostgresChangeEvent = PostgresChangeEvent.ALL,
+        callback: suspend (PostgresChangeEvent, JsonObject) -> Unit,
+    ): RealtimeChannelBuilder = apply {
+        postgresCallbacks += PostgresCallbackConfig.Typed(
             schema = schema,
             table = table,
             filter = filter,
@@ -68,10 +84,25 @@ public class RealtimeChannelBuilder internal constructor(
     public suspend fun subscribe(): RealtimeSubscription =
         client.subscribe(this)
 }
-internal data class PostgresCallbackConfig(
-    val schema: String,
-    val table: String?,
-    val filter: String?,
-    val event: PostgresChangeEvent,
-    val callback: suspend (JsonObject) -> Unit,
-)
+internal sealed class PostgresCallbackConfig {
+    abstract val schema: String
+    abstract val table: String?
+    abstract val filter: String?
+    abstract val event: PostgresChangeEvent
+
+    data class Simple(
+        override val schema: String,
+        override val table: String?,
+        override val filter: String?,
+        override val event: PostgresChangeEvent,
+        val callback: suspend (JsonObject) -> Unit,
+    ) : PostgresCallbackConfig()
+
+    data class Typed(
+        override val schema: String,
+        override val table: String?,
+        override val filter: String?,
+        override val event: PostgresChangeEvent,
+        val callback: suspend (PostgresChangeEvent, JsonObject) -> Unit,
+    ) : PostgresCallbackConfig()
+}

@@ -475,7 +475,17 @@ internal class ChannelSubscriptionImpl(
         for (config in postgresCallbacks) {
             if (config.event == PostgresChangeEvent.ALL || config.event.toWireValue() == type) {
                 val callbackPayload = record ?: oldRecord ?: return
-                config.callback(callbackPayload)
+                when (config) {
+                    is PostgresCallbackConfig.Simple -> config.callback(callbackPayload)
+                    is PostgresCallbackConfig.Typed -> {
+                        val changeEvent = try {
+                            PostgresChangeEvent.valueOf(type)
+                        } catch (_: IllegalArgumentException) {
+                            PostgresChangeEvent.ALL
+                        }
+                        config.callback(changeEvent, callbackPayload)
+                    }
+                }
             }
         }
     }
