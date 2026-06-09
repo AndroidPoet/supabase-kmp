@@ -13,19 +13,37 @@ public class FilterBuilder {
     public fun eq(column: String, value: String) {
         params += column to "eq.$value"
     }
+    public fun eq(column: String, value: Number) {
+        params += column to "eq.$value"
+    }
     public fun neq(column: String, value: String) {
+        params += column to "neq.$value"
+    }
+    public fun neq(column: String, value: Number) {
         params += column to "neq.$value"
     }
     public fun gt(column: String, value: String) {
         params += column to "gt.$value"
     }
+    public fun gt(column: String, value: Number) {
+        params += column to "gt.$value"
+    }
     public fun gte(column: String, value: String) {
+        params += column to "gte.$value"
+    }
+    public fun gte(column: String, value: Number) {
         params += column to "gte.$value"
     }
     public fun lt(column: String, value: String) {
         params += column to "lt.$value"
     }
+    public fun lt(column: String, value: Number) {
+        params += column to "lt.$value"
+    }
     public fun lte(column: String, value: String) {
+        params += column to "lte.$value"
+    }
+    public fun lte(column: String, value: Number) {
         params += column to "lte.$value"
     }
     public fun like(column: String, pattern: String) {

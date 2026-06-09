@@ -18,6 +18,7 @@ public interface RealtimeClient {
     public fun activeChannelDetails(): Set<RealtimeChannel>
     public suspend fun removeSubscription(subscription: RealtimeSubscription)
     public suspend fun removeSubscriptions(subscriptions: List<RealtimeSubscription>)
+    @Deprecated("Use removeSubscription instead", ReplaceWith("removeSubscription(subscription)"))
     public suspend fun removeChannel(subscription: RealtimeSubscription)
     public suspend fun removeSubscriptionByTopic(topic: String)
     public suspend fun removeChannelsByTopic(topics: List<String>)

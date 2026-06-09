@@ -61,7 +61,6 @@ internal class RealtimeClientImpl(
     override val isConnected: Boolean get() = _connectionState.value is ConnectionState.Connected
     override val isConnecting: Boolean get() = _connectionState.value is ConnectionState.Connecting
     override val isDisconnecting: Boolean get() = _connectionState.value is ConnectionState.Disconnecting
-    private val incomingMessages = MutableSharedFlow<RealtimeMessage>(extraBufferCapacity = 64)
     private val activeSubscriptions = mutableMapOf<String, ChannelSubscriptionImpl>()
     internal fun nextRef(): String = (++refCounter).toString()
     override fun channel(name: String): RealtimeChannelBuilder =
@@ -84,6 +83,7 @@ internal class RealtimeClientImpl(
             subscription.unsubscribe()
         }
     }
+    @Deprecated("Use removeSubscription instead", ReplaceWith("removeSubscription(subscription)"))
     override suspend fun removeChannel(subscription: RealtimeSubscription) {
         removeSubscription(subscription)
     }
@@ -104,7 +104,7 @@ internal class RealtimeClientImpl(
     }
     override suspend fun setAuth(token: String?) {
         authTokenOverride = token
-        if (session == null) return
+        if (activeSubscriptions.isEmpty()) return
         val accessToken = currentAccessToken()
         activeSubscriptions.values.forEach { subscription ->
             sendMessage(
@@ -214,7 +214,6 @@ internal class RealtimeClientImpl(
                         val text = frame.readText()
                         val message = json.decodeFromString<RealtimeMessage>(text)
                         recordInboundMessage(message)
-                        incomingMessages.emit(message)
                         dispatchToSubscription(message)
                     }
                 }
@@ -376,7 +375,15 @@ internal class RealtimeClientImpl(
     }
     private suspend fun dispatchToSubscription(message: RealtimeMessage) {
         val subscription = activeSubscriptions[message.topic] ?: return
-        subscription.handleMessage(message)
+        try {
+            subscription.handleMessage(message)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Throwable) {
+            // Isolate failures to prevent one subscription from killing the
+            // entire WebSocket connection. The subscription is left in its
+            // current state so it can be cleaned up by the caller.
+        }
     }
 
     private fun currentAccessToken(): String =

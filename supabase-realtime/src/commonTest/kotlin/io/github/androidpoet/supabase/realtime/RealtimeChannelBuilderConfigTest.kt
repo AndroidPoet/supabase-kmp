@@ -49,7 +49,7 @@ class RealtimeChannelBuilderConfigTest {
         val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
         val subscription = realtime.channel("room-2b").subscribe()
 
-        realtime.removeChannel(subscription)
+        realtime.removeSubscription(subscription)
 
         assertTrue(subscription.status.value == RealtimeSubscription.Status.UNSUBSCRIBED)
     }

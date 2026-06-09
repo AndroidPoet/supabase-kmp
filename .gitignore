@@ -11,3 +11,4 @@ local.properties
 *.log
 .kotlin/
 kotlin-js-store/
+docs/
