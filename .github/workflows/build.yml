@@ -24,7 +24,7 @@ jobs:
           distribution: zulu
           java-version: 17
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
 
       - name: Static analysis (detekt)
         run: ./gradlew detekt
@@ -70,7 +70,7 @@ jobs:
           distribution: zulu
           java-version: 17
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
 
       - name: Compile ${{ matrix.name }} targets
         run: ./gradlew ${{ matrix.tasks }}

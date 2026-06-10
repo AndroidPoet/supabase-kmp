@@ -21,7 +21,7 @@ jobs:
           distribution: zulu
           java-version: 17
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
 
       - name: Verify build before publishing
         run: ./gradlew apiCheck detekt jvmTest
