@@ -20,6 +20,12 @@
   engine (the WebSocket `HttpClient` was never closed); the connection handshake
   now honors `connectionTimeoutMs`; Phoenix `ref` generation uses an atomic
   counter (kotlinx-atomicfu) so concurrent sends can't collide.
+- **Realtime reliability:** `scheduleReconnect` cancels any in-flight reconnect
+  so overlapping triggers can't spawn parallel loops; a missed heartbeat reply
+  now tears the socket down and reconnects instead of leaving a zombie
+  connection; `phx_join` has a watchdog that marks the subscription `ERROR` if no
+  reply arrives within `connectionTimeoutMs`; `activeSubscriptions` is guarded by
+  a lock so the non-suspend getters are thread-safe.
 - Auth `signUpWithEmail` / `signUpWithPhone` validate that the identifier is
   non-blank.
 - Session refresh is de-duplicated: concurrent refreshes now share a single
@@ -37,12 +43,16 @@
 
 ### Added
 
+- `SupabaseClient` now implements `AutoCloseable`.
 - `KeyValueStore` + `KeyValueSessionStorage` for easy persistent, serialized
   session storage backed by the platform keystore.
 - Input validation on `Supabase.create` (non-blank api key, http(s) project URL).
-- Tooling: detekt, binary-compatibility-validator (API dumps), Kover coverage,
-  Dokka API docs, a multiplatform CI matrix, Dependabot, and
-  CONTRIBUTING/SECURITY/CODE_OF_CONDUCT.
+- Tooling: detekt, binary-compatibility-validator (JVM + Android + native klib
+  ABI dumps), Kover coverage, Dokka API docs, a multiplatform CI matrix,
+  Dependabot, and CONTRIBUTING/SECURITY/CODE_OF_CONDUCT.
+- Internal: shared `urlEncode` in `supabase-core` (deduplicated from auth /
+  auth-admin); Functions now uses the live session token (falls back to the
+  client's current token instead of only a pinned one).
 
 ## 0.3.2
 

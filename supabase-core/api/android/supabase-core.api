@@ -570,3 +570,7 @@ public final class io/github/androidpoet/supabase/core/types/UserId$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
+public final class io/github/androidpoet/supabase/core/util/UrlEncodingKt {
+	public static final fun urlEncode (Ljava/lang/String;)Ljava/lang/String;
+}
+

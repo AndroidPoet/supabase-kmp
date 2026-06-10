@@ -4,7 +4,7 @@ public final class io/github/androidpoet/supabase/client/Supabase {
 	public static synthetic fun create$default (Lio/github/androidpoet/supabase/client/Supabase;Ljava/lang/String;Ljava/lang/String;Lio/ktor/client/engine/HttpClientEngineFactory;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lio/github/androidpoet/supabase/client/SupabaseClient;
 }
 
-public abstract interface class io/github/androidpoet/supabase/client/SupabaseClient {
+public abstract interface class io/github/androidpoet/supabase/client/SupabaseClient : java/lang/AutoCloseable {
 	public abstract fun clearAccessToken ()V
 	public abstract fun close ()V
 	public abstract fun delete (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
