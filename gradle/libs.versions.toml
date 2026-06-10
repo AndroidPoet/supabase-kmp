@@ -7,6 +7,7 @@ serialization = "1.8.0"
 datetime = "0.6.2"
 vanniktech = "0.30.0"
 cryptography = "0.4.0"
+atomicfu = "0.27.0"
 androidxCoreKtx = "1.15.0"
 androidxActivityCompose = "1.10.1"
 androidxLifecycle = "2.8.7"
@@ -65,3 +66,4 @@ detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binaryCompatibilityValidator" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+atomicfu = { id = "org.jetbrains.kotlinx.atomicfu", version.ref = "atomicfu" }

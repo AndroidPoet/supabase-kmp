@@ -11,6 +11,17 @@
 
 ### Fixed
 
+- **Functions:** `invokeWithBody` no longer double-prepends the project URL
+  (it passed an absolute URL into `postRaw`, which prepends `projectUrl` again).
+- **Storage:** bucket ids, object paths, and signed-URL tokens are now
+  URL-encoded; object keys containing spaces / `#` / `?` / `+` no longer corrupt
+  the request URL or break routing.
+- **Realtime:** added `RealtimeClient.close()` to release the underlying Ktor
+  engine (the WebSocket `HttpClient` was never closed); the connection handshake
+  now honors `connectionTimeoutMs`; Phoenix `ref` generation uses an atomic
+  counter (kotlinx-atomicfu) so concurrent sends can't collide.
+- Auth `signUpWithEmail` / `signUpWithPhone` validate that the identifier is
+  non-blank.
 - Session refresh is de-duplicated: concurrent refreshes now share a single
   in-flight request instead of each spending the rotating refresh token (which
   caused spurious logouts).

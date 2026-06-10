@@ -290,6 +290,7 @@ private class AwaitFakeRealtimeClient(
     override suspend fun sendHeartbeat() = Unit
     override suspend fun connect() = Unit
     override suspend fun disconnect() = Unit
+    override suspend fun close() = Unit
 
     fun emit(value: ConnectionState) {
         state.value = value

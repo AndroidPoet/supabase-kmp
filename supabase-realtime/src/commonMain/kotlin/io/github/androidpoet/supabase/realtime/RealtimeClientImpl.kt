@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.encodeToString
@@ -36,6 +37,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import kotlinx.atomicfu.atomic
 import kotlin.concurrent.Volatile
 import kotlin.math.min
 import kotlin.math.pow
@@ -61,7 +63,15 @@ internal class RealtimeClientImpl(
 
     @Volatile
     private var reconnectJob: Job? = null
-    private var refCounter = 0
+
+    // Phoenix refs must be unique; nextRef() can run from concurrent suspend
+    // calls, so use an atomic counter (kotlinx-atomicfu — the stdlib
+    // kotlin.concurrent.atomics is only available from Kotlin 2.1.20).
+    private val refCounter = atomic(0)
+
+    // Only ever touched from the single reconnect loop, so @Volatile (visibility)
+    // is sufficient here.
+    @Volatile
     private var reconnectAttempt = 0
 
     @Volatile
@@ -85,7 +95,7 @@ internal class RealtimeClientImpl(
     override val isConnecting: Boolean get() = _connectionState.value is ConnectionState.Connecting
     override val isDisconnecting: Boolean get() = _connectionState.value is ConnectionState.Disconnecting
     private val activeSubscriptions = mutableMapOf<String, ChannelSubscriptionImpl>()
-    internal fun nextRef(): String = (++refCounter).toString()
+    internal fun nextRef(): String = refCounter.incrementAndGet().toString()
     override fun channel(name: String): RealtimeChannelBuilder =
         RealtimeChannelBuilder(channelName = name, client = this)
     override fun getSubscription(name: String): RealtimeSubscription? =
@@ -181,6 +191,12 @@ internal class RealtimeClientImpl(
         scope = null
         _connectionState.value = ConnectionState.Disconnected
     }
+    override suspend fun close() {
+        disconnect()
+        // Release the Ktor engine (connection pool / background threads). The
+        // client is single-use after this; constructing a new one is cheap.
+        httpClient.close()
+    }
     internal suspend fun subscribe(builder: RealtimeChannelBuilder): RealtimeSubscription {
         val topic = "realtime:${builder.channelName}"
         val subscription = ChannelSubscriptionImpl(
@@ -250,7 +266,9 @@ internal class RealtimeClientImpl(
         val url = "$wsScheme://$host/realtime/v1/websocket?apikey=${supabaseClient.apiKey}&vsn=1.0.0"
         val newScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         scope = newScope
-        val ws = httpClient.webSocketSession(url)
+        // Bound the handshake so a stalled connect surfaces as a timeout (and
+        // triggers reconnect/Failed) instead of hanging on the platform default.
+        val ws = withTimeout(config.connectionTimeoutMs) { httpClient.webSocketSession(url) }
         session = ws
         newScope.launch {
             try {
