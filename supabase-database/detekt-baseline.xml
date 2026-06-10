@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MaxLineLength:DatabaseClientImplTest.kt$FakeSupabaseClient$lastGetEndpoint = if (queryParams.isEmpty()) endpoint else "$endpoint?${queryParams.joinToString("&amp;") { "${it.first}=${it.second}" }}"</ID>
+  </CurrentIssues>
+</SmellBaseline>

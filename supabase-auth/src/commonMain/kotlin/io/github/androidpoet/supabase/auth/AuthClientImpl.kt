@@ -53,7 +53,7 @@ import io.github.androidpoet.supabase.core.result.map
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
-import kotlin.random.Random
+import dev.whyoleg.cryptography.random.CryptographyRandom
 internal class AuthClientImpl(
     private val client: SupabaseClient,
 ) : AuthClient {
@@ -443,9 +443,11 @@ internal class AuthClientImpl(
             ),
         )
     override fun generatePkceParams(sha256: ((ByteArray) -> ByteArray)?): PkceParams {
+        // PKCE verifiers are security tokens and MUST be drawn from a
+        // cryptographically secure RNG (RFC 7636 §7.1), not kotlin.random.Random.
         val verifier = buildString(PKCE_VERIFIER_LENGTH) {
             repeat(PKCE_VERIFIER_LENGTH) {
-                append(PKCE_ALPHABET[Random.nextInt(PKCE_ALPHABET.length)])
+                append(PKCE_ALPHABET[CryptographyRandom.nextInt(PKCE_ALPHABET.length)])
             }
         }
         return if (sha256 != null) {

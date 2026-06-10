@@ -1,0 +1,113 @@
+public final class io/github/androidpoet/supabase/database/CountOption : java/lang/Enum {
+	public static final field ESTIMATED Lio/github/androidpoet/supabase/database/CountOption;
+	public static final field EXACT Lio/github/androidpoet/supabase/database/CountOption;
+	public static final field PLANNED Lio/github/androidpoet/supabase/database/CountOption;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/database/CountOption;
+	public static fun values ()[Lio/github/androidpoet/supabase/database/CountOption;
+}
+
+public abstract interface class io/github/androidpoet/supabase/database/DatabaseClient {
+	public abstract fun delete (Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/database/ReturnOption;Lio/github/androidpoet/supabase/database/CountOption;ZZLjava/lang/Integer;Lio/github/androidpoet/supabase/database/ExplainOptions;Ljava/util/Map;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun insert (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ZLio/github/androidpoet/supabase/database/UpsertResolution;ZLjava/lang/String;Lio/github/androidpoet/supabase/database/ReturnOption;Lio/github/androidpoet/supabase/database/CountOption;ZZLjava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun rpc (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZZZLio/github/androidpoet/supabase/database/CountOption;ZZLjava/lang/Integer;Lio/github/androidpoet/supabase/database/ExplainOptions;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun rpcGet (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ZZZLio/github/androidpoet/supabase/database/CountOption;ZLio/github/androidpoet/supabase/database/ExplainOptions;ZLjava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun select (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZZZLio/github/androidpoet/supabase/database/CountOption;ZLio/github/androidpoet/supabase/database/ExplainOptions;ZLjava/util/Map;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun update (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/database/ReturnOption;Lio/github/androidpoet/supabase/database/CountOption;ZZLjava/lang/Integer;Lio/github/androidpoet/supabase/database/ExplainOptions;Ljava/util/Map;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/github/androidpoet/supabase/database/DatabaseClient$DefaultImpls {
+	public static synthetic fun delete$default (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/database/ReturnOption;Lio/github/androidpoet/supabase/database/CountOption;ZZLjava/lang/Integer;Lio/github/androidpoet/supabase/database/ExplainOptions;Ljava/util/Map;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun insert$default (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ZLio/github/androidpoet/supabase/database/UpsertResolution;ZLjava/lang/String;Lio/github/androidpoet/supabase/database/ReturnOption;Lio/github/androidpoet/supabase/database/CountOption;ZZLjava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun rpc$default (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZZZLio/github/androidpoet/supabase/database/CountOption;ZZLjava/lang/Integer;Lio/github/androidpoet/supabase/database/ExplainOptions;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun rpcGet$default (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ZZZLio/github/androidpoet/supabase/database/CountOption;ZLio/github/androidpoet/supabase/database/ExplainOptions;ZLjava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun select$default (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZZZLio/github/androidpoet/supabase/database/CountOption;ZLio/github/androidpoet/supabase/database/ExplainOptions;ZLjava/util/Map;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun update$default (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/database/ReturnOption;Lio/github/androidpoet/supabase/database/CountOption;ZZLjava/lang/Integer;Lio/github/androidpoet/supabase/database/ExplainOptions;Ljava/util/Map;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class io/github/androidpoet/supabase/database/DatabaseClientExtKt {
+	public static final fun deleteUnit (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/database/CountOption;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun deleteUnit$default (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/database/CountOption;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun insertUnit (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ZLio/github/androidpoet/supabase/database/UpsertResolution;ZLjava/lang/String;Lio/github/androidpoet/supabase/database/CountOption;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun insertUnit$default (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ZLio/github/androidpoet/supabase/database/UpsertResolution;ZLjava/lang/String;Lio/github/androidpoet/supabase/database/CountOption;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun rpcCsv (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun rpcCsv$default (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun rpcGet (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun rpcGet (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ZZZLio/github/androidpoet/supabase/database/CountOption;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun rpcGet$default (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun rpcGet$default (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ZZZLio/github/androidpoet/supabase/database/CountOption;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun rpcGetCsv (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun rpcGetCsv (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun rpcGetCsv$default (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun rpcGetCsv$default (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun rpcGetHead (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lio/github/androidpoet/supabase/database/CountOption;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun rpcGetHead (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lio/github/androidpoet/supabase/database/CountOption;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun rpcGetHead$default (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lio/github/androidpoet/supabase/database/CountOption;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun rpcGetHead$default (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lio/github/androidpoet/supabase/database/CountOption;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun rpcGetUnit (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun rpcGetUnit (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun rpcGetUnit$default (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun rpcGetUnit$default (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun rpcHead (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/database/CountOption;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun rpcHead$default (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/database/CountOption;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun rpcUnit (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun rpcUnit$default (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun selectCsv (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun selectCsv$default (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun selectHead (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/database/CountOption;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun selectHead$default (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/database/CountOption;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun updateUnit (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/database/CountOption;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun updateUnit$default (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/database/CountOption;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class io/github/androidpoet/supabase/database/DatabaseFactoryKt {
+	public static final fun createDatabaseClient (Lio/github/androidpoet/supabase/client/SupabaseClient;)Lio/github/androidpoet/supabase/database/DatabaseClient;
+}
+
+public final class io/github/androidpoet/supabase/database/ExplainFormat : java/lang/Enum {
+	public static final field JSON Lio/github/androidpoet/supabase/database/ExplainFormat;
+	public static final field TEXT Lio/github/androidpoet/supabase/database/ExplainFormat;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/database/ExplainFormat;
+	public static fun values ()[Lio/github/androidpoet/supabase/database/ExplainFormat;
+}
+
+public final class io/github/androidpoet/supabase/database/ExplainOptions {
+	public fun <init> ()V
+	public fun <init> (ZZZZZLio/github/androidpoet/supabase/database/ExplainFormat;)V
+	public synthetic fun <init> (ZZZZZLio/github/androidpoet/supabase/database/ExplainFormat;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Z
+	public final fun component3 ()Z
+	public final fun component4 ()Z
+	public final fun component5 ()Z
+	public final fun component6 ()Lio/github/androidpoet/supabase/database/ExplainFormat;
+	public final fun copy (ZZZZZLio/github/androidpoet/supabase/database/ExplainFormat;)Lio/github/androidpoet/supabase/database/ExplainOptions;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/database/ExplainOptions;ZZZZZLio/github/androidpoet/supabase/database/ExplainFormat;ILjava/lang/Object;)Lio/github/androidpoet/supabase/database/ExplainOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnalyze ()Z
+	public final fun getBuffers ()Z
+	public final fun getFormat ()Lio/github/androidpoet/supabase/database/ExplainFormat;
+	public final fun getSettings ()Z
+	public final fun getVerbose ()Z
+	public final fun getWal ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/androidpoet/supabase/database/ReturnOption : java/lang/Enum {
+	public static final field MINIMAL Lio/github/androidpoet/supabase/database/ReturnOption;
+	public static final field REPRESENTATION Lio/github/androidpoet/supabase/database/ReturnOption;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/database/ReturnOption;
+	public static fun values ()[Lio/github/androidpoet/supabase/database/ReturnOption;
+}
+
+public final class io/github/androidpoet/supabase/database/UpsertResolution : java/lang/Enum {
+	public static final field IGNORE_DUPLICATES Lio/github/androidpoet/supabase/database/UpsertResolution;
+	public static final field MERGE_DUPLICATES Lio/github/androidpoet/supabase/database/UpsertResolution;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/database/UpsertResolution;
+	public static fun values ()[Lio/github/androidpoet/supabase/database/UpsertResolution;
+}
+

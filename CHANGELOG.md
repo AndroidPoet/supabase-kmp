@@ -1,5 +1,38 @@
 # Changelog
 
+## Unreleased
+
+### Security
+
+- PKCE code verifiers are now generated from a cryptographically secure RNG
+  (`CryptographyRandom`) instead of `kotlin.random.Random`.
+- HTTP logging now redacts the `Authorization` and `apikey` headers, so enabling
+  `logging = true` no longer leaks anon/service-role keys or bearer tokens.
+
+### Fixed
+
+- Session refresh is de-duplicated: concurrent refreshes now share a single
+  in-flight request instead of each spending the rotating refresh token (which
+  caused spurious logouts).
+- Retries now cover 429/500/502/504 (in addition to 503/520) and honor
+  `Retry-After`.
+- PostgREST filter values containing structural characters (`, ( ) "`) are
+  quoted/escaped, fixing `in(...)` lists and `or`/`and` groups.
+- Realtime: outbound application messages sent while disconnected are buffered
+  and replayed after rejoin instead of being silently dropped; presence
+  callbacks now receive the full cumulative state on diffs.
+- Cross-thread visibility hardening for the access token, session refresh state,
+  and realtime connection fields (`@Volatile`).
+
+### Added
+
+- `KeyValueStore` + `KeyValueSessionStorage` for easy persistent, serialized
+  session storage backed by the platform keystore.
+- Input validation on `Supabase.create` (non-blank api key, http(s) project URL).
+- Tooling: detekt, binary-compatibility-validator (API dumps), Kover coverage,
+  Dokka API docs, a multiplatform CI matrix, Dependabot, and
+  CONTRIBUTING/SECURITY/CODE_OF_CONDUCT.
+
 ## 0.3.2
 
 - Added typed Iceberg REST catalog models and typed Analytics Catalog methods while keeping raw JSON methods available.

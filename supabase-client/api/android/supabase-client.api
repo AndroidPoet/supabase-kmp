@@ -1,0 +1,100 @@
+public final class io/github/androidpoet/supabase/client/Supabase {
+	public static final field INSTANCE Lio/github/androidpoet/supabase/client/Supabase;
+	public final fun create (Ljava/lang/String;Ljava/lang/String;Lio/ktor/client/engine/HttpClientEngineFactory;Lkotlin/jvm/functions/Function1;)Lio/github/androidpoet/supabase/client/SupabaseClient;
+	public static synthetic fun create$default (Lio/github/androidpoet/supabase/client/Supabase;Ljava/lang/String;Ljava/lang/String;Lio/ktor/client/engine/HttpClientEngineFactory;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lio/github/androidpoet/supabase/client/SupabaseClient;
+}
+
+public abstract interface class io/github/androidpoet/supabase/client/SupabaseClient {
+	public abstract fun clearAccessToken ()V
+	public abstract fun close ()V
+	public abstract fun delete (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun get (Ljava/lang/String;Ljava/util/List;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getAccessTokenOrNull ()Ljava/lang/String;
+	public abstract fun getApiKey ()Ljava/lang/String;
+	public abstract fun getProjectUrl ()Ljava/lang/String;
+	public abstract fun patch (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun post (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun postRaw (Ljava/lang/String;[BLjava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun put (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun putRaw (Ljava/lang/String;[BLjava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun setAccessToken (Ljava/lang/String;)V
+}
+
+public final class io/github/androidpoet/supabase/client/SupabaseClient$DefaultImpls {
+	public static synthetic fun delete$default (Lio/github/androidpoet/supabase/client/SupabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun get$default (Lio/github/androidpoet/supabase/client/SupabaseClient;Ljava/lang/String;Ljava/util/List;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun patch$default (Lio/github/androidpoet/supabase/client/SupabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun post$default (Lio/github/androidpoet/supabase/client/SupabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun postRaw$default (Lio/github/androidpoet/supabase/client/SupabaseClient;Ljava/lang/String;[BLjava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun put$default (Lio/github/androidpoet/supabase/client/SupabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun putRaw$default (Lio/github/androidpoet/supabase/client/SupabaseClient;Ljava/lang/String;[BLjava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class io/github/androidpoet/supabase/client/SupabaseClientExtKt {
+	public static final fun getDefaultJson ()Lkotlinx/serialization/json/Json;
+}
+
+public final class io/github/androidpoet/supabase/client/SupabaseConfig {
+	public fun <init> (ZLio/ktor/client/plugins/logging/LogLevel;Ljava/util/Map;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Lio/ktor/client/plugins/logging/LogLevel;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun copy (ZLio/ktor/client/plugins/logging/LogLevel;Ljava/util/Map;)Lio/github/androidpoet/supabase/client/SupabaseConfig;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/client/SupabaseConfig;ZLio/ktor/client/plugins/logging/LogLevel;Ljava/util/Map;ILjava/lang/Object;)Lio/github/androidpoet/supabase/client/SupabaseConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHeaders ()Ljava/util/Map;
+	public final fun getLogLevel ()Lio/ktor/client/plugins/logging/LogLevel;
+	public final fun getLogging ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/androidpoet/supabase/client/SupabaseConfigBuilder {
+	public fun <init> ()V
+	public final fun getHeaders ()Ljava/util/Map;
+	public final fun getLogLevel ()Lio/ktor/client/plugins/logging/LogLevel;
+	public final fun getLogging ()Z
+	public final fun setLogLevel (Lio/ktor/client/plugins/logging/LogLevel;)V
+	public final fun setLogging (Z)V
+}
+
+public abstract interface annotation class io/github/androidpoet/supabase/client/SupabaseDsl : java/lang/annotation/Annotation {
+}
+
+public abstract interface class io/github/androidpoet/supabase/client/auth/AuthState {
+}
+
+public final class io/github/androidpoet/supabase/client/auth/AuthState$ApiKey : io/github/androidpoet/supabase/client/auth/AuthState {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lio/github/androidpoet/supabase/client/auth/AuthState$ApiKey;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/client/auth/AuthState$ApiKey;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/client/auth/AuthState$ApiKey;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getKey ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/androidpoet/supabase/client/auth/AuthState$Bearer : io/github/androidpoet/supabase/client/auth/AuthState {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lio/github/androidpoet/supabase/client/auth/AuthState$Bearer;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/client/auth/AuthState$Bearer;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/client/auth/AuthState$Bearer;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getToken ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/androidpoet/supabase/client/auth/AuthState$None : io/github/androidpoet/supabase/client/auth/AuthState {
+	public static final field INSTANCE Lio/github/androidpoet/supabase/client/auth/AuthState$None;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/androidpoet/supabase/client/auth/AuthStateKt {
+	public static final fun apiKeyHeader (Lio/github/androidpoet/supabase/client/auth/AuthState;)Ljava/lang/String;
+	public static final fun authorizationHeader (Lio/github/androidpoet/supabase/client/auth/AuthState;)Ljava/lang/String;
+}
+

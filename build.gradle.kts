@@ -7,6 +7,63 @@ plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.vanniktech.publish) apply false
+    alias(libs.plugins.detekt) apply false
+    alias(libs.plugins.dokka)
+    alias(libs.plugins.kover)
+    alias(libs.plugins.binary.compatibility.validator)
+}
+
+// Published modules whose public API and coverage we track.
+val publishedModules = listOf(
+    "supabase-core",
+    "supabase-client",
+    "supabase-auth",
+    "supabase-auth-admin",
+    "supabase-database",
+    "supabase-storage",
+    "supabase-realtime",
+    "supabase-functions",
+)
+
+// Validate the binary (ABI) compatibility of every published module so an
+// accidental public-API break is caught in review instead of by consumers.
+apiValidation {
+    ignoredProjects.addAll(
+        subprojects.map { it.name }.filterNot { it in publishedModules },
+    )
+    nonPublicMarkers.add("kotlin.PublishedApi")
+}
+
+subprojects {
+    apply(plugin = "io.gitlab.arturbosch.detekt")
+
+    extensions.configure<io.gitlab.arturbosch.detekt.extensions.DetektExtension> {
+        parallel = true
+        buildUponDefaultConfig = true
+        config.setFrom(rootProject.files("config/detekt/detekt.yml"))
+        baseline = file("detekt-baseline.xml")
+        // Analyze every Kotlin source set, not just JVM main.
+        source.setFrom(
+            files(
+                "src/commonMain/kotlin",
+                "src/commonTest/kotlin",
+                "src/jvmMain/kotlin",
+                "src/androidMain/kotlin",
+                "src/appleMain/kotlin",
+                "src/jvmTest/kotlin",
+            ).filter { it.exists() },
+        )
+    }
+
+    // Generate API reference docs from KDoc for every published module.
+    if (name in publishedModules) {
+        apply(plugin = "org.jetbrains.dokka")
+    }
+}
+
+// Aggregate coverage across all published modules.
+dependencies {
+    publishedModules.forEach { kover(project(":$it")) }
 }
 
 val supabaseStart by tasks.registering(Exec::class) {
