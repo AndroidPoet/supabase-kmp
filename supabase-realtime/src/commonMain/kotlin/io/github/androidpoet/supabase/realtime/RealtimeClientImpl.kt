@@ -25,6 +25,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -34,8 +36,12 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import kotlin.concurrent.Volatile
 import kotlin.math.min
 import kotlin.math.pow
+
+private const val MAX_OUTBOUND_BUFFER = 100
+
 internal class RealtimeClientImpl(
     private val supabaseClient: SupabaseClient,
     private val config: RealtimeConfig = RealtimeConfig(),
@@ -44,14 +50,31 @@ internal class RealtimeClientImpl(
     private val httpClient = HttpClient {
         install(WebSockets)
     }
+    @Volatile
     private var session: WebSocketSession? = null
+
+    @Volatile
     private var scope: CoroutineScope? = null
+
+    @Volatile
     private var heartbeatJob: Job? = null
+
+    @Volatile
     private var reconnectJob: Job? = null
     private var refCounter = 0
     private var reconnectAttempt = 0
+
+    @Volatile
     private var authTokenOverride: String? = null
+
+    @Volatile
     private var intentionalDisconnect = false
+
+    // Outbound messages issued while the socket is down (e.g. a broadcast sent
+    // mid-reconnect) would otherwise be silently dropped by `session?.send`.
+    // Buffer non-heartbeat application messages and replay them once rejoined.
+    private val outboundBuffer = mutableListOf<RealtimeMessage>()
+    private val outboundBufferLock = Mutex()
     private val _connectionState = MutableStateFlow<ConnectionState>(ConnectionState.Disconnected)
     override val connectionState: StateFlow<ConnectionState> = _connectionState.asStateFlow()
     private val _debugState = MutableStateFlow(RealtimeDebugState())
@@ -191,9 +214,31 @@ internal class RealtimeClientImpl(
         )
     }
     internal suspend fun sendMessage(message: RealtimeMessage) {
-        val text = json.encodeToString(message)
         recordOutboundMessage(message)
-        session?.send(Frame.Text(text))
+        val current = session
+        if (current != null) {
+            current.send(Frame.Text(json.encodeToString(message)))
+            return
+        }
+        // Disconnected. Heartbeats and channel join/leave control frames are
+        // regenerated on reconnect, so only buffer application messages.
+        if (message.event in NON_BUFFERED_EVENTS) return
+        outboundBufferLock.withLock {
+            if (outboundBuffer.size >= MAX_OUTBOUND_BUFFER) outboundBuffer.removeAt(0)
+            outboundBuffer.add(message)
+        }
+    }
+
+    private suspend fun flushOutboundBuffer() {
+        val pending = outboundBufferLock.withLock {
+            val copy = outboundBuffer.toList()
+            outboundBuffer.clear()
+            copy
+        }
+        val current = session ?: return
+        for (message in pending) {
+            current.send(Frame.Text(json.encodeToString(message)))
+        }
     }
     private suspend fun establishConnection() {
         val isHttps = supabaseClient.projectUrl.startsWith("https://")
@@ -301,6 +346,7 @@ internal class RealtimeClientImpl(
             reconnectAttempt = 0
             _connectionState.value = ConnectionState.Connected
             rejoinActiveChannels()
+            flushOutboundBuffer()
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
             session = null
@@ -405,6 +451,8 @@ internal class ChannelSubscriptionImpl(
 ) : RealtimeSubscription {
     private val eventFlow = MutableSharedFlow<RealtimeEvent>(extraBufferCapacity = 64)
     private val _status = MutableStateFlow(RealtimeSubscription.Status.SUBSCRIBING)
+    // Cumulative presence state, mutated only on the single inbound dispatch loop.
+    private val presenceState = mutableMapOf<String, JsonObject>()
     internal var joinRef: String? = null
     internal val hasPresenceTracking: Boolean = presenceCallback != null
     override val status: StateFlow<RealtimeSubscription.Status> = _status.asStateFlow()
@@ -508,25 +556,23 @@ internal class ChannelSubscriptionImpl(
         val leaves = payload["leaves"]?.jsonObject
         joins?.forEach { (key, value) ->
             val presence = value.jsonObject
-            val event = RealtimeEvent.PresenceJoin(key = key, newPresence = presence)
-            eventFlow.emit(event)
+            presenceState[key] = presence
+            eventFlow.emit(RealtimeEvent.PresenceJoin(key = key, newPresence = presence))
         }
         leaves?.forEach { (key, value) ->
             val presence = value.jsonObject
-            val event = RealtimeEvent.PresenceLeave(key = key, leftPresence = presence)
-            eventFlow.emit(event)
+            presenceState.remove(key)
+            eventFlow.emit(RealtimeEvent.PresenceLeave(key = key, leftPresence = presence))
         }
-        presenceCallback?.let { cb ->
-            val state = buildMap {
-                joins?.forEach { (k, v) -> put(k, v.jsonObject) }
-            }
-            if (state.isNotEmpty()) cb(state)
-        }
+        // Hand the callback the full, cumulative presence state — not just the
+        // members in this diff — so callers always see who is currently present.
+        presenceCallback?.invoke(presenceState.toMap())
     }
     private suspend fun handlePresenceState(payload: JsonObject) {
-        val state: PresenceState = payload.mapValues { (_, value) -> value.jsonObject }
-        val event = RealtimeEvent.PresenceSync(state = state)
-        eventFlow.emit(event)
+        presenceState.clear()
+        payload.forEach { (key, value) -> presenceState[key] = value.jsonObject }
+        val state: PresenceState = presenceState.toMap()
+        eventFlow.emit(RealtimeEvent.PresenceSync(state = state))
         presenceCallback?.invoke(state)
     }
     private suspend fun handleSystemReply(payload: JsonObject) {
@@ -550,6 +596,10 @@ internal fun PostgresChangeEvent.toWireValue(): String = when (this) {
     PostgresChangeEvent.DELETE -> "DELETE"
     PostgresChangeEvent.ALL -> "*"
 }
+
+// Control frames that are regenerated on reconnect and must not be replayed
+// from the outbound buffer (they would carry stale refs / duplicate joins).
+private val NON_BUFFERED_EVENTS = setOf("heartbeat", "phx_join", "phx_leave")
 
 private fun RealtimeMessage.isHeartbeatRequest(): Boolean =
     topic == "phoenix" && event == "heartbeat"

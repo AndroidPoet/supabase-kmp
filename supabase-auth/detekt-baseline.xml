@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:AuthClientExt.kt$b1 &lt; 0 || b2 &lt; 0 || (c3 != '=' &amp;&amp; b3 &lt; 0) || (c4 != '=' &amp;&amp; b4 &lt; 0)</ID>
+    <ID>CyclomaticComplexMethod:AuthClientExt.kt$private fun decodeBase64Url(input: String): String?</ID>
+    <ID>InstanceOfCheckForException:AuthClientExt.kt$e is CancellationException</ID>
+    <ID>LargeClass:AuthClientImpl.kt$AuthClientImpl : AuthClient</ID>
+    <ID>LoopWithTooManyJumpStatements:AuthClientExt.kt$while</ID>
+    <ID>MatchingDeclarationName:SessionManagerExt.kt$AuthStateChangeEvent</ID>
+    <ID>MaxLineLength:AuthClientExtTest.kt$FakeAuthClient$override</ID>
+    <ID>MaxLineLength:AuthClientExtTest.kt$FakeAuthClient$override suspend</ID>
+    <ID>MaxLineLength:AuthClientImplTest.kt$FakeSupabaseClient$"""[{"client":{"id":"client-1","name":"Example App","uri":"https://app.example.com","logo_uri":"https://app.example.com/logo.png"},"scopes":["openid","email"],"granted_at":"2026-01-01T00:00:00Z"}]"""</ID>
+    <ID>MaxLineLength:AuthClientImplTest.kt$FakeSupabaseClient$"""[{"id":"passkey1","friendly_name":"Laptop","created_at":"2026-01-01T00:00:00Z","last_used_at":"2026-01-02T00:00:00Z"}]"""</ID>
+    <ID>MaxLineLength:AuthClientImplTest.kt$FakeSupabaseClient$"""{"access_token":"passkey-acc","refresh_token":"passkey-ref","expires_in":3600,"token_type":"bearer","user":{"id":"u1"}}"""</ID>
+    <ID>MaxLineLength:AuthClientImplTest.kt$FakeSupabaseClient$"""{"authorization_id":"authz-1","redirect_uri":"https://app.example.com/callback","client":{"id":"client-1","name":"Example App","uri":"https://app.example.com","logo_uri":"https://app.example.com/logo.png"},"user":{"id":"u1","email":"user@example.com"},"scope":"openid email"}"""</ID>
+    <ID>MaxLineLength:AuthClientImplTest.kt$FakeSupabaseClient$SupabaseResult.Success("""{"id":"passkey1","friendly_name":"Laptop","created_at":"2026-01-01T00:00:00Z","last_used_at":"2026-01-02T00:00:00Z"}""")</ID>
+    <ID>MaxLineLength:AuthClientImplTest.kt$FakeSupabaseClient$endpoint == "/auth/v1/oauth/authorizations/authz-1/consent" &amp;&amp; body?.contains("\"action\":\"approve\"") == true</ID>
+    <ID>MaxLineLength:AuthClientImplTest.kt$FakeSupabaseClient$endpoint == "/auth/v1/oauth/authorizations/authz-1/consent" &amp;&amp; body?.contains("\"action\":\"deny\"") == true</ID>
+    <ID>MaxLineLength:SessionManagerImplTest.kt$SessionFakeSupabaseClient$"""{"access_token":"refreshed-acc","refresh_token":"refreshed-ref","expires_in":3600,"token_type":"bearer","user":{"id":"user-1"}}"""</ID>
+    <ID>ReturnCount:AuthClientExt.kt$private fun decodeBase64Url(input: String): String?</ID>
+  </CurrentIssues>
+</SmellBaseline>

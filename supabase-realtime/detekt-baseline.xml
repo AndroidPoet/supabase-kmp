@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>InstanceOfCheckForException:RealtimeClientImpl.kt$RealtimeClientImpl$e is CancellationException</ID>
+    <ID>NestedBlockDepth:RealtimeClientImpl.kt$ChannelSubscriptionImpl$private suspend fun handlePostgresChange(payload: JsonObject)</ID>
+    <ID>ReturnCount:RealtimeClientImpl.kt$ChannelSubscriptionImpl$private suspend fun handlePostgresChange(payload: JsonObject)</ID>
+    <ID>UseRequire:RealtimeExt.kt$throw IllegalArgumentException("Failed to decode presence payload: $value")</ID>
+  </CurrentIssues>
+</SmellBaseline>

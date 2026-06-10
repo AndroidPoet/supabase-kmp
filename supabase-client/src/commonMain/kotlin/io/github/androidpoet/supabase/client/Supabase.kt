@@ -9,6 +9,11 @@ public object Supabase {
         engineFactory: HttpClientEngineFactory<*> = platformEngine(),
         configure: SupabaseConfigBuilder.() -> Unit = {},
     ): SupabaseClient {
+        require(projectUrl.isNotBlank()) { "projectUrl must not be blank" }
+        require(projectUrl.startsWith("http://") || projectUrl.startsWith("https://")) {
+            "projectUrl must start with http:// or https:// (got: $projectUrl)"
+        }
+        require(apiKey.isNotBlank()) { "apiKey must not be blank" }
         val config = SupabaseConfigBuilder().apply(configure).build()
         val transport = HttpTransport(
             config = config,

@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:StorageClientImpl.kt$(c in 'a'..'z') || (c in 'A'..'Z') || (c in '0'..'9') || c == '-' || c == '_' || c == '.' || c == '~'</ID>
+    <ID>CyclomaticComplexMethod:StorageClientImplTest.kt$FakeSupabaseClient$override suspend fun post( endpoint: String, body: String?, headers: Map&lt;String, String>, ): SupabaseResult&lt;String></ID>
+    <ID>LargeClass:StorageClientImpl.kt$StorageClientImpl : StorageClient</ID>
+    <ID>LargeClass:StorageClientImplTest.kt$StorageClientImplTest</ID>
+    <ID>MaxLineLength:StorageClientExtTest.kt$FakeStorageClient$override</ID>
+    <ID>MaxLineLength:StorageClientExtTest.kt$FakeStorageClient$override fun getSignedDownloadUrl(bucket: String, path: String, token: String, download: Boolean, fileName: String?): String</ID>
+    <ID>MaxLineLength:StorageClientExtTest.kt$FakeStorageClient$override suspend</ID>
+    <ID>MaxLineLength:StorageClientExtTest.kt$FakeStorageClient$override suspend fun copy(bucket: String, fromPath: String, toPath: String, destinationBucket: String?, copyMetadata: Boolean?): SupabaseResult&lt;Unit></ID>
+    <ID>MaxLineLength:StorageClientExtTest.kt$FakeStorageClient$override suspend fun createBucket(id: String, name: String, public: Boolean, fileSizeLimit: Long?, allowedMimeTypes: List&lt;String>?): SupabaseResult&lt;Bucket></ID>
+    <ID>MaxLineLength:StorageClientExtTest.kt$FakeStorageClient$override suspend fun createUploadSignedUrlWithPath(bucket: String, path: String, upsert: Boolean): SupabaseResult&lt;UploadSignedUrl></ID>
+    <ID>MaxLineLength:StorageClientExtTest.kt$FakeStorageClient$override suspend fun deleteVectors(vectorBucketName: String, indexName: String, keys: List&lt;String>): SupabaseResult&lt;Unit></ID>
+    <ID>MaxLineLength:StorageClientExtTest.kt$FakeStorageClient$override suspend fun download(bucket: String, path: String, download: Boolean, fileName: String?): SupabaseResult&lt;String></ID>
+    <ID>MaxLineLength:StorageClientExtTest.kt$FakeStorageClient$override suspend fun downloadPublic(bucket: String, path: String, download: Boolean, fileName: String?): SupabaseResult&lt;String></ID>
+    <ID>MaxLineLength:StorageClientExtTest.kt$FakeStorageClient$override suspend fun getVectors(vectorBucketName: String, indexName: String, keys: List&lt;String>, returnData: Boolean?, returnMetadata: Boolean?): SupabaseResult&lt;List&lt;VectorMatch>></ID>
+    <ID>MaxLineLength:StorageClientExtTest.kt$FakeStorageClient$override suspend fun list(bucket: String, prefix: String, limit: Int, offset: Int, sortBy: String?, sortOrder: SortOrder, search: String?): SupabaseResult&lt;List&lt;FileObject>></ID>
+    <ID>MaxLineLength:StorageClientExtTest.kt$FakeStorageClient$override suspend fun listAnalyticsBuckets(limit: Int?, offset: Int?, sortColumn: String?, sortOrder: SortOrder?, search: String?): SupabaseResult&lt;List&lt;AnalyticsBucket>></ID>
+    <ID>MaxLineLength:StorageClientExtTest.kt$FakeStorageClient$override suspend fun listVectorBuckets(prefix: String?, maxResults: Int?, nextToken: String?): SupabaseResult&lt;VectorBucketListResponse></ID>
+    <ID>MaxLineLength:StorageClientExtTest.kt$FakeStorageClient$override suspend fun listVectorIndexes(vectorBucketName: String, prefix: String?, maxResults: Int?, nextToken: String?): SupabaseResult&lt;VectorIndexListResponse></ID>
+    <ID>MaxLineLength:StorageClientExtTest.kt$FakeStorageClient$override suspend fun move(bucket: String, fromPath: String, toPath: String, destinationBucket: String?): SupabaseResult&lt;Unit></ID>
+    <ID>MaxLineLength:StorageClientExtTest.kt$FakeStorageClient$override suspend fun putVectors(vectorBucketName: String, indexName: String, vectors: List&lt;VectorObject>): SupabaseResult&lt;Unit></ID>
+    <ID>MaxLineLength:StorageClientExtTest.kt$FakeStorageClient$override suspend fun update(bucket: String, path: String, data: ByteArray, contentType: String, upsert: Boolean, cacheControl: Int?): SupabaseResult&lt;String></ID>
+    <ID>MaxLineLength:StorageClientExtTest.kt$FakeStorageClient$override suspend fun updateBucket(id: String, name: String?, public: Boolean?, fileSizeLimit: Long?, allowedMimeTypes: List&lt;String>?): SupabaseResult&lt;Bucket></ID>
+    <ID>MaxLineLength:StorageClientExtTest.kt$FakeStorageClient$override suspend fun upload(bucket: String, path: String, data: ByteArray, contentType: String, upsert: Boolean, cacheControl: Int?): SupabaseResult&lt;String></ID>
+    <ID>MaxLineLength:StorageClientExtTest.kt$FakeStorageClient$override suspend fun uploadToSignedUrl(bucket: String, path: String, token: String, data: ByteArray, contentType: String, upsert: Boolean, cacheControl: Int?): SupabaseResult&lt;String></ID>
+    <ID>MaxLineLength:StorageClientImplTest.kt$FakeSupabaseClient$"""{"hasNext":true,"nextCursor":"cursor-2","folders":[{"name":"nested","key":"folder/nested/"}],"objects":[{"name":"avatar.png","key":"folder/avatar.png","id":"file-1","updated_at":"2026-01-01T00:00:00Z","created_at":"2026-01-01T00:00:00Z","last_accessed_at":"2026-01-01T00:00:00Z","metadata":{"size":123}}]}"""</ID>
+    <ID>MaxLineLength:StorageClientImplTest.kt$FakeSupabaseClient$SupabaseResult.Success("""[{"name":"events","type":"ANALYTICS","format":"iceberg","created_at":"2026-01-01T00:00:00Z","updated_at":"2026-01-01T00:00:00Z"}]""")</ID>
+    <ID>MaxLineLength:StorageClientImplTest.kt$FakeSupabaseClient$SupabaseResult.Success("""{"index":{"indexName":"documents","vectorBucketName":"embeddings","dataType":"float32","dimension":1536,"distanceMetric":"cosine","creationTime":1893456000}}""")</ID>
+    <ID>MaxLineLength:StorageClientImplTest.kt$FakeSupabaseClient$SupabaseResult.Success("""{"name":"events","type":"ANALYTICS","format":"iceberg","created_at":"2026-01-01T00:00:00Z","updated_at":"2026-01-01T00:00:00Z"}""")</ID>
+    <ID>MaxLineLength:StorageClientImplTest.kt$FakeSupabaseClient$SupabaseResult.Success("""{"namespace":["prod","events"],"properties":{"owner":"data-team"},"updated":["owner"],"removed":["old"]}""")</ID>
+    <ID>MaxLineLength:StorageClientImplTest.kt$FakeSupabaseClient$SupabaseResult.Success("""{"vectors":[{"key":"doc-1","distance":0.01,"metadata":{"category":"docs"}}],"distanceMetric":"cosine"}""")</ID>
+  </CurrentIssues>
+</SmellBaseline>

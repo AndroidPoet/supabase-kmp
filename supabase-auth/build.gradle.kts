@@ -36,6 +36,7 @@ kotlin {
             implementation(project(":supabase-client"))
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
+            implementation(libs.cryptography.random)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
