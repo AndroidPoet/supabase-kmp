@@ -33,6 +33,12 @@ apiValidation {
         subprojects.map { it.name }.filterNot { it in publishedModules },
     )
     nonPublicMarkers.add("kotlin.PublishedApi")
+
+    // Also track the native/JS klib ABI, not just JVM + Android.
+    @OptIn(kotlinx.validation.ExperimentalBCVApi::class)
+    klib {
+        enabled = true
+    }
 }
 
 subprojects {

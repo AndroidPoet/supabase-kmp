@@ -1,0 +1,112 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, linuxX64, macosArm64, macosX64, mingwX64, tvosArm64, tvosSimulatorArm64, tvosX64, wasmJs, watchosArm64, watchosSimulatorArm64, watchosX64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <supabase-kmp:supabase-client>
+open annotation class io.github.androidpoet.supabase.client/SupabaseDsl : kotlin/Annotation { // io.github.androidpoet.supabase.client/SupabaseDsl|null[0]
+    constructor <init>() // io.github.androidpoet.supabase.client/SupabaseDsl.<init>|<init>(){}[0]
+}
+
+abstract interface io.github.androidpoet.supabase.client/SupabaseClient : kotlin/AutoCloseable { // io.github.androidpoet.supabase.client/SupabaseClient|null[0]
+    abstract val accessTokenOrNull // io.github.androidpoet.supabase.client/SupabaseClient.accessTokenOrNull|{}accessTokenOrNull[0]
+        abstract fun <get-accessTokenOrNull>(): kotlin/String? // io.github.androidpoet.supabase.client/SupabaseClient.accessTokenOrNull.<get-accessTokenOrNull>|<get-accessTokenOrNull>(){}[0]
+    abstract val apiKey // io.github.androidpoet.supabase.client/SupabaseClient.apiKey|{}apiKey[0]
+        abstract fun <get-apiKey>(): kotlin/String // io.github.androidpoet.supabase.client/SupabaseClient.apiKey.<get-apiKey>|<get-apiKey>(){}[0]
+    abstract val projectUrl // io.github.androidpoet.supabase.client/SupabaseClient.projectUrl|{}projectUrl[0]
+        abstract fun <get-projectUrl>(): kotlin/String // io.github.androidpoet.supabase.client/SupabaseClient.projectUrl.<get-projectUrl>|<get-projectUrl>(){}[0]
+
+    abstract fun clearAccessToken() // io.github.androidpoet.supabase.client/SupabaseClient.clearAccessToken|clearAccessToken(){}[0]
+    abstract fun close() // io.github.androidpoet.supabase.client/SupabaseClient.close|close(){}[0]
+    abstract fun setAccessToken(kotlin/String) // io.github.androidpoet.supabase.client/SupabaseClient.setAccessToken|setAccessToken(kotlin.String){}[0]
+    abstract suspend fun delete(kotlin/String, kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/String> // io.github.androidpoet.supabase.client/SupabaseClient.delete|delete(kotlin.String;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+    abstract suspend fun get(kotlin/String, kotlin.collections/List<kotlin/Pair<kotlin/String, kotlin/String>> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/String> // io.github.androidpoet.supabase.client/SupabaseClient.get|get(kotlin.String;kotlin.collections.List<kotlin.Pair<kotlin.String,kotlin.String>>;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+    abstract suspend fun patch(kotlin/String, kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/String> // io.github.androidpoet.supabase.client/SupabaseClient.patch|patch(kotlin.String;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+    abstract suspend fun post(kotlin/String, kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/String> // io.github.androidpoet.supabase.client/SupabaseClient.post|post(kotlin.String;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+    abstract suspend fun postRaw(kotlin/String, kotlin/ByteArray, kotlin/String, kotlin.collections/Map<kotlin/String, kotlin/String> = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/String> // io.github.androidpoet.supabase.client/SupabaseClient.postRaw|postRaw(kotlin.String;kotlin.ByteArray;kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+    abstract suspend fun put(kotlin/String, kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/String> // io.github.androidpoet.supabase.client/SupabaseClient.put|put(kotlin.String;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+    abstract suspend fun putRaw(kotlin/String, kotlin/ByteArray, kotlin/String, kotlin.collections/Map<kotlin/String, kotlin/String> = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/String> // io.github.androidpoet.supabase.client/SupabaseClient.putRaw|putRaw(kotlin.String;kotlin.ByteArray;kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+}
+
+sealed interface io.github.androidpoet.supabase.client.auth/AuthState { // io.github.androidpoet.supabase.client.auth/AuthState|null[0]
+    final class ApiKey : io.github.androidpoet.supabase.client.auth/AuthState { // io.github.androidpoet.supabase.client.auth/AuthState.ApiKey|null[0]
+        constructor <init>(kotlin/String) // io.github.androidpoet.supabase.client.auth/AuthState.ApiKey.<init>|<init>(kotlin.String){}[0]
+
+        final val key // io.github.androidpoet.supabase.client.auth/AuthState.ApiKey.key|{}key[0]
+            final fun <get-key>(): kotlin/String // io.github.androidpoet.supabase.client.auth/AuthState.ApiKey.key.<get-key>|<get-key>(){}[0]
+
+        final fun component1(): kotlin/String // io.github.androidpoet.supabase.client.auth/AuthState.ApiKey.component1|component1(){}[0]
+        final fun copy(kotlin/String = ...): io.github.androidpoet.supabase.client.auth/AuthState.ApiKey // io.github.androidpoet.supabase.client.auth/AuthState.ApiKey.copy|copy(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.client.auth/AuthState.ApiKey.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.client.auth/AuthState.ApiKey.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.androidpoet.supabase.client.auth/AuthState.ApiKey.toString|toString(){}[0]
+    }
+
+    final class Bearer : io.github.androidpoet.supabase.client.auth/AuthState { // io.github.androidpoet.supabase.client.auth/AuthState.Bearer|null[0]
+        constructor <init>(kotlin/String) // io.github.androidpoet.supabase.client.auth/AuthState.Bearer.<init>|<init>(kotlin.String){}[0]
+
+        final val token // io.github.androidpoet.supabase.client.auth/AuthState.Bearer.token|{}token[0]
+            final fun <get-token>(): kotlin/String // io.github.androidpoet.supabase.client.auth/AuthState.Bearer.token.<get-token>|<get-token>(){}[0]
+
+        final fun component1(): kotlin/String // io.github.androidpoet.supabase.client.auth/AuthState.Bearer.component1|component1(){}[0]
+        final fun copy(kotlin/String = ...): io.github.androidpoet.supabase.client.auth/AuthState.Bearer // io.github.androidpoet.supabase.client.auth/AuthState.Bearer.copy|copy(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.client.auth/AuthState.Bearer.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.client.auth/AuthState.Bearer.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.androidpoet.supabase.client.auth/AuthState.Bearer.toString|toString(){}[0]
+    }
+
+    final object None : io.github.androidpoet.supabase.client.auth/AuthState { // io.github.androidpoet.supabase.client.auth/AuthState.None|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.client.auth/AuthState.None.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.client.auth/AuthState.None.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.androidpoet.supabase.client.auth/AuthState.None.toString|toString(){}[0]
+    }
+}
+
+final class io.github.androidpoet.supabase.client/SupabaseConfig { // io.github.androidpoet.supabase.client/SupabaseConfig|null[0]
+    constructor <init>(kotlin/Boolean, io.ktor.client.plugins.logging/LogLevel, kotlin.collections/Map<kotlin/String, kotlin/String>) // io.github.androidpoet.supabase.client/SupabaseConfig.<init>|<init>(kotlin.Boolean;io.ktor.client.plugins.logging.LogLevel;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+
+    final val headers // io.github.androidpoet.supabase.client/SupabaseConfig.headers|{}headers[0]
+        final fun <get-headers>(): kotlin.collections/Map<kotlin/String, kotlin/String> // io.github.androidpoet.supabase.client/SupabaseConfig.headers.<get-headers>|<get-headers>(){}[0]
+    final val logLevel // io.github.androidpoet.supabase.client/SupabaseConfig.logLevel|{}logLevel[0]
+        final fun <get-logLevel>(): io.ktor.client.plugins.logging/LogLevel // io.github.androidpoet.supabase.client/SupabaseConfig.logLevel.<get-logLevel>|<get-logLevel>(){}[0]
+    final val logging // io.github.androidpoet.supabase.client/SupabaseConfig.logging|{}logging[0]
+        final fun <get-logging>(): kotlin/Boolean // io.github.androidpoet.supabase.client/SupabaseConfig.logging.<get-logging>|<get-logging>(){}[0]
+
+    final fun component1(): kotlin/Boolean // io.github.androidpoet.supabase.client/SupabaseConfig.component1|component1(){}[0]
+    final fun component2(): io.ktor.client.plugins.logging/LogLevel // io.github.androidpoet.supabase.client/SupabaseConfig.component2|component2(){}[0]
+    final fun component3(): kotlin.collections/Map<kotlin/String, kotlin/String> // io.github.androidpoet.supabase.client/SupabaseConfig.component3|component3(){}[0]
+    final fun copy(kotlin/Boolean = ..., io.ktor.client.plugins.logging/LogLevel = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): io.github.androidpoet.supabase.client/SupabaseConfig // io.github.androidpoet.supabase.client/SupabaseConfig.copy|copy(kotlin.Boolean;io.ktor.client.plugins.logging.LogLevel;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.client/SupabaseConfig.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.client/SupabaseConfig.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.client/SupabaseConfig.toString|toString(){}[0]
+}
+
+final class io.github.androidpoet.supabase.client/SupabaseConfigBuilder { // io.github.androidpoet.supabase.client/SupabaseConfigBuilder|null[0]
+    constructor <init>() // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.<init>|<init>(){}[0]
+
+    final val headers // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.headers|{}headers[0]
+        final fun <get-headers>(): kotlin.collections/MutableMap<kotlin/String, kotlin/String> // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.headers.<get-headers>|<get-headers>(){}[0]
+
+    final var logLevel // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.logLevel|{}logLevel[0]
+        final fun <get-logLevel>(): io.ktor.client.plugins.logging/LogLevel // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.logLevel.<get-logLevel>|<get-logLevel>(){}[0]
+        final fun <set-logLevel>(io.ktor.client.plugins.logging/LogLevel) // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.logLevel.<set-logLevel>|<set-logLevel>(io.ktor.client.plugins.logging.LogLevel){}[0]
+    final var logging // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.logging|{}logging[0]
+        final fun <get-logging>(): kotlin/Boolean // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.logging.<get-logging>|<get-logging>(){}[0]
+        final fun <set-logging>(kotlin/Boolean) // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.logging.<set-logging>|<set-logging>(kotlin.Boolean){}[0]
+}
+
+final object io.github.androidpoet.supabase.client/Supabase { // io.github.androidpoet.supabase.client/Supabase|null[0]
+    final fun create(kotlin/String, kotlin/String, io.ktor.client.engine/HttpClientEngineFactory<*> = ..., kotlin/Function1<io.github.androidpoet.supabase.client/SupabaseConfigBuilder, kotlin/Unit> = ...): io.github.androidpoet.supabase.client/SupabaseClient // io.github.androidpoet.supabase.client/Supabase.create|create(kotlin.String;kotlin.String;io.ktor.client.engine.HttpClientEngineFactory<*>;kotlin.Function1<io.github.androidpoet.supabase.client.SupabaseConfigBuilder,kotlin.Unit>){}[0]
+}
+
+final val io.github.androidpoet.supabase.client/defaultJson // io.github.androidpoet.supabase.client/defaultJson|{}defaultJson[0]
+    final fun <get-defaultJson>(): kotlinx.serialization.json/Json // io.github.androidpoet.supabase.client/defaultJson.<get-defaultJson>|<get-defaultJson>(){}[0]
+
+final fun (io.github.androidpoet.supabase.client.auth/AuthState).io.github.androidpoet.supabase.client.auth/apiKeyHeader(): kotlin/String? // io.github.androidpoet.supabase.client.auth/apiKeyHeader|apiKeyHeader@io.github.androidpoet.supabase.client.auth.AuthState(){}[0]
+final fun (io.github.androidpoet.supabase.client.auth/AuthState).io.github.androidpoet.supabase.client.auth/authorizationHeader(): kotlin/String? // io.github.androidpoet.supabase.client.auth/authorizationHeader|authorizationHeader@io.github.androidpoet.supabase.client.auth.AuthState(){}[0]
+final inline fun <#A: reified kotlin/Any?> (io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/String>).io.github.androidpoet.supabase.client/deserialize(): io.github.androidpoet.supabase.core.result/SupabaseResult<#A> // io.github.androidpoet.supabase.client/deserialize|deserialize@io.github.androidpoet.supabase.core.result.SupabaseResult<kotlin.String>(){0§<kotlin.Any?>}[0]
+final suspend inline fun <#A: reified kotlin/Any?> (io.github.androidpoet.supabase.client/SupabaseClient).io.github.androidpoet.supabase.client/getTyped(kotlin/String, kotlin.collections/List<kotlin/Pair<kotlin/String, kotlin/String>> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<#A> // io.github.androidpoet.supabase.client/getTyped|getTyped@io.github.androidpoet.supabase.client.SupabaseClient(kotlin.String;kotlin.collections.List<kotlin.Pair<kotlin.String,kotlin.String>>;kotlin.collections.Map<kotlin.String,kotlin.String>){0§<kotlin.Any?>}[0]
+final suspend inline fun <#A: reified kotlin/Any?> (io.github.androidpoet.supabase.client/SupabaseClient).io.github.androidpoet.supabase.client/patchTyped(kotlin/String, kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<#A> // io.github.androidpoet.supabase.client/patchTyped|patchTyped@io.github.androidpoet.supabase.client.SupabaseClient(kotlin.String;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>){0§<kotlin.Any?>}[0]
+final suspend inline fun <#A: reified kotlin/Any?> (io.github.androidpoet.supabase.client/SupabaseClient).io.github.androidpoet.supabase.client/postTyped(kotlin/String, kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<#A> // io.github.androidpoet.supabase.client/postTyped|postTyped@io.github.androidpoet.supabase.client.SupabaseClient(kotlin.String;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>){0§<kotlin.Any?>}[0]

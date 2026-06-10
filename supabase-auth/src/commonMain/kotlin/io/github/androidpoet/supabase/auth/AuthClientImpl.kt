@@ -50,6 +50,7 @@ import io.github.androidpoet.supabase.client.deserialize
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.core.result.map
+import io.github.androidpoet.supabase.core.util.urlEncode
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
@@ -730,20 +731,6 @@ internal class AuthClientImpl(
                 }
             }
         }
-    private fun urlEncode(value: String): String = buildString {
-        for (char in value) {
-            when {
-                char.isLetterOrDigit() || char in "-._~" -> append(char)
-                else -> {
-                    for (byte in char.toString().encodeToByteArray()) {
-                        append('%')
-                        append(HEX_CHARS[(byte.toInt() shr 4) and 0x0F])
-                        append(HEX_CHARS[byte.toInt() and 0x0F])
-                    }
-                }
-            }
-        }
-    }
     private fun base64UrlEncode(bytes: ByteArray): String {
         val table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
         return buildString {
@@ -771,6 +758,5 @@ internal class AuthClientImpl(
     private companion object {
         const val PKCE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
         const val PKCE_VERIFIER_LENGTH = 43
-        val HEX_CHARS = "0123456789ABCDEF".toCharArray()
     }
 }

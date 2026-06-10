@@ -26,8 +26,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.atomicfu.locks.SynchronizedObject
+import kotlinx.atomicfu.locks.synchronized
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -80,6 +84,12 @@ internal class RealtimeClientImpl(
     @Volatile
     private var intentionalDisconnect = false
 
+    // Set when a heartbeat is sent, cleared when its reply arrives. If it is still
+    // set at the next heartbeat tick, the server went silent: tear the socket down
+    // so the normal reconnect path runs (otherwise the connection is a zombie).
+    @Volatile
+    private var pendingHeartbeatRef: String? = null
+
     // Outbound messages issued while the socket is down (e.g. a broadcast sent
     // mid-reconnect) would otherwise be silently dropped by `session?.send`.
     // Buffer non-heartbeat application messages and replay them once rejoined.
@@ -94,20 +104,26 @@ internal class RealtimeClientImpl(
     override val isConnected: Boolean get() = _connectionState.value is ConnectionState.Connected
     override val isConnecting: Boolean get() = _connectionState.value is ConnectionState.Connecting
     override val isDisconnecting: Boolean get() = _connectionState.value is ConnectionState.Disconnecting
+    // activeSubscriptions is read from non-suspend getters on arbitrary threads
+    // and mutated from coroutines; guard every access with this lock. Callers must
+    // snapshot under the lock and release it before invoking suspend functions.
+    private val subscriptionsLock = SynchronizedObject()
     private val activeSubscriptions = mutableMapOf<String, ChannelSubscriptionImpl>()
     internal fun nextRef(): String = refCounter.incrementAndGet().toString()
     override fun channel(name: String): RealtimeChannelBuilder =
         RealtimeChannelBuilder(channelName = name, client = this)
     override fun getSubscription(name: String): RealtimeSubscription? =
-        activeSubscriptions["realtime:$name"]
+        synchronized(subscriptionsLock) { activeSubscriptions["realtime:$name"] }
     override fun getSubscriptionByTopic(topic: String): RealtimeSubscription? =
-        activeSubscriptions[topic]
+        synchronized(subscriptionsLock) { activeSubscriptions[topic] }
     override fun getSubscriptions(): Set<RealtimeSubscription> =
-        activeSubscriptions.values.toSet()
+        synchronized(subscriptionsLock) { activeSubscriptions.values.toSet() }
     override fun activeChannels(): Set<String> =
-        activeSubscriptions.values.mapTo(mutableSetOf()) { it.channel }
+        synchronized(subscriptionsLock) { activeSubscriptions.values.mapTo(mutableSetOf()) { it.channel } }
     override fun activeChannelDetails(): Set<RealtimeChannel> =
-        activeSubscriptions.values.mapTo(mutableSetOf()) { RealtimeChannel(name = it.channel, topic = it.topic) }
+        synchronized(subscriptionsLock) {
+            activeSubscriptions.values.mapTo(mutableSetOf()) { RealtimeChannel(name = it.channel, topic = it.topic) }
+        }
     override suspend fun removeSubscription(subscription: RealtimeSubscription) {
         subscription.unsubscribe()
     }
@@ -121,25 +137,27 @@ internal class RealtimeClientImpl(
         removeSubscription(subscription)
     }
     override suspend fun removeSubscriptionByTopic(topic: String) {
-        activeSubscriptions[topic]?.unsubscribe()
+        synchronized(subscriptionsLock) { activeSubscriptions[topic] }?.unsubscribe()
     }
     override suspend fun removeChannelsByTopic(topics: List<String>) {
         topics.forEach { topic ->
-            activeSubscriptions[topic]?.unsubscribe()
+            synchronized(subscriptionsLock) { activeSubscriptions[topic] }?.unsubscribe()
         }
     }
     override suspend fun removeChannel(name: String) {
         val topic = "realtime:$name"
-        activeSubscriptions[topic]?.unsubscribe()
+        synchronized(subscriptionsLock) { activeSubscriptions[topic] }?.unsubscribe()
     }
     override suspend fun removeAllChannels() {
-        activeSubscriptions.values.toList().forEach { it.unsubscribe() }
+        synchronized(subscriptionsLock) { activeSubscriptions.values.toList() }
+            .forEach { it.unsubscribe() }
     }
     override suspend fun setAuth(token: String?) {
         authTokenOverride = token
-        if (activeSubscriptions.isEmpty()) return
+        val subscriptions = synchronized(subscriptionsLock) { activeSubscriptions.values.toList() }
+        if (subscriptions.isEmpty()) return
         val accessToken = currentAccessToken()
-        activeSubscriptions.values.forEach { subscription ->
+        subscriptions.forEach { subscription ->
             sendMessage(
                 RealtimeMessage(
                     topic = subscription.topic,
@@ -181,8 +199,12 @@ internal class RealtimeClientImpl(
         reconnectJob?.cancel()
         reconnectJob = null
         reconnectAttempt = 0
-        activeSubscriptions.values.toList().forEach { it.unsubscribe() }
-        activeSubscriptions.clear()
+        val toUnsubscribe = synchronized(subscriptionsLock) {
+            val snapshot = activeSubscriptions.values.toList()
+            activeSubscriptions.clear()
+            snapshot
+        }
+        toUnsubscribe.forEach { it.unsubscribe() }
         heartbeatJob?.cancel()
         heartbeatJob = null
         session?.close()
@@ -213,12 +235,12 @@ internal class RealtimeClientImpl(
             replaySinceMs = builder.replaySinceMs,
             replayLimit = builder.replayLimit,
         )
-        activeSubscriptions[topic] = subscription
+        synchronized(subscriptionsLock) { activeSubscriptions[topic] = subscription }
         sendJoinMessage(subscription)
         return subscription
     }
     internal suspend fun leaveChannel(topic: String) {
-        val subscription = activeSubscriptions.remove(topic)
+        val subscription = synchronized(subscriptionsLock) { activeSubscriptions.remove(topic) }
         sendMessage(
             RealtimeMessage(
                 topic = topic,
@@ -266,6 +288,7 @@ internal class RealtimeClientImpl(
         val url = "$wsScheme://$host/realtime/v1/websocket?apikey=${supabaseClient.apiKey}&vsn=1.0.0"
         val newScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         scope = newScope
+        pendingHeartbeatRef = null
         // Bound the handshake so a stalled connect surfaces as a timeout (and
         // triggers reconnect/Failed) instead of hanging on the platform default.
         val ws = withTimeout(config.connectionTimeoutMs) { httpClient.webSocketSession(url) }
@@ -292,17 +315,27 @@ internal class RealtimeClientImpl(
         heartbeatJob = newScope.launch {
             while (isActive) {
                 delay(config.heartbeatIntervalMs)
+                if (pendingHeartbeatRef != null) {
+                    // Previous heartbeat was never acknowledged → server is gone.
+                    // Closing the socket wakes the incoming loop, whose finally
+                    // block runs the reconnect path.
+                    pendingHeartbeatRef = null
+                    session?.close()
+                    break
+                }
                 sendHeartbeatMessage()
             }
         }
     }
     private suspend fun sendHeartbeatMessage() {
+        val ref = nextRef()
+        pendingHeartbeatRef = ref
         sendMessage(
             RealtimeMessage(
                 topic = "phoenix",
                 event = "heartbeat",
                 payload = buildJsonObject {},
-                ref = nextRef(),
+                ref = ref,
             ),
         )
     }
@@ -325,6 +358,7 @@ internal class RealtimeClientImpl(
         )
         _debugEvents.tryEmit(RealtimeDebugEvent.InboundMessage(message))
         if (message.isHeartbeatReply()) {
+            pendingHeartbeatRef = null
             _debugEvents.tryEmit(RealtimeDebugEvent.HeartbeatReceived(message.ref))
         }
     }
@@ -337,6 +371,10 @@ internal class RealtimeClientImpl(
         scheduleReconnect()
     }
     private fun scheduleReconnect() {
+        // Cancel any in-flight reconnect so overlapping triggers (e.g. a connect
+        // failure racing an unexpected disconnect) don't spawn parallel loops.
+        reconnectJob?.cancel()
+        reconnectJob = null
         val maxAttempts = config.maxReconnectAttempts
         if (maxAttempts > 0 && reconnectAttempt >= maxAttempts) {
             _connectionState.value = ConnectionState.Failed(
@@ -374,7 +412,8 @@ internal class RealtimeClientImpl(
         }
     }
     private suspend fun rejoinActiveChannels() {
-        for ((_, subscription) in activeSubscriptions) {
+        val subscriptions = synchronized(subscriptionsLock) { activeSubscriptions.values.toList() }
+        for (subscription in subscriptions) {
             sendJoinMessage(subscription)
         }
     }
@@ -431,6 +470,14 @@ internal class RealtimeClientImpl(
                 ref = joinRef,
             ),
         )
+        // phx_join is fire-and-forget; without a watchdog a missing phx_reply
+        // leaves the subscription stuck in SUBSCRIBING forever. Fail it on timeout.
+        scope?.launch {
+            val resolved = withTimeoutOrNull(config.connectionTimeoutMs) {
+                subscription.status.first { it != RealtimeSubscription.Status.SUBSCRIBING }
+            }
+            if (resolved == null) subscription.markJoinTimedOut()
+        }
     }
     private fun calculateBackoffDelay(attempt: Int): Long {
         val delay = config.initialReconnectDelayMs *
@@ -438,7 +485,7 @@ internal class RealtimeClientImpl(
         return min(delay.toLong(), config.maxReconnectDelayMs)
     }
     private suspend fun dispatchToSubscription(message: RealtimeMessage) {
-        val subscription = activeSubscriptions[message.topic] ?: return
+        val subscription = synchronized(subscriptionsLock) { activeSubscriptions[message.topic] } ?: return
         try {
             subscription.handleMessage(message)
         } catch (e: CancellationException) {
@@ -475,6 +522,11 @@ internal class ChannelSubscriptionImpl(
     internal val hasPresenceTracking: Boolean = presenceCallback != null
     override val status: StateFlow<RealtimeSubscription.Status> = _status.asStateFlow()
     override fun asFlow(): Flow<RealtimeEvent> = eventFlow
+    internal fun markJoinTimedOut() {
+        if (_status.value == RealtimeSubscription.Status.SUBSCRIBING) {
+            _status.value = RealtimeSubscription.Status.ERROR
+        }
+    }
     override suspend fun unsubscribe() {
         _status.value = RealtimeSubscription.Status.UNSUBSCRIBING
         client.leaveChannel(topic)
