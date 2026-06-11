@@ -1,0 +1,46 @@
+build:
+  maxIssues: 0
+  excludeCorrectable: false
+
+config:
+  validation: true
+  warningsAsErrors: false
+
+complexity:
+  LongParameterList:
+    # Multiplatform client/builder APIs intentionally expose many named, defaulted
+    # parameters rather than mandatory option objects.
+    functionThreshold: 12
+    constructorThreshold: 14
+    ignoreDefaultParameters: true
+  LongMethod:
+    threshold: 80
+  TooManyFunctions:
+    active: false
+  CyclomaticComplexMethod:
+    threshold: 20
+
+style:
+  MagicNumber:
+    active: false
+  ReturnCount:
+    max: 5
+  MaxLineLength:
+    maxLineLength: 140
+  UnusedPrivateMember:
+    active: true
+  ForbiddenComment:
+    active: false
+
+naming:
+  FunctionNaming:
+    # PostgREST DSL uses backticked operator names like `in`.
+    ignoreAnnotated: ['FilterDsl']
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: false
+  SwallowedException:
+    active: false
+  ThrowingExceptionsWithoutMessageOrCause:
+    active: false

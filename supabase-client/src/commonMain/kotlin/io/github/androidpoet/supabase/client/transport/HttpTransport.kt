@@ -23,6 +23,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
+import kotlin.concurrent.Volatile
 private const val CLIENT_VERSION = "supabase-kmp/0.1.0"
 private const val INTERNAL_RETRY_HEADER = "X-Supabase-Kmp-Retry"
 private const val RETRY_COUNT_HEADER = "X-Retry-Count"
@@ -33,6 +34,10 @@ internal class HttpTransport(
     private val projectUrl: String,
     private val apiKey: String,
 ) {
+    // Written by the session layer on a different coroutine/thread than the
+    // request builders that read it; @Volatile guarantees cross-thread visibility
+    // (a single reference write/read is already atomic on every target).
+    @Volatile
     private var accessToken: String? = null
     internal val accessTokenOrNull: String? get() = accessToken
     private val errorJson = Json { ignoreUnknownKeys = true }
@@ -49,6 +54,13 @@ internal class HttpTransport(
         if (config.logging) {
             install(Logging) {
                 level = config.logLevel
+                // Never let credentials reach the log sink. This covers the anon/service
+                // apikey header and every Bearer token (including the auth-admin
+                // service-role key, which flows through this same client).
+                sanitizeHeader { name ->
+                    name.equals("Authorization", ignoreCase = true) ||
+                        name.equals("apikey", ignoreCase = true)
+                }
             }
         }
         defaultRequest {
@@ -236,7 +248,13 @@ internal class HttpTransport(
     }
     private fun retryDelayMillis(attempt: Int): Long =
         1_000L shl attempt
-    private fun Int.isRetryableStatus(): Boolean = this == 503 || this == 520
+    private fun Int.isRetryableStatus(): Boolean =
+        this == 429 || // Too Many Requests — Retry-After is honored above
+            this == 500 ||
+            this == 502 ||
+            this == 503 ||
+            this == 504 ||
+            this == 520
     private fun parseError(body: String, statusCode: Int): SupabaseError =
         try {
             errorJson.decodeFromString<SupabaseError>(body)

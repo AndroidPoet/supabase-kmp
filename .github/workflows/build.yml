@@ -1,12 +1,20 @@
 name: Build
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
 
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
+  # Quality gates + JVM tests. macOS runners ship the Android SDK, so apiCheck
+  # (which compiles the JVM, Android and native klib ABIs) runs here too.
+  quality:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,8 +26,51 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Compile
-        run: ./gradlew compileKotlinJvm
+      - name: Static analysis (detekt)
+        run: ./gradlew detekt
 
-      - name: Test
-        run: ./gradlew jvmTest
+      - name: Binary compatibility (apiCheck)
+        run: ./gradlew apiCheck
+
+      - name: JVM tests + coverage
+        run: ./gradlew jvmTest koverXmlReport
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kover-coverage
+          path: build/reports/kover/report.xml
+
+  # Compile every declared target family so a platform-specific break is caught.
+  multiplatform:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            name: apple
+            tasks: >-
+              compileKotlinIosArm64 compileKotlinIosSimulatorArm64
+              compileKotlinMacosArm64 compileKotlinTvosArm64
+              compileKotlinWatchosArm64
+          - os: ubuntu-latest
+            name: linux-wasm-jvm
+            tasks: compileKotlinJvm compileKotlinLinuxX64 compileKotlinWasmJs
+          - os: windows-latest
+            name: windows
+            tasks: compileKotlinMingwX64
+    name: compile (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Compile ${{ matrix.name }} targets
+        run: ./gradlew ${{ matrix.tasks }}

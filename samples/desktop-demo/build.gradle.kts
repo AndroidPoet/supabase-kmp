@@ -20,5 +20,5 @@ dependencies {
     implementation(project(":supabase-functions"))
     implementation(project(":supabase-core"))
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
+    implementation(libs.kotlinx.coroutines.core)
 }

@@ -1,0 +1,572 @@
+public final class io/github/androidpoet/supabase/core/models/ErrorResponse {
+	public static final field Companion Lio/github/androidpoet/supabase/core/models/ErrorResponse$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lio/github/androidpoet/supabase/core/models/ErrorResponse;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/core/models/ErrorResponse;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/core/models/ErrorResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCode ()Ljava/lang/String;
+	public final fun getDetails ()Ljava/lang/String;
+	public final fun getHint ()Ljava/lang/String;
+	public final fun getMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public synthetic class io/github/androidpoet/supabase/core/models/ErrorResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lio/github/androidpoet/supabase/core/models/ErrorResponse$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/core/models/ErrorResponse;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/core/models/ErrorResponse;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class io/github/androidpoet/supabase/core/models/ErrorResponse$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class io/github/androidpoet/supabase/core/models/FilterBuilder {
+	public fun <init> ()V
+	public final fun and (Lkotlin/jvm/functions/Function1;)V
+	public final fun build ()Ljava/util/List;
+	public final fun containedBy (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun contains (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun eq (Ljava/lang/String;Ljava/lang/Number;)V
+	public final fun eq (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun filter (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun gt (Ljava/lang/String;Ljava/lang/Number;)V
+	public final fun gt (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun gte (Ljava/lang/String;Ljava/lang/Number;)V
+	public final fun gte (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun ilike (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun ilikeAllOf (Ljava/lang/String;Ljava/util/List;)V
+	public final fun ilikeAnyOf (Ljava/lang/String;Ljava/util/List;)V
+	public final fun in (Ljava/lang/String;Ljava/util/List;)V
+	public final fun is (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun like (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun likeAllOf (Ljava/lang/String;Ljava/util/List;)V
+	public final fun likeAnyOf (Ljava/lang/String;Ljava/util/List;)V
+	public final fun limit (ILjava/lang/String;)V
+	public static synthetic fun limit$default (Lio/github/androidpoet/supabase/core/models/FilterBuilder;ILjava/lang/String;ILjava/lang/Object;)V
+	public final fun lt (Ljava/lang/String;Ljava/lang/Number;)V
+	public final fun lt (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun lte (Ljava/lang/String;Ljava/lang/Number;)V
+	public final fun lte (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun match (Ljava/util/Map;)V
+	public final fun neq (Ljava/lang/String;Ljava/lang/Number;)V
+	public final fun neq (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun not (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun not (Lkotlin/jvm/functions/Function1;)V
+	public final fun notExtendLeft (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun notExtendRight (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun or (Lkotlin/jvm/functions/Function1;)V
+	public final fun order (Ljava/lang/String;ZLjava/lang/Boolean;Ljava/lang/String;)V
+	public static synthetic fun order$default (Lio/github/androidpoet/supabase/core/models/FilterBuilder;Ljava/lang/String;ZLjava/lang/Boolean;Ljava/lang/String;ILjava/lang/Object;)V
+	public final fun overlaps (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun range (IILjava/lang/String;)V
+	public static synthetic fun range$default (Lio/github/androidpoet/supabase/core/models/FilterBuilder;IILjava/lang/String;ILjava/lang/Object;)V
+	public final fun rangeAdj (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun rangeGt (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun rangeGte (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun rangeLt (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun rangeLte (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun strictlyLeft (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun strictlyRight (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun textSearch (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/core/models/TextSearchType;)V
+	public static synthetic fun textSearch$default (Lio/github/androidpoet/supabase/core/models/FilterBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/core/models/TextSearchType;ILjava/lang/Object;)V
+}
+
+public abstract interface annotation class io/github/androidpoet/supabase/core/models/FilterDsl : java/lang/annotation/Annotation {
+}
+
+public final class io/github/androidpoet/supabase/core/models/FiltersKt {
+	public static final fun filters (Lkotlin/jvm/functions/Function1;)Ljava/util/List;
+}
+
+public final class io/github/androidpoet/supabase/core/models/PostgrestResponse {
+	public static final field Companion Lio/github/androidpoet/supabase/core/models/PostgrestResponse$Companion;
+	public fun <init> (Ljava/lang/Object;Ljava/lang/Long;)V
+	public synthetic fun <init> (Ljava/lang/Object;Ljava/lang/Long;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Object;
+	public final fun component2 ()Ljava/lang/Long;
+	public final fun copy (Ljava/lang/Object;Ljava/lang/Long;)Lio/github/androidpoet/supabase/core/models/PostgrestResponse;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/core/models/PostgrestResponse;Ljava/lang/Object;Ljava/lang/Long;ILjava/lang/Object;)Lio/github/androidpoet/supabase/core/models/PostgrestResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCount ()Ljava/lang/Long;
+	public final fun getData ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public synthetic class io/github/androidpoet/supabase/core/models/PostgrestResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public fun <init> (Lkotlinx/serialization/KSerializer;)V
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/core/models/PostgrestResponse;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/core/models/PostgrestResponse;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class io/github/androidpoet/supabase/core/models/PostgrestResponse$Companion {
+	public final fun serializer (Lkotlinx/serialization/KSerializer;)Lkotlinx/serialization/KSerializer;
+}
+
+public final class io/github/androidpoet/supabase/core/models/TextSearchType : java/lang/Enum {
+	public static final field Phrase Lio/github/androidpoet/supabase/core/models/TextSearchType;
+	public static final field Plain Lio/github/androidpoet/supabase/core/models/TextSearchType;
+	public static final field Websearch Lio/github/androidpoet/supabase/core/models/TextSearchType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/core/models/TextSearchType;
+	public static fun values ()[Lio/github/androidpoet/supabase/core/models/TextSearchType;
+}
+
+public final class io/github/androidpoet/supabase/core/result/SupabaseError {
+	public static final field Companion Lio/github/androidpoet/supabase/core/result/SupabaseError$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;)Lio/github/androidpoet/supabase/core/result/SupabaseError;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/core/result/SupabaseError;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/core/result/SupabaseError;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCode ()Ljava/lang/String;
+	public final fun getDetails ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getHint ()Ljava/lang/String;
+	public final fun getMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public synthetic class io/github/androidpoet/supabase/core/result/SupabaseError$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lio/github/androidpoet/supabase/core/result/SupabaseError$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/core/result/SupabaseError;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/core/result/SupabaseError;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class io/github/androidpoet/supabase/core/result/SupabaseError$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class io/github/androidpoet/supabase/core/result/SupabaseErrorCategory : java/lang/Enum {
+	public static final field Conflict Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
+	public static final field Internal Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
+	public static final field NotFound Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
+	public static final field RateLimited Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
+	public static final field Unauthorized Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
+	public static final field Unknown Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
+	public static final field Validation Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
+	public static fun values ()[Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
+}
+
+public final class io/github/androidpoet/supabase/core/result/SupabaseErrorCodes {
+	public static final field INSTANCE Lio/github/androidpoet/supabase/core/result/SupabaseErrorCodes;
+}
+
+public final class io/github/androidpoet/supabase/core/result/SupabaseErrorCodes$Auth {
+	public static final field BAD_CODE_VERIFIER Ljava/lang/String;
+	public static final field EMAIL_NOT_CONFIRMED Ljava/lang/String;
+	public static final field IDENTITY_ALREADY_EXISTS Ljava/lang/String;
+	public static final field INSTANCE Lio/github/androidpoet/supabase/core/result/SupabaseErrorCodes$Auth;
+	public static final field INVALID_CREDENTIALS Ljava/lang/String;
+	public static final field INVALID_GRANT Ljava/lang/String;
+	public static final field INVITE_NOT_FOUND Ljava/lang/String;
+	public static final field MFA_CHALLENGE_EXPIRED Ljava/lang/String;
+	public static final field MFA_FACTOR_NOT_FOUND Ljava/lang/String;
+	public static final field MFA_IP_ADDRESS_MISMATCH Ljava/lang/String;
+	public static final field MFA_VERIFICATION_FAILED Ljava/lang/String;
+	public static final field OTP_EXPIRED Ljava/lang/String;
+	public static final field OVER_CONFIRMATION_RATE_LIMIT Ljava/lang/String;
+	public static final field PHONE_NOT_CONFIRMED Ljava/lang/String;
+	public static final field PROVIDER_DISABLED Ljava/lang/String;
+	public static final field SIGNUP_DISABLED Ljava/lang/String;
+	public static final field TOO_MANY_REQUESTS Ljava/lang/String;
+	public static final field USER_ALREADY_EXISTS Ljava/lang/String;
+	public static final field USER_NOT_FOUND Ljava/lang/String;
+	public static final field WEAK_PASSWORD Ljava/lang/String;
+}
+
+public final class io/github/androidpoet/supabase/core/result/SupabaseErrorCodes$Database {
+	public static final field AGGREGATES_DISABLED Ljava/lang/String;
+	public static final field AMBIGUOUS_EMBEDDING Ljava/lang/String;
+	public static final field ANONYMOUS_ROLE_DISABLED Ljava/lang/String;
+	public static final field COLUMN_NOT_FOUND Ljava/lang/String;
+	public static final field CONNECTION_ERROR Ljava/lang/String;
+	public static final field CONNECTION_POOL_TIMEOUT Ljava/lang/String;
+	public static final field FEATURE_NOT_IMPLEMENTED Ljava/lang/String;
+	public static final field FILTER_EMBEDDED_NOT_SELECTED Ljava/lang/String;
+	public static final field FOREIGN_KEY_VIOLATION Ljava/lang/String;
+	public static final field FUNCTION_NOT_FOUND Ljava/lang/String;
+	public static final field INSTANCE Lio/github/androidpoet/supabase/core/result/SupabaseErrorCodes$Database;
+	public static final field INSUFFICIENT_PRIVILEGE Ljava/lang/String;
+	public static final field INTERNAL_CONNECTION_ERROR Ljava/lang/String;
+	public static final field INTERNAL_DB_LIBRARY_ERROR Ljava/lang/String;
+	public static final field INVALID_CONTENT_TYPE Ljava/lang/String;
+	public static final field INVALID_EMBEDDED_FILTER Ljava/lang/String;
+	public static final field INVALID_HTTP_VERB Ljava/lang/String;
+	public static final field INVALID_ORDER_BY Ljava/lang/String;
+	public static final field INVALID_PATH Ljava/lang/String;
+	public static final field INVALID_PREFERENCES Ljava/lang/String;
+	public static final field INVALID_PUT_UPSERT Ljava/lang/String;
+	public static final field INVALID_RANGE Ljava/lang/String;
+	public static final field INVALID_REQUEST_BODY Ljava/lang/String;
+	public static final field INVALID_RESPONSE_HEADERS Ljava/lang/String;
+	public static final field INVALID_SCHEMA Ljava/lang/String;
+	public static final field INVALID_SPREAD_OPERATOR Ljava/lang/String;
+	public static final field INVALID_STATUS_CODE Ljava/lang/String;
+	public static final field JSON_PARSE_ERROR Ljava/lang/String;
+	public static final field JWT_CLAIMS_DECODING_FAILED Ljava/lang/String;
+	public static final field JWT_INVALID Ljava/lang/String;
+	public static final field JWT_SECRET_MISSING Ljava/lang/String;
+	public static final field LIMIT_WITHOUT_ORDERING Ljava/lang/String;
+	public static final field MAX_AFFECTED_VIOLATION Ljava/lang/String;
+	public static final field MAX_AFFECTED_VIOLATION_LIMIT Ljava/lang/String;
+	public static final field MAX_AFFECTED_VIOLATION_RPC Ljava/lang/String;
+	public static final field OPENAPI_DISABLED Ljava/lang/String;
+	public static final field OVERLOADED_FUNCTION Ljava/lang/String;
+	public static final field QUERY_PARSING_ERROR Ljava/lang/String;
+	public static final field SCALAR_RESULT_VIOLATION Ljava/lang/String;
+	public static final field SCHEMA_CACHE_CONNECTION_ERROR Ljava/lang/String;
+	public static final field SINGULAR_RESPONSE_VIOLATION Ljava/lang/String;
+	public static final field STALE_RELATIONSHIP Ljava/lang/String;
+	public static final field STATEMENT_TIMEOUT Ljava/lang/String;
+	public static final field TABLE_NOT_FOUND Ljava/lang/String;
+	public static final field UNDEFINED_TABLE Ljava/lang/String;
+	public static final field UNEXPECTED_PARAMETER Ljava/lang/String;
+	public static final field UNIQUENESS_VIOLATION Ljava/lang/String;
+	public static final field UNSUPPORTED_HTTP_VERB Ljava/lang/String;
+	public static final field UPSERT_PUT_LIMIT_OFFSET Ljava/lang/String;
+	public static final field UPSERT_PUT_PK_MISMATCH Ljava/lang/String;
+}
+
+public final class io/github/androidpoet/supabase/core/result/SupabaseErrorCodes$Functions {
+	public static final field BOOT_ERROR Ljava/lang/String;
+	public static final field DEPLOYMENT_FAILED Ljava/lang/String;
+	public static final field FUNCTION_NOT_RETURNING_RESPONSE Ljava/lang/String;
+	public static final field INSTANCE Lio/github/androidpoet/supabase/core/result/SupabaseErrorCodes$Functions;
+	public static final field UNSUPPORTED_NODE_VERSION Ljava/lang/String;
+	public static final field WORKER_ERROR Ljava/lang/String;
+	public static final field WORKER_LIMIT Ljava/lang/String;
+}
+
+public final class io/github/androidpoet/supabase/core/result/SupabaseErrorCodes$Management {
+	public static final field FORBIDDEN Ljava/lang/String;
+	public static final field INSTANCE Lio/github/androidpoet/supabase/core/result/SupabaseErrorCodes$Management;
+	public static final field INVALID_PROJECT_REF Ljava/lang/String;
+	public static final field ORGANIZATION_NOT_FOUND Ljava/lang/String;
+	public static final field PROJECT_NOT_FOUND Ljava/lang/String;
+	public static final field RATE_LIMIT_EXCEEDED Ljava/lang/String;
+	public static final field UNAUTHORIZED Ljava/lang/String;
+}
+
+public final class io/github/androidpoet/supabase/core/result/SupabaseErrorCodes$Realtime {
+	public static final field AUTH_EXPIRED Ljava/lang/String;
+	public static final field CHANNEL_RATE_LIMIT_REACHED Ljava/lang/String;
+	public static final field CLIENT_JOIN_RATE_LIMIT_REACHED Ljava/lang/String;
+	public static final field CONNECTION_RATE_LIMIT_REACHED Ljava/lang/String;
+	public static final field DATABASE_CONNECTION_ISSUE Ljava/lang/String;
+	public static final field ERROR_AUTHORIZING_WEBSOCKET Ljava/lang/String;
+	public static final field INSTANCE Lio/github/androidpoet/supabase/core/result/SupabaseErrorCodes$Realtime;
+	public static final field INVALID_TOPIC Ljava/lang/String;
+	public static final field PAYLOAD_TOO_LARGE Ljava/lang/String;
+}
+
+public final class io/github/androidpoet/supabase/core/result/SupabaseErrorCodes$Storage {
+	public static final field ACCESS_DENIED Ljava/lang/String;
+	public static final field ALREADY_EXISTS Ljava/lang/String;
+	public static final field BUCKET_ALREADY_EXISTS Ljava/lang/String;
+	public static final field CHECKSUM_MISMATCH Ljava/lang/String;
+	public static final field DATABASE_ERROR Ljava/lang/String;
+	public static final field DATABASE_TIMEOUT Ljava/lang/String;
+	public static final field DATABASE_TIMEOUT_SNAKE Ljava/lang/String;
+	public static final field ENTITY_TOO_LARGE Ljava/lang/String;
+	public static final field INSTANCE Lio/github/androidpoet/supabase/core/result/SupabaseErrorCodes$Storage;
+	public static final field INTERNAL_ERROR Ljava/lang/String;
+	public static final field INTERNAL_SERVER_ERROR Ljava/lang/String;
+	public static final field INVALID_ACCESS_KEY_ID Ljava/lang/String;
+	public static final field INVALID_BUCKET_NAME Ljava/lang/String;
+	public static final field INVALID_JWT Ljava/lang/String;
+	public static final field INVALID_KEY Ljava/lang/String;
+	public static final field INVALID_MIME_TYPE Ljava/lang/String;
+	public static final field INVALID_RANGE Ljava/lang/String;
+	public static final field INVALID_UPLOAD_ID Ljava/lang/String;
+	public static final field INVALID_UPLOAD_SIGNATURE Ljava/lang/String;
+	public static final field KEY_ALREADY_EXISTS Ljava/lang/String;
+	public static final field LOCK_TIMEOUT Ljava/lang/String;
+	public static final field MISSING_PART Ljava/lang/String;
+	public static final field NOT_FOUND Ljava/lang/String;
+	public static final field NO_SUCH_BUCKET Ljava/lang/String;
+	public static final field NO_SUCH_KEY Ljava/lang/String;
+	public static final field NO_SUCH_UPLOAD Ljava/lang/String;
+	public static final field RESOURCE_LOCKED Ljava/lang/String;
+	public static final field S3_ERROR Ljava/lang/String;
+	public static final field SIGNATURE_DOES_NOT_MATCH Ljava/lang/String;
+	public static final field TENANT_NOT_FOUND Ljava/lang/String;
+	public static final field THROTTLING Ljava/lang/String;
+	public static final field TOO_MANY_REQUESTS Ljava/lang/String;
+	public static final field UNAUTHORIZED Ljava/lang/String;
+}
+
+public final class io/github/androidpoet/supabase/core/result/SupabaseErrorKt {
+	public static final fun getCategory (Lio/github/androidpoet/supabase/core/result/SupabaseError;)Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
+	public static final fun isFileNotFound (Lio/github/androidpoet/supabase/core/result/SupabaseError;)Z
+	public static final fun isForeignKeyViolation (Lio/github/androidpoet/supabase/core/result/SupabaseError;)Z
+	public static final fun isInvalidCredentials (Lio/github/androidpoet/supabase/core/result/SupabaseError;)Z
+	public static final fun isUniquenessViolation (Lio/github/androidpoet/supabase/core/result/SupabaseError;)Z
+	public static final fun isUserAlreadyExists (Lio/github/androidpoet/supabase/core/result/SupabaseError;)Z
+	public static final fun toException (Lio/github/androidpoet/supabase/core/result/SupabaseError;)Lio/github/androidpoet/supabase/core/result/SupabaseException;
+}
+
+public final class io/github/androidpoet/supabase/core/result/SupabaseException : java/lang/Exception {
+	public fun <init> (Lio/github/androidpoet/supabase/core/result/SupabaseError;)V
+	public final fun getError ()Lio/github/androidpoet/supabase/core/result/SupabaseError;
+}
+
+public abstract interface class io/github/androidpoet/supabase/core/result/SupabaseResult {
+	public static final field Companion Lio/github/androidpoet/supabase/core/result/SupabaseResult$Companion;
+	public abstract fun errorOrNull ()Lio/github/androidpoet/supabase/core/result/SupabaseError;
+	public abstract fun getOrNull ()Ljava/lang/Object;
+	public abstract fun getOrThrow ()Ljava/lang/Object;
+	public abstract fun isFailure ()Z
+	public abstract fun isSuccess ()Z
+}
+
+public final class io/github/androidpoet/supabase/core/result/SupabaseResult$Companion {
+	public final fun catching (Lkotlin/jvm/functions/Function0;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
+	public final fun suspendCatching (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/github/androidpoet/supabase/core/result/SupabaseResult$DefaultImpls {
+	public static fun errorOrNull (Lio/github/androidpoet/supabase/core/result/SupabaseResult;)Lio/github/androidpoet/supabase/core/result/SupabaseError;
+	public static fun getOrNull (Lio/github/androidpoet/supabase/core/result/SupabaseResult;)Ljava/lang/Object;
+	public static fun getOrThrow (Lio/github/androidpoet/supabase/core/result/SupabaseResult;)Ljava/lang/Object;
+	public static fun isFailure (Lio/github/androidpoet/supabase/core/result/SupabaseResult;)Z
+	public static fun isSuccess (Lio/github/androidpoet/supabase/core/result/SupabaseResult;)Z
+}
+
+public final class io/github/androidpoet/supabase/core/result/SupabaseResult$Failure : io/github/androidpoet/supabase/core/result/SupabaseResult {
+	public fun <init> (Lio/github/androidpoet/supabase/core/result/SupabaseError;)V
+	public final fun component1 ()Lio/github/androidpoet/supabase/core/result/SupabaseError;
+	public final fun copy (Lio/github/androidpoet/supabase/core/result/SupabaseError;)Lio/github/androidpoet/supabase/core/result/SupabaseResult$Failure;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/core/result/SupabaseResult$Failure;Lio/github/androidpoet/supabase/core/result/SupabaseError;ILjava/lang/Object;)Lio/github/androidpoet/supabase/core/result/SupabaseResult$Failure;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun errorOrNull ()Lio/github/androidpoet/supabase/core/result/SupabaseError;
+	public final fun getError ()Lio/github/androidpoet/supabase/core/result/SupabaseError;
+	public synthetic fun getOrNull ()Ljava/lang/Object;
+	public fun getOrNull ()Ljava/lang/Void;
+	public synthetic fun getOrThrow ()Ljava/lang/Object;
+	public fun getOrThrow ()Ljava/lang/Void;
+	public fun hashCode ()I
+	public fun isFailure ()Z
+	public fun isSuccess ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/androidpoet/supabase/core/result/SupabaseResult$Success : io/github/androidpoet/supabase/core/result/SupabaseResult {
+	public fun <init> (Ljava/lang/Object;)V
+	public final fun component1 ()Ljava/lang/Object;
+	public final fun copy (Ljava/lang/Object;)Lio/github/androidpoet/supabase/core/result/SupabaseResult$Success;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/core/result/SupabaseResult$Success;Ljava/lang/Object;ILjava/lang/Object;)Lio/github/androidpoet/supabase/core/result/SupabaseResult$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun errorOrNull ()Lio/github/androidpoet/supabase/core/result/SupabaseError;
+	public fun getOrNull ()Ljava/lang/Object;
+	public fun getOrThrow ()Ljava/lang/Object;
+	public final fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun isFailure ()Z
+	public fun isSuccess ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/androidpoet/supabase/core/result/SupabaseResultKt {
+	public static final fun flatMap (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function1;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
+	public static final fun fold (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+	public static final fun foldSuspend (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun getOrElse (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+	public static final fun map (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function1;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
+	public static final fun mapError (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function1;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
+	public static final fun mapSuspend (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun onConflict (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function1;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
+	public static final fun onFailure (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function1;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
+	public static final fun onFailureCategory (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;Lkotlin/jvm/functions/Function1;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
+	public static final fun onFailureCategory (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Ljava/lang/Object;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
+	public static final fun onFailureCategorySuspend (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun onFailureCategorySuspend (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Ljava/lang/Object;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun onFailureSuspend (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun onNotFound (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function1;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
+	public static final fun onRateLimited (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function1;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
+	public static final fun onSuccess (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function1;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
+	public static final fun onSuccessSuspend (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun onUnauthorized (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function1;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
+	public static final fun recover (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function1;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
+	public static final fun recoverSuspend (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun toKotlinResult (Lio/github/androidpoet/supabase/core/result/SupabaseResult;)Ljava/lang/Object;
+	public static final fun toSupabaseResult (Ljava/lang/Object;Lkotlin/jvm/functions/Function1;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
+	public static synthetic fun toSupabaseResult$default (Ljava/lang/Object;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
+}
+
+public final class io/github/androidpoet/supabase/core/types/BucketId {
+	public static final field Companion Lio/github/androidpoet/supabase/core/types/BucketId$Companion;
+	public static final synthetic fun box-impl (Ljava/lang/String;)Lio/github/androidpoet/supabase/core/types/BucketId;
+	public static fun constructor-impl (Ljava/lang/String;)Ljava/lang/String;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Ljava/lang/String;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Ljava/lang/String;Ljava/lang/String;)Z
+	public final fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public static fun hashCode-impl (Ljava/lang/String;)I
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Ljava/lang/String;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Ljava/lang/String;
+}
+
+public synthetic class io/github/androidpoet/supabase/core/types/BucketId$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lio/github/androidpoet/supabase/core/types/BucketId$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize-CqYDMo0 (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/String;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize-h-AVPUU (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/String;)V
+}
+
+public final class io/github/androidpoet/supabase/core/types/BucketId$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class io/github/androidpoet/supabase/core/types/ChannelId {
+	public static final field Companion Lio/github/androidpoet/supabase/core/types/ChannelId$Companion;
+	public static final synthetic fun box-impl (Ljava/lang/String;)Lio/github/androidpoet/supabase/core/types/ChannelId;
+	public static fun constructor-impl (Ljava/lang/String;)Ljava/lang/String;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Ljava/lang/String;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Ljava/lang/String;Ljava/lang/String;)Z
+	public final fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public static fun hashCode-impl (Ljava/lang/String;)I
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Ljava/lang/String;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Ljava/lang/String;
+}
+
+public synthetic class io/github/androidpoet/supabase/core/types/ChannelId$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lio/github/androidpoet/supabase/core/types/ChannelId$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize-gnRX0vI (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/String;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize-1pB_3NQ (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/String;)V
+}
+
+public final class io/github/androidpoet/supabase/core/types/ChannelId$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class io/github/androidpoet/supabase/core/types/ProjectUrl {
+	public static final field Companion Lio/github/androidpoet/supabase/core/types/ProjectUrl$Companion;
+	public static final synthetic fun box-impl (Ljava/lang/String;)Lio/github/androidpoet/supabase/core/types/ProjectUrl;
+	public static fun constructor-impl (Ljava/lang/String;)Ljava/lang/String;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Ljava/lang/String;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Ljava/lang/String;Ljava/lang/String;)Z
+	public static final fun getAuthUrl-impl (Ljava/lang/String;)Ljava/lang/String;
+	public static final fun getFunctionsUrl-impl (Ljava/lang/String;)Ljava/lang/String;
+	public static final fun getRealtimeUrl-impl (Ljava/lang/String;)Ljava/lang/String;
+	public static final fun getRestUrl-impl (Ljava/lang/String;)Ljava/lang/String;
+	public static final fun getStorageUrl-impl (Ljava/lang/String;)Ljava/lang/String;
+	public final fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public static fun hashCode-impl (Ljava/lang/String;)I
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Ljava/lang/String;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Ljava/lang/String;
+}
+
+public synthetic class io/github/androidpoet/supabase/core/types/ProjectUrl$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lio/github/androidpoet/supabase/core/types/ProjectUrl$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize-sQLzz_Y (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/String;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize-T9SveD8 (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/String;)V
+}
+
+public final class io/github/androidpoet/supabase/core/types/ProjectUrl$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class io/github/androidpoet/supabase/core/types/SessionId {
+	public static final field Companion Lio/github/androidpoet/supabase/core/types/SessionId$Companion;
+	public static final synthetic fun box-impl (Ljava/lang/String;)Lio/github/androidpoet/supabase/core/types/SessionId;
+	public static fun constructor-impl (Ljava/lang/String;)Ljava/lang/String;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Ljava/lang/String;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Ljava/lang/String;Ljava/lang/String;)Z
+	public final fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public static fun hashCode-impl (Ljava/lang/String;)I
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Ljava/lang/String;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Ljava/lang/String;
+}
+
+public synthetic class io/github/androidpoet/supabase/core/types/SessionId$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lio/github/androidpoet/supabase/core/types/SessionId$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize-aczIC98 (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/String;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize-LqNKX84 (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/String;)V
+}
+
+public final class io/github/androidpoet/supabase/core/types/SessionId$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class io/github/androidpoet/supabase/core/types/UserId {
+	public static final field Companion Lio/github/androidpoet/supabase/core/types/UserId$Companion;
+	public static final synthetic fun box-impl (Ljava/lang/String;)Lio/github/androidpoet/supabase/core/types/UserId;
+	public static fun constructor-impl (Ljava/lang/String;)Ljava/lang/String;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Ljava/lang/String;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Ljava/lang/String;Ljava/lang/String;)Z
+	public final fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public static fun hashCode-impl (Ljava/lang/String;)I
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Ljava/lang/String;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Ljava/lang/String;
+}
+
+public synthetic class io/github/androidpoet/supabase/core/types/UserId$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lio/github/androidpoet/supabase/core/types/UserId$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize-a_8GvxQ (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/String;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize-w2-PR-8 (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/String;)V
+}
+
+public final class io/github/androidpoet/supabase/core/types/UserId$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
