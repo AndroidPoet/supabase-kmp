@@ -19,9 +19,10 @@ Kotlin Multiplatform SDK for [Supabase](https://supabase.com) — type-safe, cor
 - **Type-safe Result monad** — `SupabaseResult<T>` with `map`, `flatMap`, `recover` — no exceptions leak to callers
 - **Value class IDs** — `UserId`, `BucketId`, `SessionId`, `ChannelId` prevent mixups at compile time
 - **PostgREST filter DSL** — `eq`, `neq`, `gt`, `like`, `ilike`, `in`, `is`, `textSearch`, `contains`, and more
-- **OAuth (17 providers) + MFA** — TOTP and phone-based multi-factor auth with PKCE flow support
-- **Session management** — Auto-refresh, token persistence, `SessionState` observation via `StateFlow`
-- **Realtime WebSocket** — Phoenix protocol with auto-reconnection, exponential backoff, presence
+- **OAuth (17 providers) + MFA** — TOTP and phone-based multi-factor auth with CSPRNG-backed PKCE
+- **Session management** — Single-flight auto-refresh, pluggable persistence (`SessionStorage`), `SessionState` via `StateFlow`
+- **Realtime WebSocket** — Phoenix protocol with auto-reconnection, exponential backoff, presence, offline send buffering
+- **Secure by default** — Credential headers redacted from logs, smart retries (`429`/`5xx` + `Retry-After`)
 - **Edge Functions** — Invoke Supabase Edge Functions with typed request/response
 - **Manual composition** — Explicit factory helpers for each feature module
 - **15 platform targets** — Android, iOS, macOS, tvOS, watchOS, JVM, Linux, Windows, and WasmJs
@@ -176,6 +177,35 @@ sessionManager.sessionState.collect { state ->
     }
 }
 ```
+
+### Persisting Sessions
+
+The default `InMemorySessionStorage` keeps the session only for the process
+lifetime. To keep users signed in across restarts, back `KeyValueSessionStorage`
+with your platform's secure store — Keychain (Apple), EncryptedSharedPreferences /
+DataStore (Android), `localStorage` (Web), a file (desktop). You only implement
+three string operations; serialization is handled for you:
+
+```kotlin
+class KeychainStore : KeyValueStore {
+    override suspend fun get(key: String): String? = /* read */
+    override suspend fun set(key: String, value: String) { /* write */ }
+    override suspend fun remove(key: String) { /* delete */ }
+}
+
+val sessionManager = createSessionManager(
+    authClient = auth,
+    supabaseClient = client,
+    config = SessionConfig(storage = KeyValueSessionStorage(KeychainStore())),
+)
+
+// On launch: load the stored session and refresh it in one call.
+sessionManager.restoreSession()
+```
+
+> [!NOTE]
+> `supabase-auth-admin` uses the service-role key — use it only in trusted
+> server-side contexts, never in an anon-key client app.
 
 ### Storage — File Upload & Download
 
@@ -345,10 +375,10 @@ functions.invokeWithBody(
 ## Build
 
 ```bash
-# Compile all targets
+# Compile a single target (swap in IosArm64, LinuxX64, WasmJs, MingwX64, …)
 ./gradlew compileKotlinJvm
 
-# Run tests
+# Run JVM unit tests
 ./gradlew jvmTest
 
 # Full build (all platforms)
@@ -358,9 +388,26 @@ functions.invokeWithBody(
 ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache
 ```
 
+### Quality gates
+
+These run in CI on every PR; run them locally before pushing:
+
+```bash
+./gradlew detekt        # static analysis (config/detekt/detekt.yml)
+./gradlew apiCheck      # fails on unintended public/binary API changes
+./gradlew jvmTest koverHtmlReport   # tests + coverage report
+./gradlew dokkaHtmlMultiModule      # API reference docs from KDoc
+```
+
+If you intentionally change the public API, regenerate the dumps with
+`./gradlew apiDump` and commit them. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for
+the full workflow.
+
 ## Documentation
 
 - Release notes: [`CHANGELOG.md`](CHANGELOG.md)
+- Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md)
+- Security policy: [`SECURITY.md`](SECURITY.md)
 - GitBook-ready pages: [`docs/`](docs/)
 - GitBook config: [`.gitbook.yaml`](.gitbook.yaml)
 - Publishing guide: [`docs/guides/gitbook-publishing.md`](docs/guides/gitbook-publishing.md)
