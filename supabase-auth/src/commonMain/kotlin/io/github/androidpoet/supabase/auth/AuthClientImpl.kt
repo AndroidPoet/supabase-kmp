@@ -62,6 +62,7 @@ internal class AuthClientImpl(
         password: String,
         data: JsonObject?,
     ): SupabaseResult<Session> {
+        require(email.isNotBlank()) { "email must not be blank" }
         val body = defaultJson.encodeToString(SignUpRequest(email = email, password = password, data = data))
         return client.post("/auth/v1/signup", body = body).deserialize()
     }
@@ -70,6 +71,7 @@ internal class AuthClientImpl(
         password: String,
         data: JsonObject?,
     ): SupabaseResult<Session> {
+        require(phone.isNotBlank()) { "phone must not be blank" }
         val body = defaultJson.encodeToString(SignUpRequest(phone = phone, password = password, data = data))
         return client.post("/auth/v1/signup", body = body).deserialize()
     }

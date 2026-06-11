@@ -28,6 +28,14 @@ public interface RealtimeClient {
     public suspend fun sendHeartbeat()
     public suspend fun connect()
     public suspend fun disconnect()
+
+    /**
+     * Disconnects and releases the underlying HTTP/WebSocket engine. The client
+     * cannot be reused afterwards. Call this when you are done with the client to
+     * avoid leaking the engine's connection pool and threads. Prefer [disconnect]
+     * if you intend to [connect] again later.
+     */
+    public suspend fun close()
 }
 
 public data class RealtimeDebugState(

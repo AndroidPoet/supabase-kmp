@@ -142,7 +142,7 @@ internal class StorageClientImpl(
         val headers = buildMap {
             if (upsert) put("x-upsert", "true")
         }
-        val endpoint = withCacheControl("/storage/v1/object/$bucket/$path", cacheControl)
+        val endpoint = withCacheControl("/storage/v1/object/${objectRef(bucket, path)}", cacheControl)
         return client.postRaw(
             url = endpoint,
             body = data,
@@ -161,7 +161,7 @@ internal class StorageClientImpl(
         val headers = buildMap {
             if (upsert) put("x-upsert", "true")
         }
-        val endpoint = withCacheControl("/storage/v1/object/$bucket/$path", cacheControl)
+        val endpoint = withCacheControl("/storage/v1/object/${objectRef(bucket, path)}", cacheControl)
         return client.putRaw(
             url = endpoint,
             body = data,
@@ -170,27 +170,27 @@ internal class StorageClientImpl(
         )
     }
     override suspend fun download(bucket: String, path: String): SupabaseResult<String> =
-        client.get("/storage/v1/object/authenticated/$bucket/$path")
+        client.get("/storage/v1/object/authenticated/${objectRef(bucket, path)}")
     override suspend fun downloadPublic(bucket: String, path: String): SupabaseResult<String> =
-        client.get("/storage/v1/object/public/$bucket/$path")
+        client.get("/storage/v1/object/public/${objectRef(bucket, path)}")
     override suspend fun download(
         bucket: String,
         path: String,
         download: Boolean,
         fileName: String?,
     ): SupabaseResult<String> =
-        client.get("/storage/v1/object/authenticated/$bucket/$path${buildDownloadQuery(download, fileName)}")
+        client.get("/storage/v1/object/authenticated/${objectRef(bucket, path)}${buildDownloadQuery(download, fileName)}")
     override suspend fun downloadPublic(
         bucket: String,
         path: String,
         download: Boolean,
         fileName: String?,
     ): SupabaseResult<String> =
-        client.get("/storage/v1/object/public/$bucket/$path${buildDownloadQuery(download, fileName)}")
+        client.get("/storage/v1/object/public/${objectRef(bucket, path)}${buildDownloadQuery(download, fileName)}")
     override suspend fun info(bucket: String, path: String): SupabaseResult<FileObject> =
-        client.get("/storage/v1/object/info/$bucket/$path").deserialize()
+        client.get("/storage/v1/object/info/${objectRef(bucket, path)}").deserialize()
     override suspend fun infoPublic(bucket: String, path: String): SupabaseResult<FileObject> =
-        client.get("/storage/v1/object/info/public/$bucket/$path").deserialize()
+        client.get("/storage/v1/object/info/public/${objectRef(bucket, path)}").deserialize()
     override suspend fun exists(bucket: String, path: String): SupabaseResult<Boolean> =
         when (val result = info(bucket, path)) {
             is SupabaseResult.Success -> SupabaseResult.Success(true)
@@ -275,7 +275,7 @@ internal class StorageClientImpl(
         bucket: String,
         path: String,
     ): SupabaseResult<Unit> =
-        client.delete("/storage/v1/object/$bucket/$path").map { }
+        client.delete("/storage/v1/object/${objectRef(bucket, path)}").map { }
     override suspend fun copy(
         bucket: String,
         fromPath: String,
@@ -322,7 +322,7 @@ internal class StorageClientImpl(
                 transform = transform?.toRequest(),
             ),
         )
-        return client.post("/storage/v1/object/sign/$bucket/$path", body = body)
+        return client.post("/storage/v1/object/sign/${objectRef(bucket, path)}", body = body)
             .deserialize<SignedUrlResponse>()
             .map { appendDownloadQuery(resolveStorageUrl(it.signedUrl), download, fileName) }
     }
@@ -352,7 +352,7 @@ internal class StorageClientImpl(
         upsert: Boolean,
     ): SupabaseResult<UploadSignedUrl> =
         client.post(
-            endpoint = "/storage/v1/object/upload/sign/$bucket/$path",
+            endpoint = "/storage/v1/object/upload/sign/${objectRef(bucket, path)}",
             headers = if (upsert) mapOf("x-upsert" to "true") else emptyMap(),
         )
             .deserialize<UploadSignedUrlResponse>()
@@ -371,11 +371,11 @@ internal class StorageClientImpl(
             if (upsert) put("x-upsert", "true")
         }
         val qs = buildList {
-            add("token=$token")
+            add("token=${encodeQueryComponent(token)}")
             cacheControl?.let { add("cacheControl=$it") }
         }.joinToString("&")
         return client.postRaw(
-            url = "/storage/v1/object/upload/sign/$bucket/$path?$qs",
+            url = "/storage/v1/object/upload/sign/${objectRef(bucket, path)}?$qs",
             body = data,
             contentType = contentType,
             headers = headers,
@@ -390,7 +390,7 @@ internal class StorageClientImpl(
     ): String {
         val downloadQuery = buildDownloadQuery(download, fileName)
         val join = if (downloadQuery.isEmpty()) "" else "&${downloadQuery.removePrefix("?")}"
-        return "${client.projectUrl}/storage/v1/object/sign/$bucket/$path?token=$token$join"
+        return "${client.projectUrl}/storage/v1/object/sign/${objectRef(bucket, path)}?token=${encodeQueryComponent(token)}$join"
     }
 
     override fun getPublicUrl(
@@ -426,7 +426,7 @@ internal class StorageClientImpl(
         fileName: String?,
         transform: ImageTransformOptions?,
     ): String {
-        val base = "${client.projectUrl}/storage/v1/object/public/$bucket/$path"
+        val base = "${client.projectUrl}/storage/v1/object/public/${objectRef(bucket, path)}"
         val queryParts = mutableListOf<String>()
         val transformQuery = transform?.toQueryString()
         if (!transformQuery.isNullOrBlank()) {
@@ -446,7 +446,7 @@ internal class StorageClientImpl(
         fileName: String?,
         transform: ImageTransformOptions?,
     ): String {
-        val base = "${client.projectUrl}/storage/v1/object/authenticated/$bucket/$path"
+        val base = "${client.projectUrl}/storage/v1/object/authenticated/${objectRef(bucket, path)}"
         val queryParts = mutableListOf<String>()
         val transformQuery = transform?.toQueryString()
         if (!transformQuery.isNullOrBlank()) {
@@ -464,7 +464,7 @@ internal class StorageClientImpl(
         path: String,
         transform: ImageTransformOptions?,
     ): String {
-        val base = "${client.projectUrl}/storage/v1/render/image/public/$bucket/$path"
+        val base = "${client.projectUrl}/storage/v1/render/image/public/${objectRef(bucket, path)}"
         val transformQuery = transform?.toQueryString().orEmpty()
         return if (transformQuery.isBlank()) base else "$base?$transformQuery"
     }
@@ -474,7 +474,7 @@ internal class StorageClientImpl(
         path: String,
         transform: ImageTransformOptions?,
     ): String {
-        val base = "${client.projectUrl}/storage/v1/render/image/authenticated/$bucket/$path"
+        val base = "${client.projectUrl}/storage/v1/render/image/authenticated/${objectRef(bucket, path)}"
         val transformQuery = transform?.toQueryString().orEmpty()
         return if (transformQuery.isBlank()) base else "$base?$transformQuery"
     }
@@ -1084,6 +1084,17 @@ private fun validateAnalyticsBucketName(value: String) {
 
 private fun List<String>.toIcebergPath(): String =
     joinToString("%1F") { encodePathSegment(it) }
+
+// Percent-encodes each `/`-separated segment of a storage object path while
+// preserving the slashes (which are real path separators in object keys). Object
+// keys and bucket ids can legally contain spaces, '#', '?', '+', etc., which
+// would otherwise corrupt the request URL.
+private fun encodeStoragePath(path: String): String =
+    path.split('/').joinToString("/") { encodePathSegment(it) }
+
+// URL-safe `bucket/object/path` reference for object-storage endpoints.
+private fun objectRef(bucket: String, path: String): String =
+    "${encodePathSegment(bucket)}/${encodeStoragePath(path)}"
 
 private fun encodePathSegment(value: String): String {
     val bytes = value.encodeToByteArray()

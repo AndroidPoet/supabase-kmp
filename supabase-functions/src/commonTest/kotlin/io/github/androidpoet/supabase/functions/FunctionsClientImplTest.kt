@@ -25,7 +25,7 @@ class FunctionsClientImplTest {
     }
 
     @Test
-    fun test_invokeWithBody_usesAbsoluteFunctionsUrl() = runTest {
+    fun test_invokeWithBody_usesRelativeFunctionsPath() = runTest {
         val fake = FakeSupabaseClient()
         val sut = FunctionsClientImpl(fake)
 
@@ -36,7 +36,9 @@ class FunctionsClientImplTest {
         )
 
         assertTrue(result is SupabaseResult.Success)
-        assertEquals("https://example.supabase.co/functions/v1/upload", fake.lastPostRawUrl)
+        // postRaw receives a relative path; SupabaseClientImpl.postRaw prepends
+        // projectUrl exactly once. Passing an absolute URL here would duplicate it.
+        assertEquals("/functions/v1/upload", fake.lastPostRawUrl)
     }
 
     @Test
