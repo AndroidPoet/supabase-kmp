@@ -1,0 +1,549 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, linuxX64, macosArm64, macosX64, mingwX64, tvosArm64, tvosSimulatorArm64, tvosX64, wasmJs, watchosArm64, watchosSimulatorArm64, watchosX64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <supabase-kmp:supabase-realtime>
+final enum class io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent : kotlin/Enum<io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent> { // io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent|null[0]
+    enum entry ALL // io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent.ALL|null[0]
+    enum entry DELETE // io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent.DELETE|null[0]
+    enum entry INSERT // io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent.INSERT|null[0]
+    enum entry UPDATE // io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent.UPDATE|null[0]
+
+    final val entries // io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent> // io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent // io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent> // io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent.values|values#static(){}[0]
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent> // io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+abstract interface io.github.androidpoet.supabase.realtime/RealtimeClient { // io.github.androidpoet.supabase.realtime/RealtimeClient|null[0]
+    abstract val connectionState // io.github.androidpoet.supabase.realtime/RealtimeClient.connectionState|{}connectionState[0]
+        abstract fun <get-connectionState>(): kotlinx.coroutines.flow/StateFlow<io.github.androidpoet.supabase.realtime/ConnectionState> // io.github.androidpoet.supabase.realtime/RealtimeClient.connectionState.<get-connectionState>|<get-connectionState>(){}[0]
+    abstract val debugEvents // io.github.androidpoet.supabase.realtime/RealtimeClient.debugEvents|{}debugEvents[0]
+        abstract fun <get-debugEvents>(): kotlinx.coroutines.flow/Flow<io.github.androidpoet.supabase.realtime/RealtimeDebugEvent> // io.github.androidpoet.supabase.realtime/RealtimeClient.debugEvents.<get-debugEvents>|<get-debugEvents>(){}[0]
+    abstract val debugState // io.github.androidpoet.supabase.realtime/RealtimeClient.debugState|{}debugState[0]
+        abstract fun <get-debugState>(): kotlinx.coroutines.flow/StateFlow<io.github.androidpoet.supabase.realtime/RealtimeDebugState> // io.github.androidpoet.supabase.realtime/RealtimeClient.debugState.<get-debugState>|<get-debugState>(){}[0]
+    abstract val isConnected // io.github.androidpoet.supabase.realtime/RealtimeClient.isConnected|{}isConnected[0]
+        abstract fun <get-isConnected>(): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeClient.isConnected.<get-isConnected>|<get-isConnected>(){}[0]
+    abstract val isConnecting // io.github.androidpoet.supabase.realtime/RealtimeClient.isConnecting|{}isConnecting[0]
+        abstract fun <get-isConnecting>(): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeClient.isConnecting.<get-isConnecting>|<get-isConnecting>(){}[0]
+    abstract val isDisconnecting // io.github.androidpoet.supabase.realtime/RealtimeClient.isDisconnecting|{}isDisconnecting[0]
+        abstract fun <get-isDisconnecting>(): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeClient.isDisconnecting.<get-isDisconnecting>|<get-isDisconnecting>(){}[0]
+
+    abstract fun activeChannelDetails(): kotlin.collections/Set<io.github.androidpoet.supabase.realtime.models/RealtimeChannel> // io.github.androidpoet.supabase.realtime/RealtimeClient.activeChannelDetails|activeChannelDetails(){}[0]
+    abstract fun activeChannels(): kotlin.collections/Set<kotlin/String> // io.github.androidpoet.supabase.realtime/RealtimeClient.activeChannels|activeChannels(){}[0]
+    abstract fun channel(kotlin/String): io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder // io.github.androidpoet.supabase.realtime/RealtimeClient.channel|channel(kotlin.String){}[0]
+    abstract fun getSubscription(kotlin/String): io.github.androidpoet.supabase.realtime/RealtimeSubscription? // io.github.androidpoet.supabase.realtime/RealtimeClient.getSubscription|getSubscription(kotlin.String){}[0]
+    abstract fun getSubscriptionByTopic(kotlin/String): io.github.androidpoet.supabase.realtime/RealtimeSubscription? // io.github.androidpoet.supabase.realtime/RealtimeClient.getSubscriptionByTopic|getSubscriptionByTopic(kotlin.String){}[0]
+    abstract fun getSubscriptions(): kotlin.collections/Set<io.github.androidpoet.supabase.realtime/RealtimeSubscription> // io.github.androidpoet.supabase.realtime/RealtimeClient.getSubscriptions|getSubscriptions(){}[0]
+    abstract suspend fun close() // io.github.androidpoet.supabase.realtime/RealtimeClient.close|close(){}[0]
+    abstract suspend fun connect() // io.github.androidpoet.supabase.realtime/RealtimeClient.connect|connect(){}[0]
+    abstract suspend fun disconnect() // io.github.androidpoet.supabase.realtime/RealtimeClient.disconnect|disconnect(){}[0]
+    abstract suspend fun removeAllChannels() // io.github.androidpoet.supabase.realtime/RealtimeClient.removeAllChannels|removeAllChannels(){}[0]
+    abstract suspend fun removeChannel(io.github.androidpoet.supabase.realtime/RealtimeSubscription) // io.github.androidpoet.supabase.realtime/RealtimeClient.removeChannel|removeChannel(io.github.androidpoet.supabase.realtime.RealtimeSubscription){}[0]
+    abstract suspend fun removeChannel(kotlin/String) // io.github.androidpoet.supabase.realtime/RealtimeClient.removeChannel|removeChannel(kotlin.String){}[0]
+    abstract suspend fun removeChannelsByTopic(kotlin.collections/List<kotlin/String>) // io.github.androidpoet.supabase.realtime/RealtimeClient.removeChannelsByTopic|removeChannelsByTopic(kotlin.collections.List<kotlin.String>){}[0]
+    abstract suspend fun removeSubscription(io.github.androidpoet.supabase.realtime/RealtimeSubscription) // io.github.androidpoet.supabase.realtime/RealtimeClient.removeSubscription|removeSubscription(io.github.androidpoet.supabase.realtime.RealtimeSubscription){}[0]
+    abstract suspend fun removeSubscriptionByTopic(kotlin/String) // io.github.androidpoet.supabase.realtime/RealtimeClient.removeSubscriptionByTopic|removeSubscriptionByTopic(kotlin.String){}[0]
+    abstract suspend fun removeSubscriptions(kotlin.collections/List<io.github.androidpoet.supabase.realtime/RealtimeSubscription>) // io.github.androidpoet.supabase.realtime/RealtimeClient.removeSubscriptions|removeSubscriptions(kotlin.collections.List<io.github.androidpoet.supabase.realtime.RealtimeSubscription>){}[0]
+    abstract suspend fun sendHeartbeat() // io.github.androidpoet.supabase.realtime/RealtimeClient.sendHeartbeat|sendHeartbeat(){}[0]
+    abstract suspend fun setAuth(kotlin/String? = ...) // io.github.androidpoet.supabase.realtime/RealtimeClient.setAuth|setAuth(kotlin.String?){}[0]
+}
+
+abstract interface io.github.androidpoet.supabase.realtime/RealtimeSubscription { // io.github.androidpoet.supabase.realtime/RealtimeSubscription|null[0]
+    abstract val channel // io.github.androidpoet.supabase.realtime/RealtimeSubscription.channel|{}channel[0]
+        abstract fun <get-channel>(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeSubscription.channel.<get-channel>|<get-channel>(){}[0]
+    abstract val status // io.github.androidpoet.supabase.realtime/RealtimeSubscription.status|{}status[0]
+        abstract fun <get-status>(): kotlinx.coroutines.flow/StateFlow<io.github.androidpoet.supabase.realtime/RealtimeSubscription.Status> // io.github.androidpoet.supabase.realtime/RealtimeSubscription.status.<get-status>|<get-status>(){}[0]
+
+    abstract fun asFlow(): kotlinx.coroutines.flow/Flow<io.github.androidpoet.supabase.realtime/RealtimeEvent> // io.github.androidpoet.supabase.realtime/RealtimeSubscription.asFlow|asFlow(){}[0]
+    abstract suspend fun broadcast(kotlin/String, kotlinx.serialization.json/JsonObject) // io.github.androidpoet.supabase.realtime/RealtimeSubscription.broadcast|broadcast(kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
+    abstract suspend fun send(io.github.androidpoet.supabase.realtime/RealtimeSubscription.SendType, kotlin/String, kotlinx.serialization.json/JsonObject? = ...) // io.github.androidpoet.supabase.realtime/RealtimeSubscription.send|send(io.github.androidpoet.supabase.realtime.RealtimeSubscription.SendType;kotlin.String;kotlinx.serialization.json.JsonObject?){}[0]
+    abstract suspend fun track(kotlinx.serialization.json/JsonObject) // io.github.androidpoet.supabase.realtime/RealtimeSubscription.track|track(kotlinx.serialization.json.JsonObject){}[0]
+    abstract suspend fun unsubscribe() // io.github.androidpoet.supabase.realtime/RealtimeSubscription.unsubscribe|unsubscribe(){}[0]
+    abstract suspend fun untrack() // io.github.androidpoet.supabase.realtime/RealtimeSubscription.untrack|untrack(){}[0]
+
+    final enum class SendType : kotlin/Enum<io.github.androidpoet.supabase.realtime/RealtimeSubscription.SendType> { // io.github.androidpoet.supabase.realtime/RealtimeSubscription.SendType|null[0]
+        enum entry BROADCAST // io.github.androidpoet.supabase.realtime/RealtimeSubscription.SendType.BROADCAST|null[0]
+        enum entry POSTGRES_CHANGES // io.github.androidpoet.supabase.realtime/RealtimeSubscription.SendType.POSTGRES_CHANGES|null[0]
+        enum entry PRESENCE // io.github.androidpoet.supabase.realtime/RealtimeSubscription.SendType.PRESENCE|null[0]
+
+        final val entries // io.github.androidpoet.supabase.realtime/RealtimeSubscription.SendType.entries|#static{}entries[0]
+            final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.androidpoet.supabase.realtime/RealtimeSubscription.SendType> // io.github.androidpoet.supabase.realtime/RealtimeSubscription.SendType.entries.<get-entries>|<get-entries>#static(){}[0]
+        final val wireValue // io.github.androidpoet.supabase.realtime/RealtimeSubscription.SendType.wireValue|{}wireValue[0]
+            final fun <get-wireValue>(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeSubscription.SendType.wireValue.<get-wireValue>|<get-wireValue>(){}[0]
+
+        final fun valueOf(kotlin/String): io.github.androidpoet.supabase.realtime/RealtimeSubscription.SendType // io.github.androidpoet.supabase.realtime/RealtimeSubscription.SendType.valueOf|valueOf#static(kotlin.String){}[0]
+        final fun values(): kotlin/Array<io.github.androidpoet.supabase.realtime/RealtimeSubscription.SendType> // io.github.androidpoet.supabase.realtime/RealtimeSubscription.SendType.values|values#static(){}[0]
+    }
+
+    final enum class Status : kotlin/Enum<io.github.androidpoet.supabase.realtime/RealtimeSubscription.Status> { // io.github.androidpoet.supabase.realtime/RealtimeSubscription.Status|null[0]
+        enum entry ERROR // io.github.androidpoet.supabase.realtime/RealtimeSubscription.Status.ERROR|null[0]
+        enum entry SUBSCRIBED // io.github.androidpoet.supabase.realtime/RealtimeSubscription.Status.SUBSCRIBED|null[0]
+        enum entry SUBSCRIBING // io.github.androidpoet.supabase.realtime/RealtimeSubscription.Status.SUBSCRIBING|null[0]
+        enum entry UNSUBSCRIBED // io.github.androidpoet.supabase.realtime/RealtimeSubscription.Status.UNSUBSCRIBED|null[0]
+        enum entry UNSUBSCRIBING // io.github.androidpoet.supabase.realtime/RealtimeSubscription.Status.UNSUBSCRIBING|null[0]
+
+        final val entries // io.github.androidpoet.supabase.realtime/RealtimeSubscription.Status.entries|#static{}entries[0]
+            final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.androidpoet.supabase.realtime/RealtimeSubscription.Status> // io.github.androidpoet.supabase.realtime/RealtimeSubscription.Status.entries.<get-entries>|<get-entries>#static(){}[0]
+
+        final fun valueOf(kotlin/String): io.github.androidpoet.supabase.realtime/RealtimeSubscription.Status // io.github.androidpoet.supabase.realtime/RealtimeSubscription.Status.valueOf|valueOf#static(kotlin.String){}[0]
+        final fun values(): kotlin/Array<io.github.androidpoet.supabase.realtime/RealtimeSubscription.Status> // io.github.androidpoet.supabase.realtime/RealtimeSubscription.Status.values|values#static(){}[0]
+    }
+}
+
+sealed interface io.github.androidpoet.supabase.realtime/ConnectionState { // io.github.androidpoet.supabase.realtime/ConnectionState|null[0]
+    final class Failed : io.github.androidpoet.supabase.realtime/ConnectionState { // io.github.androidpoet.supabase.realtime/ConnectionState.Failed|null[0]
+        constructor <init>(kotlin/String, kotlin/Int) // io.github.androidpoet.supabase.realtime/ConnectionState.Failed.<init>|<init>(kotlin.String;kotlin.Int){}[0]
+
+        final val attempts // io.github.androidpoet.supabase.realtime/ConnectionState.Failed.attempts|{}attempts[0]
+            final fun <get-attempts>(): kotlin/Int // io.github.androidpoet.supabase.realtime/ConnectionState.Failed.attempts.<get-attempts>|<get-attempts>(){}[0]
+        final val reason // io.github.androidpoet.supabase.realtime/ConnectionState.Failed.reason|{}reason[0]
+            final fun <get-reason>(): kotlin/String // io.github.androidpoet.supabase.realtime/ConnectionState.Failed.reason.<get-reason>|<get-reason>(){}[0]
+
+        final fun component1(): kotlin/String // io.github.androidpoet.supabase.realtime/ConnectionState.Failed.component1|component1(){}[0]
+        final fun component2(): kotlin/Int // io.github.androidpoet.supabase.realtime/ConnectionState.Failed.component2|component2(){}[0]
+        final fun copy(kotlin/String = ..., kotlin/Int = ...): io.github.androidpoet.supabase.realtime/ConnectionState.Failed // io.github.androidpoet.supabase.realtime/ConnectionState.Failed.copy|copy(kotlin.String;kotlin.Int){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime/ConnectionState.Failed.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime/ConnectionState.Failed.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime/ConnectionState.Failed.toString|toString(){}[0]
+    }
+
+    final class Reconnecting : io.github.androidpoet.supabase.realtime/ConnectionState { // io.github.androidpoet.supabase.realtime/ConnectionState.Reconnecting|null[0]
+        constructor <init>(kotlin/Int, kotlin/Long) // io.github.androidpoet.supabase.realtime/ConnectionState.Reconnecting.<init>|<init>(kotlin.Int;kotlin.Long){}[0]
+
+        final val attempt // io.github.androidpoet.supabase.realtime/ConnectionState.Reconnecting.attempt|{}attempt[0]
+            final fun <get-attempt>(): kotlin/Int // io.github.androidpoet.supabase.realtime/ConnectionState.Reconnecting.attempt.<get-attempt>|<get-attempt>(){}[0]
+        final val nextRetryMs // io.github.androidpoet.supabase.realtime/ConnectionState.Reconnecting.nextRetryMs|{}nextRetryMs[0]
+            final fun <get-nextRetryMs>(): kotlin/Long // io.github.androidpoet.supabase.realtime/ConnectionState.Reconnecting.nextRetryMs.<get-nextRetryMs>|<get-nextRetryMs>(){}[0]
+
+        final fun component1(): kotlin/Int // io.github.androidpoet.supabase.realtime/ConnectionState.Reconnecting.component1|component1(){}[0]
+        final fun component2(): kotlin/Long // io.github.androidpoet.supabase.realtime/ConnectionState.Reconnecting.component2|component2(){}[0]
+        final fun copy(kotlin/Int = ..., kotlin/Long = ...): io.github.androidpoet.supabase.realtime/ConnectionState.Reconnecting // io.github.androidpoet.supabase.realtime/ConnectionState.Reconnecting.copy|copy(kotlin.Int;kotlin.Long){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime/ConnectionState.Reconnecting.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime/ConnectionState.Reconnecting.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime/ConnectionState.Reconnecting.toString|toString(){}[0]
+    }
+
+    final object Connected : io.github.androidpoet.supabase.realtime/ConnectionState { // io.github.androidpoet.supabase.realtime/ConnectionState.Connected|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime/ConnectionState.Connected.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime/ConnectionState.Connected.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime/ConnectionState.Connected.toString|toString(){}[0]
+    }
+
+    final object Connecting : io.github.androidpoet.supabase.realtime/ConnectionState { // io.github.androidpoet.supabase.realtime/ConnectionState.Connecting|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime/ConnectionState.Connecting.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime/ConnectionState.Connecting.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime/ConnectionState.Connecting.toString|toString(){}[0]
+    }
+
+    final object Disconnected : io.github.androidpoet.supabase.realtime/ConnectionState { // io.github.androidpoet.supabase.realtime/ConnectionState.Disconnected|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime/ConnectionState.Disconnected.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime/ConnectionState.Disconnected.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime/ConnectionState.Disconnected.toString|toString(){}[0]
+    }
+
+    final object Disconnecting : io.github.androidpoet.supabase.realtime/ConnectionState { // io.github.androidpoet.supabase.realtime/ConnectionState.Disconnecting|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime/ConnectionState.Disconnecting.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime/ConnectionState.Disconnecting.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime/ConnectionState.Disconnecting.toString|toString(){}[0]
+    }
+}
+
+sealed interface io.github.androidpoet.supabase.realtime/RealtimeDebugEvent { // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent|null[0]
+    final class HeartbeatReceived : io.github.androidpoet.supabase.realtime/RealtimeDebugEvent { // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.HeartbeatReceived|null[0]
+        constructor <init>(kotlin/String?) // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.HeartbeatReceived.<init>|<init>(kotlin.String?){}[0]
+
+        final val ref // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.HeartbeatReceived.ref|{}ref[0]
+            final fun <get-ref>(): kotlin/String? // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.HeartbeatReceived.ref.<get-ref>|<get-ref>(){}[0]
+
+        final fun component1(): kotlin/String? // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.HeartbeatReceived.component1|component1(){}[0]
+        final fun copy(kotlin/String? = ...): io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.HeartbeatReceived // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.HeartbeatReceived.copy|copy(kotlin.String?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.HeartbeatReceived.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.HeartbeatReceived.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.HeartbeatReceived.toString|toString(){}[0]
+    }
+
+    final class HeartbeatSent : io.github.androidpoet.supabase.realtime/RealtimeDebugEvent { // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.HeartbeatSent|null[0]
+        constructor <init>(kotlin/String) // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.HeartbeatSent.<init>|<init>(kotlin.String){}[0]
+
+        final val ref // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.HeartbeatSent.ref|{}ref[0]
+            final fun <get-ref>(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.HeartbeatSent.ref.<get-ref>|<get-ref>(){}[0]
+
+        final fun component1(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.HeartbeatSent.component1|component1(){}[0]
+        final fun copy(kotlin/String = ...): io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.HeartbeatSent // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.HeartbeatSent.copy|copy(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.HeartbeatSent.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.HeartbeatSent.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.HeartbeatSent.toString|toString(){}[0]
+    }
+
+    final class InboundMessage : io.github.androidpoet.supabase.realtime/RealtimeDebugEvent { // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundMessage|null[0]
+        constructor <init>(io.github.androidpoet.supabase.realtime.models/RealtimeMessage) // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundMessage.<init>|<init>(io.github.androidpoet.supabase.realtime.models.RealtimeMessage){}[0]
+
+        final val message // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundMessage.message|{}message[0]
+            final fun <get-message>(): io.github.androidpoet.supabase.realtime.models/RealtimeMessage // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundMessage.message.<get-message>|<get-message>(){}[0]
+
+        final fun component1(): io.github.androidpoet.supabase.realtime.models/RealtimeMessage // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundMessage.component1|component1(){}[0]
+        final fun copy(io.github.androidpoet.supabase.realtime.models/RealtimeMessage = ...): io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundMessage // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundMessage.copy|copy(io.github.androidpoet.supabase.realtime.models.RealtimeMessage){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundMessage.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundMessage.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundMessage.toString|toString(){}[0]
+    }
+
+    final class OutboundMessage : io.github.androidpoet.supabase.realtime/RealtimeDebugEvent { // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.OutboundMessage|null[0]
+        constructor <init>(io.github.androidpoet.supabase.realtime.models/RealtimeMessage) // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.OutboundMessage.<init>|<init>(io.github.androidpoet.supabase.realtime.models.RealtimeMessage){}[0]
+
+        final val message // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.OutboundMessage.message|{}message[0]
+            final fun <get-message>(): io.github.androidpoet.supabase.realtime.models/RealtimeMessage // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.OutboundMessage.message.<get-message>|<get-message>(){}[0]
+
+        final fun component1(): io.github.androidpoet.supabase.realtime.models/RealtimeMessage // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.OutboundMessage.component1|component1(){}[0]
+        final fun copy(io.github.androidpoet.supabase.realtime.models/RealtimeMessage = ...): io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.OutboundMessage // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.OutboundMessage.copy|copy(io.github.androidpoet.supabase.realtime.models.RealtimeMessage){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.OutboundMessage.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.OutboundMessage.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.OutboundMessage.toString|toString(){}[0]
+    }
+}
+
+sealed interface io.github.androidpoet.supabase.realtime/RealtimeEvent { // io.github.androidpoet.supabase.realtime/RealtimeEvent|null[0]
+    final class Broadcast : io.github.androidpoet.supabase.realtime/RealtimeEvent { // io.github.androidpoet.supabase.realtime/RealtimeEvent.Broadcast|null[0]
+        constructor <init>(kotlin/String, kotlinx.serialization.json/JsonObject) // io.github.androidpoet.supabase.realtime/RealtimeEvent.Broadcast.<init>|<init>(kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
+
+        final val event // io.github.androidpoet.supabase.realtime/RealtimeEvent.Broadcast.event|{}event[0]
+            final fun <get-event>(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeEvent.Broadcast.event.<get-event>|<get-event>(){}[0]
+        final val payload // io.github.androidpoet.supabase.realtime/RealtimeEvent.Broadcast.payload|{}payload[0]
+            final fun <get-payload>(): kotlinx.serialization.json/JsonObject // io.github.androidpoet.supabase.realtime/RealtimeEvent.Broadcast.payload.<get-payload>|<get-payload>(){}[0]
+
+        final fun component1(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeEvent.Broadcast.component1|component1(){}[0]
+        final fun component2(): kotlinx.serialization.json/JsonObject // io.github.androidpoet.supabase.realtime/RealtimeEvent.Broadcast.component2|component2(){}[0]
+        final fun copy(kotlin/String = ..., kotlinx.serialization.json/JsonObject = ...): io.github.androidpoet.supabase.realtime/RealtimeEvent.Broadcast // io.github.androidpoet.supabase.realtime/RealtimeEvent.Broadcast.copy|copy(kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeEvent.Broadcast.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime/RealtimeEvent.Broadcast.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeEvent.Broadcast.toString|toString(){}[0]
+    }
+
+    final class PostgresDelete : io.github.androidpoet.supabase.realtime/RealtimeEvent { // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresDelete|null[0]
+        constructor <init>(kotlinx.serialization.json/JsonObject) // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresDelete.<init>|<init>(kotlinx.serialization.json.JsonObject){}[0]
+
+        final val oldRecord // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresDelete.oldRecord|{}oldRecord[0]
+            final fun <get-oldRecord>(): kotlinx.serialization.json/JsonObject // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresDelete.oldRecord.<get-oldRecord>|<get-oldRecord>(){}[0]
+
+        final fun component1(): kotlinx.serialization.json/JsonObject // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresDelete.component1|component1(){}[0]
+        final fun copy(kotlinx.serialization.json/JsonObject = ...): io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresDelete // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresDelete.copy|copy(kotlinx.serialization.json.JsonObject){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresDelete.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresDelete.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresDelete.toString|toString(){}[0]
+    }
+
+    final class PostgresInsert : io.github.androidpoet.supabase.realtime/RealtimeEvent { // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresInsert|null[0]
+        constructor <init>(kotlinx.serialization.json/JsonObject, kotlinx.serialization.json/JsonObject? = ...) // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresInsert.<init>|<init>(kotlinx.serialization.json.JsonObject;kotlinx.serialization.json.JsonObject?){}[0]
+
+        final val oldRecord // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresInsert.oldRecord|{}oldRecord[0]
+            final fun <get-oldRecord>(): kotlinx.serialization.json/JsonObject? // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresInsert.oldRecord.<get-oldRecord>|<get-oldRecord>(){}[0]
+        final val record // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresInsert.record|{}record[0]
+            final fun <get-record>(): kotlinx.serialization.json/JsonObject // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresInsert.record.<get-record>|<get-record>(){}[0]
+
+        final fun component1(): kotlinx.serialization.json/JsonObject // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresInsert.component1|component1(){}[0]
+        final fun component2(): kotlinx.serialization.json/JsonObject? // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresInsert.component2|component2(){}[0]
+        final fun copy(kotlinx.serialization.json/JsonObject = ..., kotlinx.serialization.json/JsonObject? = ...): io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresInsert // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresInsert.copy|copy(kotlinx.serialization.json.JsonObject;kotlinx.serialization.json.JsonObject?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresInsert.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresInsert.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresInsert.toString|toString(){}[0]
+    }
+
+    final class PostgresUpdate : io.github.androidpoet.supabase.realtime/RealtimeEvent { // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresUpdate|null[0]
+        constructor <init>(kotlinx.serialization.json/JsonObject, kotlinx.serialization.json/JsonObject? = ...) // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresUpdate.<init>|<init>(kotlinx.serialization.json.JsonObject;kotlinx.serialization.json.JsonObject?){}[0]
+
+        final val oldRecord // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresUpdate.oldRecord|{}oldRecord[0]
+            final fun <get-oldRecord>(): kotlinx.serialization.json/JsonObject? // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresUpdate.oldRecord.<get-oldRecord>|<get-oldRecord>(){}[0]
+        final val record // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresUpdate.record|{}record[0]
+            final fun <get-record>(): kotlinx.serialization.json/JsonObject // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresUpdate.record.<get-record>|<get-record>(){}[0]
+
+        final fun component1(): kotlinx.serialization.json/JsonObject // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresUpdate.component1|component1(){}[0]
+        final fun component2(): kotlinx.serialization.json/JsonObject? // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresUpdate.component2|component2(){}[0]
+        final fun copy(kotlinx.serialization.json/JsonObject = ..., kotlinx.serialization.json/JsonObject? = ...): io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresUpdate // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresUpdate.copy|copy(kotlinx.serialization.json.JsonObject;kotlinx.serialization.json.JsonObject?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresUpdate.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresUpdate.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresUpdate.toString|toString(){}[0]
+    }
+
+    final class PresenceJoin : io.github.androidpoet.supabase.realtime/RealtimeEvent { // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceJoin|null[0]
+        constructor <init>(kotlin/String, kotlinx.serialization.json/JsonObject) // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceJoin.<init>|<init>(kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
+
+        final val key // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceJoin.key|{}key[0]
+            final fun <get-key>(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceJoin.key.<get-key>|<get-key>(){}[0]
+        final val newPresence // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceJoin.newPresence|{}newPresence[0]
+            final fun <get-newPresence>(): kotlinx.serialization.json/JsonObject // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceJoin.newPresence.<get-newPresence>|<get-newPresence>(){}[0]
+
+        final fun component1(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceJoin.component1|component1(){}[0]
+        final fun component2(): kotlinx.serialization.json/JsonObject // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceJoin.component2|component2(){}[0]
+        final fun copy(kotlin/String = ..., kotlinx.serialization.json/JsonObject = ...): io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceJoin // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceJoin.copy|copy(kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceJoin.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceJoin.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceJoin.toString|toString(){}[0]
+    }
+
+    final class PresenceLeave : io.github.androidpoet.supabase.realtime/RealtimeEvent { // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceLeave|null[0]
+        constructor <init>(kotlin/String, kotlinx.serialization.json/JsonObject) // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceLeave.<init>|<init>(kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
+
+        final val key // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceLeave.key|{}key[0]
+            final fun <get-key>(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceLeave.key.<get-key>|<get-key>(){}[0]
+        final val leftPresence // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceLeave.leftPresence|{}leftPresence[0]
+            final fun <get-leftPresence>(): kotlinx.serialization.json/JsonObject // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceLeave.leftPresence.<get-leftPresence>|<get-leftPresence>(){}[0]
+
+        final fun component1(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceLeave.component1|component1(){}[0]
+        final fun component2(): kotlinx.serialization.json/JsonObject // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceLeave.component2|component2(){}[0]
+        final fun copy(kotlin/String = ..., kotlinx.serialization.json/JsonObject = ...): io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceLeave // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceLeave.copy|copy(kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceLeave.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceLeave.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceLeave.toString|toString(){}[0]
+    }
+
+    final class PresenceSync : io.github.androidpoet.supabase.realtime/RealtimeEvent { // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceSync|null[0]
+        constructor <init>(kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonObject>) // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceSync.<init>|<init>(kotlin.collections.Map<kotlin.String,kotlinx.serialization.json.JsonObject>){}[0]
+
+        final val state // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceSync.state|{}state[0]
+            final fun <get-state>(): kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceSync.state.<get-state>|<get-state>(){}[0]
+
+        final fun component1(): kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceSync.component1|component1(){}[0]
+        final fun copy(kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonObject> = ...): io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceSync // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceSync.copy|copy(kotlin.collections.Map<kotlin.String,kotlinx.serialization.json.JsonObject>){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceSync.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceSync.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceSync.toString|toString(){}[0]
+    }
+
+    final class SystemEvent : io.github.androidpoet.supabase.realtime/RealtimeEvent { // io.github.androidpoet.supabase.realtime/RealtimeEvent.SystemEvent|null[0]
+        constructor <init>(kotlin/String, kotlin/String? = ...) // io.github.androidpoet.supabase.realtime/RealtimeEvent.SystemEvent.<init>|<init>(kotlin.String;kotlin.String?){}[0]
+
+        final val message // io.github.androidpoet.supabase.realtime/RealtimeEvent.SystemEvent.message|{}message[0]
+            final fun <get-message>(): kotlin/String? // io.github.androidpoet.supabase.realtime/RealtimeEvent.SystemEvent.message.<get-message>|<get-message>(){}[0]
+        final val status // io.github.androidpoet.supabase.realtime/RealtimeEvent.SystemEvent.status|{}status[0]
+            final fun <get-status>(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeEvent.SystemEvent.status.<get-status>|<get-status>(){}[0]
+
+        final fun component1(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeEvent.SystemEvent.component1|component1(){}[0]
+        final fun component2(): kotlin/String? // io.github.androidpoet.supabase.realtime/RealtimeEvent.SystemEvent.component2|component2(){}[0]
+        final fun copy(kotlin/String = ..., kotlin/String? = ...): io.github.androidpoet.supabase.realtime/RealtimeEvent.SystemEvent // io.github.androidpoet.supabase.realtime/RealtimeEvent.SystemEvent.copy|copy(kotlin.String;kotlin.String?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeEvent.SystemEvent.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime/RealtimeEvent.SystemEvent.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeEvent.SystemEvent.toString|toString(){}[0]
+    }
+}
+
+final class io.github.androidpoet.supabase.realtime.models/BroadcastPayload { // io.github.androidpoet.supabase.realtime.models/BroadcastPayload|null[0]
+    constructor <init>(kotlin/String, kotlinx.serialization.json/JsonObject) // io.github.androidpoet.supabase.realtime.models/BroadcastPayload.<init>|<init>(kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
+
+    final val event // io.github.androidpoet.supabase.realtime.models/BroadcastPayload.event|{}event[0]
+        final fun <get-event>(): kotlin/String // io.github.androidpoet.supabase.realtime.models/BroadcastPayload.event.<get-event>|<get-event>(){}[0]
+    final val payload // io.github.androidpoet.supabase.realtime.models/BroadcastPayload.payload|{}payload[0]
+        final fun <get-payload>(): kotlinx.serialization.json/JsonObject // io.github.androidpoet.supabase.realtime.models/BroadcastPayload.payload.<get-payload>|<get-payload>(){}[0]
+
+    final fun component1(): kotlin/String // io.github.androidpoet.supabase.realtime.models/BroadcastPayload.component1|component1(){}[0]
+    final fun component2(): kotlinx.serialization.json/JsonObject // io.github.androidpoet.supabase.realtime.models/BroadcastPayload.component2|component2(){}[0]
+    final fun copy(kotlin/String = ..., kotlinx.serialization.json/JsonObject = ...): io.github.androidpoet.supabase.realtime.models/BroadcastPayload // io.github.androidpoet.supabase.realtime.models/BroadcastPayload.copy|copy(kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime.models/BroadcastPayload.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime.models/BroadcastPayload.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime.models/BroadcastPayload.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.realtime.models/BroadcastPayload> { // io.github.androidpoet.supabase.realtime.models/BroadcastPayload.$serializer|null[0]
+        final val descriptor // io.github.androidpoet.supabase.realtime.models/BroadcastPayload.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.realtime.models/BroadcastPayload.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.realtime.models/BroadcastPayload.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.realtime.models/BroadcastPayload // io.github.androidpoet.supabase.realtime.models/BroadcastPayload.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.realtime.models/BroadcastPayload) // io.github.androidpoet.supabase.realtime.models/BroadcastPayload.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.realtime.models.BroadcastPayload){}[0]
+    }
+
+    final object Companion { // io.github.androidpoet.supabase.realtime.models/BroadcastPayload.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.realtime.models/BroadcastPayload> // io.github.androidpoet.supabase.realtime.models/BroadcastPayload.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class io.github.androidpoet.supabase.realtime.models/PostgresChange { // io.github.androidpoet.supabase.realtime.models/PostgresChange|null[0]
+    constructor <init>(kotlin/String = ..., kotlin/String? = ..., kotlin/String? = ..., io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent = ...) // io.github.androidpoet.supabase.realtime.models/PostgresChange.<init>|<init>(kotlin.String;kotlin.String?;kotlin.String?;io.github.androidpoet.supabase.realtime.models.PostgresChangeEvent){}[0]
+
+    final val event // io.github.androidpoet.supabase.realtime.models/PostgresChange.event|{}event[0]
+        final fun <get-event>(): io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent // io.github.androidpoet.supabase.realtime.models/PostgresChange.event.<get-event>|<get-event>(){}[0]
+    final val filter // io.github.androidpoet.supabase.realtime.models/PostgresChange.filter|{}filter[0]
+        final fun <get-filter>(): kotlin/String? // io.github.androidpoet.supabase.realtime.models/PostgresChange.filter.<get-filter>|<get-filter>(){}[0]
+    final val schema // io.github.androidpoet.supabase.realtime.models/PostgresChange.schema|{}schema[0]
+        final fun <get-schema>(): kotlin/String // io.github.androidpoet.supabase.realtime.models/PostgresChange.schema.<get-schema>|<get-schema>(){}[0]
+    final val table // io.github.androidpoet.supabase.realtime.models/PostgresChange.table|{}table[0]
+        final fun <get-table>(): kotlin/String? // io.github.androidpoet.supabase.realtime.models/PostgresChange.table.<get-table>|<get-table>(){}[0]
+
+    final fun component1(): kotlin/String // io.github.androidpoet.supabase.realtime.models/PostgresChange.component1|component1(){}[0]
+    final fun component2(): kotlin/String? // io.github.androidpoet.supabase.realtime.models/PostgresChange.component2|component2(){}[0]
+    final fun component3(): kotlin/String? // io.github.androidpoet.supabase.realtime.models/PostgresChange.component3|component3(){}[0]
+    final fun component4(): io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent // io.github.androidpoet.supabase.realtime.models/PostgresChange.component4|component4(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String? = ..., kotlin/String? = ..., io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent = ...): io.github.androidpoet.supabase.realtime.models/PostgresChange // io.github.androidpoet.supabase.realtime.models/PostgresChange.copy|copy(kotlin.String;kotlin.String?;kotlin.String?;io.github.androidpoet.supabase.realtime.models.PostgresChangeEvent){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime.models/PostgresChange.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime.models/PostgresChange.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime.models/PostgresChange.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.realtime.models/PostgresChange> { // io.github.androidpoet.supabase.realtime.models/PostgresChange.$serializer|null[0]
+        final val descriptor // io.github.androidpoet.supabase.realtime.models/PostgresChange.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.realtime.models/PostgresChange.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.realtime.models/PostgresChange.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.realtime.models/PostgresChange // io.github.androidpoet.supabase.realtime.models/PostgresChange.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.realtime.models/PostgresChange) // io.github.androidpoet.supabase.realtime.models/PostgresChange.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.realtime.models.PostgresChange){}[0]
+    }
+
+    final object Companion { // io.github.androidpoet.supabase.realtime.models/PostgresChange.Companion|null[0]
+        final val $childSerializers // io.github.androidpoet.supabase.realtime.models/PostgresChange.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.realtime.models/PostgresChange> // io.github.androidpoet.supabase.realtime.models/PostgresChange.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class io.github.androidpoet.supabase.realtime.models/RealtimeChannel { // io.github.androidpoet.supabase.realtime.models/RealtimeChannel|null[0]
+    constructor <init>(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.realtime.models/RealtimeChannel.<init>|<init>(kotlin.String;kotlin.String){}[0]
+
+    final val name // io.github.androidpoet.supabase.realtime.models/RealtimeChannel.name|{}name[0]
+        final fun <get-name>(): kotlin/String // io.github.androidpoet.supabase.realtime.models/RealtimeChannel.name.<get-name>|<get-name>(){}[0]
+    final val topic // io.github.androidpoet.supabase.realtime.models/RealtimeChannel.topic|{}topic[0]
+        final fun <get-topic>(): kotlin/String // io.github.androidpoet.supabase.realtime.models/RealtimeChannel.topic.<get-topic>|<get-topic>(){}[0]
+
+    final fun component1(): kotlin/String // io.github.androidpoet.supabase.realtime.models/RealtimeChannel.component1|component1(){}[0]
+    final fun component2(): kotlin/String // io.github.androidpoet.supabase.realtime.models/RealtimeChannel.component2|component2(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ...): io.github.androidpoet.supabase.realtime.models/RealtimeChannel // io.github.androidpoet.supabase.realtime.models/RealtimeChannel.copy|copy(kotlin.String;kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime.models/RealtimeChannel.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime.models/RealtimeChannel.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime.models/RealtimeChannel.toString|toString(){}[0]
+}
+
+final class io.github.androidpoet.supabase.realtime.models/RealtimeMessage { // io.github.androidpoet.supabase.realtime.models/RealtimeMessage|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlinx.serialization.json/JsonObject, kotlin/String? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.<init>|<init>(kotlin.String;kotlin.String;kotlinx.serialization.json.JsonObject;kotlin.String?;kotlin.String?){}[0]
+
+    final val event // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.event|{}event[0]
+        final fun <get-event>(): kotlin/String // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.event.<get-event>|<get-event>(){}[0]
+    final val joinRef // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.joinRef|{}joinRef[0]
+        final fun <get-joinRef>(): kotlin/String? // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.joinRef.<get-joinRef>|<get-joinRef>(){}[0]
+    final val payload // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.payload|{}payload[0]
+        final fun <get-payload>(): kotlinx.serialization.json/JsonObject // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.payload.<get-payload>|<get-payload>(){}[0]
+    final val ref // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.ref|{}ref[0]
+        final fun <get-ref>(): kotlin/String? // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.ref.<get-ref>|<get-ref>(){}[0]
+    final val topic // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.topic|{}topic[0]
+        final fun <get-topic>(): kotlin/String // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.topic.<get-topic>|<get-topic>(){}[0]
+
+    final fun component1(): kotlin/String // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.component1|component1(){}[0]
+    final fun component2(): kotlin/String // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.component2|component2(){}[0]
+    final fun component3(): kotlinx.serialization.json/JsonObject // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.component3|component3(){}[0]
+    final fun component4(): kotlin/String? // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.component4|component4(){}[0]
+    final fun component5(): kotlin/String? // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.component5|component5(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlinx.serialization.json/JsonObject = ..., kotlin/String? = ..., kotlin/String? = ...): io.github.androidpoet.supabase.realtime.models/RealtimeMessage // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.copy|copy(kotlin.String;kotlin.String;kotlinx.serialization.json.JsonObject;kotlin.String?;kotlin.String?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.realtime.models/RealtimeMessage> { // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.$serializer|null[0]
+        final val descriptor // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.realtime.models/RealtimeMessage // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.realtime.models/RealtimeMessage) // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.realtime.models.RealtimeMessage){}[0]
+    }
+
+    final object Companion { // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.realtime.models/RealtimeMessage> // io.github.androidpoet.supabase.realtime.models/RealtimeMessage.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder { // io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder|null[0]
+    final fun configureBroadcast(kotlin/Boolean = ..., kotlin/Boolean = ...): io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder // io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder.configureBroadcast|configureBroadcast(kotlin.Boolean;kotlin.Boolean){}[0]
+    final fun configureBroadcastReplay(kotlin/Long, kotlin/Int? = ...): io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder // io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder.configureBroadcastReplay|configureBroadcastReplay(kotlin.Long;kotlin.Int?){}[0]
+    final fun configurePresence(kotlin/String = ...): io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder // io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder.configurePresence|configurePresence(kotlin.String){}[0]
+    final fun onBroadcast(kotlin/String, kotlin.coroutines/SuspendFunction1<kotlinx.serialization.json/JsonObject, kotlin/Unit>): io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder // io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder.onBroadcast|onBroadcast(kotlin.String;kotlin.coroutines.SuspendFunction1<kotlinx.serialization.json.JsonObject,kotlin.Unit>){}[0]
+    final fun onPostgresChange(kotlin/String = ..., kotlin/String? = ..., kotlin/String? = ..., io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent = ..., kotlin.coroutines/SuspendFunction1<kotlinx.serialization.json/JsonObject, kotlin/Unit>): io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder // io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder.onPostgresChange|onPostgresChange(kotlin.String;kotlin.String?;kotlin.String?;io.github.androidpoet.supabase.realtime.models.PostgresChangeEvent;kotlin.coroutines.SuspendFunction1<kotlinx.serialization.json.JsonObject,kotlin.Unit>){}[0]
+    final fun onPostgresChange(kotlin/String = ..., kotlin/String? = ..., kotlin/String? = ..., io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent = ..., kotlin.coroutines/SuspendFunction2<io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent, kotlinx.serialization.json/JsonObject, kotlin/Unit>): io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder // io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder.onPostgresChange|onPostgresChange(kotlin.String;kotlin.String?;kotlin.String?;io.github.androidpoet.supabase.realtime.models.PostgresChangeEvent;kotlin.coroutines.SuspendFunction2<io.github.androidpoet.supabase.realtime.models.PostgresChangeEvent,kotlinx.serialization.json.JsonObject,kotlin.Unit>){}[0]
+    final fun onPresence(kotlin.coroutines/SuspendFunction1<kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonObject>, kotlin/Unit>): io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder // io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder.onPresence|onPresence(kotlin.coroutines.SuspendFunction1<kotlin.collections.Map<kotlin.String,kotlinx.serialization.json.JsonObject>,kotlin.Unit>){}[0]
+    final fun setPrivate(kotlin/Boolean = ...): io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder // io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder.setPrivate|setPrivate(kotlin.Boolean){}[0]
+    final suspend fun subscribe(): io.github.androidpoet.supabase.realtime/RealtimeSubscription // io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder.subscribe|subscribe(){}[0]
+}
+
+final class io.github.androidpoet.supabase.realtime/RealtimeConfig { // io.github.androidpoet.supabase.realtime/RealtimeConfig|null[0]
+    constructor <init>(kotlin/Boolean = ..., kotlin/Long = ..., kotlin/Long = ..., kotlin/Double = ..., kotlin/Int = ..., kotlin/Long = ..., kotlin/Long = ...) // io.github.androidpoet.supabase.realtime/RealtimeConfig.<init>|<init>(kotlin.Boolean;kotlin.Long;kotlin.Long;kotlin.Double;kotlin.Int;kotlin.Long;kotlin.Long){}[0]
+
+    final val autoReconnect // io.github.androidpoet.supabase.realtime/RealtimeConfig.autoReconnect|{}autoReconnect[0]
+        final fun <get-autoReconnect>(): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeConfig.autoReconnect.<get-autoReconnect>|<get-autoReconnect>(){}[0]
+    final val backoffMultiplier // io.github.androidpoet.supabase.realtime/RealtimeConfig.backoffMultiplier|{}backoffMultiplier[0]
+        final fun <get-backoffMultiplier>(): kotlin/Double // io.github.androidpoet.supabase.realtime/RealtimeConfig.backoffMultiplier.<get-backoffMultiplier>|<get-backoffMultiplier>(){}[0]
+    final val connectionTimeoutMs // io.github.androidpoet.supabase.realtime/RealtimeConfig.connectionTimeoutMs|{}connectionTimeoutMs[0]
+        final fun <get-connectionTimeoutMs>(): kotlin/Long // io.github.androidpoet.supabase.realtime/RealtimeConfig.connectionTimeoutMs.<get-connectionTimeoutMs>|<get-connectionTimeoutMs>(){}[0]
+    final val heartbeatIntervalMs // io.github.androidpoet.supabase.realtime/RealtimeConfig.heartbeatIntervalMs|{}heartbeatIntervalMs[0]
+        final fun <get-heartbeatIntervalMs>(): kotlin/Long // io.github.androidpoet.supabase.realtime/RealtimeConfig.heartbeatIntervalMs.<get-heartbeatIntervalMs>|<get-heartbeatIntervalMs>(){}[0]
+    final val initialReconnectDelayMs // io.github.androidpoet.supabase.realtime/RealtimeConfig.initialReconnectDelayMs|{}initialReconnectDelayMs[0]
+        final fun <get-initialReconnectDelayMs>(): kotlin/Long // io.github.androidpoet.supabase.realtime/RealtimeConfig.initialReconnectDelayMs.<get-initialReconnectDelayMs>|<get-initialReconnectDelayMs>(){}[0]
+    final val maxReconnectAttempts // io.github.androidpoet.supabase.realtime/RealtimeConfig.maxReconnectAttempts|{}maxReconnectAttempts[0]
+        final fun <get-maxReconnectAttempts>(): kotlin/Int // io.github.androidpoet.supabase.realtime/RealtimeConfig.maxReconnectAttempts.<get-maxReconnectAttempts>|<get-maxReconnectAttempts>(){}[0]
+    final val maxReconnectDelayMs // io.github.androidpoet.supabase.realtime/RealtimeConfig.maxReconnectDelayMs|{}maxReconnectDelayMs[0]
+        final fun <get-maxReconnectDelayMs>(): kotlin/Long // io.github.androidpoet.supabase.realtime/RealtimeConfig.maxReconnectDelayMs.<get-maxReconnectDelayMs>|<get-maxReconnectDelayMs>(){}[0]
+
+    final fun component1(): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeConfig.component1|component1(){}[0]
+    final fun component2(): kotlin/Long // io.github.androidpoet.supabase.realtime/RealtimeConfig.component2|component2(){}[0]
+    final fun component3(): kotlin/Long // io.github.androidpoet.supabase.realtime/RealtimeConfig.component3|component3(){}[0]
+    final fun component4(): kotlin/Double // io.github.androidpoet.supabase.realtime/RealtimeConfig.component4|component4(){}[0]
+    final fun component5(): kotlin/Int // io.github.androidpoet.supabase.realtime/RealtimeConfig.component5|component5(){}[0]
+    final fun component6(): kotlin/Long // io.github.androidpoet.supabase.realtime/RealtimeConfig.component6|component6(){}[0]
+    final fun component7(): kotlin/Long // io.github.androidpoet.supabase.realtime/RealtimeConfig.component7|component7(){}[0]
+    final fun copy(kotlin/Boolean = ..., kotlin/Long = ..., kotlin/Long = ..., kotlin/Double = ..., kotlin/Int = ..., kotlin/Long = ..., kotlin/Long = ...): io.github.androidpoet.supabase.realtime/RealtimeConfig // io.github.androidpoet.supabase.realtime/RealtimeConfig.copy|copy(kotlin.Boolean;kotlin.Long;kotlin.Long;kotlin.Double;kotlin.Int;kotlin.Long;kotlin.Long){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeConfig.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime/RealtimeConfig.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeConfig.toString|toString(){}[0]
+}
+
+final class io.github.androidpoet.supabase.realtime/RealtimeDebugState { // io.github.androidpoet.supabase.realtime/RealtimeDebugState|null[0]
+    constructor <init>(kotlin/Long = ..., kotlin/Long = ..., kotlin/Long = ..., kotlin/Long = ..., kotlin/String? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.realtime/RealtimeDebugState.<init>|<init>(kotlin.Long;kotlin.Long;kotlin.Long;kotlin.Long;kotlin.String?;kotlin.String?){}[0]
+
+    final val heartbeatReceivedCount // io.github.androidpoet.supabase.realtime/RealtimeDebugState.heartbeatReceivedCount|{}heartbeatReceivedCount[0]
+        final fun <get-heartbeatReceivedCount>(): kotlin/Long // io.github.androidpoet.supabase.realtime/RealtimeDebugState.heartbeatReceivedCount.<get-heartbeatReceivedCount>|<get-heartbeatReceivedCount>(){}[0]
+    final val heartbeatSentCount // io.github.androidpoet.supabase.realtime/RealtimeDebugState.heartbeatSentCount|{}heartbeatSentCount[0]
+        final fun <get-heartbeatSentCount>(): kotlin/Long // io.github.androidpoet.supabase.realtime/RealtimeDebugState.heartbeatSentCount.<get-heartbeatSentCount>|<get-heartbeatSentCount>(){}[0]
+    final val inboundMessageCount // io.github.androidpoet.supabase.realtime/RealtimeDebugState.inboundMessageCount|{}inboundMessageCount[0]
+        final fun <get-inboundMessageCount>(): kotlin/Long // io.github.androidpoet.supabase.realtime/RealtimeDebugState.inboundMessageCount.<get-inboundMessageCount>|<get-inboundMessageCount>(){}[0]
+    final val lastInboundRef // io.github.androidpoet.supabase.realtime/RealtimeDebugState.lastInboundRef|{}lastInboundRef[0]
+        final fun <get-lastInboundRef>(): kotlin/String? // io.github.androidpoet.supabase.realtime/RealtimeDebugState.lastInboundRef.<get-lastInboundRef>|<get-lastInboundRef>(){}[0]
+    final val lastOutboundRef // io.github.androidpoet.supabase.realtime/RealtimeDebugState.lastOutboundRef|{}lastOutboundRef[0]
+        final fun <get-lastOutboundRef>(): kotlin/String? // io.github.androidpoet.supabase.realtime/RealtimeDebugState.lastOutboundRef.<get-lastOutboundRef>|<get-lastOutboundRef>(){}[0]
+    final val outboundMessageCount // io.github.androidpoet.supabase.realtime/RealtimeDebugState.outboundMessageCount|{}outboundMessageCount[0]
+        final fun <get-outboundMessageCount>(): kotlin/Long // io.github.androidpoet.supabase.realtime/RealtimeDebugState.outboundMessageCount.<get-outboundMessageCount>|<get-outboundMessageCount>(){}[0]
+
+    final fun component1(): kotlin/Long // io.github.androidpoet.supabase.realtime/RealtimeDebugState.component1|component1(){}[0]
+    final fun component2(): kotlin/Long // io.github.androidpoet.supabase.realtime/RealtimeDebugState.component2|component2(){}[0]
+    final fun component3(): kotlin/Long // io.github.androidpoet.supabase.realtime/RealtimeDebugState.component3|component3(){}[0]
+    final fun component4(): kotlin/Long // io.github.androidpoet.supabase.realtime/RealtimeDebugState.component4|component4(){}[0]
+    final fun component5(): kotlin/String? // io.github.androidpoet.supabase.realtime/RealtimeDebugState.component5|component5(){}[0]
+    final fun component6(): kotlin/String? // io.github.androidpoet.supabase.realtime/RealtimeDebugState.component6|component6(){}[0]
+    final fun copy(kotlin/Long = ..., kotlin/Long = ..., kotlin/Long = ..., kotlin/Long = ..., kotlin/String? = ..., kotlin/String? = ...): io.github.androidpoet.supabase.realtime/RealtimeDebugState // io.github.androidpoet.supabase.realtime/RealtimeDebugState.copy|copy(kotlin.Long;kotlin.Long;kotlin.Long;kotlin.Long;kotlin.String?;kotlin.String?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeDebugState.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime/RealtimeDebugState.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeDebugState.toString|toString(){}[0]
+}
+
+final fun (io.github.androidpoet.supabase.realtime/RealtimeSubscription).io.github.androidpoet.supabase.realtime/broadcastFlow(kotlin/String? = ...): kotlinx.coroutines.flow/Flow<kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.realtime/broadcastFlow|broadcastFlow@io.github.androidpoet.supabase.realtime.RealtimeSubscription(kotlin.String?){}[0]
+final fun (io.github.androidpoet.supabase.realtime/RealtimeSubscription).io.github.androidpoet.supabase.realtime/postgresDeletesFlow(): kotlinx.coroutines.flow/Flow<kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.realtime/postgresDeletesFlow|postgresDeletesFlow@io.github.androidpoet.supabase.realtime.RealtimeSubscription(){}[0]
+final fun (io.github.androidpoet.supabase.realtime/RealtimeSubscription).io.github.androidpoet.supabase.realtime/postgresInsertsFlow(): kotlinx.coroutines.flow/Flow<kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.realtime/postgresInsertsFlow|postgresInsertsFlow@io.github.androidpoet.supabase.realtime.RealtimeSubscription(){}[0]
+final fun (io.github.androidpoet.supabase.realtime/RealtimeSubscription).io.github.androidpoet.supabase.realtime/postgresUpdatesFlow(): kotlinx.coroutines.flow/Flow<io.github.androidpoet.supabase.realtime/RealtimeEvent.PostgresUpdate> // io.github.androidpoet.supabase.realtime/postgresUpdatesFlow|postgresUpdatesFlow@io.github.androidpoet.supabase.realtime.RealtimeSubscription(){}[0]
+final fun (io.github.androidpoet.supabase.realtime/RealtimeSubscription).io.github.androidpoet.supabase.realtime/presenceJoinFlow(): kotlinx.coroutines.flow/Flow<io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceJoin> // io.github.androidpoet.supabase.realtime/presenceJoinFlow|presenceJoinFlow@io.github.androidpoet.supabase.realtime.RealtimeSubscription(){}[0]
+final fun (io.github.androidpoet.supabase.realtime/RealtimeSubscription).io.github.androidpoet.supabase.realtime/presenceLeaveFlow(): kotlinx.coroutines.flow/Flow<io.github.androidpoet.supabase.realtime/RealtimeEvent.PresenceLeave> // io.github.androidpoet.supabase.realtime/presenceLeaveFlow|presenceLeaveFlow@io.github.androidpoet.supabase.realtime.RealtimeSubscription(){}[0]
+final fun (io.github.androidpoet.supabase.realtime/RealtimeSubscription).io.github.androidpoet.supabase.realtime/presenceSyncFlow(): kotlinx.coroutines.flow/Flow<kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonObject>> // io.github.androidpoet.supabase.realtime/presenceSyncFlow|presenceSyncFlow@io.github.androidpoet.supabase.realtime.RealtimeSubscription(){}[0]
+final fun (io.github.androidpoet.supabase.realtime/RealtimeSubscription).io.github.androidpoet.supabase.realtime/statusFlow(): kotlinx.coroutines.flow/StateFlow<io.github.androidpoet.supabase.realtime/RealtimeSubscription.Status> // io.github.androidpoet.supabase.realtime/statusFlow|statusFlow@io.github.androidpoet.supabase.realtime.RealtimeSubscription(){}[0]
+final fun (io.github.androidpoet.supabase.realtime/RealtimeSubscription).io.github.androidpoet.supabase.realtime/systemEventFlow(kotlin/String? = ...): kotlinx.coroutines.flow/Flow<io.github.androidpoet.supabase.realtime/RealtimeEvent.SystemEvent> // io.github.androidpoet.supabase.realtime/systemEventFlow|systemEventFlow@io.github.androidpoet.supabase.realtime.RealtimeSubscription(kotlin.String?){}[0]
+final fun io.github.androidpoet.supabase.realtime/createRealtimeClient(io.github.androidpoet.supabase.client/SupabaseClient, io.github.androidpoet.supabase.realtime/RealtimeConfig = ...): io.github.androidpoet.supabase.realtime/RealtimeClient // io.github.androidpoet.supabase.realtime/createRealtimeClient|createRealtimeClient(io.github.androidpoet.supabase.client.SupabaseClient;io.github.androidpoet.supabase.realtime.RealtimeConfig){}[0]
+final inline fun <#A: reified kotlin/Any?> (io.github.androidpoet.supabase.realtime/RealtimeSubscription).io.github.androidpoet.supabase.realtime/presenceDataFlow(kotlinx.serialization.json/Json = ..., kotlin/Boolean = ...): kotlinx.coroutines.flow/Flow<kotlin.collections/List<#A>> // io.github.androidpoet.supabase.realtime/presenceDataFlow|presenceDataFlow@io.github.androidpoet.supabase.realtime.RealtimeSubscription(kotlinx.serialization.json.Json;kotlin.Boolean){0§<kotlin.Any?>}[0]
+final suspend fun (io.github.androidpoet.supabase.realtime/RealtimeClient).io.github.androidpoet.supabase.realtime/awaitConnected(): io.github.androidpoet.supabase.realtime/ConnectionState.Connected // io.github.androidpoet.supabase.realtime/awaitConnected|awaitConnected@io.github.androidpoet.supabase.realtime.RealtimeClient(){}[0]
+final suspend fun (io.github.androidpoet.supabase.realtime/RealtimeClient).io.github.androidpoet.supabase.realtime/awaitDisconnected(): io.github.androidpoet.supabase.realtime/ConnectionState.Disconnected // io.github.androidpoet.supabase.realtime/awaitDisconnected|awaitDisconnected@io.github.androidpoet.supabase.realtime.RealtimeClient(){}[0]
+final suspend fun (io.github.androidpoet.supabase.realtime/RealtimeClient).io.github.androidpoet.supabase.realtime/subscribe(kotlin/String, kotlin/Function1<io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder, kotlin/Unit> = ...): io.github.androidpoet.supabase.realtime/RealtimeSubscription // io.github.androidpoet.supabase.realtime/subscribe|subscribe@io.github.androidpoet.supabase.realtime.RealtimeClient(kotlin.String;kotlin.Function1<io.github.androidpoet.supabase.realtime.RealtimeChannelBuilder,kotlin.Unit>){}[0]
+final suspend fun (io.github.androidpoet.supabase.realtime/RealtimeClient).io.github.androidpoet.supabase.realtime/subscribeToBroadcast(kotlin/String, kotlin/String, kotlin.coroutines/SuspendFunction1<kotlinx.serialization.json/JsonObject, kotlin/Unit>): io.github.androidpoet.supabase.realtime/RealtimeSubscription // io.github.androidpoet.supabase.realtime/subscribeToBroadcast|subscribeToBroadcast@io.github.androidpoet.supabase.realtime.RealtimeClient(kotlin.String;kotlin.String;kotlin.coroutines.SuspendFunction1<kotlinx.serialization.json.JsonObject,kotlin.Unit>){}[0]
+final suspend fun (io.github.androidpoet.supabase.realtime/RealtimeClient).io.github.androidpoet.supabase.realtime/subscribeToPostgresChanges(kotlin/String, kotlin/String = ..., kotlin/String? = ..., kotlin/String? = ..., io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent = ..., kotlin.coroutines/SuspendFunction1<kotlinx.serialization.json/JsonObject, kotlin/Unit>): io.github.androidpoet.supabase.realtime/RealtimeSubscription // io.github.androidpoet.supabase.realtime/subscribeToPostgresChanges|subscribeToPostgresChanges@io.github.androidpoet.supabase.realtime.RealtimeClient(kotlin.String;kotlin.String;kotlin.String?;kotlin.String?;io.github.androidpoet.supabase.realtime.models.PostgresChangeEvent;kotlin.coroutines.SuspendFunction1<kotlinx.serialization.json.JsonObject,kotlin.Unit>){}[0]
+final suspend fun (io.github.androidpoet.supabase.realtime/RealtimeClient).io.github.androidpoet.supabase.realtime/subscribeToPostgresChanges(kotlin/String, kotlin/String = ..., kotlin/String? = ..., kotlin/String? = ..., io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent = ..., kotlin.coroutines/SuspendFunction2<io.github.androidpoet.supabase.realtime.models/PostgresChangeEvent, kotlinx.serialization.json/JsonObject, kotlin/Unit>): io.github.androidpoet.supabase.realtime/RealtimeSubscription // io.github.androidpoet.supabase.realtime/subscribeToPostgresChanges|subscribeToPostgresChanges@io.github.androidpoet.supabase.realtime.RealtimeClient(kotlin.String;kotlin.String;kotlin.String?;kotlin.String?;io.github.androidpoet.supabase.realtime.models.PostgresChangeEvent;kotlin.coroutines.SuspendFunction2<io.github.androidpoet.supabase.realtime.models.PostgresChangeEvent,kotlinx.serialization.json.JsonObject,kotlin.Unit>){}[0]
+final suspend fun (io.github.androidpoet.supabase.realtime/RealtimeClient).io.github.androidpoet.supabase.realtime/subscribeToPresence(kotlin/String, kotlin.coroutines/SuspendFunction1<kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonObject>, kotlin/Unit>): io.github.androidpoet.supabase.realtime/RealtimeSubscription // io.github.androidpoet.supabase.realtime/subscribeToPresence|subscribeToPresence@io.github.androidpoet.supabase.realtime.RealtimeClient(kotlin.String;kotlin.coroutines.SuspendFunction1<kotlin.collections.Map<kotlin.String,kotlinx.serialization.json.JsonObject>,kotlin.Unit>){}[0]
+final suspend fun (io.github.androidpoet.supabase.realtime/RealtimeSubscription).io.github.androidpoet.supabase.realtime/awaitSubscribed(kotlin/Long = ...): io.github.androidpoet.supabase.realtime/RealtimeSubscription.Status // io.github.androidpoet.supabase.realtime/awaitSubscribed|awaitSubscribed@io.github.androidpoet.supabase.realtime.RealtimeSubscription(kotlin.Long){}[0]
+final suspend fun (io.github.androidpoet.supabase.realtime/RealtimeSubscription).io.github.androidpoet.supabase.realtime/awaitUnsubscribed(kotlin/Long = ...): io.github.androidpoet.supabase.realtime/RealtimeSubscription.Status // io.github.androidpoet.supabase.realtime/awaitUnsubscribed|awaitUnsubscribed@io.github.androidpoet.supabase.realtime.RealtimeSubscription(kotlin.Long){}[0]

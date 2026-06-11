@@ -44,7 +44,9 @@ internal class FunctionsClientImpl(
         extra: Map<String, String>,
         region: FunctionRegion?,
     ): Map<String, String> = buildMap {
-        authToken?.let { put("Authorization", "Bearer $it") }
+        // Prefer an explicitly pinned token, otherwise fall back to the client's
+        // current session token so refreshes are picked up automatically.
+        (authToken ?: client.accessTokenOrNull)?.let { put("Authorization", "Bearer $it") }
         if (region != null) {
             put("x-region", region.value)
         }

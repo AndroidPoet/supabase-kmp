@@ -1,0 +1,41 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, linuxX64, macosArm64, macosX64, mingwX64, tvosArm64, tvosSimulatorArm64, tvosX64, wasmJs, watchosArm64, watchosSimulatorArm64, watchosX64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <supabase-kmp:supabase-functions>
+final enum class io.github.androidpoet.supabase.functions/FunctionRegion : kotlin/Enum<io.github.androidpoet.supabase.functions/FunctionRegion> { // io.github.androidpoet.supabase.functions/FunctionRegion|null[0]
+    enum entry AP_NORTHEAST_1 // io.github.androidpoet.supabase.functions/FunctionRegion.AP_NORTHEAST_1|null[0]
+    enum entry AP_SOUTHEAST_1 // io.github.androidpoet.supabase.functions/FunctionRegion.AP_SOUTHEAST_1|null[0]
+    enum entry EU_WEST_1 // io.github.androidpoet.supabase.functions/FunctionRegion.EU_WEST_1|null[0]
+    enum entry US_EAST_1 // io.github.androidpoet.supabase.functions/FunctionRegion.US_EAST_1|null[0]
+    enum entry US_WEST_1 // io.github.androidpoet.supabase.functions/FunctionRegion.US_WEST_1|null[0]
+
+    final val entries // io.github.androidpoet.supabase.functions/FunctionRegion.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.androidpoet.supabase.functions/FunctionRegion> // io.github.androidpoet.supabase.functions/FunctionRegion.entries.<get-entries>|<get-entries>#static(){}[0]
+    final val value // io.github.androidpoet.supabase.functions/FunctionRegion.value|{}value[0]
+        final fun <get-value>(): kotlin/String // io.github.androidpoet.supabase.functions/FunctionRegion.value.<get-value>|<get-value>(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.androidpoet.supabase.functions/FunctionRegion // io.github.androidpoet.supabase.functions/FunctionRegion.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.androidpoet.supabase.functions/FunctionRegion> // io.github.androidpoet.supabase.functions/FunctionRegion.values|values#static(){}[0]
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // io.github.androidpoet.supabase.functions/FunctionRegion.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.functions/FunctionRegion> // io.github.androidpoet.supabase.functions/FunctionRegion.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // io.github.androidpoet.supabase.functions/FunctionRegion.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+abstract interface io.github.androidpoet.supabase.functions/FunctionsClient { // io.github.androidpoet.supabase.functions/FunctionsClient|null[0]
+    abstract fun setAuth(kotlin/String) // io.github.androidpoet.supabase.functions/FunctionsClient.setAuth|setAuth(kotlin.String){}[0]
+    abstract suspend fun invoke(kotlin/String, kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., io.github.androidpoet.supabase.functions/FunctionRegion? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/String> // io.github.androidpoet.supabase.functions/FunctionsClient.invoke|invoke(kotlin.String;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>;io.github.androidpoet.supabase.functions.FunctionRegion?){}[0]
+    abstract suspend fun invokeWithBody(kotlin/String, kotlin/ByteArray, kotlin/String = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., io.github.androidpoet.supabase.functions/FunctionRegion? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/String> // io.github.androidpoet.supabase.functions/FunctionsClient.invokeWithBody|invokeWithBody(kotlin.String;kotlin.ByteArray;kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>;io.github.androidpoet.supabase.functions.FunctionRegion?){}[0]
+}
+
+final fun io.github.androidpoet.supabase.functions/createFunctionsClient(io.github.androidpoet.supabase.client/SupabaseClient): io.github.androidpoet.supabase.functions/FunctionsClient // io.github.androidpoet.supabase.functions/createFunctionsClient|createFunctionsClient(io.github.androidpoet.supabase.client.SupabaseClient){}[0]
+final suspend fun (io.github.androidpoet.supabase.functions/FunctionsClient).io.github.androidpoet.supabase.functions/invokeUnit(kotlin/String, kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., io.github.androidpoet.supabase.functions/FunctionRegion? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.functions/invokeUnit|invokeUnit@io.github.androidpoet.supabase.functions.FunctionsClient(kotlin.String;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>;io.github.androidpoet.supabase.functions.FunctionRegion?){}[0]
+final suspend fun (io.github.androidpoet.supabase.functions/FunctionsClient).io.github.androidpoet.supabase.functions/invokeWithBodyUnit(kotlin/String, kotlin/ByteArray, kotlin/String = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., io.github.androidpoet.supabase.functions/FunctionRegion? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.functions/invokeWithBodyUnit|invokeWithBodyUnit@io.github.androidpoet.supabase.functions.FunctionsClient(kotlin.String;kotlin.ByteArray;kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>;io.github.androidpoet.supabase.functions.FunctionRegion?){}[0]
+final suspend inline fun <#A: reified kotlin/Any, #B: reified kotlin/Any?> (io.github.androidpoet.supabase.functions/FunctionsClient).io.github.androidpoet.supabase.functions/invokeTyped(kotlin/String, #A, kotlin.collections/Map<kotlin/String, kotlin/String> = ..., io.github.androidpoet.supabase.functions/FunctionRegion? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<#B> // io.github.androidpoet.supabase.functions/invokeTyped|invokeTyped@io.github.androidpoet.supabase.functions.FunctionsClient(kotlin.String;0:0;kotlin.collections.Map<kotlin.String,kotlin.String>;io.github.androidpoet.supabase.functions.FunctionRegion?){0§<kotlin.Any>;1§<kotlin.Any?>}[0]
+final suspend inline fun <#A: reified kotlin/Any?> (io.github.androidpoet.supabase.functions/FunctionsClient).io.github.androidpoet.supabase.functions/invokeTyped(kotlin/String, kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., io.github.androidpoet.supabase.functions/FunctionRegion? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<#A> // io.github.androidpoet.supabase.functions/invokeTyped|invokeTyped@io.github.androidpoet.supabase.functions.FunctionsClient(kotlin.String;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>;io.github.androidpoet.supabase.functions.FunctionRegion?){0§<kotlin.Any?>}[0]
+final suspend inline fun <#A: reified kotlin/Any?> (io.github.androidpoet.supabase.functions/FunctionsClient).io.github.androidpoet.supabase.functions/invokeWithBodyTyped(kotlin/String, kotlin/ByteArray, kotlin/String = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., io.github.androidpoet.supabase.functions/FunctionRegion? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<#A> // io.github.androidpoet.supabase.functions/invokeWithBodyTyped|invokeWithBodyTyped@io.github.androidpoet.supabase.functions.FunctionsClient(kotlin.String;kotlin.ByteArray;kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>;io.github.androidpoet.supabase.functions.FunctionRegion?){0§<kotlin.Any?>}[0]

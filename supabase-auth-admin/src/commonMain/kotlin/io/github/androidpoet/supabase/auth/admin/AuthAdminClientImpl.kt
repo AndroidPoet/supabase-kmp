@@ -27,6 +27,7 @@ import io.github.androidpoet.supabase.client.deserialize
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.core.result.map
+import io.github.androidpoet.supabase.core.util.urlEncode
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonObject
 
@@ -269,22 +270,4 @@ internal class AuthAdminClientImpl(
             "$endpoint?redirect_to=${urlEncode(redirectTo)}"
         }
 
-    private fun urlEncode(value: String): String = buildString {
-        for (char in value) {
-            when {
-                char.isLetterOrDigit() || char in "-._~" -> append(char)
-                else -> {
-                    for (byte in char.toString().encodeToByteArray()) {
-                        append('%')
-                        append(HEX_CHARS[(byte.toInt() shr 4) and 0x0F])
-                        append(HEX_CHARS[byte.toInt() and 0x0F])
-                    }
-                }
-            }
-        }
-    }
-
-    private companion object {
-        private const val HEX_CHARS: String = "0123456789ABCDEF"
-    }
 }

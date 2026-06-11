@@ -1,6 +1,6 @@
 package io.github.androidpoet.supabase.client
 import io.github.androidpoet.supabase.core.result.SupabaseResult
-public interface SupabaseClient {
+public interface SupabaseClient : AutoCloseable {
     public val projectUrl: String
     public val apiKey: String
     public val accessTokenOrNull: String?
@@ -43,5 +43,5 @@ public interface SupabaseClient {
     ): SupabaseResult<String>
     public fun setAccessToken(token: String)
     public fun clearAccessToken()
-    public fun close()
+    override fun close()
 }
