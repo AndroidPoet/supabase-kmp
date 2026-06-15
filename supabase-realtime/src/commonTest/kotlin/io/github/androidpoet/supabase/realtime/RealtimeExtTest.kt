@@ -103,6 +103,8 @@ private class FakeSubscription : RealtimeSubscription {
 
     override fun asFlow(): Flow<RealtimeEvent> = flow
 
+    override fun presenceState(): io.github.androidpoet.supabase.realtime.models.PresenceState = emptyMap()
+
     suspend fun emit(event: RealtimeEvent) {
         flow.emit(event)
     }
