@@ -52,6 +52,21 @@ private const val JWT_VALID_PAYLOAD =
         "MTAyNDQ0ODAwLCJpYXQiOjE3MDAwMDAwMDAsInNlc3Npb25faWQiOiJzZXNzLTEiLCJhYWwiOiJhYWwxIn0"
 private const val JWT_EXPIRED_PAYLOAD = "eyJzdWIiOiJ1MSIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzAwMDAwMDAwfQ"
 
+// Real ES256 fixture: a P-256 key pair signs the JWT below; JWKS_ES256_JSON is the matching public key.
+//   header  = {"alg":"ES256","typ":"JWT","kid":"test-es256-key"}
+//   payload = {"sub":"user-123","email":"jwt@example.com","role":"authenticated",...,"exp":4102444800,...}
+private const val JWT_ES256_HEADER = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InRlc3QtZXMyNTYta2V5In0"
+private const val JWT_ES256_PAYLOAD =
+    "eyJzdWIiOiJ1c2VyLTEyMyIsImVtYWlsIjoiand0QGV4YW1wbGUuY29tIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLC" +
+        "Jpc3MiOiJodHRwczovL2RlbW8uc3VwYWJhc2UuY28vYXV0aC92MSIsImV4cCI6NDEwMjQ0NDgwMCwiaWF0IjoxNzAw" +
+        "MDAwMDAwLCJzZXNzaW9uX2lkIjoic2Vzcy0xIn0"
+private const val JWT_ES256_SIG = "TYd2l98wlxvmYMfOX8-hI6M5zsnhJqTm5v_l9thVyGF61YCnJBOTrykgxsd-xwaAJjcGx32V9dBVBEuS1WBwpQ"
+private const val JWT_ES256_BAD_SIG = "TYd2l98wlxvmYMfOX8-hI6M5zsnhJqTm5v_l9thVyGF61YCnJBOTrykgxsd-xwaAJjcGx32V9dBVBEuS1WBwpA"
+private const val JWKS_ES256_JSON =
+    "{\"keys\":[{\"kty\":\"EC\",\"crv\":\"P-256\",\"kid\":\"test-es256-key\",\"alg\":\"ES256\"," +
+        "\"use\":\"sig\",\"x\":\"Rxw-dYxJBChbun5TEY7Q9SSt6wdX0lvS-Oew1236cUw\",\"y\":\"3VIPesqKi5F6" +
+        "zDf1HejwybvjrYWDgucC3CWhLQn3qFg\"}]}"
+
 class AuthClientExtTest {
     @Test
     fun test_signUp_alias_routesToEmailSignup() =
@@ -429,6 +444,46 @@ class AuthClientExtTest {
             val result = FakeAuthClient().getClaims("not-a-jwt")
 
             assertTrue(result is SupabaseResult.Failure)
+        }
+
+    @Test
+    fun test_getClaims_verifiesEs256SignatureLocallyWithoutServerCall() =
+        runTest {
+            val auth = FakeAuthClient().apply { jwksResponse = SupabaseResult.Success(JWKS_ES256_JSON) }
+            val jwt = "$JWT_ES256_HEADER.$JWT_ES256_PAYLOAD.$JWT_ES256_SIG"
+
+            val result = auth.getClaims(jwt)
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals("user-123", result.value.claims.subject)
+            // A valid local ES256 verification must NOT fall back to the Auth server.
+            assertNull(auth.lastGetUserAccessToken)
+        }
+
+    @Test
+    fun test_getClaims_rejectsTamperedEs256SignatureWithoutServerCall() =
+        runTest {
+            val auth = FakeAuthClient().apply { jwksResponse = SupabaseResult.Success(JWKS_ES256_JSON) }
+            val jwt = "$JWT_ES256_HEADER.$JWT_ES256_PAYLOAD.$JWT_ES256_BAD_SIG"
+
+            val result = auth.getClaims(jwt)
+
+            assertTrue(result is SupabaseResult.Failure)
+            // A definitive local "invalid" verdict is final — no server fallback that might mask forgery.
+            assertNull(auth.lastGetUserAccessToken)
+        }
+
+    @Test
+    fun test_getClaims_fallsBackToServerWhenJwksMissingKey() =
+        runTest {
+            // Default JWKS has no matching key, so local verification can't run and the server is used.
+            val auth = FakeAuthClient()
+            val jwt = "$JWT_ES256_HEADER.$JWT_ES256_PAYLOAD.$JWT_ES256_SIG"
+
+            val result = auth.getClaims(jwt)
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals(jwt, auth.lastGetUserAccessToken)
         }
 
     @Test
@@ -870,6 +925,7 @@ private class FakeAuthClient : AuthClient {
     var lastSignOutScope: SignOutScope? = null
     var lastSignOutAccessToken: String? = null
     var lastGetUserAccessToken: String? = null
+    var jwksResponse: SupabaseResult<String> = SupabaseResult.Success("{\"keys\":[]}")
     var lastReauthenticateAccessToken: String? = null
     var lastExchangeAuthCode: String? = null
     var lastExchangeCodeVerifier: String? = null
@@ -1015,6 +1071,8 @@ private class FakeAuthClient : AuthClient {
         SupabaseResult.Success(dummySession.user.copy(email = "updated@b.com")).also {
             lastGetUserAccessToken = accessToken
         }
+
+    override suspend fun fetchJwks(): SupabaseResult<String> = jwksResponse
 
     override suspend fun getUserIdentities(accessToken: String): SupabaseResult<List<UserIdentity>> =
         SupabaseResult.Success(currentUserIdentities).also {

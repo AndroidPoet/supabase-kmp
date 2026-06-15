@@ -1,5 +1,11 @@
 package io.github.androidpoet.supabase.auth
 
+import dev.whyoleg.cryptography.CryptographyProvider
+import dev.whyoleg.cryptography.algorithms.EC
+import dev.whyoleg.cryptography.algorithms.ECDSA
+import dev.whyoleg.cryptography.algorithms.SHA256
+import io.github.androidpoet.supabase.auth.models.Jwk
+import io.github.androidpoet.supabase.auth.models.JwkSet
 import io.github.androidpoet.supabase.auth.models.JwtClaims
 import io.github.androidpoet.supabase.auth.models.JwtClaimsResult
 import io.github.androidpoet.supabase.auth.models.JwtHeader
@@ -17,6 +23,7 @@ import io.github.androidpoet.supabase.auth.models.UserUpdateRequest
 import io.github.androidpoet.supabase.auth.session.SessionManager
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
+import io.github.androidpoet.supabase.core.result.map
 import kotlinx.coroutines.CancellationException
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
@@ -797,13 +804,21 @@ private fun decodeJwt(jwt: String): SupabaseResult<JwtClaimsResult> {
  * `auth.getClaims()`.
  *
  * The header and payload are decoded locally into [JwtClaims] (use [JwtClaimsResult.raw] for any
- * non-standard claim). When [verify] is true the token's authenticity is confirmed against the
- * Auth server (the same validation [AuthClient.getUser] performs), which covers both symmetric
- * (HS256) and asymmetric signing. Local JWKS signature verification is not yet implemented, so a
- * server round-trip is used when [verify] is true.
+ * non-standard claim). When [verify] is true the token's signature is checked:
+ *
+ * - For asymmetric `ES256` (ECDSA P-256) tokens the signature is verified **locally** against the
+ *   project's JWKS (fetched via [AuthClient.fetchJwks]), avoiding a network round-trip — this is
+ *   what distinguishes `getClaims` from [AuthClient.getUser].
+ * - For any other case (symmetric `HS256`, other asymmetric algorithms, a missing `kid`, an
+ *   unreachable JWKS endpoint, or a platform without local crypto), it falls back to validating the
+ *   token against the Auth server, the same check [AuthClient.getUser] performs. Falling back is
+ *   always safe because the server re-validates the signature.
+ *
+ * Local verification uses platform-native crypto (JDK/JCA, Apple Security, WebCrypto, OpenSSL3) via
+ * the `cryptography-kotlin` library; signature math is never hand-rolled.
  *
  * @param jwt the JWT to inspect, e.g. a session access token.
- * @param verify when true, validate the token against the Auth server before returning the claims.
+ * @param verify when true, verify the token's signature before returning the claims.
  * @param allowExpired when false, a token whose `exp` is in the past is rejected without a network call.
  */
 public suspend fun AuthClient.getClaims(
@@ -821,10 +836,109 @@ public suspend fun AuthClient.getClaims(
         return SupabaseResult.Failure(SupabaseError(message = "JWT has expired"))
     }
     if (verify) {
-        val validation = getUser(accessToken = jwt)
+        val validation = verifyJwt(jwt, decoded.header)
         if (validation is SupabaseResult.Failure) return validation
     }
     return SupabaseResult.Success(decoded)
+}
+
+/**
+ * Verifies [jwt] either locally (asymmetric ES256 against the project JWKS) or, when local
+ * verification isn't applicable, by asking the Auth server. The server path is always safe.
+ */
+private suspend fun AuthClient.verifyJwt(
+    jwt: String,
+    header: JwtHeader,
+): SupabaseResult<Unit> =
+    when (verifyEs256Locally(jwt, header)) {
+        LocalVerification.VALID -> SupabaseResult.Success(Unit)
+        LocalVerification.INVALID ->
+            SupabaseResult.Failure(SupabaseError(message = "JWT signature verification failed"))
+        LocalVerification.UNSUPPORTED -> getUser(accessToken = jwt).map { }
+    }
+
+private enum class LocalVerification { VALID, INVALID, UNSUPPORTED }
+
+/** Material required to verify an ES256 signature: the RAW public key, the signing input, and the signature. */
+private class Es256Material(
+    val publicKey: ByteArray,
+    val signingInput: ByteArray,
+    val signature: ByteArray,
+)
+
+private const val ES256_ALG = "ES256"
+private const val EC_CURVE_P256 = "P-256"
+private const val EC_KEY_TYPE = "EC"
+private const val EC_COORDINATE_SIZE = 32
+private const val EC_UNCOMPRESSED_TAG: Byte = 0x04
+private const val JWT_PART_COUNT = 3
+
+/**
+ * Attempts a local ES256 signature check. Returns [LocalVerification.UNSUPPORTED] for any token that
+ * can't be verified locally (wrong alg, missing key, JWKS fetch failure, or no platform crypto), so
+ * the caller can fall back to the server.
+ */
+private suspend fun AuthClient.verifyEs256Locally(
+    jwt: String,
+    header: JwtHeader,
+): LocalVerification {
+    val material = buildEs256Material(jwt, header) ?: return LocalVerification.UNSUPPORTED
+    return try {
+        if (verifyEs256(material)) LocalVerification.VALID else LocalVerification.INVALID
+    } catch (e: Throwable) {
+        if (e is CancellationException) throw e
+        LocalVerification.UNSUPPORTED
+    }
+}
+
+private suspend fun AuthClient.buildEs256Material(
+    jwt: String,
+    header: JwtHeader,
+): Es256Material? {
+    val parts = jwt.split('.')
+    val kid = header.keyId
+    if (header.algorithm != ES256_ALG || kid == null || parts.size < JWT_PART_COUNT) return null
+    val publicKey = resolveJwk(kid)?.let(::ecPublicKeyBytes) ?: return null
+    val signature = decodeBase64UrlBytes(parts[2]) ?: return null
+    return Es256Material(
+        publicKey = publicKey,
+        signingInput = "${parts[0]}.${parts[1]}".encodeToByteArray(),
+        signature = signature,
+    )
+}
+
+private suspend fun AuthClient.resolveJwk(kid: String): Jwk? {
+    val raw =
+        when (val result = fetchJwks()) {
+            is SupabaseResult.Failure -> return null
+            is SupabaseResult.Success -> result.value
+        }
+    return try {
+        claimsJson.decodeFromString(JwkSet.serializer(), raw).keys.firstOrNull { it.keyId == kid }
+    } catch (e: Throwable) {
+        if (e is CancellationException) throw e
+        null
+    }
+}
+
+/** Reconstructs the RAW (uncompressed `0x04 || X || Y`) public key bytes for an EC P-256 JWK. */
+private fun ecPublicKeyBytes(jwk: Jwk): ByteArray? {
+    if (jwk.keyType != EC_KEY_TYPE || jwk.curve != EC_CURVE_P256) return null
+    val x = jwk.x?.let(::decodeBase64UrlBytes) ?: return null
+    val y = jwk.y?.let(::decodeBase64UrlBytes) ?: return null
+    if (x.size != EC_COORDINATE_SIZE || y.size != EC_COORDINATE_SIZE) return null
+    return byteArrayOf(EC_UNCOMPRESSED_TAG) + x + y
+}
+
+private suspend fun verifyEs256(material: Es256Material): Boolean {
+    val ecdsa = CryptographyProvider.Default.get(ECDSA)
+    val publicKey =
+        ecdsa
+            .publicKeyDecoder(EC.Curve.P256)
+            .decodeFromByteArray(EC.PublicKey.Format.RAW, material.publicKey)
+    return publicKey
+        .signatureVerifier(SHA256, ECDSA.SignatureFormat.RAW)
+        .tryVerifySignature(material.signingInput, material.signature)
 }
 
 /** Decodes and verifies the claims of the current session's access token. See [getClaims]. */
@@ -839,7 +953,9 @@ public suspend fun SessionManager.getClaimsForCurrentSession(
     return authClient.getClaims(jwt = token, verify = verify, allowExpired = allowExpired)
 }
 
-private fun decodeBase64Url(input: String): String? {
+private fun decodeBase64Url(input: String): String? = decodeBase64UrlBytes(input)?.decodeToString()
+
+private fun decodeBase64UrlBytes(input: String): ByteArray? {
     val normalized =
         input
             .replace('-', '+')
@@ -870,5 +986,5 @@ private fun decodeBase64Url(input: String): String? {
         if (c4 != '=') output += (n and 0xFF).toByte()
         i += 4
     }
-    return output.toByteArray().decodeToString()
+    return output.toByteArray()
 }

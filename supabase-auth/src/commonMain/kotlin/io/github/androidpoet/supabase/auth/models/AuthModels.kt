@@ -494,3 +494,26 @@ public data class JwtClaimsResult(
     public val signature: String,
     public val raw: JsonObject,
 )
+
+/**
+ * A single JSON Web Key from a project's JWKS endpoint. Only the fields needed to reconstruct a
+ * public key for signature verification are modelled; unknown fields are ignored.
+ */
+@Serializable
+public data class Jwk(
+    @SerialName("kty") public val keyType: String,
+    @SerialName("alg") public val algorithm: String? = null,
+    @SerialName("kid") public val keyId: String? = null,
+    @SerialName("crv") public val curve: String? = null,
+    @SerialName("use") public val use: String? = null,
+    @SerialName("x") public val x: String? = null,
+    @SerialName("y") public val y: String? = null,
+    @SerialName("n") public val modulus: String? = null,
+    @SerialName("e") public val exponent: String? = null,
+)
+
+/** A JSON Web Key Set, as returned by `/auth/v1/.well-known/jwks.json`. */
+@Serializable
+public data class JwkSet(
+    @SerialName("keys") public val keys: List<Jwk> = emptyList(),
+)

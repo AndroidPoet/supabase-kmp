@@ -142,6 +142,12 @@ public interface AuthClient {
 
     public suspend fun getUser(accessToken: String): SupabaseResult<User>
 
+    /**
+     * Fetches the raw JSON Web Key Set (JWKS) from `/auth/v1/.well-known/jwks.json`. Used by
+     * [getClaims] to verify asymmetric token signatures locally without an Auth server round-trip.
+     */
+    public suspend fun fetchJwks(): SupabaseResult<String>
+
     public suspend fun getUserIdentities(accessToken: String): SupabaseResult<List<UserIdentity>>
 
     public suspend fun updateUser(
