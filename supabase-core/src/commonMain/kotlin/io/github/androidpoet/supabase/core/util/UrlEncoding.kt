@@ -8,16 +8,17 @@ private const val HEX_CHARS = "0123456789ABCDEF"
  * else is encoded from its UTF-8 bytes. Shared so the auth modules don't each
  * carry their own copy.
  */
-public fun urlEncode(value: String): String = buildString {
-    for (char in value) {
-        if (char.isLetterOrDigit() || char in "-._~") {
-            append(char)
-        } else {
-            for (byte in char.toString().encodeToByteArray()) {
-                append('%')
-                append(HEX_CHARS[(byte.toInt() shr 4) and 0x0F])
-                append(HEX_CHARS[byte.toInt() and 0x0F])
+public fun urlEncode(value: String): String =
+    buildString {
+        for (char in value) {
+            if (char.isLetterOrDigit() || char in "-._~") {
+                append(char)
+            } else {
+                for (byte in char.toString().encodeToByteArray()) {
+                    append('%')
+                    append(HEX_CHARS[(byte.toInt() shr 4) and 0x0F])
+                    append(HEX_CHARS[byte.toInt() and 0x0F])
+                }
             }
         }
     }
-}

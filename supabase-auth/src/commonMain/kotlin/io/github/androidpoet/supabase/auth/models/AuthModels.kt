@@ -2,6 +2,7 @@ package io.github.androidpoet.supabase.auth.models
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
+
 @Serializable
 public data class Session(
     @SerialName("access_token") val accessToken: String,
@@ -10,6 +11,7 @@ public data class Session(
     @SerialName("token_type") val tokenType: String,
     val user: User,
 )
+
 @Serializable
 public data class User(
     val id: String,
@@ -31,6 +33,7 @@ public data class UserIdentity(
     @SerialName("user_id") val userId: String? = null,
     @SerialName("identity_data") val identityData: JsonObject? = null,
 )
+
 @Serializable
 public data class SignUpRequest(
     val email: String? = null,
@@ -38,12 +41,14 @@ public data class SignUpRequest(
     val password: String,
     val data: JsonObject? = null,
 )
+
 @Serializable
 public data class SignInRequest(
     val email: String? = null,
     val phone: String? = null,
     val password: String,
 )
+
 @Serializable
 public data class IdTokenRequest(
     @SerialName("id_token") val idToken: String,
@@ -59,6 +64,7 @@ public data class AnonymousSignInRequest(
     val data: JsonObject? = null,
     @SerialName("captcha_token") val captchaToken: String? = null,
 )
+
 @Serializable
 public data class OtpRequest(
     val email: String? = null,
@@ -67,6 +73,7 @@ public data class OtpRequest(
     @SerialName("captcha_token") val captchaToken: String? = null,
     @SerialName("email_redirect_to") val emailRedirectTo: String? = null,
 )
+
 @Serializable
 public data class OtpVerifyRequest(
     val email: String? = null,
@@ -78,9 +85,13 @@ public data class OtpVerifyRequest(
 )
 
 public sealed interface OtpVerifyResult {
-    public data class Authenticated(public val session: Session) : OtpVerifyResult
+    public data class Authenticated(
+        public val session: Session,
+    ) : OtpVerifyResult
+
     public data object VerifiedNoSession : OtpVerifyResult
 }
+
 @Serializable
 public data class ResendOtpRequest(
     val type: OtpType,
@@ -89,19 +100,33 @@ public data class ResendOtpRequest(
     @SerialName("captcha_token") val captchaToken: String? = null,
     @SerialName("redirect_to") val redirectTo: String? = null,
 )
+
 @Serializable
 public enum class OtpType {
-    @SerialName("sms") SMS,
-    @SerialName("email") EMAIL,
-    @SerialName("recovery") RECOVERY,
-    @SerialName("invite") INVITE,
-    @SerialName("email_change") EMAIL_CHANGE,
-    @SerialName("phone_change") PHONE_CHANGE,
+    @SerialName("sms")
+    SMS,
+
+    @SerialName("email")
+    EMAIL,
+
+    @SerialName("recovery")
+    RECOVERY,
+
+    @SerialName("invite")
+    INVITE,
+
+    @SerialName("email_change")
+    EMAIL_CHANGE,
+
+    @SerialName("phone_change")
+    PHONE_CHANGE,
 }
+
 @Serializable
 public data class RefreshTokenRequest(
     @SerialName("refresh_token") val refreshToken: String,
 )
+
 @Serializable
 public data class UserUpdateRequest(
     val email: String? = null,
@@ -111,11 +136,17 @@ public data class UserUpdateRequest(
     val data: JsonObject? = null,
     val nonce: String? = null,
 )
+
 @Serializable
 public enum class SignOutScope {
-    @SerialName("global") GLOBAL,
-    @SerialName("local") LOCAL,
-    @SerialName("others") OTHERS,
+    @SerialName("global")
+    GLOBAL,
+
+    @SerialName("local")
+    LOCAL,
+
+    @SerialName("others")
+    OTHERS,
 }
 
 @Serializable
@@ -135,48 +166,94 @@ public data class SsoRequest(
 public data class SsoResponse(
     @SerialName("url") public val url: String,
 )
+
 @Serializable
-public enum class OAuthProvider(@SerialName("value") public val value: String) {
-    @SerialName("google") GOOGLE("google"),
-    @SerialName("apple") APPLE("apple"),
-    @SerialName("github") GITHUB("github"),
-    @SerialName("gitlab") GITLAB("gitlab"),
-    @SerialName("bitbucket") BITBUCKET("bitbucket"),
-    @SerialName("discord") DISCORD("discord"),
-    @SerialName("facebook") FACEBOOK("facebook"),
-    @SerialName("twitter") TWITTER("twitter"),
-    @SerialName("slack") SLACK("slack"),
-    @SerialName("spotify") SPOTIFY("spotify"),
-    @SerialName("twitch") TWITCH("twitch"),
-    @SerialName("azure") AZURE("azure"),
-    @SerialName("keycloak") KEYCLOAK("keycloak"),
-    @SerialName("linkedin_oidc") LINKEDIN("linkedin_oidc"),
-    @SerialName("notion") NOTION("notion"),
-    @SerialName("zoom") ZOOM("zoom"),
-    @SerialName("figma") FIGMA("figma"),
+public enum class OAuthProvider(
+    @SerialName("value") public val value: String,
+) {
+    @SerialName("google")
+    GOOGLE("google"),
+
+    @SerialName("apple")
+    APPLE("apple"),
+
+    @SerialName("github")
+    GITHUB("github"),
+
+    @SerialName("gitlab")
+    GITLAB("gitlab"),
+
+    @SerialName("bitbucket")
+    BITBUCKET("bitbucket"),
+
+    @SerialName("discord")
+    DISCORD("discord"),
+
+    @SerialName("facebook")
+    FACEBOOK("facebook"),
+
+    @SerialName("twitter")
+    TWITTER("twitter"),
+
+    @SerialName("slack")
+    SLACK("slack"),
+
+    @SerialName("spotify")
+    SPOTIFY("spotify"),
+
+    @SerialName("twitch")
+    TWITCH("twitch"),
+
+    @SerialName("azure")
+    AZURE("azure"),
+
+    @SerialName("keycloak")
+    KEYCLOAK("keycloak"),
+
+    @SerialName("linkedin_oidc")
+    LINKEDIN("linkedin_oidc"),
+
+    @SerialName("notion")
+    NOTION("notion"),
+
+    @SerialName("zoom")
+    ZOOM("zoom"),
+
+    @SerialName("figma")
+    FIGMA("figma"),
 }
+
 @Serializable
 public data class OAuthResponse(
     @SerialName("url") public val url: String,
     @SerialName("provider") public val provider: String,
 )
+
 @Serializable
 public data class PkceParams(
     public val codeVerifier: String,
     public val codeChallenge: String,
     public val codeChallengeMethod: String = "S256",
 )
+
 @Serializable
 public data class ExchangeCodeRequest(
     @SerialName("auth_code") public val authCode: String,
     @SerialName("code_verifier") public val codeVerifier: String,
 )
+
 @Serializable
 public enum class MfaFactorType {
-    @SerialName("totp") TOTP,
-    @SerialName("phone") PHONE,
-    @SerialName("webauthn") WEBAUTHN,
+    @SerialName("totp")
+    TOTP,
+
+    @SerialName("phone")
+    PHONE,
+
+    @SerialName("webauthn")
+    WEBAUTHN,
 }
+
 @Serializable
 public data class MfaEnrollRequest(
     @SerialName("factor_type") public val factorType: MfaFactorType,
@@ -184,6 +261,7 @@ public data class MfaEnrollRequest(
     @SerialName("issuer") public val issuer: String? = null,
     @SerialName("phone") public val phone: String? = null,
 )
+
 @Serializable
 public data class MfaEnrollResponse(
     @SerialName("id") public val id: String,
@@ -192,28 +270,33 @@ public data class MfaEnrollResponse(
     @SerialName("friendly_name") public val friendlyName: String? = null,
     @SerialName("phone") public val phone: String? = null,
 )
+
 @Serializable
 public data class MfaTotpDetails(
     @SerialName("qr_code") public val qrCode: String,
     @SerialName("secret") public val secret: String,
     @SerialName("uri") public val uri: String,
 )
+
 @Serializable
 public data class MfaChallengeRequest(
     @SerialName("factor_id") public val factorId: String,
 )
+
 @Serializable
 public data class MfaChallengeResponse(
     @SerialName("id") public val id: String,
     @SerialName("factor_id") public val factorId: String,
     @SerialName("expires_at") public val expiresAt: Long? = null,
 )
+
 @Serializable
 public data class MfaVerifyRequest(
     @SerialName("factor_id") public val factorId: String,
     @SerialName("challenge_id") public val challengeId: String,
     @SerialName("code") public val code: String,
 )
+
 @Serializable
 public data class MfaVerifyResponse(
     @SerialName("access_token") public val accessToken: String,
@@ -222,15 +305,21 @@ public data class MfaVerifyResponse(
     @SerialName("expires_in") public val expiresIn: Long,
     @SerialName("user") public val user: User,
 )
+
 @Serializable
 public data class MfaUnenrollResponse(
     @SerialName("id") public val id: String,
 )
+
 @Serializable
 public enum class AuthenticatorAssuranceLevel {
-    @SerialName("aal1") AAL1,
-    @SerialName("aal2") AAL2,
+    @SerialName("aal1")
+    AAL1,
+
+    @SerialName("aal2")
+    AAL2,
 }
+
 @Serializable
 public data class MfaListFactorsResponse(
     @SerialName("all") public val all: List<MfaFactor>,
@@ -238,6 +327,7 @@ public data class MfaListFactorsResponse(
     @SerialName("phone") public val phone: List<MfaFactor>,
     @SerialName("webauthn") public val webauthn: List<MfaFactor> = emptyList(),
 )
+
 @Serializable
 public data class MfaFactor(
     @SerialName("id") public val id: String,
@@ -320,8 +410,11 @@ public data class OAuthConsentRequest(
 
 @Serializable
 public enum class Web3Chain {
-    @SerialName("ethereum") ETHEREUM,
-    @SerialName("solana") SOLANA,
+    @SerialName("ethereum")
+    ETHEREUM,
+
+    @SerialName("solana")
+    SOLANA,
 }
 
 @Serializable

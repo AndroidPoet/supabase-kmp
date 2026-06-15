@@ -24,10 +24,12 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
 import kotlin.concurrent.Volatile
+
 private const val CLIENT_VERSION = "supabase-kmp/0.1.0"
 private const val INTERNAL_RETRY_HEADER = "X-Supabase-Kmp-Retry"
 private const val RETRY_COUNT_HEADER = "X-Retry-Count"
 private const val DEFAULT_MAX_RETRIES = 3
+
 internal class HttpTransport(
     private val config: SupabaseConfig,
     engineFactory: HttpClientEngineFactory<*>,
@@ -41,34 +43,36 @@ internal class HttpTransport(
     private var accessToken: String? = null
     internal val accessTokenOrNull: String? get() = accessToken
     private val errorJson = Json { ignoreUnknownKeys = true }
-    internal val httpClient: HttpClient = HttpClient(engineFactory) {
-        install(ContentNegotiation) {
-            json(
-                Json {
-                    ignoreUnknownKeys = true
-                    isLenient = true
-                    explicitNulls = false
-                },
-            )
-        }
-        if (config.logging) {
-            install(Logging) {
-                level = config.logLevel
-                // Never let credentials reach the log sink. This covers the anon/service
-                // apikey header and every Bearer token (including the auth-admin
-                // service-role key, which flows through this same client).
-                sanitizeHeader { name ->
-                    name.equals("Authorization", ignoreCase = true) ||
-                        name.equals("apikey", ignoreCase = true)
+    internal val httpClient: HttpClient =
+        HttpClient(engineFactory) {
+            install(ContentNegotiation) {
+                json(
+                    Json {
+                        ignoreUnknownKeys = true
+                        isLenient = true
+                        explicitNulls = false
+                    },
+                )
+            }
+            if (config.logging) {
+                install(Logging) {
+                    level = config.logLevel
+                    // Never let credentials reach the log sink. This covers the anon/service
+                    // apikey header and every Bearer token (including the auth-admin
+                    // service-role key, which flows through this same client).
+                    sanitizeHeader { name ->
+                        name.equals("Authorization", ignoreCase = true) ||
+                            name.equals("apikey", ignoreCase = true)
+                    }
                 }
             }
+            defaultRequest {
+                header("apikey", apiKey)
+                header("X-Client-Info", CLIENT_VERSION)
+                config.headers.forEach { (key, value) -> header(key, value) }
+            }
         }
-        defaultRequest {
-            header("apikey", apiKey)
-            header("X-Client-Info", CLIENT_VERSION)
-            config.headers.forEach { (key, value) -> header(key, value) }
-        }
-    }
+
     suspend fun get(
         url: String,
         queryParams: List<Pair<String, String>> = emptyList(),
@@ -77,16 +81,17 @@ internal class HttpTransport(
         val retryEnabled = headers[INTERNAL_RETRY_HEADER]?.toBooleanStrictOrNull() ?: false
         val outgoingHeaders = headers - INTERNAL_RETRY_HEADER
         return execute(retryEnabled = retryEnabled, retryableMethod = true) { attempt ->
-        httpClient.get(url) {
-            queryParams.forEach { (k, v) -> this.url.parameters.append(k, v) }
-            outgoingHeaders.forEach { (k, v) -> header(k, v) }
-            if (attempt > 0) header(RETRY_COUNT_HEADER, attempt.toString())
-            if ("Authorization" !in outgoingHeaders) {
-                header("Authorization", "Bearer ${accessToken ?: apiKey}")
+            httpClient.get(url) {
+                queryParams.forEach { (k, v) -> this.url.parameters.append(k, v) }
+                outgoingHeaders.forEach { (k, v) -> header(k, v) }
+                if (attempt > 0) header(RETRY_COUNT_HEADER, attempt.toString())
+                if ("Authorization" !in outgoingHeaders) {
+                    header("Authorization", "Bearer ${accessToken ?: apiKey}")
+                }
             }
         }
     }
-    }
+
     suspend fun post(
         url: String,
         body: String? = null,
@@ -94,16 +99,17 @@ internal class HttpTransport(
     ): SupabaseResult<String> {
         val outgoingHeaders = headers - INTERNAL_RETRY_HEADER
         return execute {
-        httpClient.post(url) {
-            contentType(ContentType.Application.Json)
-            body?.let { setBody(it) }
-            outgoingHeaders.forEach { (k, v) -> header(k, v) }
-            if ("Authorization" !in outgoingHeaders) {
-                header("Authorization", "Bearer ${accessToken ?: apiKey}")
+            httpClient.post(url) {
+                contentType(ContentType.Application.Json)
+                body?.let { setBody(it) }
+                outgoingHeaders.forEach { (k, v) -> header(k, v) }
+                if ("Authorization" !in outgoingHeaders) {
+                    header("Authorization", "Bearer ${accessToken ?: apiKey}")
+                }
             }
         }
     }
-    }
+
     suspend fun put(
         url: String,
         body: String? = null,
@@ -111,16 +117,17 @@ internal class HttpTransport(
     ): SupabaseResult<String> {
         val outgoingHeaders = headers - INTERNAL_RETRY_HEADER
         return execute {
-        httpClient.put(url) {
-            contentType(ContentType.Application.Json)
-            body?.let { setBody(it) }
-            outgoingHeaders.forEach { (k, v) -> header(k, v) }
-            if ("Authorization" !in outgoingHeaders) {
-                header("Authorization", "Bearer ${accessToken ?: apiKey}")
+            httpClient.put(url) {
+                contentType(ContentType.Application.Json)
+                body?.let { setBody(it) }
+                outgoingHeaders.forEach { (k, v) -> header(k, v) }
+                if ("Authorization" !in outgoingHeaders) {
+                    header("Authorization", "Bearer ${accessToken ?: apiKey}")
+                }
             }
         }
     }
-    }
+
     suspend fun patch(
         url: String,
         body: String? = null,
@@ -128,16 +135,17 @@ internal class HttpTransport(
     ): SupabaseResult<String> {
         val outgoingHeaders = headers - INTERNAL_RETRY_HEADER
         return execute {
-        httpClient.patch(url) {
-            contentType(ContentType.Application.Json)
-            body?.let { setBody(it) }
-            outgoingHeaders.forEach { (k, v) -> header(k, v) }
-            if ("Authorization" !in outgoingHeaders) {
-                header("Authorization", "Bearer ${accessToken ?: apiKey}")
+            httpClient.patch(url) {
+                contentType(ContentType.Application.Json)
+                body?.let { setBody(it) }
+                outgoingHeaders.forEach { (k, v) -> header(k, v) }
+                if ("Authorization" !in outgoingHeaders) {
+                    header("Authorization", "Bearer ${accessToken ?: apiKey}")
+                }
             }
         }
     }
-    }
+
     suspend fun delete(
         url: String,
         body: String? = null,
@@ -145,18 +153,19 @@ internal class HttpTransport(
     ): SupabaseResult<String> {
         val outgoingHeaders = headers - INTERNAL_RETRY_HEADER
         return execute {
-        httpClient.delete(url) {
-            if (body != null) {
-                contentType(ContentType.Application.Json)
-                setBody(body)
-            }
-            outgoingHeaders.forEach { (k, v) -> header(k, v) }
-            if ("Authorization" !in outgoingHeaders) {
-                header("Authorization", "Bearer ${accessToken ?: apiKey}")
+            httpClient.delete(url) {
+                if (body != null) {
+                    contentType(ContentType.Application.Json)
+                    setBody(body)
+                }
+                outgoingHeaders.forEach { (k, v) -> header(k, v) }
+                if ("Authorization" !in outgoingHeaders) {
+                    header("Authorization", "Bearer ${accessToken ?: apiKey}")
+                }
             }
         }
     }
-    }
+
     suspend fun postRaw(
         url: String,
         body: ByteArray,
@@ -165,16 +174,17 @@ internal class HttpTransport(
     ): SupabaseResult<String> {
         val outgoingHeaders = headers - INTERNAL_RETRY_HEADER
         return execute {
-        httpClient.post(url) {
-            contentType(ContentType.parse(contentType))
-            setBody(body)
-            outgoingHeaders.forEach { (k, v) -> header(k, v) }
-            if ("Authorization" !in outgoingHeaders) {
-                header("Authorization", "Bearer ${accessToken ?: apiKey}")
+            httpClient.post(url) {
+                contentType(ContentType.parse(contentType))
+                setBody(body)
+                outgoingHeaders.forEach { (k, v) -> header(k, v) }
+                if ("Authorization" !in outgoingHeaders) {
+                    header("Authorization", "Bearer ${accessToken ?: apiKey}")
+                }
             }
         }
     }
-    }
+
     suspend fun putRaw(
         url: String,
         body: ByteArray,
@@ -183,25 +193,29 @@ internal class HttpTransport(
     ): SupabaseResult<String> {
         val outgoingHeaders = headers - INTERNAL_RETRY_HEADER
         return execute {
-        httpClient.put(url) {
-            contentType(ContentType.parse(contentType))
-            setBody(body)
-            outgoingHeaders.forEach { (k, v) -> header(k, v) }
-            if ("Authorization" !in outgoingHeaders) {
-                header("Authorization", "Bearer ${accessToken ?: apiKey}")
+            httpClient.put(url) {
+                contentType(ContentType.parse(contentType))
+                setBody(body)
+                outgoingHeaders.forEach { (k, v) -> header(k, v) }
+                if ("Authorization" !in outgoingHeaders) {
+                    header("Authorization", "Bearer ${accessToken ?: apiKey}")
+                }
             }
         }
     }
-    }
+
     fun setAccessToken(token: String) {
         accessToken = token
     }
+
     fun clearAccessToken() {
         accessToken = null
     }
+
     fun close() {
         httpClient.close()
     }
+
     private suspend inline fun execute(
         retryEnabled: Boolean = false,
         retryableMethod: Boolean = false,
@@ -210,17 +224,18 @@ internal class HttpTransport(
         return try {
             var attempt = 0
             while (attempt <= DEFAULT_MAX_RETRIES) {
-                val response = try {
-                    request(attempt)
-                } catch (e: Throwable) {
-                    if (e is CancellationException) throw e
-                    if (retryEnabled && retryableMethod && attempt < DEFAULT_MAX_RETRIES) {
-                        delay(retryDelayMillis(attempt))
-                        attempt++
-                        continue
+                val response =
+                    try {
+                        request(attempt)
+                    } catch (e: Throwable) {
+                        if (e is CancellationException) throw e
+                        if (retryEnabled && retryableMethod && attempt < DEFAULT_MAX_RETRIES) {
+                            delay(retryDelayMillis(attempt))
+                            attempt++
+                            continue
+                        }
+                        throw e
                     }
-                    throw e
-                }
                 val text = response.bodyAsText()
                 val statusCode = response.status.value
                 if (response.status.isSuccess()) {
@@ -242,19 +257,24 @@ internal class HttpTransport(
             )
         }
     }
+
     private fun io.ktor.client.statement.HttpResponse.retryDelayMillis(attempt: Int): Long {
         val retryAfterSeconds = headers["Retry-After"]?.toLongOrNull()
         return if (retryAfterSeconds != null) retryAfterSeconds.coerceAtLeast(0) * 1_000 else retryDelayMillis(attempt)
     }
+
     private fun retryDelayMillis(attempt: Int): Long =
         1_000L shl attempt
+
     private fun Int.isRetryableStatus(): Boolean =
-        this == 429 || // Too Many Requests — Retry-After is honored above
+        this == 429 ||
+            // Too Many Requests — Retry-After is honored above
             this == 500 ||
             this == 502 ||
             this == 503 ||
             this == 504 ||
             this == 520
+
     private fun parseError(body: String, statusCode: Int): SupabaseError =
         try {
             errorJson.decodeFromString<SupabaseError>(body)

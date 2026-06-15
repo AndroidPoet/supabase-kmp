@@ -9,7 +9,6 @@ import io.github.androidpoet.supabase.core.result.map
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonPrimitive
 
 public suspend inline fun <reified T> DatabaseClient.selectTyped(
     table: String,
@@ -21,6 +20,7 @@ public suspend inline fun <reified T> DatabaseClient.selectTyped(
     val result = select(table = table, schema = schema, columns = columns, single = single, filters = filters)
     return if (single) result.deserialize<T>().map { listOf(it) } else result.deserialize()
 }
+
 public suspend inline fun <reified T> DatabaseClient.selectSingleTyped(
     table: String,
     schema: String? = null,
@@ -70,6 +70,7 @@ public suspend fun DatabaseClient.selectHead(
         count = count,
         filters = filters,
     ).map { }
+
 public suspend inline fun <reified T> DatabaseClient.insertTyped(
     table: String,
     schema: String? = null,
@@ -137,6 +138,7 @@ public suspend inline fun <reified T> DatabaseClient.insertUnitTyped(
         onConflict = onConflict,
         count = count,
     )
+
 public suspend inline fun <reified T> DatabaseClient.insertTypedMany(
     table: String,
     schema: String? = null,
@@ -197,6 +199,7 @@ public suspend inline fun <reified T> DatabaseClient.upsertTypedMany(
         defaultToNull = defaultToNull,
         onConflict = onConflict,
     )
+
 public suspend inline fun <reified T> DatabaseClient.updateTyped(
     table: String,
     schema: String? = null,
@@ -269,6 +272,7 @@ public suspend fun DatabaseClient.deleteUnit(
         count = count,
         filters = filters,
     ).map { }
+
 public suspend inline fun <reified T> DatabaseClient.rpcTyped(
     function: String,
     schema: String? = null,
@@ -365,12 +369,13 @@ public suspend inline fun <reified Request : Any, reified Response> DatabaseClie
     params: Request,
 ): SupabaseResult<Response?> =
     when (
-        val result = rpc(
-            function = function,
-            schema = schema,
-            params = defaultJson.encodeToString(params),
-            single = true,
-        )
+        val result =
+            rpc(
+                function = function,
+                schema = schema,
+                params = defaultJson.encodeToString(params),
+                single = true,
+            )
     ) {
         is SupabaseResult.Success -> result.deserialize<Response>().map { it as Response? }
         is SupabaseResult.Failure ->

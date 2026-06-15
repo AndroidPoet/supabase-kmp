@@ -9,45 +9,54 @@ import kotlin.test.assertTrue
 
 class FunctionsClientExtTest {
     @Test
-    fun test_invokeTyped_requestEncodesAndDecodes() = runTest {
-        val client = FakeFunctionsClient()
+    fun test_invokeTyped_requestEncodesAndDecodes() =
+        runTest {
+            val client = FakeFunctionsClient()
 
-        val result = client.invokeTyped<Req, Res>(
-            functionName = "echo",
-            request = Req("hello"),
-        )
+            val result =
+                client.invokeTyped<Req, Res>(
+                    functionName = "echo",
+                    request = Req("hello"),
+                )
 
-        assertTrue(result is SupabaseResult.Success)
-        assertEquals("hello", result.value.value)
-        assertEquals("""{"value":"hello"}""", client.lastInvokeBody)
-    }
-
-    @Test
-    fun test_invokeWithBodyTyped_decodesResponse() = runTest {
-        val client = FakeFunctionsClient()
-
-        val result = client.invokeWithBodyTyped<Res>(
-            functionName = "bin",
-            body = byteArrayOf(1),
-        )
-
-        assertTrue(result is SupabaseResult.Success)
-        assertEquals("binary-ok", result.value.value)
-    }
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals("hello", result.value.value)
+            assertEquals("""{"value":"hello"}""", client.lastInvokeBody)
+        }
 
     @Test
-    fun test_invokeUnit_mapsSuccessToUnit() = runTest {
-        val client = FakeFunctionsClient()
-        val result = client.invokeUnit(functionName = "ping")
-        assertTrue(result is SupabaseResult.Success)
-    }
+    fun test_invokeWithBodyTyped_decodesResponse() =
+        runTest {
+            val client = FakeFunctionsClient()
+
+            val result =
+                client.invokeWithBodyTyped<Res>(
+                    functionName = "bin",
+                    body = byteArrayOf(1),
+                )
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals("binary-ok", result.value.value)
+        }
+
+    @Test
+    fun test_invokeUnit_mapsSuccessToUnit() =
+        runTest {
+            val client = FakeFunctionsClient()
+            val result = client.invokeUnit(functionName = "ping")
+            assertTrue(result is SupabaseResult.Success)
+        }
 }
 
 @Serializable
-private data class Req(val value: String)
+private data class Req(
+    val value: String,
+)
 
 @Serializable
-private data class Res(val value: String)
+private data class Res(
+    val value: String,
+)
 
 private class FakeFunctionsClient : FunctionsClient {
     var lastInvokeBody: String? = null

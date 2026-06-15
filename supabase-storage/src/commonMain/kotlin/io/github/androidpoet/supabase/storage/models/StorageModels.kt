@@ -293,14 +293,20 @@ public data class VectorBucketListResponse(
 
 @Serializable
 public enum class VectorDataType {
-    @SerialName("float32") FLOAT32,
+    @SerialName("float32")
+    FLOAT32,
 }
 
 @Serializable
 public enum class VectorDistanceMetric {
-    @SerialName("cosine") COSINE,
-    @SerialName("euclidean") EUCLIDEAN,
-    @SerialName("dotproduct") DOTPRODUCT,
+    @SerialName("cosine")
+    COSINE,
+
+    @SerialName("euclidean")
+    EUCLIDEAN,
+
+    @SerialName("dotproduct")
+    DOTPRODUCT,
 }
 
 @Serializable

@@ -1,6 +1,7 @@
 package io.github.androidpoet.supabase.client
 import io.github.androidpoet.supabase.client.transport.HttpTransport
 import io.github.androidpoet.supabase.core.result.SupabaseResult
+
 internal class SupabaseClientImpl(
     override val projectUrl: String,
     override val apiKey: String,
@@ -15,30 +16,35 @@ internal class SupabaseClientImpl(
         headers: Map<String, String>,
     ): SupabaseResult<String> =
         transport.get(url = "$projectUrl$endpoint", queryParams = queryParams, headers = headers)
+
     override suspend fun post(
         endpoint: String,
         body: String?,
         headers: Map<String, String>,
     ): SupabaseResult<String> =
         transport.post(url = "$projectUrl$endpoint", body = body, headers = headers)
+
     override suspend fun put(
         endpoint: String,
         body: String?,
         headers: Map<String, String>,
     ): SupabaseResult<String> =
         transport.put(url = "$projectUrl$endpoint", body = body, headers = headers)
+
     override suspend fun patch(
         endpoint: String,
         body: String?,
         headers: Map<String, String>,
     ): SupabaseResult<String> =
         transport.patch(url = "$projectUrl$endpoint", body = body, headers = headers)
+
     override suspend fun delete(
         endpoint: String,
         body: String?,
         headers: Map<String, String>,
     ): SupabaseResult<String> =
         transport.delete(url = "$projectUrl$endpoint", body = body, headers = headers)
+
     override suspend fun postRaw(
         url: String,
         body: ByteArray,
@@ -46,6 +52,7 @@ internal class SupabaseClientImpl(
         headers: Map<String, String>,
     ): SupabaseResult<String> =
         transport.postRaw(url = "$projectUrl$url", body = body, contentType = contentType, headers = headers)
+
     override suspend fun putRaw(
         url: String,
         body: ByteArray,
@@ -53,12 +60,15 @@ internal class SupabaseClientImpl(
         headers: Map<String, String>,
     ): SupabaseResult<String> =
         transport.putRaw(url = "$projectUrl$url", body = body, contentType = contentType, headers = headers)
+
     override fun setAccessToken(token: String) {
         transport.setAccessToken(token)
     }
+
     override fun clearAccessToken() {
         transport.clearAccessToken()
     }
+
     override fun close() {
         transport.close()
     }

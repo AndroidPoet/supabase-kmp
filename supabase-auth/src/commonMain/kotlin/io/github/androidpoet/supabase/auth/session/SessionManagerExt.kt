@@ -20,17 +20,18 @@ public fun SessionManager.onAuthStateChange(
     scope: CoroutineScope,
     emitInitialSession: Boolean = true,
     callback: suspend (event: AuthStateChangeEvent, session: Session?) -> Unit,
-): Job = scope.launch {
-    var previousState = sessionState.value
-    if (emitInitialSession) {
-        callback(AuthStateChangeEvent.INITIAL_SESSION, previousState.sessionOrNull())
+): Job =
+    scope.launch {
+        var previousState = sessionState.value
+        if (emitInitialSession) {
+            callback(AuthStateChangeEvent.INITIAL_SESSION, previousState.sessionOrNull())
+        }
+        sessionState.drop(1).collect { state ->
+            val event = state.toAuthStateChangeEvent(previousState) ?: return@collect
+            previousState = state
+            callback(event, state.sessionOrNull())
+        }
     }
-    sessionState.drop(1).collect { state ->
-        val event = state.toAuthStateChangeEvent(previousState) ?: return@collect
-        previousState = state
-        callback(event, state.sessionOrNull())
-    }
-}
 
 private fun SessionState.sessionOrNull(): Session? =
     when (this) {

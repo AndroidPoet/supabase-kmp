@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.vanniktech.publish) apply false
     alias(libs.plugins.detekt) apply false
+    alias(libs.plugins.spotless) apply false
     alias(libs.plugins.atomicfu) apply false
     alias(libs.plugins.dokka)
     alias(libs.plugins.kover)
@@ -15,16 +16,17 @@ plugins {
 }
 
 // Published modules whose public API and coverage we track.
-val publishedModules = listOf(
-    "supabase-core",
-    "supabase-client",
-    "supabase-auth",
-    "supabase-auth-admin",
-    "supabase-database",
-    "supabase-storage",
-    "supabase-realtime",
-    "supabase-functions",
-)
+val publishedModules =
+    listOf(
+        "supabase-core",
+        "supabase-client",
+        "supabase-auth",
+        "supabase-auth-admin",
+        "supabase-database",
+        "supabase-storage",
+        "supabase-realtime",
+        "supabase-functions",
+    )
 
 // Validate the binary (ABI) compatibility of every published module so an
 // accidental public-API break is caught in review instead of by consumers.
@@ -41,8 +43,60 @@ apiValidation {
     }
 }
 
+// ktlint engine version shared by every Spotless format below.
+val ktlintVersion = libs.versions.ktlint.get()
+
+// ktlint reads these from .editorconfig in the IDE; pass them to Spotless's
+// bundled engine too so the Gradle check matches editor behaviour exactly.
+//   - @Composable functions and the @FilterDsl PostgREST operators (`in`/`is`)
+//     are intentionally not lowerCamelCase.
+//   - line length is owned by detekt (MaxLineLength = 140); ktlint's own
+//     reporting rule is off to avoid double-reporting.
+//   - the function-signature rule is off because it collapses author-wrapped
+//     expression bodies onto a single line that then exceeds detekt's 140 limit.
+val ktlintOverrides =
+    mapOf(
+        "ktlint_function_naming_ignore_when_annotated_with" to "Composable,FilterDsl",
+        "ktlint_standard_max-line-length" to "disabled",
+        "ktlint_standard_function-signature" to "disabled",
+    )
+
+// Format the root build script and shared config files too, not just modules.
+apply(plugin = "com.diffplug.spotless")
+extensions.configure<com.diffplug.gradle.spotless.SpotlessExtension> {
+    kotlinGradle {
+        target("*.gradle.kts")
+        ktlint(ktlintVersion)
+            .editorConfigOverride(ktlintOverrides)
+    }
+    format("misc") {
+        target("*.md", ".gitignore", "config/**/*.yml")
+        trimTrailingWhitespace()
+        leadingTabsToSpaces()
+        endWithNewline()
+    }
+}
+
 subprojects {
     apply(plugin = "io.gitlab.arturbosch.detekt")
+
+    // Auto-format + lint Kotlin via ktlint (ktlint_official style, see .editorconfig).
+    apply(plugin = "com.diffplug.spotless")
+    extensions.configure<com.diffplug.gradle.spotless.SpotlessExtension> {
+        kotlin {
+            target("src/**/*.kt")
+            targetExclude("**/build/**")
+            ktlint(ktlintVersion)
+                .editorConfigOverride(ktlintOverrides)
+            trimTrailingWhitespace()
+            endWithNewline()
+        }
+        kotlinGradle {
+            target("*.gradle.kts")
+            ktlint(ktlintVersion)
+                .editorConfigOverride(ktlintOverrides)
+        }
+    }
 
     extensions.configure<io.gitlab.arturbosch.detekt.extensions.DetektExtension> {
         parallel = true

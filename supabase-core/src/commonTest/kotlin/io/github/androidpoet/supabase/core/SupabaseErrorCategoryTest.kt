@@ -10,10 +10,11 @@ import kotlin.test.assertEquals
 class SupabaseErrorCategoryTest {
     @Test
     fun test_category_mapsKnownSupabaseCode() {
-        val error = SupabaseError(
-            message = "duplicate",
-            code = SupabaseErrorCodes.Database.UNIQUENESS_VIOLATION,
-        )
+        val error =
+            SupabaseError(
+                message = "duplicate",
+                code = SupabaseErrorCodes.Database.UNIQUENESS_VIOLATION,
+            )
 
         assertEquals(SupabaseErrorCategory.Conflict, error.category)
     }

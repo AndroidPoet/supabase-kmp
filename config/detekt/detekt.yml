@@ -14,7 +14,9 @@ complexity:
     constructorThreshold: 14
     ignoreDefaultParameters: true
   LongMethod:
-    threshold: 80
+    # ktlint (ktlint_official) expands single-line builder calls onto multiple
+    # lines via trailing commas, so a few wide test bodies land just over 80.
+    threshold: 100
   TooManyFunctions:
     active: false
   CyclomaticComplexMethod:
@@ -26,7 +28,10 @@ style:
   ReturnCount:
     max: 5
   MaxLineLength:
-    maxLineLength: 140
+    # ktlint (ktlint_official) owns wrapping; its continuation indent can push a
+    # handful of unbreakable lines (string templates, URLs) a few chars past 140.
+    # Keep a small margin so the formatter and the analyzer agree.
+    maxLineLength: 150
   UnusedPrivateMember:
     active: true
   ForbiddenComment:

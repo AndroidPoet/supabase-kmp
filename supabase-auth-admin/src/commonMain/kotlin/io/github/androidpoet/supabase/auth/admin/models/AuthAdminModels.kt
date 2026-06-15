@@ -83,7 +83,9 @@ public data class MfaAdminDeleteFactorResponse(
 )
 
 @Serializable
-public enum class OAuthClientType(public val value: String) {
+public enum class OAuthClientType(
+    public val value: String,
+) {
     @SerialName("public")
     PUBLIC("public"),
 
@@ -92,7 +94,9 @@ public enum class OAuthClientType(public val value: String) {
 }
 
 @Serializable
-public enum class OAuthClientRegistrationType(public val value: String) {
+public enum class OAuthClientRegistrationType(
+    public val value: String,
+) {
     @SerialName("dynamic")
     DYNAMIC("dynamic"),
 
@@ -101,7 +105,9 @@ public enum class OAuthClientRegistrationType(public val value: String) {
 }
 
 @Serializable
-public enum class OAuthClientTokenEndpointAuthMethod(public val value: String) {
+public enum class OAuthClientTokenEndpointAuthMethod(
+    public val value: String,
+) {
     @SerialName("none")
     NONE("none"),
 
@@ -158,7 +164,9 @@ public data class OAuthClientListResponse(
 )
 
 @Serializable
-public enum class CustomProviderType(public val value: String) {
+public enum class CustomProviderType(
+    public val value: String,
+) {
     @SerialName("oauth2")
     OAUTH2("oauth2"),
 

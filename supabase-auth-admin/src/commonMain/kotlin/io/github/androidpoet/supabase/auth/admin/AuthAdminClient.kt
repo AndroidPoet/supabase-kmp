@@ -1,23 +1,23 @@
 package io.github.androidpoet.supabase.auth.admin
 
-import io.github.androidpoet.supabase.auth.models.SignOutScope
-import io.github.androidpoet.supabase.auth.models.User
 import io.github.androidpoet.supabase.auth.admin.models.AdminUserAttributes
 import io.github.androidpoet.supabase.auth.admin.models.CustomProvider
+import io.github.androidpoet.supabase.auth.admin.models.CustomProviderCreateRequest
 import io.github.androidpoet.supabase.auth.admin.models.CustomProviderListResponse
 import io.github.androidpoet.supabase.auth.admin.models.CustomProviderType
-import io.github.androidpoet.supabase.auth.admin.models.OAuthClient
-import io.github.androidpoet.supabase.auth.admin.models.OAuthClientCreateRequest
-import io.github.androidpoet.supabase.auth.admin.models.OAuthClientListResponse
-import io.github.androidpoet.supabase.auth.admin.models.OAuthClientUpdateRequest
-import io.github.androidpoet.supabase.auth.admin.models.Passkey
-import io.github.androidpoet.supabase.auth.admin.models.CustomProviderCreateRequest
 import io.github.androidpoet.supabase.auth.admin.models.CustomProviderUpdateRequest
 import io.github.androidpoet.supabase.auth.admin.models.GenerateLinkRequest
 import io.github.androidpoet.supabase.auth.admin.models.GenerateLinkResponse
 import io.github.androidpoet.supabase.auth.admin.models.ListUsersResponse
 import io.github.androidpoet.supabase.auth.admin.models.MfaAdminDeleteFactorResponse
 import io.github.androidpoet.supabase.auth.admin.models.MfaAdminListFactorsResponse
+import io.github.androidpoet.supabase.auth.admin.models.OAuthClient
+import io.github.androidpoet.supabase.auth.admin.models.OAuthClientCreateRequest
+import io.github.androidpoet.supabase.auth.admin.models.OAuthClientListResponse
+import io.github.androidpoet.supabase.auth.admin.models.OAuthClientUpdateRequest
+import io.github.androidpoet.supabase.auth.admin.models.Passkey
+import io.github.androidpoet.supabase.auth.models.SignOutScope
+import io.github.androidpoet.supabase.auth.models.User
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import kotlinx.serialization.json.JsonObject
 

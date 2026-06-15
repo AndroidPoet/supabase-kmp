@@ -12,7 +12,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-enum class DemoTab(val label: String) {
+enum class DemoTab(
+    val label: String,
+) {
     AUTH("Auth"),
     CHAT("Chat"),
     STORAGE("Storage"),
@@ -50,12 +52,13 @@ data class DemoUiState(
 class DemoViewModel(
     private val repository: DemoRepository,
 ) : ViewModel() {
-    private val _state = MutableStateFlow(
-        DemoUiState(
-            bucket = repository.defaultBucket,
-            functionName = repository.defaultFunctionName,
-        ),
-    )
+    private val _state =
+        MutableStateFlow(
+            DemoUiState(
+                bucket = repository.defaultBucket,
+                functionName = repository.defaultFunctionName,
+            ),
+        )
     val state: StateFlow<DemoUiState> = _state.asStateFlow()
 
     private val pageSize = 20
@@ -72,7 +75,9 @@ class DemoViewModel(
     }
 
     fun setAuthEmail(value: String) = _state.update { it.copy(authEmail = value) }
+
     fun setAuthPassword(value: String) = _state.update { it.copy(authPassword = value) }
+
     private fun selectRoom(room: ChatRoom) {
         if (room.id == _state.value.roomId) return
         _state.update {
@@ -100,10 +105,15 @@ class DemoViewModel(
     }
 
     fun setChatComposer(value: String) = _state.update { it.copy(chatComposer = value) }
+
     fun setBucket(value: String) = _state.update { it.copy(bucket = value) }
+
     fun setStoragePath(value: String) = _state.update { it.copy(storagePath = value) }
+
     fun setStorageContent(value: String) = _state.update { it.copy(storageContent = value) }
+
     fun setFunctionName(value: String) = _state.update { it.copy(functionName = value) }
+
     fun setFunctionBody(value: String) = _state.update { it.copy(functionBody = value) }
 
     fun signUp() {
@@ -173,14 +183,15 @@ class DemoViewModel(
     fun getCurrentUser() {
         viewModelScope.launch {
             when (val result = repository.getCurrentUser()) {
-                is SupabaseResult.Success -> _state.update {
-                    it.copy(
-                        authStatus = "Current user: ${result.value.email ?: result.value.id}",
-                        currentUserId = result.value.id,
-                        senderName = displayNameFor(result.value.email, result.value.id),
-                        error = null,
-                    )
-                }
+                is SupabaseResult.Success ->
+                    _state.update {
+                        it.copy(
+                            authStatus = "Current user: ${result.value.email ?: result.value.id}",
+                            currentUserId = result.value.id,
+                            senderName = displayNameFor(result.value.email, result.value.id),
+                            error = null,
+                        )
+                    }
                 is SupabaseResult.Failure -> _state.update { it.copy(error = result.error.message) }
             }
         }
@@ -189,14 +200,15 @@ class DemoViewModel(
     fun refreshSession() {
         viewModelScope.launch {
             when (val result = repository.refreshSession()) {
-                is SupabaseResult.Success -> _state.update {
-                    it.copy(
-                        authStatus = "Session refreshed: ${result.value.user.email ?: result.value.user.id}",
-                        currentUserId = result.value.user.id,
-                        senderName = displayNameFor(result.value.user.email, result.value.user.id),
-                        error = null,
-                    )
-                }
+                is SupabaseResult.Success ->
+                    _state.update {
+                        it.copy(
+                            authStatus = "Session refreshed: ${result.value.user.email ?: result.value.user.id}",
+                            currentUserId = result.value.user.id,
+                            senderName = displayNameFor(result.value.user.email, result.value.user.id),
+                            error = null,
+                        )
+                    }
                 is SupabaseResult.Failure -> _state.update { it.copy(error = result.error.message) }
             }
         }
@@ -213,14 +225,15 @@ class DemoViewModel(
         viewModelScope.launch {
             val result = repository.signOut()
             when (result) {
-                is SupabaseResult.Success -> _state.update {
-                    it.copy(
-                        authStatus = "Signed out",
-                        currentUserId = null,
-                        senderName = "Guest",
-                        error = null,
-                    )
-                }
+                is SupabaseResult.Success ->
+                    _state.update {
+                        it.copy(
+                            authStatus = "Signed out",
+                            currentUserId = null,
+                            senderName = "Guest",
+                            error = null,
+                        )
+                    }
                 is SupabaseResult.Failure -> _state.update { it.copy(error = result.error.message) }
             }
             if (result is SupabaseResult.Success) {
@@ -243,12 +256,13 @@ class DemoViewModel(
                 return@launch
             }
             when (
-                val result = repository.sendMessage(
-                    roomId = room.id,
-                    senderId = snapshot.currentUserId,
-                    senderName = snapshot.senderName,
-                    body = text,
-                )
+                val result =
+                    repository.sendMessage(
+                        roomId = room.id,
+                        senderId = snapshot.currentUserId,
+                        senderName = snapshot.senderName,
+                        body = text,
+                    )
             ) {
                 is SupabaseResult.Success -> _state.update { it.copy(sending = false, chatComposer = "") }
                 is SupabaseResult.Failure -> _state.update { it.copy(sending = false, error = result.error.message) }
@@ -260,9 +274,10 @@ class DemoViewModel(
         val snapshot = _state.value
         viewModelScope.launch {
             when (val result = repository.sendBroadcast(snapshot.senderName, "ping from ${snapshot.senderName}")) {
-                is SupabaseResult.Success -> _state.update {
-                    it.copy(chatDiagnostics = "Broadcast sent on ${snapshot.roomName}", error = null)
-                }
+                is SupabaseResult.Success ->
+                    _state.update {
+                        it.copy(chatDiagnostics = "Broadcast sent on ${snapshot.roomName}", error = null)
+                    }
                 is SupabaseResult.Failure -> _state.update { it.copy(error = result.error.message) }
             }
         }
@@ -272,9 +287,10 @@ class DemoViewModel(
         val snapshot = _state.value
         viewModelScope.launch {
             when (val result = repository.updatePresence(snapshot.senderName)) {
-                is SupabaseResult.Success -> _state.update {
-                    it.copy(chatDiagnostics = "Presence tracked as ${snapshot.senderName}", error = null)
-                }
+                is SupabaseResult.Success ->
+                    _state.update {
+                        it.copy(chatDiagnostics = "Presence tracked as ${snapshot.senderName}", error = null)
+                    }
                 is SupabaseResult.Failure -> _state.update { it.copy(error = result.error.message) }
             }
         }
@@ -287,12 +303,13 @@ class DemoViewModel(
             when (val count = repository.loadRoomMessageCount(roomId)) {
                 is SupabaseResult.Success -> {
                     when (val report = repository.buildDatabaseReport(roomId)) {
-                        is SupabaseResult.Success -> _state.update {
-                            it.copy(
-                                chatDiagnostics = "RPC count: ${count.value}\n${report.value}",
-                                error = null,
-                            )
-                        }
+                        is SupabaseResult.Success ->
+                            _state.update {
+                                it.copy(
+                                    chatDiagnostics = "RPC count: ${count.value}\n${report.value}",
+                                    error = null,
+                                )
+                            }
                         is SupabaseResult.Failure -> _state.update { it.copy(error = report.error.message) }
                     }
                 }
@@ -327,11 +344,12 @@ class DemoViewModel(
         if (snapshot.bucket.isBlank() || snapshot.storagePath.isBlank()) return
         viewModelScope.launch {
             when (
-                val result = repository.uploadText(
-                    bucket = snapshot.bucket.trim(),
-                    path = snapshot.storagePath.trim(),
-                    content = snapshot.storageContent,
-                )
+                val result =
+                    repository.uploadText(
+                        bucket = snapshot.bucket.trim(),
+                        path = snapshot.storagePath.trim(),
+                        content = snapshot.storageContent,
+                    )
             ) {
                 is SupabaseResult.Success -> _state.update { it.copy(storageResult = "Uploaded key: ${result.value}", error = null) }
                 is SupabaseResult.Failure -> _state.update { it.copy(error = result.error.message) }
@@ -380,12 +398,13 @@ class DemoViewModel(
         if (snapshot.bucket.isBlank() || snapshot.storagePath.isBlank()) return
         viewModelScope.launch {
             when (val result = repository.buildStorageUrls(snapshot.bucket.trim(), snapshot.storagePath.trim())) {
-                is SupabaseResult.Success -> _state.update {
-                    it.copy(
-                        storageResult = "Public: ${result.value.publicUrl}\nSigned: ${result.value.signedUrl}",
-                        error = null,
-                    )
-                }
+                is SupabaseResult.Success ->
+                    _state.update {
+                        it.copy(
+                            storageResult = "Public: ${result.value.publicUrl}\nSigned: ${result.value.signedUrl}",
+                            error = null,
+                        )
+                    }
                 is SupabaseResult.Failure -> _state.update { it.copy(error = result.error.message) }
             }
         }
@@ -416,13 +435,14 @@ class DemoViewModel(
     private fun restoreSession() {
         viewModelScope.launch {
             when (val result = repository.restoreSession()) {
-                is SupabaseResult.Success -> _state.update {
-                    it.copy(
-                        authStatus = "Session restored: ${result.value.user.email ?: result.value.user.id}",
-                        currentUserId = result.value.user.id,
-                        senderName = displayNameFor(result.value.user.email, result.value.user.id),
-                    )
-                }
+                is SupabaseResult.Success ->
+                    _state.update {
+                        it.copy(
+                            authStatus = "Session restored: ${result.value.user.email ?: result.value.user.id}",
+                            currentUserId = result.value.user.id,
+                            senderName = displayNameFor(result.value.user.email, result.value.user.id),
+                        )
+                    }
                 is SupabaseResult.Failure -> Unit
             }
         }
@@ -433,17 +453,18 @@ class DemoViewModel(
             _state.update { it.copy(loadingMessages = true, error = null) }
             when (val result = repository.loadRooms()) {
                 is SupabaseResult.Success -> {
-                    val rooms = if (result.value.isEmpty()) {
-                        when (val created = repository.createRoom("general")) {
-                            is SupabaseResult.Success -> listOf(created.value)
-                            is SupabaseResult.Failure -> {
-                                _state.update { it.copy(loadingMessages = false, error = created.error.message) }
-                                return@launch
+                    val rooms =
+                        if (result.value.isEmpty()) {
+                            when (val created = repository.createRoom("general")) {
+                                is SupabaseResult.Success -> listOf(created.value)
+                                is SupabaseResult.Failure -> {
+                                    _state.update { it.copy(loadingMessages = false, error = created.error.message) }
+                                    return@launch
+                                }
                             }
+                        } else {
+                            result.value
                         }
-                    } else {
-                        result.value
-                    }
                     val selected = rooms.firstOrNull { it.name == "general" } ?: rooms.first()
                     _state.update {
                         it.copy(
@@ -456,9 +477,10 @@ class DemoViewModel(
                     }
                     openChatIfNeeded()
                 }
-                is SupabaseResult.Failure -> _state.update {
-                    it.copy(loadingMessages = false, error = result.error.message)
-                }
+                is SupabaseResult.Failure ->
+                    _state.update {
+                        it.copy(loadingMessages = false, error = result.error.message)
+                    }
             }
         }
     }
@@ -473,8 +495,11 @@ class DemoViewModel(
                 roomId = _state.value.roomId,
                 onInserted = { inserted ->
                     _state.update { state ->
-                        if (state.messages.any { it.id == inserted.id }) state
-                        else state.copy(messages = listOf(inserted) + state.messages)
+                        if (state.messages.any { it.id == inserted.id }) {
+                            state
+                        } else {
+                            state.copy(messages = listOf(inserted) + state.messages)
+                        }
                     }
                 },
                 onBroadcast = { status ->

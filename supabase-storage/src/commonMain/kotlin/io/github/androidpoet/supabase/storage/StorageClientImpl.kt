@@ -2,8 +2,8 @@ package io.github.androidpoet.supabase.storage
 import io.github.androidpoet.supabase.client.SupabaseClient
 import io.github.androidpoet.supabase.client.defaultJson
 import io.github.androidpoet.supabase.client.deserialize
-import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.core.result.SupabaseErrorCategory
+import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.core.result.category
 import io.github.androidpoet.supabase.core.result.map
 import io.github.androidpoet.supabase.storage.models.AnalyticsBucket
@@ -29,11 +29,11 @@ import io.github.androidpoet.supabase.storage.models.ObjectListRequest
 import io.github.androidpoet.supabase.storage.models.ObjectListV2Request
 import io.github.androidpoet.supabase.storage.models.ObjectListV2Result
 import io.github.androidpoet.supabase.storage.models.ObjectSortByRequest
-import io.github.androidpoet.supabase.storage.models.SignedUrlRequest
 import io.github.androidpoet.supabase.storage.models.SignedUrlItemResponse
-import io.github.androidpoet.supabase.storage.models.SignedUrlsRequest
-import io.github.androidpoet.supabase.storage.models.SignedUrlTransformRequest
+import io.github.androidpoet.supabase.storage.models.SignedUrlRequest
 import io.github.androidpoet.supabase.storage.models.SignedUrlResponse
+import io.github.androidpoet.supabase.storage.models.SignedUrlTransformRequest
+import io.github.androidpoet.supabase.storage.models.SignedUrlsRequest
 import io.github.androidpoet.supabase.storage.models.UpdateBucketRequest
 import io.github.androidpoet.supabase.storage.models.UploadSignedUrlResponse
 import io.github.androidpoet.supabase.storage.models.VectorBucket
@@ -61,8 +61,8 @@ import io.github.androidpoet.supabase.storage.models.VectorObject
 import io.github.androidpoet.supabase.storage.models.VectorPutRequest
 import io.github.androidpoet.supabase.storage.models.VectorQueryRequest
 import io.github.androidpoet.supabase.storage.models.VectorQueryResponse
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -71,6 +71,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
+
 internal class StorageClientImpl(
     private val client: SupabaseClient,
 ) : StorageClient {
@@ -81,17 +82,20 @@ internal class StorageClientImpl(
         sortOrder: SortOrder?,
         search: String?,
     ): SupabaseResult<List<Bucket>> {
-        val query = buildList {
-            limit?.let { add("limit" to it.toString()) }
-            offset?.let { add("offset" to it.toString()) }
-            sortColumn?.let { add("sortColumn" to it) }
-            sortOrder?.let { add("sortOrder" to it.name.lowercase()) }
-            search?.let { add("search" to it) }
-        }
+        val query =
+            buildList {
+                limit?.let { add("limit" to it.toString()) }
+                offset?.let { add("offset" to it.toString()) }
+                sortColumn?.let { add("sortColumn" to it) }
+                sortOrder?.let { add("sortOrder" to it.name.lowercase()) }
+                search?.let { add("search" to it) }
+            }
         return client.get("/storage/v1/bucket", queryParams = query).deserialize()
     }
+
     override suspend fun getBucket(id: String): SupabaseResult<Bucket> =
         client.get("/storage/v1/bucket/$id").deserialize()
+
     override suspend fun createBucket(
         id: String,
         name: String,
@@ -99,17 +103,19 @@ internal class StorageClientImpl(
         fileSizeLimit: Long?,
         allowedMimeTypes: List<String>?,
     ): SupabaseResult<Bucket> {
-        val body = defaultJson.encodeToString(
-            CreateBucketRequest(
-                id = id,
-                name = name,
-                public = public,
-                fileSizeLimit = fileSizeLimit,
-                allowedMimeTypes = allowedMimeTypes,
-            ),
-        )
+        val body =
+            defaultJson.encodeToString(
+                CreateBucketRequest(
+                    id = id,
+                    name = name,
+                    public = public,
+                    fileSizeLimit = fileSizeLimit,
+                    allowedMimeTypes = allowedMimeTypes,
+                ),
+            )
         return client.post("/storage/v1/bucket", body = body).deserialize()
     }
+
     override suspend fun updateBucket(
         id: String,
         name: String?,
@@ -117,20 +123,24 @@ internal class StorageClientImpl(
         fileSizeLimit: Long?,
         allowedMimeTypes: List<String>?,
     ): SupabaseResult<Bucket> {
-        val body = defaultJson.encodeToString(
-            UpdateBucketRequest(
-                name = name,
-                public = public,
-                fileSizeLimit = fileSizeLimit,
-                allowedMimeTypes = allowedMimeTypes,
-            ),
-        )
+        val body =
+            defaultJson.encodeToString(
+                UpdateBucketRequest(
+                    name = name,
+                    public = public,
+                    fileSizeLimit = fileSizeLimit,
+                    allowedMimeTypes = allowedMimeTypes,
+                ),
+            )
         return client.put("/storage/v1/bucket/$id", body = body).deserialize()
     }
+
     override suspend fun deleteBucket(id: String): SupabaseResult<Unit> =
         client.delete("/storage/v1/bucket/$id").map { }
+
     override suspend fun emptyBucket(id: String): SupabaseResult<Unit> =
         client.post("/storage/v1/bucket/$id/empty").map { }
+
     override suspend fun upload(
         bucket: String,
         path: String,
@@ -139,9 +149,10 @@ internal class StorageClientImpl(
         upsert: Boolean,
         cacheControl: Int?,
     ): SupabaseResult<String> {
-        val headers = buildMap {
-            if (upsert) put("x-upsert", "true")
-        }
+        val headers =
+            buildMap {
+                if (upsert) put("x-upsert", "true")
+            }
         val endpoint = withCacheControl("/storage/v1/object/${objectRef(bucket, path)}", cacheControl)
         return client.postRaw(
             url = endpoint,
@@ -150,6 +161,7 @@ internal class StorageClientImpl(
             headers = headers,
         )
     }
+
     override suspend fun update(
         bucket: String,
         path: String,
@@ -158,9 +170,10 @@ internal class StorageClientImpl(
         upsert: Boolean,
         cacheControl: Int?,
     ): SupabaseResult<String> {
-        val headers = buildMap {
-            if (upsert) put("x-upsert", "true")
-        }
+        val headers =
+            buildMap {
+                if (upsert) put("x-upsert", "true")
+            }
         val endpoint = withCacheControl("/storage/v1/object/${objectRef(bucket, path)}", cacheControl)
         return client.putRaw(
             url = endpoint,
@@ -169,10 +182,13 @@ internal class StorageClientImpl(
             headers = headers,
         )
     }
+
     override suspend fun download(bucket: String, path: String): SupabaseResult<String> =
         client.get("/storage/v1/object/authenticated/${objectRef(bucket, path)}")
+
     override suspend fun downloadPublic(bucket: String, path: String): SupabaseResult<String> =
         client.get("/storage/v1/object/public/${objectRef(bucket, path)}")
+
     override suspend fun download(
         bucket: String,
         path: String,
@@ -180,6 +196,7 @@ internal class StorageClientImpl(
         fileName: String?,
     ): SupabaseResult<String> =
         client.get("/storage/v1/object/authenticated/${objectRef(bucket, path)}${buildDownloadQuery(download, fileName)}")
+
     override suspend fun downloadPublic(
         bucket: String,
         path: String,
@@ -187,10 +204,13 @@ internal class StorageClientImpl(
         fileName: String?,
     ): SupabaseResult<String> =
         client.get("/storage/v1/object/public/${objectRef(bucket, path)}${buildDownloadQuery(download, fileName)}")
+
     override suspend fun info(bucket: String, path: String): SupabaseResult<FileObject> =
         client.get("/storage/v1/object/info/${objectRef(bucket, path)}").deserialize()
+
     override suspend fun infoPublic(bucket: String, path: String): SupabaseResult<FileObject> =
         client.get("/storage/v1/object/info/public/${objectRef(bucket, path)}").deserialize()
+
     override suspend fun exists(bucket: String, path: String): SupabaseResult<Boolean> =
         when (val result = info(bucket, path)) {
             is SupabaseResult.Success -> SupabaseResult.Success(true)
@@ -201,6 +221,7 @@ internal class StorageClientImpl(
                     result
                 }
         }
+
     override suspend fun existsPublic(bucket: String, path: String): SupabaseResult<Boolean> =
         when (val result = infoPublic(bucket, path)) {
             is SupabaseResult.Success -> SupabaseResult.Success(true)
@@ -211,6 +232,7 @@ internal class StorageClientImpl(
                     result
                 }
         }
+
     override suspend fun list(
         bucket: String,
         prefix: String,
@@ -220,19 +242,22 @@ internal class StorageClientImpl(
         sortOrder: SortOrder,
         search: String?,
     ): SupabaseResult<List<FileObject>> {
-        val body = defaultJson.encodeToString(
-            ObjectListRequest(
-                prefix = prefix,
-                limit = limit,
-                offset = offset,
-                sortBy = sortBy?.let {
-                    ObjectSortByRequest(column = it, order = sortOrder.name.lowercase())
-                },
-                search = search,
-            ),
-        )
+        val body =
+            defaultJson.encodeToString(
+                ObjectListRequest(
+                    prefix = prefix,
+                    limit = limit,
+                    offset = offset,
+                    sortBy =
+                        sortBy?.let {
+                            ObjectSortByRequest(column = it, order = sortOrder.name.lowercase())
+                        },
+                    search = search,
+                ),
+            )
         return client.post("/storage/v1/object/list/$bucket", body = body).deserialize()
     }
+
     override suspend fun listV2(
         bucket: String,
         prefix: String?,
@@ -242,40 +267,46 @@ internal class StorageClientImpl(
         sortBy: String?,
         sortOrder: SortOrder,
     ): SupabaseResult<ObjectListV2Result> {
-        val body = defaultJson.encodeToString(
-            ObjectListV2Request(
-                prefix = prefix,
-                cursor = cursor,
-                limit = limit,
-                withDelimiter = withDelimiter,
-                sortBy = sortBy?.let {
-                    ObjectSortByRequest(column = it, order = sortOrder.name.lowercase())
-                },
-            ),
-        )
+        val body =
+            defaultJson.encodeToString(
+                ObjectListV2Request(
+                    prefix = prefix,
+                    cursor = cursor,
+                    limit = limit,
+                    withDelimiter = withDelimiter,
+                    sortBy =
+                        sortBy?.let {
+                            ObjectSortByRequest(column = it, order = sortOrder.name.lowercase())
+                        },
+                ),
+            )
         return client.post("/storage/v1/object/list-v2/$bucket", body = body).deserialize()
     }
+
     override suspend fun move(
         bucket: String,
         fromPath: String,
         toPath: String,
         destinationBucket: String?,
     ): SupabaseResult<Unit> {
-        val body = defaultJson.encodeToString(
-            MoveRequest(
-                bucketId = bucket,
-                sourceKey = fromPath,
-                destinationKey = toPath,
-                destinationBucketId = destinationBucket,
-            ),
-        )
+        val body =
+            defaultJson.encodeToString(
+                MoveRequest(
+                    bucketId = bucket,
+                    sourceKey = fromPath,
+                    destinationKey = toPath,
+                    destinationBucketId = destinationBucket,
+                ),
+            )
         return client.post("/storage/v1/object/move", body = body).map { }
     }
+
     override suspend fun deleteObject(
         bucket: String,
         path: String,
     ): SupabaseResult<Unit> =
         client.delete("/storage/v1/object/${objectRef(bucket, path)}").map { }
+
     override suspend fun copy(
         bucket: String,
         fromPath: String,
@@ -283,31 +314,33 @@ internal class StorageClientImpl(
         destinationBucket: String?,
         copyMetadata: Boolean?,
     ): SupabaseResult<Unit> {
-        val body = defaultJson.encodeToString(
-            MoveRequest(
-                bucketId = bucket,
-                sourceKey = fromPath,
-                destinationKey = toPath,
-                destinationBucketId = destinationBucket,
-                copyMetadata = copyMetadata,
-            ),
-        )
+        val body =
+            defaultJson.encodeToString(
+                MoveRequest(
+                    bucketId = bucket,
+                    sourceKey = fromPath,
+                    destinationKey = toPath,
+                    destinationBucketId = destinationBucket,
+                    copyMetadata = copyMetadata,
+                ),
+            )
         return client.post("/storage/v1/object/copy", body = body).map { }
     }
-    override suspend fun remove(bucket: String, paths: List<String>): SupabaseResult<Unit> {
-        return removeWithResult(bucket, paths).map { }
-    }
+
+    override suspend fun remove(bucket: String, paths: List<String>): SupabaseResult<Unit> = removeWithResult(bucket, paths).map { }
 
     override suspend fun removeWithResult(
         bucket: String,
         paths: List<String>,
     ): SupabaseResult<List<FileObject>> {
         val body = defaultJson.encodeToString(mapOf("prefixes" to paths))
-        return client.post(
-            endpoint = "/storage/v1/object/remove/$bucket",
-            body = body,
-        ).deserialize()
+        return client
+            .post(
+                endpoint = "/storage/v1/object/remove/$bucket",
+                body = body,
+            ).deserialize()
     }
+
     override suspend fun createSignedUrl(
         bucket: String,
         path: String,
@@ -316,13 +349,15 @@ internal class StorageClientImpl(
         fileName: String?,
         transform: ImageTransformOptions?,
     ): SupabaseResult<String> {
-        val body = defaultJson.encodeToString(
-            SignedUrlRequest(
-                expiresIn = expiresIn,
-                transform = transform?.toRequest(),
-            ),
-        )
-        return client.post("/storage/v1/object/sign/${objectRef(bucket, path)}", body = body)
+        val body =
+            defaultJson.encodeToString(
+                SignedUrlRequest(
+                    expiresIn = expiresIn,
+                    transform = transform?.toRequest(),
+                ),
+            )
+        return client
+            .post("/storage/v1/object/sign/${objectRef(bucket, path)}", body = body)
             .deserialize<SignedUrlResponse>()
             .map { appendDownloadQuery(resolveStorageUrl(it.signedUrl), download, fileName) }
     }
@@ -335,10 +370,12 @@ internal class StorageClientImpl(
         fileName: String?,
     ): SupabaseResult<List<String>> {
         val body = defaultJson.encodeToString(SignedUrlsRequest(paths = paths, expiresIn = expiresIn))
-        return client.post("/storage/v1/object/sign/$bucket", body = body)
+        return client
+            .post("/storage/v1/object/sign/$bucket", body = body)
             .deserialize<List<SignedUrlItemResponse>>()
             .map { list -> list.map { appendDownloadQuery(resolveStorageUrl(it.signedUrl), download, fileName) } }
     }
+
     override suspend fun createUploadSignedUrl(
         bucket: String,
         path: String,
@@ -346,16 +383,17 @@ internal class StorageClientImpl(
     ): SupabaseResult<String> =
         createUploadSignedUrlWithPath(bucket, path, upsert)
             .map { it.token }
+
     override suspend fun createUploadSignedUrlWithPath(
         bucket: String,
         path: String,
         upsert: Boolean,
     ): SupabaseResult<UploadSignedUrl> =
-        client.post(
-            endpoint = "/storage/v1/object/upload/sign/${objectRef(bucket, path)}",
-            headers = if (upsert) mapOf("x-upsert" to "true") else emptyMap(),
-        )
-            .deserialize<UploadSignedUrlResponse>()
+        client
+            .post(
+                endpoint = "/storage/v1/object/upload/sign/${objectRef(bucket, path)}",
+                headers = if (upsert) mapOf("x-upsert" to "true") else emptyMap(),
+            ).deserialize<UploadSignedUrlResponse>()
             .map { UploadSignedUrl(url = resolveStorageUrl(it.url), token = it.token) }
 
     override suspend fun uploadToSignedUrl(
@@ -367,13 +405,15 @@ internal class StorageClientImpl(
         upsert: Boolean,
         cacheControl: Int?,
     ): SupabaseResult<String> {
-        val headers = buildMap {
-            if (upsert) put("x-upsert", "true")
-        }
-        val qs = buildList {
-            add("token=${encodeQueryComponent(token)}")
-            cacheControl?.let { add("cacheControl=$it") }
-        }.joinToString("&")
+        val headers =
+            buildMap {
+                if (upsert) put("x-upsert", "true")
+            }
+        val qs =
+            buildList {
+                add("token=${encodeQueryComponent(token)}")
+                cacheControl?.let { add("cacheControl=$it") }
+            }.joinToString("&")
         return client.postRaw(
             url = "/storage/v1/object/upload/sign/${objectRef(bucket, path)}?$qs",
             body = data,
@@ -381,6 +421,7 @@ internal class StorageClientImpl(
             headers = headers,
         )
     }
+
     override fun getSignedDownloadUrl(
         bucket: String,
         path: String,
@@ -491,18 +532,20 @@ internal class StorageClientImpl(
         sortOrder: SortOrder?,
         search: String?,
     ): SupabaseResult<List<AnalyticsBucket>> {
-        val query = buildList {
-            limit?.let { add("limit" to it.toString()) }
-            offset?.let { add("offset" to it.toString()) }
-            sortColumn?.let { add("sortColumn" to it) }
-            sortOrder?.let { add("sortOrder" to it.name.lowercase()) }
-            search?.let { add("search" to it) }
-        }
-        val endpoint = if (query.isEmpty()) {
-            "/storage/v1/iceberg/bucket"
-        } else {
-            "/storage/v1/iceberg/bucket?${query.joinToString("&") { (k, v) -> "${encodeQueryComponent(k)}=${encodeQueryComponent(v)}" }}"
-        }
+        val query =
+            buildList {
+                limit?.let { add("limit" to it.toString()) }
+                offset?.let { add("offset" to it.toString()) }
+                sortColumn?.let { add("sortColumn" to it) }
+                sortOrder?.let { add("sortOrder" to it.name.lowercase()) }
+                search?.let { add("search" to it) }
+            }
+        val endpoint =
+            if (query.isEmpty()) {
+                "/storage/v1/iceberg/bucket"
+            } else {
+                "/storage/v1/iceberg/bucket?${query.joinToString("&") { (k, v) -> "${encodeQueryComponent(k)}=${encodeQueryComponent(v)}" }}"
+            }
         return client.get(endpoint).deserialize()
     }
 
@@ -521,7 +564,8 @@ internal class StorageClientImpl(
 
     override suspend fun getVectorBucket(vectorBucketName: String): SupabaseResult<VectorBucket> {
         val body = defaultJson.encodeToString(VectorBucketRequest(vectorBucketName = vectorBucketName))
-        return client.post("/storage/v1/vector/GetVectorBucket", body = body)
+        return client
+            .post("/storage/v1/vector/GetVectorBucket", body = body)
             .deserialize<VectorBucketResponse>()
             .map { it.vectorBucket }
     }
@@ -531,13 +575,14 @@ internal class StorageClientImpl(
         maxResults: Int?,
         nextToken: String?,
     ): SupabaseResult<VectorBucketListResponse> {
-        val body = defaultJson.encodeToString(
-            VectorBucketListRequest(
-                prefix = prefix,
-                maxResults = maxResults,
-                nextToken = nextToken,
-            ),
-        )
+        val body =
+            defaultJson.encodeToString(
+                VectorBucketListRequest(
+                    prefix = prefix,
+                    maxResults = maxResults,
+                    nextToken = nextToken,
+                ),
+            )
         return client.post("/storage/v1/vector/ListVectorBuckets", body = body).deserialize()
     }
 
@@ -554,16 +599,17 @@ internal class StorageClientImpl(
         distanceMetric: VectorDistanceMetric,
         metadataConfiguration: VectorMetadataConfiguration?,
     ): SupabaseResult<Unit> {
-        val body = defaultJson.encodeToString(
-            VectorIndexCreateRequest(
-                vectorBucketName = vectorBucketName,
-                indexName = indexName,
-                dataType = dataType,
-                dimension = dimension,
-                distanceMetric = distanceMetric,
-                metadataConfiguration = metadataConfiguration,
-            ),
-        )
+        val body =
+            defaultJson.encodeToString(
+                VectorIndexCreateRequest(
+                    vectorBucketName = vectorBucketName,
+                    indexName = indexName,
+                    dataType = dataType,
+                    dimension = dimension,
+                    distanceMetric = distanceMetric,
+                    metadataConfiguration = metadataConfiguration,
+                ),
+            )
         return client.post("/storage/v1/vector/CreateIndex", body = body).map { }
     }
 
@@ -571,10 +617,12 @@ internal class StorageClientImpl(
         vectorBucketName: String,
         indexName: String,
     ): SupabaseResult<VectorIndex> {
-        val body = defaultJson.encodeToString(
-            VectorIndexRequest(vectorBucketName = vectorBucketName, indexName = indexName),
-        )
-        return client.post("/storage/v1/vector/GetIndex", body = body)
+        val body =
+            defaultJson.encodeToString(
+                VectorIndexRequest(vectorBucketName = vectorBucketName, indexName = indexName),
+            )
+        return client
+            .post("/storage/v1/vector/GetIndex", body = body)
             .deserialize<VectorIndexResponse>()
             .map { it.index }
     }
@@ -585,14 +633,15 @@ internal class StorageClientImpl(
         maxResults: Int?,
         nextToken: String?,
     ): SupabaseResult<VectorIndexListResponse> {
-        val body = defaultJson.encodeToString(
-            VectorIndexListRequest(
-                vectorBucketName = vectorBucketName,
-                prefix = prefix,
-                maxResults = maxResults,
-                nextToken = nextToken,
-            ),
-        )
+        val body =
+            defaultJson.encodeToString(
+                VectorIndexListRequest(
+                    vectorBucketName = vectorBucketName,
+                    prefix = prefix,
+                    maxResults = maxResults,
+                    nextToken = nextToken,
+                ),
+            )
         return client.post("/storage/v1/vector/ListIndexes", body = body).deserialize()
     }
 
@@ -600,9 +649,10 @@ internal class StorageClientImpl(
         vectorBucketName: String,
         indexName: String,
     ): SupabaseResult<Unit> {
-        val body = defaultJson.encodeToString(
-            VectorIndexRequest(vectorBucketName = vectorBucketName, indexName = indexName),
-        )
+        val body =
+            defaultJson.encodeToString(
+                VectorIndexRequest(vectorBucketName = vectorBucketName, indexName = indexName),
+            )
         return client.post("/storage/v1/vector/DeleteIndex", body = body).map { }
     }
 
@@ -612,9 +662,10 @@ internal class StorageClientImpl(
         vectors: List<VectorObject>,
     ): SupabaseResult<Unit> {
         require(vectors.size in 1..500) { "Vector batch size must be between 1 and 500 items" }
-        val body = defaultJson.encodeToString(
-            VectorPutRequest(vectorBucketName = vectorBucketName, indexName = indexName, vectors = vectors),
-        )
+        val body =
+            defaultJson.encodeToString(
+                VectorPutRequest(vectorBucketName = vectorBucketName, indexName = indexName, vectors = vectors),
+            )
         return client.post("/storage/v1/vector/PutVectors", body = body).map { }
     }
 
@@ -625,16 +676,18 @@ internal class StorageClientImpl(
         returnData: Boolean?,
         returnMetadata: Boolean?,
     ): SupabaseResult<List<VectorMatch>> {
-        val body = defaultJson.encodeToString(
-            VectorGetRequest(
-                vectorBucketName = vectorBucketName,
-                indexName = indexName,
-                keys = keys,
-                returnData = returnData,
-                returnMetadata = returnMetadata,
-            ),
-        )
-        return client.post("/storage/v1/vector/GetVectors", body = body)
+        val body =
+            defaultJson.encodeToString(
+                VectorGetRequest(
+                    vectorBucketName = vectorBucketName,
+                    indexName = indexName,
+                    keys = keys,
+                    returnData = returnData,
+                    returnMetadata = returnMetadata,
+                ),
+            )
+        return client
+            .post("/storage/v1/vector/GetVectors", body = body)
             .deserialize<VectorMatchesResponse>()
             .map { it.vectors }
     }
@@ -657,18 +710,19 @@ internal class StorageClientImpl(
                 }
             }
         }
-        val body = defaultJson.encodeToString(
-            VectorListRequest(
-                vectorBucketName = vectorBucketName,
-                indexName = indexName,
-                maxResults = maxResults,
-                nextToken = nextToken,
-                returnData = returnData,
-                returnMetadata = returnMetadata,
-                segmentCount = segmentCount,
-                segmentIndex = segmentIndex,
-            ),
-        )
+        val body =
+            defaultJson.encodeToString(
+                VectorListRequest(
+                    vectorBucketName = vectorBucketName,
+                    indexName = indexName,
+                    maxResults = maxResults,
+                    nextToken = nextToken,
+                    returnData = returnData,
+                    returnMetadata = returnMetadata,
+                    segmentCount = segmentCount,
+                    segmentIndex = segmentIndex,
+                ),
+            )
         return client.post("/storage/v1/vector/ListVectors", body = body).deserialize()
     }
 
@@ -681,17 +735,18 @@ internal class StorageClientImpl(
         returnDistance: Boolean?,
         returnMetadata: Boolean?,
     ): SupabaseResult<VectorQueryResponse> {
-        val body = defaultJson.encodeToString(
-            VectorQueryRequest(
-                vectorBucketName = vectorBucketName,
-                indexName = indexName,
-                queryVector = queryVector,
-                topK = topK,
-                filter = filter,
-                returnDistance = returnDistance,
-                returnMetadata = returnMetadata,
-            ),
-        )
+        val body =
+            defaultJson.encodeToString(
+                VectorQueryRequest(
+                    vectorBucketName = vectorBucketName,
+                    indexName = indexName,
+                    queryVector = queryVector,
+                    topK = topK,
+                    filter = filter,
+                    returnDistance = returnDistance,
+                    returnMetadata = returnMetadata,
+                ),
+            )
         return client.post("/storage/v1/vector/QueryVectors", body = body).deserialize()
     }
 
@@ -701,9 +756,10 @@ internal class StorageClientImpl(
         keys: List<String>,
     ): SupabaseResult<Unit> {
         require(keys.size in 1..500) { "Keys batch size must be between 1 and 500 items" }
-        val body = defaultJson.encodeToString(
-            VectorDeleteRequest(vectorBucketName = vectorBucketName, indexName = indexName, keys = keys),
-        )
+        val body =
+            defaultJson.encodeToString(
+                VectorDeleteRequest(vectorBucketName = vectorBucketName, indexName = indexName, keys = keys),
+            )
         return client.post("/storage/v1/vector/DeleteVectors", body = body).map { }
     }
 
@@ -724,13 +780,14 @@ internal class StorageClientImpl(
         )
 
     private fun ImageTransformOptions.toQueryString(): String {
-        val params = buildList {
-            width?.let { add("width" to it.toString()) }
-            height?.let { add("height" to it.toString()) }
-            resize?.let { add("resize" to it.name.lowercase()) }
-            format?.let { add("format" to it) }
-            quality?.let { add("quality" to it.toString()) }
-        }
+        val params =
+            buildList {
+                width?.let { add("width" to it.toString()) }
+                height?.let { add("height" to it.toString()) }
+                resize?.let { add("resize" to it.name.lowercase()) }
+                format?.let { add("format" to it) }
+                quality?.let { add("quality" to it.toString()) }
+            }
         return params.joinToString("&") { (k, v) ->
             "${encodeQueryComponent(k)}=${encodeQueryComponent(v)}"
         }
@@ -793,16 +850,18 @@ internal class AnalyticsCatalogClientImpl(
     private var resolvedPrefix: String? = null
 
     override suspend fun loadConfig(): SupabaseResult<JsonObject> =
-        client.get(
-            endpoint = "/storage/v1/iceberg/v1/config",
-            queryParams = listOf("warehouse" to bucketName),
-        ).toJsonObject()
+        client
+            .get(
+                endpoint = "/storage/v1/iceberg/v1/config",
+                queryParams = listOf("warehouse" to bucketName),
+            ).toJsonObject()
 
     override suspend fun loadConfigTyped(): SupabaseResult<IcebergCatalogConfig> =
-        client.get(
-            endpoint = "/storage/v1/iceberg/v1/config",
-            queryParams = listOf("warehouse" to bucketName),
-        ).deserialize()
+        client
+            .get(
+                endpoint = "/storage/v1/iceberg/v1/config",
+                queryParams = listOf("warehouse" to bucketName),
+            ).deserialize()
 
     override suspend fun listNamespaces(
         parent: List<String>?,
@@ -810,11 +869,12 @@ internal class AnalyticsCatalogClientImpl(
         pageSize: Int?,
     ): SupabaseResult<JsonObject> {
         val prefix = resolvePrefix()
-        val query = buildList {
-            parent?.let { add("parent" to it.joinToString("\u001F")) }
-            pageToken?.let { add("pageToken" to it) }
-            pageSize?.let { add("pageSize" to it.toString()) }
-        }
+        val query =
+            buildList {
+                parent?.let { add("parent" to it.joinToString("\u001F")) }
+                pageToken?.let { add("pageToken" to it) }
+                pageSize?.let { add("pageSize" to it.toString()) }
+            }
         return client.get(appendQuery("$prefix/namespaces", query)).toJsonObject()
     }
 
@@ -824,11 +884,12 @@ internal class AnalyticsCatalogClientImpl(
         pageSize: Int?,
     ): SupabaseResult<IcebergNamespaceListResponse> {
         val prefix = resolvePrefix()
-        val query = buildList {
-            parent?.let { add("parent" to it.joinToString("\u001F")) }
-            pageToken?.let { add("pageToken" to it) }
-            pageSize?.let { add("pageSize" to it.toString()) }
-        }
+        val query =
+            buildList {
+                parent?.let { add("parent" to it.joinToString("\u001F")) }
+                pageToken?.let { add("pageToken" to it) }
+                pageSize?.let { add("pageSize" to it.toString()) }
+            }
         return client.get(appendQuery("$prefix/namespaces", query)).deserialize()
     }
 
@@ -837,28 +898,30 @@ internal class AnalyticsCatalogClientImpl(
         properties: Map<String, String>,
     ): SupabaseResult<JsonObject> {
         val prefix = resolvePrefix()
-        val body = defaultJson.encodeToString(
-            buildJsonObject {
-                putJsonArray("namespace") {
-                    namespace.forEach { add(JsonPrimitive(it)) }
-                }
-                if (properties.isNotEmpty()) {
-                    putJsonObject("properties") {
-                        properties.forEach { (key, value) -> put(key, value) }
+        val body =
+            defaultJson.encodeToString(
+                buildJsonObject {
+                    putJsonArray("namespace") {
+                        namespace.forEach { add(JsonPrimitive(it)) }
                     }
-                }
-            },
-        )
+                    if (properties.isNotEmpty()) {
+                        putJsonObject("properties") {
+                            properties.forEach { (key, value) -> put(key, value) }
+                        }
+                    }
+                },
+            )
         return client.post("$prefix/namespaces", body = body).toJsonObject()
     }
 
     override suspend fun createNamespaceTyped(
         request: IcebergCreateNamespaceRequest,
     ): SupabaseResult<IcebergNamespaceMetadata> =
-        client.post(
-            endpoint = "${resolvePrefix()}/namespaces",
-            body = defaultJson.encodeToString(request),
-        ).deserialize()
+        client
+            .post(
+                endpoint = "${resolvePrefix()}/namespaces",
+                body = defaultJson.encodeToString(request),
+            ).deserialize()
 
     override suspend fun dropNamespace(namespace: List<String>): SupabaseResult<Unit> =
         client.delete("${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}").map { }
@@ -874,47 +937,52 @@ internal class AnalyticsCatalogClientImpl(
         removals: List<String>?,
         updates: Map<String, String>?,
     ): SupabaseResult<JsonObject> {
-        val body = defaultJson.encodeToString(
-            buildJsonObject {
-                removals?.let {
-                    putJsonArray("removals") {
-                        it.forEach { value -> add(JsonPrimitive(value)) }
+        val body =
+            defaultJson.encodeToString(
+                buildJsonObject {
+                    removals?.let {
+                        putJsonArray("removals") {
+                            it.forEach { value -> add(JsonPrimitive(value)) }
+                        }
                     }
-                }
-                updates?.let {
-                    putJsonObject("updates") {
-                        it.forEach { (key, value) -> put(key, value) }
+                    updates?.let {
+                        putJsonObject("updates") {
+                            it.forEach { (key, value) -> put(key, value) }
+                        }
                     }
-                }
-            },
-        )
-        return client.post(
-            endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/properties",
-            body = body,
-        ).toJsonObject()
+                },
+            )
+        return client
+            .post(
+                endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/properties",
+                body = body,
+            ).toJsonObject()
     }
 
     override suspend fun updateNamespacePropertiesTyped(
         namespace: List<String>,
         request: IcebergUpdateNamespacePropertiesRequest,
     ): SupabaseResult<IcebergUpdateNamespacePropertiesResponse> =
-        client.post(
-            endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/properties",
-            body = defaultJson.encodeToString(request),
-        ).deserialize()
+        client
+            .post(
+                endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/properties",
+                body = defaultJson.encodeToString(request),
+            ).deserialize()
 
     override suspend fun listTables(
         namespace: List<String>,
         pageToken: String?,
         pageSize: Int?,
     ): SupabaseResult<JsonObject> {
-        val query = buildList {
-            pageToken?.let { add("pageToken" to it) }
-            pageSize?.let { add("pageSize" to it.toString()) }
-        }
-        return client.get(
-            endpoint = appendQuery("${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables", query),
-        ).toJsonObject()
+        val query =
+            buildList {
+                pageToken?.let { add("pageToken" to it) }
+                pageSize?.let { add("pageSize" to it.toString()) }
+            }
+        return client
+            .get(
+                endpoint = appendQuery("${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables", query),
+            ).toJsonObject()
     }
 
     override suspend fun listTablesTyped(
@@ -922,39 +990,44 @@ internal class AnalyticsCatalogClientImpl(
         pageToken: String?,
         pageSize: Int?,
     ): SupabaseResult<IcebergTableListResponse> {
-        val query = buildList {
-            pageToken?.let { add("pageToken" to it) }
-            pageSize?.let { add("pageSize" to it.toString()) }
-        }
-        return client.get(
-            endpoint = appendQuery("${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables", query),
-        ).deserialize()
+        val query =
+            buildList {
+                pageToken?.let { add("pageToken" to it) }
+                pageSize?.let { add("pageSize" to it.toString()) }
+            }
+        return client
+            .get(
+                endpoint = appendQuery("${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables", query),
+            ).deserialize()
     }
 
     override suspend fun createTable(namespace: List<String>, request: JsonObject): SupabaseResult<JsonObject> =
-        client.post(
-            endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables",
-            body = defaultJson.encodeToString(request),
-        ).toJsonObject()
+        client
+            .post(
+                endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables",
+                body = defaultJson.encodeToString(request),
+            ).toJsonObject()
 
     override suspend fun createTableTyped(
         namespace: List<String>,
         request: IcebergTableCreateRequest,
     ): SupabaseResult<IcebergTableMetadataResponse> =
-        client.post(
-            endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables",
-            body = defaultJson.encodeToString(request),
-        ).deserialize()
+        client
+            .post(
+                endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables",
+                body = defaultJson.encodeToString(request),
+            ).deserialize()
 
     override suspend fun updateTable(
         namespace: List<String>,
         name: String,
         request: JsonObject,
     ): SupabaseResult<JsonObject> =
-        client.post(
-            endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables/${encodePathSegment(name)}",
-            body = defaultJson.encodeToString(request),
-        ).toJsonObject()
+        client
+            .post(
+                endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables/${encodePathSegment(name)}",
+                body = defaultJson.encodeToString(request),
+            ).toJsonObject()
 
     override suspend fun commitTable(
         namespace: List<String>,
@@ -968,34 +1041,39 @@ internal class AnalyticsCatalogClientImpl(
         name: String,
         request: IcebergTableCommitRequest,
     ): SupabaseResult<IcebergTableMetadataResponse> =
-        client.post(
-            endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables/${encodePathSegment(name)}",
-            body = defaultJson.encodeToString(request),
-        ).deserialize()
+        client
+            .post(
+                endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables/${encodePathSegment(name)}",
+                body = defaultJson.encodeToString(request),
+            ).deserialize()
 
     override suspend fun dropTable(
         namespace: List<String>,
         name: String,
         purge: Boolean,
     ): SupabaseResult<Unit> =
-        client.delete(
-            endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables/${encodePathSegment(name)}?purgeRequested=$purge",
-        ).map { }
+        client
+            .delete(
+                endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables/${encodePathSegment(name)}?purgeRequested=$purge",
+            ).map { }
 
     override suspend fun loadTable(
         namespace: List<String>,
         name: String,
         snapshots: String?,
     ): SupabaseResult<JsonObject> {
-        val query = buildList {
-            snapshots?.let { add("snapshots" to it) }
-        }
-        return client.get(
-            endpoint = appendQuery(
-                "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables/${encodePathSegment(name)}",
-                query,
-            ),
-        ).toJsonObject()
+        val query =
+            buildList {
+                snapshots?.let { add("snapshots" to it) }
+            }
+        return client
+            .get(
+                endpoint =
+                    appendQuery(
+                        "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables/${encodePathSegment(name)}",
+                        query,
+                    ),
+            ).toJsonObject()
     }
 
     override suspend fun loadTableTyped(
@@ -1003,68 +1081,85 @@ internal class AnalyticsCatalogClientImpl(
         name: String,
         snapshots: String?,
     ): SupabaseResult<IcebergTableMetadataResponse> {
-        val query = buildList {
-            snapshots?.let { add("snapshots" to it) }
-        }
-        return client.get(
-            endpoint = appendQuery(
-                "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables/${encodePathSegment(name)}",
-                query,
-            ),
-        ).deserialize()
+        val query =
+            buildList {
+                snapshots?.let { add("snapshots" to it) }
+            }
+        return client
+            .get(
+                endpoint =
+                    appendQuery(
+                        "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables/${encodePathSegment(name)}",
+                        query,
+                    ),
+            ).deserialize()
     }
 
     override suspend fun registerTable(namespace: List<String>, request: JsonObject): SupabaseResult<JsonObject> =
-        client.post(
-            endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/register",
-            body = defaultJson.encodeToString(request),
-        ).toJsonObject()
+        client
+            .post(
+                endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/register",
+                body = defaultJson.encodeToString(request),
+            ).toJsonObject()
 
     override suspend fun registerTableTyped(
         namespace: List<String>,
         request: IcebergTableRegisterRequest,
     ): SupabaseResult<IcebergTableMetadataResponse> =
-        client.post(
-            endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/register",
-            body = defaultJson.encodeToString(request),
-        ).deserialize()
+        client
+            .post(
+                endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/register",
+                body = defaultJson.encodeToString(request),
+            ).deserialize()
 
     override suspend fun renameTable(request: JsonObject): SupabaseResult<Unit> =
-        client.post(
-            endpoint = "${resolvePrefix()}/tables/rename",
-            body = defaultJson.encodeToString(request),
-        ).map { }
+        client
+            .post(
+                endpoint = "${resolvePrefix()}/tables/rename",
+                body = defaultJson.encodeToString(request),
+            ).map { }
 
     override suspend fun renameTableTyped(
         source: IcebergTableIdentifier,
         destination: IcebergTableIdentifier,
     ): SupabaseResult<Unit> =
-        client.post(
-            endpoint = "${resolvePrefix()}/tables/rename",
-            body = defaultJson.encodeToString(IcebergTableRenameRequest(source = source, destination = destination)),
-        ).map { }
+        client
+            .post(
+                endpoint = "${resolvePrefix()}/tables/rename",
+                body = defaultJson.encodeToString(IcebergTableRenameRequest(source = source, destination = destination)),
+            ).map { }
 
     private suspend fun resolvePrefix(): String {
         resolvedPrefix?.let { return it }
-        val prefix = when (val config = loadConfig()) {
-            is SupabaseResult.Success -> config.value.extractIcebergPrefix()
-            is SupabaseResult.Failure -> null
-        } ?: bucketName
+        val prefix =
+            when (val config = loadConfig()) {
+                is SupabaseResult.Success -> config.value.extractIcebergPrefix()
+                is SupabaseResult.Failure -> null
+            } ?: bucketName
         return "/storage/v1/iceberg/v1/$prefix".also { resolvedPrefix = it }
     }
 
     private fun JsonObject.extractIcebergPrefix(): String? =
-        this["overrides"]?.jsonObject?.get("prefix")?.jsonPrimitive?.contentOrNull()
-            ?: this["defaults"]?.jsonObject?.get("prefix")?.jsonPrimitive?.contentOrNull()
+        this["overrides"]
+            ?.jsonObject
+            ?.get("prefix")
+            ?.jsonPrimitive
+            ?.contentOrNull()
+            ?: this["defaults"]
+                ?.jsonObject
+                ?.get("prefix")
+                ?.jsonPrimitive
+                ?.contentOrNull()
 
     private fun JsonPrimitive.contentOrNull(): String? =
         runCatching { content }.getOrNull()
 
     private fun appendQuery(endpoint: String, params: List<Pair<String, String>>): String {
         if (params.isEmpty()) return endpoint
-        val qs = params.joinToString("&") { (key, value) ->
-            "${encodePathSegment(key)}=${encodePathSegment(value)}"
-        }
+        val qs =
+            params.joinToString("&") { (key, value) ->
+                "${encodePathSegment(key)}=${encodePathSegment(value)}"
+            }
         return "$endpoint?$qs"
     }
 }

@@ -24,7 +24,10 @@ tasks.register<Test>("e2eTest") {
     group = "verification"
     description = "Runs E2E tests against a running local Supabase stack."
     dependsOn(tasks.named("testClasses"))
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+        sourceSets.test
+            .get()
+            .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     workingDir = rootProject.projectDir
     outputs.upToDateWhen { false }

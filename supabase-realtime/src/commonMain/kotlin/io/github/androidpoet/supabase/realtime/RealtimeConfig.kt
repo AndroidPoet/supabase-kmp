@@ -1,4 +1,5 @@
 package io.github.androidpoet.supabase.realtime
+
 public data class RealtimeConfig(
     public val autoReconnect: Boolean = true,
     public val initialReconnectDelayMs: Long = 1_000L,

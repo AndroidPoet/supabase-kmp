@@ -79,47 +79,51 @@ fun DemoScreen(
         }
 
         when (state.selectedTab) {
-            DemoTab.AUTH -> AuthTab(
-                state = state,
-                onAuthEmailChanged = onAuthEmailChanged,
-                onAuthPasswordChanged = onAuthPasswordChanged,
-                onSignUp = onSignUp,
-                onSignIn = onSignIn,
-                onSignInAnonymously = onSignInAnonymously,
-                onGetCurrentUser = onGetCurrentUser,
-                onRefreshSession = onRefreshSession,
-                onInspectJwt = onInspectJwt,
-                onSignOut = onSignOut,
-            )
-            DemoTab.CHAT -> ChatTab(
-                state = state,
-                onRoomNameChanged = onRoomNameChanged,
-                onSenderNameChanged = onSenderNameChanged,
-                onChatComposerChanged = onChatComposerChanged,
-                onSendMessage = onSendMessage,
-                onSendBroadcast = onSendBroadcast,
-                onUpdatePresence = onUpdatePresence,
-                onLoadRoomDiagnostics = onLoadRoomDiagnostics,
-                onLoadOlder = onLoadOlder,
-            )
-            DemoTab.STORAGE -> StorageTab(
-                state = state,
-                onBucketChanged = onBucketChanged,
-                onStoragePathChanged = onStoragePathChanged,
-                onStorageContentChanged = onStorageContentChanged,
-                onUploadTextFile = onUploadTextFile,
-                onInspectStorage = onInspectStorage,
-                onListFiles = onListFiles,
-                onBuildUrls = onBuildUrls,
-                onRemoveFile = onRemoveFile,
-            )
-            DemoTab.FUNCTIONS -> FunctionsTab(
-                state = state,
-                onFunctionNameChanged = onFunctionNameChanged,
-                onFunctionBodyChanged = onFunctionBodyChanged,
-                onInvokeFunction = onInvokeFunction,
-                onInvokeFunctionTyped = onInvokeFunctionTyped,
-            )
+            DemoTab.AUTH ->
+                AuthTab(
+                    state = state,
+                    onAuthEmailChanged = onAuthEmailChanged,
+                    onAuthPasswordChanged = onAuthPasswordChanged,
+                    onSignUp = onSignUp,
+                    onSignIn = onSignIn,
+                    onSignInAnonymously = onSignInAnonymously,
+                    onGetCurrentUser = onGetCurrentUser,
+                    onRefreshSession = onRefreshSession,
+                    onInspectJwt = onInspectJwt,
+                    onSignOut = onSignOut,
+                )
+            DemoTab.CHAT ->
+                ChatTab(
+                    state = state,
+                    onRoomNameChanged = onRoomNameChanged,
+                    onSenderNameChanged = onSenderNameChanged,
+                    onChatComposerChanged = onChatComposerChanged,
+                    onSendMessage = onSendMessage,
+                    onSendBroadcast = onSendBroadcast,
+                    onUpdatePresence = onUpdatePresence,
+                    onLoadRoomDiagnostics = onLoadRoomDiagnostics,
+                    onLoadOlder = onLoadOlder,
+                )
+            DemoTab.STORAGE ->
+                StorageTab(
+                    state = state,
+                    onBucketChanged = onBucketChanged,
+                    onStoragePathChanged = onStoragePathChanged,
+                    onStorageContentChanged = onStorageContentChanged,
+                    onUploadTextFile = onUploadTextFile,
+                    onInspectStorage = onInspectStorage,
+                    onListFiles = onListFiles,
+                    onBuildUrls = onBuildUrls,
+                    onRemoveFile = onRemoveFile,
+                )
+            DemoTab.FUNCTIONS ->
+                FunctionsTab(
+                    state = state,
+                    onFunctionNameChanged = onFunctionNameChanged,
+                    onFunctionBodyChanged = onFunctionBodyChanged,
+                    onInvokeFunction = onInvokeFunction,
+                    onInvokeFunctionTyped = onInvokeFunctionTyped,
+                )
         }
     }
 }
@@ -207,10 +211,12 @@ private fun ChatTab(
                             horizontalArrangement = if (mine) Arrangement.End else Arrangement.Start,
                         ) {
                             Column(
-                                modifier = Modifier.background(
-                                    color = if (mine) MaterialTheme.colorScheme.primary else Color(0xFFE9EDF2),
-                                    shape = RoundedCornerShape(14.dp),
-                                ).padding(horizontal = 10.dp, vertical = 8.dp),
+                                modifier =
+                                    Modifier
+                                        .background(
+                                            color = if (mine) MaterialTheme.colorScheme.primary else Color(0xFFE9EDF2),
+                                            shape = RoundedCornerShape(14.dp),
+                                        ).padding(horizontal = 10.dp, vertical = 8.dp),
                             ) {
                                 Text(
                                     text = message.senderName,

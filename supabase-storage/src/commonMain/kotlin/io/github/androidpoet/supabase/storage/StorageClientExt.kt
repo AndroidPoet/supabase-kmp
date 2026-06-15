@@ -95,13 +95,14 @@ public suspend fun StorageClient.createSignedRenderUrls(
     val urls = ArrayList<String>(paths.size)
     for (path in paths) {
         when (
-            val signed = createSignedUrl(
-                bucket = bucket,
-                path = path,
-                expiresIn = expiresIn,
-                download = false,
-                transform = transform,
-            )
+            val signed =
+                createSignedUrl(
+                    bucket = bucket,
+                    path = path,
+                    expiresIn = expiresIn,
+                    download = false,
+                    transform = transform,
+                )
         ) {
             is SupabaseResult.Failure -> return signed
             is SupabaseResult.Success -> urls += signed.value
@@ -130,12 +131,13 @@ public suspend fun StorageClient.createSignedDownloadUrlsByPath(
     fileName: String? = null,
 ): SupabaseResult<Map<String, String>> =
     when (
-        val result = createSignedDownloadUrls(
-            bucket = bucket,
-            paths = paths,
-            expiresIn = expiresIn,
-            fileName = fileName,
-        )
+        val result =
+            createSignedDownloadUrls(
+                bucket = bucket,
+                paths = paths,
+                expiresIn = expiresIn,
+                fileName = fileName,
+            )
     ) {
         is SupabaseResult.Failure -> result
         is SupabaseResult.Success -> SupabaseResult.Success(paths.zip(result.value).toMap())
@@ -173,12 +175,13 @@ public suspend fun StorageClient.createSignedRenderUrlsByPath(
     transform: ImageTransformOptions,
 ): SupabaseResult<Map<String, String>> =
     when (
-        val result = createSignedRenderUrls(
-            bucket = bucket,
-            paths = paths,
-            expiresIn = expiresIn,
-            transform = transform,
-        )
+        val result =
+            createSignedRenderUrls(
+                bucket = bucket,
+                paths = paths,
+                expiresIn = expiresIn,
+                transform = transform,
+            )
     ) {
         is SupabaseResult.Failure -> result
         is SupabaseResult.Success -> SupabaseResult.Success(paths.zip(result.value).toMap())
@@ -237,13 +240,14 @@ public fun StorageClient.getPublicUrls(
     fileName: String? = null,
     transform: ImageTransformOptions? = null,
     vararg paths: String,
-): List<String> = getPublicUrls(
-    bucket = bucket,
-    paths = paths.toList(),
-    download = download,
-    fileName = fileName,
-    transform = transform,
-)
+): List<String> =
+    getPublicUrls(
+        bucket = bucket,
+        paths = paths.toList(),
+        download = download,
+        fileName = fileName,
+        transform = transform,
+    )
 
 public fun StorageClient.getPublicUrlsByPath(
     bucket: String,
@@ -251,15 +255,16 @@ public fun StorageClient.getPublicUrlsByPath(
     download: Boolean = false,
     fileName: String? = null,
     transform: ImageTransformOptions? = null,
-): Map<String, String> = paths.associateWith { path ->
-    getPublicUrl(
-        bucket = bucket,
-        path = path,
-        download = download,
-        fileName = fileName,
-        transform = transform,
-    )
-}
+): Map<String, String> =
+    paths.associateWith { path ->
+        getPublicUrl(
+            bucket = bucket,
+            path = path,
+            download = download,
+            fileName = fileName,
+            transform = transform,
+        )
+    }
 
 public fun StorageClient.getPublicUrlsByPath(
     bucket: String,
@@ -272,13 +277,14 @@ public fun StorageClient.getPublicUrlsByPath(
     fileName: String? = null,
     transform: ImageTransformOptions? = null,
     vararg paths: String,
-): Map<String, String> = getPublicUrlsByPath(
-    bucket = bucket,
-    paths = paths.toList(),
-    download = download,
-    fileName = fileName,
-    transform = transform,
-)
+): Map<String, String> =
+    getPublicUrlsByPath(
+        bucket = bucket,
+        paths = paths.toList(),
+        download = download,
+        fileName = fileName,
+        transform = transform,
+    )
 
 public fun StorageClient.getAuthenticatedUrls(
     bucket: String,
@@ -308,13 +314,14 @@ public fun StorageClient.getAuthenticatedUrls(
     fileName: String? = null,
     transform: ImageTransformOptions? = null,
     vararg paths: String,
-): List<String> = getAuthenticatedUrls(
-    bucket = bucket,
-    paths = paths.toList(),
-    download = download,
-    fileName = fileName,
-    transform = transform,
-)
+): List<String> =
+    getAuthenticatedUrls(
+        bucket = bucket,
+        paths = paths.toList(),
+        download = download,
+        fileName = fileName,
+        transform = transform,
+    )
 
 public fun StorageClient.getAuthenticatedUrlsByPath(
     bucket: String,
@@ -322,15 +329,16 @@ public fun StorageClient.getAuthenticatedUrlsByPath(
     download: Boolean = false,
     fileName: String? = null,
     transform: ImageTransformOptions? = null,
-): Map<String, String> = paths.associateWith { path ->
-    getAuthenticatedUrl(
-        bucket = bucket,
-        path = path,
-        download = download,
-        fileName = fileName,
-        transform = transform,
-    )
-}
+): Map<String, String> =
+    paths.associateWith { path ->
+        getAuthenticatedUrl(
+            bucket = bucket,
+            path = path,
+            download = download,
+            fileName = fileName,
+            transform = transform,
+        )
+    }
 
 public fun StorageClient.getAuthenticatedUrlsByPath(
     bucket: String,
@@ -343,21 +351,23 @@ public fun StorageClient.getAuthenticatedUrlsByPath(
     fileName: String? = null,
     transform: ImageTransformOptions? = null,
     vararg paths: String,
-): Map<String, String> = getAuthenticatedUrlsByPath(
-    bucket = bucket,
-    paths = paths.toList(),
-    download = download,
-    fileName = fileName,
-    transform = transform,
-)
+): Map<String, String> =
+    getAuthenticatedUrlsByPath(
+        bucket = bucket,
+        paths = paths.toList(),
+        download = download,
+        fileName = fileName,
+        transform = transform,
+    )
 
 public fun StorageClient.getPublicRenderUrls(
     bucket: String,
     paths: List<String>,
     transform: ImageTransformOptions? = null,
-): List<String> = paths.map { path ->
-    getPublicRenderUrl(bucket = bucket, path = path, transform = transform)
-}
+): List<String> =
+    paths.map { path ->
+        getPublicRenderUrl(bucket = bucket, path = path, transform = transform)
+    }
 
 public fun StorageClient.getPublicRenderUrls(
     bucket: String,
@@ -369,9 +379,10 @@ public fun StorageClient.getPublicRenderUrlsByPath(
     bucket: String,
     paths: List<String>,
     transform: ImageTransformOptions? = null,
-): Map<String, String> = paths.associateWith { path ->
-    getPublicRenderUrl(bucket = bucket, path = path, transform = transform)
-}
+): Map<String, String> =
+    paths.associateWith { path ->
+        getPublicRenderUrl(bucket = bucket, path = path, transform = transform)
+    }
 
 public fun StorageClient.getPublicRenderUrlsByPath(
     bucket: String,
@@ -383,9 +394,10 @@ public fun StorageClient.getAuthenticatedRenderUrls(
     bucket: String,
     paths: List<String>,
     transform: ImageTransformOptions? = null,
-): List<String> = paths.map { path ->
-    getAuthenticatedRenderUrl(bucket = bucket, path = path, transform = transform)
-}
+): List<String> =
+    paths.map { path ->
+        getAuthenticatedRenderUrl(bucket = bucket, path = path, transform = transform)
+    }
 
 public fun StorageClient.getAuthenticatedRenderUrls(
     bucket: String,
@@ -397,9 +409,10 @@ public fun StorageClient.getAuthenticatedRenderUrlsByPath(
     bucket: String,
     paths: List<String>,
     transform: ImageTransformOptions? = null,
-): Map<String, String> = paths.associateWith { path ->
-    getAuthenticatedRenderUrl(bucket = bucket, path = path, transform = transform)
-}
+): Map<String, String> =
+    paths.associateWith { path ->
+        getAuthenticatedRenderUrl(bucket = bucket, path = path, transform = transform)
+    }
 
 public fun StorageClient.getAuthenticatedRenderUrlsByPath(
     bucket: String,

@@ -1,23 +1,36 @@
 package io.github.androidpoet.supabase.database
 import io.github.androidpoet.supabase.core.models.FilterBuilder
 import io.github.androidpoet.supabase.core.result.SupabaseResult
-public enum class CountOption(internal val headerValue: String) {
+
+public enum class CountOption(
+    internal val headerValue: String,
+) {
     EXACT("exact"),
     PLANNED("planned"),
     ESTIMATED("estimated"),
 }
-public enum class ReturnOption(internal val headerValue: String) {
+
+public enum class ReturnOption(
+    internal val headerValue: String,
+) {
     MINIMAL("minimal"),
     REPRESENTATION("representation"),
 }
-public enum class UpsertResolution(internal val headerValue: String) {
+
+public enum class UpsertResolution(
+    internal val headerValue: String,
+) {
     MERGE_DUPLICATES("merge-duplicates"),
     IGNORE_DUPLICATES("ignore-duplicates"),
 }
-public enum class ExplainFormat(internal val headerValue: String) {
+
+public enum class ExplainFormat(
+    internal val headerValue: String,
+) {
     TEXT("text"),
     JSON("json"),
 }
+
 public data class ExplainOptions(
     public val analyze: Boolean = false,
     public val verbose: Boolean = false,
@@ -26,6 +39,7 @@ public data class ExplainOptions(
     public val wal: Boolean = false,
     public val format: ExplainFormat = ExplainFormat.TEXT,
 )
+
 public interface DatabaseClient {
     public suspend fun select(
         table: String,
@@ -41,6 +55,7 @@ public interface DatabaseClient {
         headers: Map<String, String> = emptyMap(),
         filters: FilterBuilder.() -> Unit = {},
     ): SupabaseResult<String>
+
     public suspend fun insert(
         table: String,
         schema: String? = null,
@@ -56,6 +71,7 @@ public interface DatabaseClient {
         rollback: Boolean = false,
         headers: Map<String, String> = emptyMap(),
     ): SupabaseResult<String>
+
     public suspend fun update(
         table: String,
         schema: String? = null,
@@ -69,6 +85,7 @@ public interface DatabaseClient {
         headers: Map<String, String> = emptyMap(),
         filters: FilterBuilder.() -> Unit = {},
     ): SupabaseResult<String>
+
     public suspend fun delete(
         table: String,
         schema: String? = null,
@@ -81,6 +98,7 @@ public interface DatabaseClient {
         headers: Map<String, String> = emptyMap(),
         filters: FilterBuilder.() -> Unit = {},
     ): SupabaseResult<String>
+
     public suspend fun rpc(
         function: String,
         schema: String? = null,
@@ -95,6 +113,7 @@ public interface DatabaseClient {
         explain: ExplainOptions? = null,
         headers: Map<String, String> = emptyMap(),
     ): SupabaseResult<String>
+
     public suspend fun rpcGet(
         function: String,
         schema: String? = null,
