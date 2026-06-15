@@ -1,6 +1,48 @@
 # Changelog
 
-## 0.3.5
+## 0.4.0
+
+### Added
+
+- **Storage:** resumable (TUS) uploads via `createResumableUpload(...)`. The
+  returned `ResumableUpload` exposes `uploadUrl`, a `progress: StateFlow`, and a
+  cancellable `await()`; cancel to pause and resume later (even across app
+  restarts) by persisting `uploadUrl`. Uploads in 6 MiB chunks with server-side
+  offset tracking.
+- **Client:** `SupabaseClient.rawRequest(method, url, body, contentType, headers)`
+  for issuing raw, non-JSON requests through the configured client (powers the
+  resumable upload protocol).
+- **Errors:** network-aware error handling — `SupabaseError.httpStatus` and
+  `retryAfterSeconds`, a `SupabaseErrorCategory.Network` category,
+  `SupabaseErrorCategory.isRetryable`, `SupabaseError.isNetworkError()`, and an
+  `onNetworkError { }` result handler. Transport now classifies timeouts and
+  connection failures into `SupabaseErrorCodes.Client` codes so categorization
+  works offline.
+- **Result operators:** `validate(predicate, lazyError)` (turn a failing
+  `Success` into a `Failure`), `flatMapError`/`flatMapErrorSuspend` (failure-side
+  recovery chains), and `zip(other) { a, b -> … }` (combine two results).
+- **Database:** GeoJSON responses via `selectGeoJson(...)` / the `geojson` flag
+  on `select` (`Accept: application/geo+json`).
+- **Realtime:** `RealtimeSubscription.presenceState()` for the current
+  cumulative presence snapshot.
+- `SupabaseClient` now implements `AutoCloseable`.
+- `KeyValueStore` + `KeyValueSessionStorage` for easy persistent, serialized
+  session storage backed by the platform keystore.
+- Input validation on `Supabase.create` (non-blank api key, http(s) project URL).
+- Tooling: detekt, binary-compatibility-validator (JVM + Android + native klib
+  ABI dumps), Kover coverage, Dokka API docs, a multiplatform CI matrix,
+  Dependabot, and CONTRIBUTING/SECURITY/CODE_OF_CONDUCT.
+- Internal: shared `urlEncode` in `supabase-core` (deduplicated from auth /
+  auth-admin); Functions now uses the live session token (falls back to the
+  client's current token instead of only a pinned one).
+
+### Changed
+
+- Internal: every module's endpoint URLs are now centralized — `StoragePaths`,
+  `AuthPaths`, `AuthAdminPaths`, `DatabasePaths`, and `FunctionsPaths` factor the
+  `v1` API version and route prefixes into one place per module instead of
+  repeating `/storage/v1/...`, `/auth/v1/...`, `/rest/v1/...`, and
+  `/functions/v1/...` string literals across the codebase. No public API change.
 
 ### Security
 
@@ -40,19 +82,6 @@
   callbacks now receive the full cumulative state on diffs.
 - Cross-thread visibility hardening for the access token, session refresh state,
   and realtime connection fields (`@Volatile`).
-
-### Added
-
-- `SupabaseClient` now implements `AutoCloseable`.
-- `KeyValueStore` + `KeyValueSessionStorage` for easy persistent, serialized
-  session storage backed by the platform keystore.
-- Input validation on `Supabase.create` (non-blank api key, http(s) project URL).
-- Tooling: detekt, binary-compatibility-validator (JVM + Android + native klib
-  ABI dumps), Kover coverage, Dokka API docs, a multiplatform CI matrix,
-  Dependabot, and CONTRIBUTING/SECURITY/CODE_OF_CONDUCT.
-- Internal: shared `urlEncode` in `supabase-core` (deduplicated from auth /
-  auth-admin); Functions now uses the live session token (falls back to the
-  client's current token instead of only a pinned one).
 
 ## 0.3.2
 

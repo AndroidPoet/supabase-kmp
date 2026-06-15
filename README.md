@@ -33,7 +33,7 @@ Add the dependencies you need to your `build.gradle.kts`:
 
 ```kotlin
 [versions]
-supabase-kmp = "0.3.5"
+supabase-kmp = "0.4.0"
 
 [libraries]
 supabase-core = { module = "io.github.androidpoet:supabase-core", version.ref = "supabase-kmp" }
