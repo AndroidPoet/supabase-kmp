@@ -33,10 +33,11 @@ class MainActivity : ComponentActivity() {
                     if (!configured) {
                         MissingConfigScreen()
                     } else {
-                        val supabaseClient = Supabase.create(
-                            projectUrl = BuildConfig.SUPABASE_URL,
-                            apiKey = BuildConfig.SUPABASE_ANON_KEY,
-                        )
+                        val supabaseClient =
+                            Supabase.create(
+                                projectUrl = BuildConfig.SUPABASE_URL,
+                                apiKey = BuildConfig.SUPABASE_ANON_KEY,
+                            )
                         val auth = createAuthClient(supabaseClient)
                         val database = createDatabaseClient(supabaseClient)
                         val storage = createStorageClient(supabaseClient)
@@ -44,20 +45,22 @@ class MainActivity : ComponentActivity() {
                         val functions = createFunctionsClient(supabaseClient)
                         val sessionManager = createSessionManager(auth, supabaseClient)
 
-                        val vm: DemoViewModel = viewModel(
-                            factory = DemoViewModelFactory(
-                                DemoRepository(
-                                    auth = auth,
-                                    sessionManager = sessionManager,
-                                    database = database,
-                                    storage = storage,
-                                    realtime = realtime,
-                                    functions = functions,
-                                    defaultBucket = BuildConfig.SUPABASE_STORAGE_BUCKET,
-                                    defaultFunctionName = BuildConfig.SUPABASE_FUNCTION_NAME,
-                                ),
-                            ),
-                        )
+                        val vm: DemoViewModel =
+                            viewModel(
+                                factory =
+                                    DemoViewModelFactory(
+                                        DemoRepository(
+                                            auth = auth,
+                                            sessionManager = sessionManager,
+                                            database = database,
+                                            storage = storage,
+                                            realtime = realtime,
+                                            functions = functions,
+                                            defaultBucket = BuildConfig.SUPABASE_STORAGE_BUCKET,
+                                            defaultFunctionName = BuildConfig.SUPABASE_FUNCTION_NAME,
+                                        ),
+                                    ),
+                            )
                         val state by vm.state.collectAsStateWithLifecycle()
 
                         DemoScreen(

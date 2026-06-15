@@ -12,10 +12,11 @@ internal class TestMockEngineFactory(
     private val handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData,
 ) : HttpClientEngineFactory<MockEngineConfig> {
     override fun create(block: MockEngineConfig.() -> Unit): HttpClientEngine {
-        val config = MockEngineConfig().apply {
-            addHandler(handler)
-            block()
-        }
+        val config =
+            MockEngineConfig().apply {
+                addHandler(handler)
+                block()
+            }
         return MockEngine(config)
     }
 }

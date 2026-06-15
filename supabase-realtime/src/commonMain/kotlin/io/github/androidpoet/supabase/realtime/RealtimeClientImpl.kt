@@ -11,8 +11,11 @@ import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketSession
 import io.ktor.websocket.close
 import io.ktor.websocket.readText
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.atomicfu.atomic
+import kotlinx.atomicfu.locks.SynchronizedObject
+import kotlinx.atomicfu.locks.synchronized
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -23,25 +26,21 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
-import kotlinx.coroutines.withTimeoutOrNull
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.atomicfu.locks.SynchronizedObject
-import kotlinx.atomicfu.locks.synchronized
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
-import kotlinx.atomicfu.atomic
 import kotlin.concurrent.Volatile
 import kotlin.math.min
 import kotlin.math.pow
@@ -53,9 +52,11 @@ internal class RealtimeClientImpl(
     private val config: RealtimeConfig = RealtimeConfig(),
 ) : RealtimeClient {
     private val json = Json { ignoreUnknownKeys = true }
-    private val httpClient = HttpClient {
-        install(WebSockets)
-    }
+    private val httpClient =
+        HttpClient {
+            install(WebSockets)
+        }
+
     @Volatile
     private var session: WebSocketSession? = null
 
@@ -104,54 +105,70 @@ internal class RealtimeClientImpl(
     override val isConnected: Boolean get() = _connectionState.value is ConnectionState.Connected
     override val isConnecting: Boolean get() = _connectionState.value is ConnectionState.Connecting
     override val isDisconnecting: Boolean get() = _connectionState.value is ConnectionState.Disconnecting
+
     // activeSubscriptions is read from non-suspend getters on arbitrary threads
     // and mutated from coroutines; guard every access with this lock. Callers must
     // snapshot under the lock and release it before invoking suspend functions.
     private val subscriptionsLock = SynchronizedObject()
     private val activeSubscriptions = mutableMapOf<String, ChannelSubscriptionImpl>()
+
     internal fun nextRef(): String = refCounter.incrementAndGet().toString()
+
     override fun channel(name: String): RealtimeChannelBuilder =
         RealtimeChannelBuilder(channelName = name, client = this)
+
     override fun getSubscription(name: String): RealtimeSubscription? =
         synchronized(subscriptionsLock) { activeSubscriptions["realtime:$name"] }
+
     override fun getSubscriptionByTopic(topic: String): RealtimeSubscription? =
         synchronized(subscriptionsLock) { activeSubscriptions[topic] }
+
     override fun getSubscriptions(): Set<RealtimeSubscription> =
         synchronized(subscriptionsLock) { activeSubscriptions.values.toSet() }
+
     override fun activeChannels(): Set<String> =
         synchronized(subscriptionsLock) { activeSubscriptions.values.mapTo(mutableSetOf()) { it.channel } }
+
     override fun activeChannelDetails(): Set<RealtimeChannel> =
         synchronized(subscriptionsLock) {
             activeSubscriptions.values.mapTo(mutableSetOf()) { RealtimeChannel(name = it.channel, topic = it.topic) }
         }
+
     override suspend fun removeSubscription(subscription: RealtimeSubscription) {
         subscription.unsubscribe()
     }
+
     override suspend fun removeSubscriptions(subscriptions: List<RealtimeSubscription>) {
         subscriptions.forEach { subscription ->
             subscription.unsubscribe()
         }
     }
+
     @Deprecated("Use removeSubscription instead", ReplaceWith("removeSubscription(subscription)"))
     override suspend fun removeChannel(subscription: RealtimeSubscription) {
         removeSubscription(subscription)
     }
+
     override suspend fun removeSubscriptionByTopic(topic: String) {
         synchronized(subscriptionsLock) { activeSubscriptions[topic] }?.unsubscribe()
     }
+
     override suspend fun removeChannelsByTopic(topics: List<String>) {
         topics.forEach { topic ->
             synchronized(subscriptionsLock) { activeSubscriptions[topic] }?.unsubscribe()
         }
     }
+
     override suspend fun removeChannel(name: String) {
         val topic = "realtime:$name"
         synchronized(subscriptionsLock) { activeSubscriptions[topic] }?.unsubscribe()
     }
+
     override suspend fun removeAllChannels() {
         synchronized(subscriptionsLock) { activeSubscriptions.values.toList() }
             .forEach { it.unsubscribe() }
     }
+
     override suspend fun setAuth(token: String?) {
         authTokenOverride = token
         val subscriptions = synchronized(subscriptionsLock) { activeSubscriptions.values.toList() }
@@ -169,9 +186,11 @@ internal class RealtimeClientImpl(
             )
         }
     }
+
     override suspend fun sendHeartbeat() {
         sendHeartbeatMessage()
     }
+
     override suspend fun connect() {
         if (session != null) return
         intentionalDisconnect = false
@@ -186,24 +205,27 @@ internal class RealtimeClientImpl(
             if (config.autoReconnect && !intentionalDisconnect) {
                 scheduleReconnect()
             } else {
-                _connectionState.value = ConnectionState.Failed(
-                    reason = e.message ?: "Connection failed",
-                    attempts = reconnectAttempt,
-                )
+                _connectionState.value =
+                    ConnectionState.Failed(
+                        reason = e.message ?: "Connection failed",
+                        attempts = reconnectAttempt,
+                    )
             }
         }
     }
+
     override suspend fun disconnect() {
         intentionalDisconnect = true
         _connectionState.value = ConnectionState.Disconnecting
         reconnectJob?.cancel()
         reconnectJob = null
         reconnectAttempt = 0
-        val toUnsubscribe = synchronized(subscriptionsLock) {
-            val snapshot = activeSubscriptions.values.toList()
-            activeSubscriptions.clear()
-            snapshot
-        }
+        val toUnsubscribe =
+            synchronized(subscriptionsLock) {
+                val snapshot = activeSubscriptions.values.toList()
+                activeSubscriptions.clear()
+                snapshot
+            }
         toUnsubscribe.forEach { it.unsubscribe() }
         heartbeatJob?.cancel()
         heartbeatJob = null
@@ -213,32 +235,36 @@ internal class RealtimeClientImpl(
         scope = null
         _connectionState.value = ConnectionState.Disconnected
     }
+
     override suspend fun close() {
         disconnect()
         // Release the Ktor engine (connection pool / background threads). The
         // client is single-use after this; constructing a new one is cheap.
         httpClient.close()
     }
+
     internal suspend fun subscribe(builder: RealtimeChannelBuilder): RealtimeSubscription {
         val topic = "realtime:${builder.channelName}"
-        val subscription = ChannelSubscriptionImpl(
-            channel = builder.channelName,
-            topic = topic,
-            client = this,
-            postgresCallbacks = builder.postgresCallbacks.toList(),
-            broadcastCallbacks = builder.broadcastCallbacks.toMap(),
-            presenceCallback = builder.presenceCallback,
-            receiveOwnBroadcasts = builder.receiveOwnBroadcasts,
-            acknowledgeBroadcasts = builder.acknowledgeBroadcasts,
-            presenceKey = builder.presenceKey,
-            privateChannel = builder.privateChannel,
-            replaySinceMs = builder.replaySinceMs,
-            replayLimit = builder.replayLimit,
-        )
+        val subscription =
+            ChannelSubscriptionImpl(
+                channel = builder.channelName,
+                topic = topic,
+                client = this,
+                postgresCallbacks = builder.postgresCallbacks.toList(),
+                broadcastCallbacks = builder.broadcastCallbacks.toMap(),
+                presenceCallback = builder.presenceCallback,
+                receiveOwnBroadcasts = builder.receiveOwnBroadcasts,
+                acknowledgeBroadcasts = builder.acknowledgeBroadcasts,
+                presenceKey = builder.presenceKey,
+                privateChannel = builder.privateChannel,
+                replaySinceMs = builder.replaySinceMs,
+                replayLimit = builder.replayLimit,
+            )
         synchronized(subscriptionsLock) { activeSubscriptions[topic] = subscription }
         sendJoinMessage(subscription)
         return subscription
     }
+
     internal suspend fun leaveChannel(topic: String) {
         val subscription = synchronized(subscriptionsLock) { activeSubscriptions.remove(topic) }
         sendMessage(
@@ -251,6 +277,7 @@ internal class RealtimeClientImpl(
             ),
         )
     }
+
     internal suspend fun sendMessage(message: RealtimeMessage) {
         recordOutboundMessage(message)
         val current = session
@@ -268,22 +295,25 @@ internal class RealtimeClientImpl(
     }
 
     private suspend fun flushOutboundBuffer() {
-        val pending = outboundBufferLock.withLock {
-            val copy = outboundBuffer.toList()
-            outboundBuffer.clear()
-            copy
-        }
+        val pending =
+            outboundBufferLock.withLock {
+                val copy = outboundBuffer.toList()
+                outboundBuffer.clear()
+                copy
+            }
         val current = session ?: return
         for (message in pending) {
             current.send(Frame.Text(json.encodeToString(message)))
         }
     }
+
     private suspend fun establishConnection() {
         val isHttps = supabaseClient.projectUrl.startsWith("https://")
-        val host = supabaseClient.projectUrl
-            .removePrefix("https://")
-            .removePrefix("http://")
-            .trimEnd('/')
+        val host =
+            supabaseClient.projectUrl
+                .removePrefix("https://")
+                .removePrefix("http://")
+                .trimEnd('/')
         val wsScheme = if (isHttps) "wss" else "ws"
         val url = "$wsScheme://$host/realtime/v1/websocket?apikey=${supabaseClient.apiKey}&vsn=1.0.0"
         val newScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -312,21 +342,23 @@ internal class RealtimeClientImpl(
                 }
             }
         }
-        heartbeatJob = newScope.launch {
-            while (isActive) {
-                delay(config.heartbeatIntervalMs)
-                if (pendingHeartbeatRef != null) {
-                    // Previous heartbeat was never acknowledged → server is gone.
-                    // Closing the socket wakes the incoming loop, whose finally
-                    // block runs the reconnect path.
-                    pendingHeartbeatRef = null
-                    session?.close()
-                    break
+        heartbeatJob =
+            newScope.launch {
+                while (isActive) {
+                    delay(config.heartbeatIntervalMs)
+                    if (pendingHeartbeatRef != null) {
+                        // Previous heartbeat was never acknowledged → server is gone.
+                        // Closing the socket wakes the incoming loop, whose finally
+                        // block runs the reconnect path.
+                        pendingHeartbeatRef = null
+                        session?.close()
+                        break
+                    }
+                    sendHeartbeatMessage()
                 }
-                sendHeartbeatMessage()
             }
-        }
     }
+
     private suspend fun sendHeartbeatMessage() {
         val ref = nextRef()
         pendingHeartbeatRef = ref
@@ -339,29 +371,34 @@ internal class RealtimeClientImpl(
             ),
         )
     }
+
     private fun recordOutboundMessage(message: RealtimeMessage) {
-        _debugState.value = _debugState.value.copy(
-            outboundMessageCount = _debugState.value.outboundMessageCount + 1,
-            heartbeatSentCount = _debugState.value.heartbeatSentCount + if (message.isHeartbeatRequest()) 1 else 0,
-            lastOutboundRef = message.ref,
-        )
+        _debugState.value =
+            _debugState.value.copy(
+                outboundMessageCount = _debugState.value.outboundMessageCount + 1,
+                heartbeatSentCount = _debugState.value.heartbeatSentCount + if (message.isHeartbeatRequest()) 1 else 0,
+                lastOutboundRef = message.ref,
+            )
         _debugEvents.tryEmit(RealtimeDebugEvent.OutboundMessage(message))
         if (message.isHeartbeatRequest()) {
             _debugEvents.tryEmit(RealtimeDebugEvent.HeartbeatSent(message.ref ?: ""))
         }
     }
+
     private fun recordInboundMessage(message: RealtimeMessage) {
-        _debugState.value = _debugState.value.copy(
-            inboundMessageCount = _debugState.value.inboundMessageCount + 1,
-            heartbeatReceivedCount = _debugState.value.heartbeatReceivedCount + if (message.isHeartbeatReply()) 1 else 0,
-            lastInboundRef = message.ref,
-        )
+        _debugState.value =
+            _debugState.value.copy(
+                inboundMessageCount = _debugState.value.inboundMessageCount + 1,
+                heartbeatReceivedCount = _debugState.value.heartbeatReceivedCount + if (message.isHeartbeatReply()) 1 else 0,
+                lastInboundRef = message.ref,
+            )
         _debugEvents.tryEmit(RealtimeDebugEvent.InboundMessage(message))
         if (message.isHeartbeatReply()) {
             pendingHeartbeatRef = null
             _debugEvents.tryEmit(RealtimeDebugEvent.HeartbeatReceived(message.ref))
         }
     }
+
     private fun handleUnexpectedDisconnect() {
         if (!config.autoReconnect || intentionalDisconnect) return
         heartbeatJob?.cancel()
@@ -370,6 +407,7 @@ internal class RealtimeClientImpl(
         scope = null
         scheduleReconnect()
     }
+
     private fun scheduleReconnect() {
         // Cancel any in-flight reconnect so overlapping triggers (e.g. a connect
         // failure racing an unexpected disconnect) don't spawn parallel loops.
@@ -377,24 +415,28 @@ internal class RealtimeClientImpl(
         reconnectJob = null
         val maxAttempts = config.maxReconnectAttempts
         if (maxAttempts > 0 && reconnectAttempt >= maxAttempts) {
-            _connectionState.value = ConnectionState.Failed(
-                reason = "Maximum reconnect attempts ($maxAttempts) exhausted",
-                attempts = reconnectAttempt,
-            )
+            _connectionState.value =
+                ConnectionState.Failed(
+                    reason = "Maximum reconnect attempts ($maxAttempts) exhausted",
+                    attempts = reconnectAttempt,
+                )
             return
         }
         val delayMs = calculateBackoffDelay(reconnectAttempt)
-        _connectionState.value = ConnectionState.Reconnecting(
-            attempt = reconnectAttempt + 1,
-            nextRetryMs = delayMs,
-        )
+        _connectionState.value =
+            ConnectionState.Reconnecting(
+                attempt = reconnectAttempt + 1,
+                nextRetryMs = delayMs,
+            )
         val reconnectScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-        reconnectJob = reconnectScope.launch {
-            delay(delayMs)
-            reconnectAttempt++
-            attemptReconnect()
-        }
+        reconnectJob =
+            reconnectScope.launch {
+                delay(delayMs)
+                reconnectAttempt++
+                attemptReconnect()
+            }
     }
+
     private suspend fun attemptReconnect() {
         _connectionState.value = ConnectionState.Connecting
         try {
@@ -411,12 +453,14 @@ internal class RealtimeClientImpl(
             scheduleReconnect()
         }
     }
+
     private suspend fun rejoinActiveChannels() {
         val subscriptions = synchronized(subscriptionsLock) { activeSubscriptions.values.toList() }
         for (subscription in subscriptions) {
             sendJoinMessage(subscription)
         }
     }
+
     private suspend fun sendJoinMessage(
         subscription: ChannelSubscriptionImpl,
     ) {
@@ -428,37 +472,51 @@ internal class RealtimeClientImpl(
         val privateChannel = subscription.privateChannel
         val replaySinceMs = subscription.replaySinceMs
         val replayLimit = subscription.replayLimit
-        val postgresConfigs = postgresCallbacks.map { config ->
-            buildJsonObject {
-                put("event", config.event.toWireValue())
-                put("schema", config.schema)
-                config.table?.let { put("table", it) }
-                config.filter?.let { put("filter", it) }
-            }
-        }
-        val joinPayload = buildJsonObject {
-            put("config", buildJsonObject {
-                put("broadcast", buildJsonObject {
-                    put("self", JsonPrimitive(receiveOwnBroadcasts))
-                    put("ack", JsonPrimitive(acknowledgeBroadcasts))
-                    if (replaySinceMs != null) {
-                        put("replay", buildJsonObject {
-                            put("since", JsonPrimitive(replaySinceMs))
-                            replayLimit?.let { put("limit", JsonPrimitive(it)) }
-                        })
-                    }
-                })
-                put("presence", buildJsonObject {
-                    put("enabled", JsonPrimitive(presenceKey.isNotEmpty() || subscription.hasPresenceTracking))
-                    put("key", JsonPrimitive(presenceKey))
-                })
-                if (postgresConfigs.isNotEmpty()) {
-                    put("postgres_changes", kotlinx.serialization.json.JsonArray(postgresConfigs))
+        val postgresConfigs =
+            postgresCallbacks.map { config ->
+                buildJsonObject {
+                    put("event", config.event.toWireValue())
+                    put("schema", config.schema)
+                    config.table?.let { put("table", it) }
+                    config.filter?.let { put("filter", it) }
                 }
-                put("private", JsonPrimitive(privateChannel))
-            })
-            put("access_token", JsonPrimitive(currentAccessToken()))
-        }
+            }
+        val joinPayload =
+            buildJsonObject {
+                put(
+                    "config",
+                    buildJsonObject {
+                        put(
+                            "broadcast",
+                            buildJsonObject {
+                                put("self", JsonPrimitive(receiveOwnBroadcasts))
+                                put("ack", JsonPrimitive(acknowledgeBroadcasts))
+                                if (replaySinceMs != null) {
+                                    put(
+                                        "replay",
+                                        buildJsonObject {
+                                            put("since", JsonPrimitive(replaySinceMs))
+                                            replayLimit?.let { put("limit", JsonPrimitive(it)) }
+                                        },
+                                    )
+                                }
+                            },
+                        )
+                        put(
+                            "presence",
+                            buildJsonObject {
+                                put("enabled", JsonPrimitive(presenceKey.isNotEmpty() || subscription.hasPresenceTracking))
+                                put("key", JsonPrimitive(presenceKey))
+                            },
+                        )
+                        if (postgresConfigs.isNotEmpty()) {
+                            put("postgres_changes", kotlinx.serialization.json.JsonArray(postgresConfigs))
+                        }
+                        put("private", JsonPrimitive(privateChannel))
+                    },
+                )
+                put("access_token", JsonPrimitive(currentAccessToken()))
+            }
         val joinRef = nextRef()
         subscription.joinRef = joinRef
         sendMessage(
@@ -473,17 +531,21 @@ internal class RealtimeClientImpl(
         // phx_join is fire-and-forget; without a watchdog a missing phx_reply
         // leaves the subscription stuck in SUBSCRIBING forever. Fail it on timeout.
         scope?.launch {
-            val resolved = withTimeoutOrNull(config.connectionTimeoutMs) {
-                subscription.status.first { it != RealtimeSubscription.Status.SUBSCRIBING }
-            }
+            val resolved =
+                withTimeoutOrNull(config.connectionTimeoutMs) {
+                    subscription.status.first { it != RealtimeSubscription.Status.SUBSCRIBING }
+                }
             if (resolved == null) subscription.markJoinTimedOut()
         }
     }
+
     private fun calculateBackoffDelay(attempt: Int): Long {
-        val delay = config.initialReconnectDelayMs *
-            config.backoffMultiplier.pow(attempt.toDouble())
+        val delay =
+            config.initialReconnectDelayMs *
+                config.backoffMultiplier.pow(attempt.toDouble())
         return min(delay.toLong(), config.maxReconnectDelayMs)
     }
+
     private suspend fun dispatchToSubscription(message: RealtimeMessage) {
         val subscription = synchronized(subscriptionsLock) { activeSubscriptions[message.topic] } ?: return
         try {
@@ -500,6 +562,7 @@ internal class RealtimeClientImpl(
     private fun currentAccessToken(): String =
         authTokenOverride ?: supabaseClient.accessTokenOrNull ?: supabaseClient.apiKey
 }
+
 internal class ChannelSubscriptionImpl(
     override val channel: String,
     internal val topic: String,
@@ -516,48 +579,58 @@ internal class ChannelSubscriptionImpl(
 ) : RealtimeSubscription {
     private val eventFlow = MutableSharedFlow<RealtimeEvent>(extraBufferCapacity = 64)
     private val _status = MutableStateFlow(RealtimeSubscription.Status.SUBSCRIBING)
+
     // Cumulative presence state, mutated only on the single inbound dispatch loop.
     private val presenceState = mutableMapOf<String, JsonObject>()
     internal var joinRef: String? = null
     internal val hasPresenceTracking: Boolean = presenceCallback != null
     override val status: StateFlow<RealtimeSubscription.Status> = _status.asStateFlow()
+
     override fun asFlow(): Flow<RealtimeEvent> = eventFlow
+
     internal fun markJoinTimedOut() {
         if (_status.value == RealtimeSubscription.Status.SUBSCRIBING) {
             _status.value = RealtimeSubscription.Status.ERROR
         }
     }
+
     override suspend fun unsubscribe() {
         _status.value = RealtimeSubscription.Status.UNSUBSCRIBING
         client.leaveChannel(topic)
         _status.value = RealtimeSubscription.Status.UNSUBSCRIBED
     }
+
     override suspend fun send(type: RealtimeSubscription.SendType, event: String, payload: JsonObject?) {
         client.sendMessage(
             RealtimeMessage(
                 topic = topic,
                 event = type.wireValue,
-                payload = buildJsonObject {
-                    put("type", type.wireValue)
-                    put("event", event)
-                    if (payload != null) {
-                        put("payload", payload)
-                    }
-                },
+                payload =
+                    buildJsonObject {
+                        put("type", type.wireValue)
+                        put("event", event)
+                        if (payload != null) {
+                            put("payload", payload)
+                        }
+                    },
                 joinRef = joinRef,
                 ref = client.nextRef(),
             ),
         )
     }
+
     override suspend fun broadcast(event: String, payload: JsonObject) {
         send(RealtimeSubscription.SendType.BROADCAST, event, payload)
     }
+
     override suspend fun track(state: JsonObject) {
         send(RealtimeSubscription.SendType.PRESENCE, "track", state)
     }
+
     override suspend fun untrack() {
         send(RealtimeSubscription.SendType.PRESENCE, "untrack")
     }
+
     internal suspend fun handleMessage(message: RealtimeMessage) {
         when (message.event) {
             "postgres_changes" -> handlePostgresChange(message.payload)
@@ -567,35 +640,38 @@ internal class ChannelSubscriptionImpl(
             "phx_reply" -> handleSystemReply(message.payload)
             "phx_error" -> {
                 _status.value = RealtimeSubscription.Status.ERROR
-                val event = RealtimeEvent.SystemEvent(
-                    status = "error",
-                    message = message.payload.toString(),
-                )
+                val event =
+                    RealtimeEvent.SystemEvent(
+                        status = "error",
+                        message = message.payload.toString(),
+                    )
                 eventFlow.emit(event)
             }
-            else -> {  }
+            else -> { }
         }
     }
+
     private suspend fun handlePostgresChange(payload: JsonObject) {
         val data = payload["data"]?.jsonObject ?: return
         val type = data["type"]?.jsonPrimitive?.content ?: return
         val record = data["record"]?.jsonObject
         val oldRecord = data["old_record"]?.jsonObject
-        val event = when (type) {
-            "INSERT" -> {
-                record ?: return
-                RealtimeEvent.PostgresInsert(record = record, oldRecord = oldRecord)
+        val event =
+            when (type) {
+                "INSERT" -> {
+                    record ?: return
+                    RealtimeEvent.PostgresInsert(record = record, oldRecord = oldRecord)
+                }
+                "UPDATE" -> {
+                    record ?: return
+                    RealtimeEvent.PostgresUpdate(record = record, oldRecord = oldRecord)
+                }
+                "DELETE" -> {
+                    val old = oldRecord ?: return
+                    RealtimeEvent.PostgresDelete(oldRecord = old)
+                }
+                else -> return
             }
-            "UPDATE" -> {
-                record ?: return
-                RealtimeEvent.PostgresUpdate(record = record, oldRecord = oldRecord)
-            }
-            "DELETE" -> {
-                val old = oldRecord ?: return
-                RealtimeEvent.PostgresDelete(oldRecord = old)
-            }
-            else -> return
-        }
         eventFlow.emit(event)
         for (config in postgresCallbacks) {
             if (config.event == PostgresChangeEvent.ALL || config.event.toWireValue() == type) {
@@ -603,17 +679,19 @@ internal class ChannelSubscriptionImpl(
                 when (config) {
                     is PostgresCallbackConfig.Simple -> config.callback(callbackPayload)
                     is PostgresCallbackConfig.Typed -> {
-                        val changeEvent = try {
-                            PostgresChangeEvent.valueOf(type)
-                        } catch (_: IllegalArgumentException) {
-                            PostgresChangeEvent.ALL
-                        }
+                        val changeEvent =
+                            try {
+                                PostgresChangeEvent.valueOf(type)
+                            } catch (_: IllegalArgumentException) {
+                                PostgresChangeEvent.ALL
+                            }
                         config.callback(changeEvent, callbackPayload)
                     }
                 }
             }
         }
     }
+
     private suspend fun handleBroadcast(payload: JsonObject) {
         val eventName = payload["event"]?.jsonPrimitive?.content ?: return
         val broadcastPayload = payload["payload"]?.jsonObject ?: buildJsonObject {}
@@ -621,6 +699,7 @@ internal class ChannelSubscriptionImpl(
         eventFlow.emit(event)
         broadcastCallbacks[eventName]?.invoke(broadcastPayload)
     }
+
     private suspend fun handlePresenceDiff(payload: JsonObject) {
         val joins = payload["joins"]?.jsonObject
         val leaves = payload["leaves"]?.jsonObject
@@ -638,6 +717,7 @@ internal class ChannelSubscriptionImpl(
         // members in this diff — so callers always see who is currently present.
         presenceCallback?.invoke(presenceState.toMap())
     }
+
     private suspend fun handlePresenceState(payload: JsonObject) {
         presenceState.clear()
         payload.forEach { (key, value) -> presenceState[key] = value.jsonObject }
@@ -645,27 +725,32 @@ internal class ChannelSubscriptionImpl(
         eventFlow.emit(RealtimeEvent.PresenceSync(state = state))
         presenceCallback?.invoke(state)
     }
+
     private suspend fun handleSystemReply(payload: JsonObject) {
         val status = payload["status"]?.jsonPrimitive?.content ?: "ok"
-        _status.value = if (status == "ok") {
-            RealtimeSubscription.Status.SUBSCRIBED
-        } else {
-            RealtimeSubscription.Status.ERROR
-        }
+        _status.value =
+            if (status == "ok") {
+                RealtimeSubscription.Status.SUBSCRIBED
+            } else {
+                RealtimeSubscription.Status.ERROR
+            }
         val response = payload["response"]
-        val event = RealtimeEvent.SystemEvent(
-            status = status,
-            message = response?.toString(),
-        )
+        val event =
+            RealtimeEvent.SystemEvent(
+                status = status,
+                message = response?.toString(),
+            )
         eventFlow.emit(event)
     }
 }
-internal fun PostgresChangeEvent.toWireValue(): String = when (this) {
-    PostgresChangeEvent.INSERT -> "INSERT"
-    PostgresChangeEvent.UPDATE -> "UPDATE"
-    PostgresChangeEvent.DELETE -> "DELETE"
-    PostgresChangeEvent.ALL -> "*"
-}
+
+internal fun PostgresChangeEvent.toWireValue(): String =
+    when (this) {
+        PostgresChangeEvent.INSERT -> "INSERT"
+        PostgresChangeEvent.UPDATE -> "UPDATE"
+        PostgresChangeEvent.DELETE -> "DELETE"
+        PostgresChangeEvent.ALL -> "*"
+    }
 
 // Control frames that are regenerated on reconnect and must not be replayed
 // from the outbound buffer (they would carry stale refs / duplicate joins).

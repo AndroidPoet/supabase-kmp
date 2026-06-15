@@ -12,7 +12,9 @@ import kotlinx.serialization.json.Json
  */
 public interface KeyValueStore {
     public suspend fun get(key: String): String?
+
     public suspend fun set(key: String, value: String)
+
     public suspend fun remove(key: String)
 }
 

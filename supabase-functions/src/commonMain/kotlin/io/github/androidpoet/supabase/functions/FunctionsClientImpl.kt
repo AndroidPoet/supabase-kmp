@@ -1,6 +1,7 @@
 package io.github.androidpoet.supabase.functions
 import io.github.androidpoet.supabase.client.SupabaseClient
 import io.github.androidpoet.supabase.core.result.SupabaseResult
+
 internal class FunctionsClientImpl(
     private val client: SupabaseClient,
 ) : FunctionsClient {
@@ -23,6 +24,7 @@ internal class FunctionsClientImpl(
             headers = merged,
         )
     }
+
     override suspend fun invokeWithBody(
         functionName: String,
         body: ByteArray,
@@ -40,16 +42,18 @@ internal class FunctionsClientImpl(
             headers = merged,
         )
     }
+
     private fun buildHeaders(
         extra: Map<String, String>,
         region: FunctionRegion?,
-    ): Map<String, String> = buildMap {
-        // Prefer an explicitly pinned token, otherwise fall back to the client's
-        // current session token so refreshes are picked up automatically.
-        (authToken ?: client.accessTokenOrNull)?.let { put("Authorization", "Bearer $it") }
-        if (region != null) {
-            put("x-region", region.value)
+    ): Map<String, String> =
+        buildMap {
+            // Prefer an explicitly pinned token, otherwise fall back to the client's
+            // current session token so refreshes are picked up automatically.
+            (authToken ?: client.accessTokenOrNull)?.let { put("Authorization", "Bearer $it") }
+            if (region != null) {
+                put("x-region", region.value)
+            }
+            putAll(extra)
         }
-        putAll(extra)
-    }
 }

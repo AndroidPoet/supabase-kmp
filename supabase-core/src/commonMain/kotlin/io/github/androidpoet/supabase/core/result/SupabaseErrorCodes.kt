@@ -1,4 +1,5 @@
 package io.github.androidpoet.supabase.core.result
+
 public object SupabaseErrorCodes {
     public object Database {
         public const val CONNECTION_ERROR: String = "PGRST000"
@@ -51,6 +52,7 @@ public object SupabaseErrorCodes {
         public const val INSUFFICIENT_PRIVILEGE: String = "42501"
         public const val STATEMENT_TIMEOUT: String = "57014"
     }
+
     public object Auth {
         public const val INVALID_CREDENTIALS: String = "invalid_credentials"
         public const val USER_NOT_FOUND: String = "user_not_found"
@@ -72,6 +74,7 @@ public object SupabaseErrorCodes {
         public const val MFA_CHALLENGE_EXPIRED: String = "mfa_challenge_expired"
         public const val MFA_VERIFICATION_FAILED: String = "mfa_verification_failed"
     }
+
     public object Storage {
         public const val NO_SUCH_BUCKET: String = "NoSuchBucket"
         public const val BUCKET_ALREADY_EXISTS: String = "BucketAlreadyExists"
@@ -106,6 +109,7 @@ public object SupabaseErrorCodes {
         public const val DATABASE_TIMEOUT_SNAKE: String = "database_timeout"
         public const val INTERNAL_SERVER_ERROR: String = "internal_server_error"
     }
+
     public object Realtime {
         public const val CHANNEL_RATE_LIMIT_REACHED: String = "ChannelRateLimitReached"
         public const val CONNECTION_RATE_LIMIT_REACHED: String = "ConnectionRateLimitReached"
@@ -116,6 +120,7 @@ public object SupabaseErrorCodes {
         public const val INVALID_TOPIC: String = "InvalidTopic"
         public const val PAYLOAD_TOO_LARGE: String = "PayloadTooLarge"
     }
+
     public object Functions {
         public const val BOOT_ERROR: String = "BOOT_ERROR"
         public const val WORKER_ERROR: String = "WORKER_ERROR"
@@ -124,6 +129,7 @@ public object SupabaseErrorCodes {
         public const val UNSUPPORTED_NODE_VERSION: String = "EF015"
         public const val FUNCTION_NOT_RETURNING_RESPONSE: String = "EF028"
     }
+
     public object Management {
         public const val PROJECT_NOT_FOUND: String = "PROJECT_NOT_FOUND"
         public const val ORGANIZATION_NOT_FOUND: String = "ORGANIZATION_NOT_FOUND"

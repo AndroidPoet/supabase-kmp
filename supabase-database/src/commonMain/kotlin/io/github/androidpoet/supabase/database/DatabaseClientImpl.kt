@@ -27,20 +27,24 @@ internal class DatabaseClientImpl(
         require(!(csv && stripNulls)) { "stripNulls cannot be used with csv" }
         val safeTable = validatePathSegment(table, "table")
         val safeSchema = schema?.let { validatePathSegment(it, "schema") }
-        val queryParams = buildList {
-            add("select" to columns)
-            addAll(FilterBuilder().apply(filters).build())
-        }
-        val requestHeaders = headers + buildPreferHeader {
-            count?.let { add("count=${it.headerValue}") }
-        } + retryHeader(retry)
+        val queryParams =
+            buildList {
+                add("select" to columns)
+                addAll(FilterBuilder().apply(filters).build())
+            }
+        val requestHeaders =
+            headers +
+                buildPreferHeader {
+                    count?.let { add("count=${it.headerValue}") }
+                } + retryHeader(retry)
         val headersWithSchema = addSchemaHeaders(requestHeaders, safeSchema, isReadRequest = true)
         if (head) {
-            val result = client.get(
-                endpoint = "/rest/v1/$safeTable",
-                queryParams = queryParams,
-                headers = headersWithSchema + ("Accept" to acceptHeader(single, csv, stripNulls, explain)),
-            )
+            val result =
+                client.get(
+                    endpoint = "/rest/v1/$safeTable",
+                    queryParams = queryParams,
+                    headers = headersWithSchema + ("Accept" to acceptHeader(single, csv, stripNulls, explain)),
+                )
             return when (result) {
                 is SupabaseResult.Success -> SupabaseResult.Success("")
                 is SupabaseResult.Failure -> result
@@ -70,23 +74,27 @@ internal class DatabaseClientImpl(
     ): SupabaseResult<String> {
         val safeTable = validatePathSegment(table, "table")
         val safeSchema = schema?.let { validatePathSegment(it, "schema") }
-        val endpoint = buildEndpoint("/rest/v1/$safeTable") {
-            if (onConflict != null) add("on_conflict" to onConflict)
-            if (!columns.isNullOrEmpty()) add("columns" to columns.joinToString(","))
-        }
-        val requestHeaders = headers + buildPreferHeader {
-            add("return=${returning.headerValue}")
-            count?.let { add("count=${it.headerValue}") }
-            if (upsert) add("resolution=${upsertResolution.headerValue}")
-            if (!defaultToNull) add("missing=default")
-            if (rollback) add("tx=rollback")
-        }
+        val endpoint =
+            buildEndpoint("/rest/v1/$safeTable") {
+                if (onConflict != null) add("on_conflict" to onConflict)
+                if (!columns.isNullOrEmpty()) add("columns" to columns.joinToString(","))
+            }
+        val requestHeaders =
+            headers +
+                buildPreferHeader {
+                    add("return=${returning.headerValue}")
+                    count?.let { add("count=${it.headerValue}") }
+                    if (upsert) add("resolution=${upsertResolution.headerValue}")
+                    if (!defaultToNull) add("missing=default")
+                    if (rollback) add("tx=rollback")
+                }
         return client.post(
             endpoint = endpoint,
             body = body,
-            headers = addSchemaHeaders(requestHeaders, safeSchema, isReadRequest = false) +
-                jsonContentHeaders() +
-                ("Accept" to acceptHeader(stripNulls = stripNulls)),
+            headers =
+                addSchemaHeaders(requestHeaders, safeSchema, isReadRequest = false) +
+                    jsonContentHeaders() +
+                    ("Accept" to acceptHeader(stripNulls = stripNulls)),
         )
     }
 
@@ -108,21 +116,24 @@ internal class DatabaseClientImpl(
         val safeSchema = schema?.let { validatePathSegment(it, "schema") }
         val filterParams = FilterBuilder().apply(filters).build()
         val endpoint = buildEndpoint("/rest/v1/$safeTable", filterParams)
-        val requestHeaders = headers + buildPreferHeader {
-            add("return=${returning.headerValue}")
-            count?.let { add("count=${it.headerValue}") }
-            if (rollback) add("tx=rollback")
-            maxAffected?.let {
-                add("handling=strict")
-                add("max-affected=$it")
-            }
-        }
+        val requestHeaders =
+            headers +
+                buildPreferHeader {
+                    add("return=${returning.headerValue}")
+                    count?.let { add("count=${it.headerValue}") }
+                    if (rollback) add("tx=rollback")
+                    maxAffected?.let {
+                        add("handling=strict")
+                        add("max-affected=$it")
+                    }
+                }
         return client.patch(
             endpoint = endpoint,
             body = body,
-            headers = addSchemaHeaders(requestHeaders, safeSchema, isReadRequest = false) +
-                jsonContentHeaders() +
-                ("Accept" to acceptHeader(stripNulls = stripNulls, explain = explain)),
+            headers =
+                addSchemaHeaders(requestHeaders, safeSchema, isReadRequest = false) +
+                    jsonContentHeaders() +
+                    ("Accept" to acceptHeader(stripNulls = stripNulls, explain = explain)),
         )
     }
 
@@ -143,19 +154,22 @@ internal class DatabaseClientImpl(
         val safeSchema = schema?.let { validatePathSegment(it, "schema") }
         val filterParams = FilterBuilder().apply(filters).build()
         val endpoint = buildEndpoint("/rest/v1/$safeTable", filterParams)
-        val requestHeaders = headers + buildPreferHeader {
-            add("return=${returning.headerValue}")
-            count?.let { add("count=${it.headerValue}") }
-            if (rollback) add("tx=rollback")
-            maxAffected?.let {
-                add("handling=strict")
-                add("max-affected=$it")
-            }
-        }
+        val requestHeaders =
+            headers +
+                buildPreferHeader {
+                    add("return=${returning.headerValue}")
+                    count?.let { add("count=${it.headerValue}") }
+                    if (rollback) add("tx=rollback")
+                    maxAffected?.let {
+                        add("handling=strict")
+                        add("max-affected=$it")
+                    }
+                }
         return client.delete(
             endpoint = endpoint,
-            headers = addSchemaHeaders(requestHeaders, safeSchema, isReadRequest = false) +
-                ("Accept" to acceptHeader(stripNulls = stripNulls, explain = explain)),
+            headers =
+                addSchemaHeaders(requestHeaders, safeSchema, isReadRequest = false) +
+                    ("Accept" to acceptHeader(stripNulls = stripNulls, explain = explain)),
         )
     }
 
@@ -178,21 +192,25 @@ internal class DatabaseClientImpl(
         maxAffected?.let { require(it > 0) { "maxAffected must be greater than 0" } }
         val safeFunction = validatePathSegment(function, "function")
         val safeSchema = schema?.let { validatePathSegment(it, "schema") }
-        val requestHeaders = headers + buildPreferHeader {
-            count?.let { add("count=${it.headerValue}") }
-            if (rollback) add("tx=rollback")
-            maxAffected?.let {
-                add("handling=strict")
-                add("max-affected=$it")
-            }
-        }
+        val requestHeaders =
+            headers +
+                buildPreferHeader {
+                    count?.let { add("count=${it.headerValue}") }
+                    if (rollback) add("tx=rollback")
+                    maxAffected?.let {
+                        add("handling=strict")
+                        add("max-affected=$it")
+                    }
+                }
         if (head) {
-            val result = client.post(
-                endpoint = "/rest/v1/rpc/$safeFunction",
-                body = params,
-                headers = addSchemaHeaders(requestHeaders, safeSchema, isReadRequest = true) +
-                    ("Accept" to acceptHeader(single, csv, stripNulls, explain)),
-            )
+            val result =
+                client.post(
+                    endpoint = "/rest/v1/rpc/$safeFunction",
+                    body = params,
+                    headers =
+                        addSchemaHeaders(requestHeaders, safeSchema, isReadRequest = true) +
+                            ("Accept" to acceptHeader(single, csv, stripNulls, explain)),
+                )
             return when (result) {
                 is SupabaseResult.Success -> SupabaseResult.Success("")
                 is SupabaseResult.Failure -> result
@@ -201,9 +219,10 @@ internal class DatabaseClientImpl(
         return client.post(
             endpoint = "/rest/v1/rpc/$safeFunction",
             body = params,
-            headers = addSchemaHeaders(requestHeaders, safeSchema, isReadRequest = false) +
-                jsonContentHeaders() +
-                ("Accept" to acceptHeader(single, csv, stripNulls, explain)),
+            headers =
+                addSchemaHeaders(requestHeaders, safeSchema, isReadRequest = false) +
+                    jsonContentHeaders() +
+                    ("Accept" to acceptHeader(single, csv, stripNulls, explain)),
         )
     }
 
@@ -224,16 +243,19 @@ internal class DatabaseClientImpl(
         require(!(csv && stripNulls)) { "stripNulls cannot be used with csv" }
         val safeFunction = validatePathSegment(function, "function")
         val safeSchema = schema?.let { validatePathSegment(it, "schema") }
-        val requestHeaders = headers + buildPreferHeader {
-            count?.let { add("count=${it.headerValue}") }
-        } + retryHeader(retry)
+        val requestHeaders =
+            headers +
+                buildPreferHeader {
+                    count?.let { add("count=${it.headerValue}") }
+                } + retryHeader(retry)
         val readHeaders = addSchemaHeaders(requestHeaders, safeSchema, isReadRequest = true)
         val endpoint = buildEndpoint("/rest/v1/rpc/$safeFunction", queryParams)
         if (head) {
-            val result = client.get(
-                endpoint = endpoint,
-                headers = readHeaders + ("Accept" to acceptHeader(single, csv, stripNulls, explain)),
-            )
+            val result =
+                client.get(
+                    endpoint = endpoint,
+                    headers = readHeaders + ("Accept" to acceptHeader(single, csv, stripNulls, explain)),
+                )
             return when (result) {
                 is SupabaseResult.Success -> SupabaseResult.Success("")
                 is SupabaseResult.Failure -> result
@@ -249,8 +271,11 @@ internal class DatabaseClientImpl(
         block: MutableList<String>.() -> Unit,
     ): Map<String, String> {
         val directives = buildList(block)
-        return if (directives.isEmpty()) emptyMap()
-        else mapOf("Prefer" to directives.joinToString(", "))
+        return if (directives.isEmpty()) {
+            emptyMap()
+        } else {
+            mapOf("Prefer" to directives.joinToString(", "))
+        }
     }
 
     private fun buildEndpoint(
@@ -258,14 +283,16 @@ internal class DatabaseClientImpl(
         params: List<Pair<String, String>> = emptyList(),
         extra: MutableList<Pair<String, String>>.() -> Unit = {},
     ): String {
-        val all = buildList {
-            addAll(params)
-            extra()
-        }
+        val all =
+            buildList {
+                addAll(params)
+                extra()
+            }
         if (all.isEmpty()) return base
-        val qs = all.joinToString("&") { (k, v) ->
-            "${encodeQueryComponent(k)}=${encodeQueryComponent(v)}"
-        }
+        val qs =
+            all.joinToString("&") { (k, v) ->
+                "${encodeQueryComponent(k)}=${encodeQueryComponent(v)}"
+            }
         return "$base?$qs"
     }
 
@@ -281,24 +308,26 @@ internal class DatabaseClientImpl(
         stripNulls: Boolean = false,
         explain: ExplainOptions? = null,
     ): String {
-        val base = when {
-            single && stripNulls -> "application/vnd.pgrst.object+json;nulls=stripped"
-            single -> "application/vnd.pgrst.object+json"
-            csv -> "text/csv"
-            stripNulls -> "application/vnd.pgrst.array+json;nulls=stripped"
-            else -> "application/json"
-        }
+        val base =
+            when {
+                single && stripNulls -> "application/vnd.pgrst.object+json;nulls=stripped"
+                single -> "application/vnd.pgrst.object+json"
+                csv -> "text/csv"
+                stripNulls -> "application/vnd.pgrst.array+json;nulls=stripped"
+                else -> "application/json"
+            }
         return explain?.acceptHeader(base) ?: base
     }
 
     private fun ExplainOptions.acceptHeader(baseMediaType: String): String {
-        val options = buildList {
-            if (analyze) add("analyze")
-            if (verbose) add("verbose")
-            if (settings) add("settings")
-            if (buffers) add("buffers")
-            if (wal) add("wal")
-        }.joinToString("|")
+        val options =
+            buildList {
+                if (analyze) add("analyze")
+                if (verbose) add("verbose")
+                if (settings) add("settings")
+                if (buffers) add("buffers")
+                if (wal) add("wal")
+            }.joinToString("|")
         return "application/vnd.pgrst.plan+${format.headerValue}; for=\"$baseMediaType\"; options=$options;"
     }
 

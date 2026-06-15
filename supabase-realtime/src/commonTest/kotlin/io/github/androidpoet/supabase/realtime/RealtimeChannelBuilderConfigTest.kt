@@ -4,136 +4,146 @@ import io.github.androidpoet.supabase.client.SupabaseClient
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.realtime.models.RealtimeChannel
+import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlinx.coroutines.test.runTest
 
 class RealtimeChannelBuilderConfigTest {
     @Test
-    fun test_builder_configValuesPropagateToSubscription() = runTest {
-        val client = FakeSupabaseClient()
-        val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
+    fun test_builder_configValuesPropagateToSubscription() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
 
-        val subscription = realtime
-            .channel("room-1")
-            .configureBroadcast(receiveOwnBroadcasts = true, acknowledgeBroadcasts = true)
-            .configureBroadcastReplay(sinceMs = 1234L, limit = 10)
-            .configurePresence(key = "user-123")
-            .setPrivate(true)
-            .subscribe()
+            val subscription =
+                realtime
+                    .channel("room-1")
+                    .configureBroadcast(receiveOwnBroadcasts = true, acknowledgeBroadcasts = true)
+                    .configureBroadcastReplay(sinceMs = 1234L, limit = 10)
+                    .configurePresence(key = "user-123")
+                    .setPrivate(true)
+                    .subscribe()
 
-        val internal = subscription as ChannelSubscriptionImpl
-        assertEquals(true, internal.receiveOwnBroadcasts)
-        assertEquals(true, internal.acknowledgeBroadcasts)
-        assertEquals("user-123", internal.presenceKey)
-        assertEquals(true, internal.privateChannel)
-        assertEquals(1234L, internal.replaySinceMs)
-        assertEquals(10, internal.replayLimit)
-    }
-
-    @Test
-    fun test_removeSubscription_unsubscribesChannel() = runTest {
-        val client = FakeSupabaseClient()
-        val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
-        val subscription = realtime.channel("room-2").subscribe()
-
-        realtime.removeSubscription(subscription)
-
-        assertTrue(subscription.status.value == RealtimeSubscription.Status.UNSUBSCRIBED)
-    }
+            val internal = subscription as ChannelSubscriptionImpl
+            assertEquals(true, internal.receiveOwnBroadcasts)
+            assertEquals(true, internal.acknowledgeBroadcasts)
+            assertEquals("user-123", internal.presenceKey)
+            assertEquals(true, internal.privateChannel)
+            assertEquals(1234L, internal.replaySinceMs)
+            assertEquals(10, internal.replayLimit)
+        }
 
     @Test
-    fun test_removeChannel_subscription_unsubscribesChannel() = runTest {
-        val client = FakeSupabaseClient()
-        val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
-        val subscription = realtime.channel("room-2b").subscribe()
+    fun test_removeSubscription_unsubscribesChannel() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
+            val subscription = realtime.channel("room-2").subscribe()
 
-        realtime.removeSubscription(subscription)
+            realtime.removeSubscription(subscription)
 
-        assertTrue(subscription.status.value == RealtimeSubscription.Status.UNSUBSCRIBED)
-    }
-
-    @Test
-    fun test_removeSubscriptions_unsubscribesAllChannels() = runTest {
-        val client = FakeSupabaseClient()
-        val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
-        val first = realtime.channel("room-2c-1").subscribe()
-        val second = realtime.channel("room-2c-2").subscribe()
-
-        realtime.removeSubscriptions(listOf(first, second))
-
-        assertTrue(first.status.value == RealtimeSubscription.Status.UNSUBSCRIBED)
-        assertTrue(second.status.value == RealtimeSubscription.Status.UNSUBSCRIBED)
-    }
+            assertTrue(subscription.status.value == RealtimeSubscription.Status.UNSUBSCRIBED)
+        }
 
     @Test
-    fun test_activeChannelDetails_returnsNameAndTopic() = runTest {
-        val client = FakeSupabaseClient()
-        val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
-        realtime.channel("room-3").subscribe()
+    fun test_removeChannel_subscription_unsubscribesChannel() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
+            val subscription = realtime.channel("room-2b").subscribe()
 
-        assertEquals(
-            setOf(RealtimeChannel(name = "room-3", topic = "realtime:room-3")),
-            realtime.activeChannelDetails(),
-        )
-    }
+            realtime.removeSubscription(subscription)
 
-    @Test
-    fun test_getSubscription_returnsSubscriptionForChannel() = runTest {
-        val client = FakeSupabaseClient()
-        val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
-        val subscription = realtime.channel("room-4").subscribe()
-
-        assertTrue(realtime.getSubscription("room-4") === subscription)
-    }
+            assertTrue(subscription.status.value == RealtimeSubscription.Status.UNSUBSCRIBED)
+        }
 
     @Test
-    fun test_getSubscriptionByTopic_returnsSubscription() = runTest {
-        val client = FakeSupabaseClient()
-        val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
-        val subscription = realtime.channel("room-5").subscribe()
+    fun test_removeSubscriptions_unsubscribesAllChannels() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
+            val first = realtime.channel("room-2c-1").subscribe()
+            val second = realtime.channel("room-2c-2").subscribe()
 
-        assertTrue(realtime.getSubscriptionByTopic("realtime:room-5") === subscription)
-    }
+            realtime.removeSubscriptions(listOf(first, second))
 
-    @Test
-    fun test_removeSubscriptionByTopic_unsubscribesChannel() = runTest {
-        val client = FakeSupabaseClient()
-        val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
-        val subscription = realtime.channel("room-topic").subscribe()
-
-        realtime.removeSubscriptionByTopic("realtime:room-topic")
-
-        assertTrue(subscription.status.value == RealtimeSubscription.Status.UNSUBSCRIBED)
-    }
+            assertTrue(first.status.value == RealtimeSubscription.Status.UNSUBSCRIBED)
+            assertTrue(second.status.value == RealtimeSubscription.Status.UNSUBSCRIBED)
+        }
 
     @Test
-    fun test_removeChannelsByTopic_unsubscribesAllMatchingChannels() = runTest {
-        val client = FakeSupabaseClient()
-        val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
-        val first = realtime.channel("room-t1").subscribe()
-        val second = realtime.channel("room-t2").subscribe()
+    fun test_activeChannelDetails_returnsNameAndTopic() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
+            realtime.channel("room-3").subscribe()
 
-        realtime.removeChannelsByTopic(listOf("realtime:room-t1", "realtime:room-t2"))
-
-        assertTrue(first.status.value == RealtimeSubscription.Status.UNSUBSCRIBED)
-        assertTrue(second.status.value == RealtimeSubscription.Status.UNSUBSCRIBED)
-    }
+            assertEquals(
+                setOf(RealtimeChannel(name = "room-3", topic = "realtime:room-3")),
+                realtime.activeChannelDetails(),
+            )
+        }
 
     @Test
-    fun test_getSubscriptions_returnsAllActiveSubscriptions() = runTest {
-        val client = FakeSupabaseClient()
-        val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
-        val first = realtime.channel("room-a").subscribe()
-        val second = realtime.channel("room-b").subscribe()
+    fun test_getSubscription_returnsSubscriptionForChannel() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
+            val subscription = realtime.channel("room-4").subscribe()
 
-        val subscriptions = realtime.getSubscriptions()
-        assertEquals(2, subscriptions.size)
-        assertTrue(subscriptions.contains(first))
-        assertTrue(subscriptions.contains(second))
-    }
+            assertTrue(realtime.getSubscription("room-4") === subscription)
+        }
 
+    @Test
+    fun test_getSubscriptionByTopic_returnsSubscription() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
+            val subscription = realtime.channel("room-5").subscribe()
+
+            assertTrue(realtime.getSubscriptionByTopic("realtime:room-5") === subscription)
+        }
+
+    @Test
+    fun test_removeSubscriptionByTopic_unsubscribesChannel() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
+            val subscription = realtime.channel("room-topic").subscribe()
+
+            realtime.removeSubscriptionByTopic("realtime:room-topic")
+
+            assertTrue(subscription.status.value == RealtimeSubscription.Status.UNSUBSCRIBED)
+        }
+
+    @Test
+    fun test_removeChannelsByTopic_unsubscribesAllMatchingChannels() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
+            val first = realtime.channel("room-t1").subscribe()
+            val second = realtime.channel("room-t2").subscribe()
+
+            realtime.removeChannelsByTopic(listOf("realtime:room-t1", "realtime:room-t2"))
+
+            assertTrue(first.status.value == RealtimeSubscription.Status.UNSUBSCRIBED)
+            assertTrue(second.status.value == RealtimeSubscription.Status.UNSUBSCRIBED)
+        }
+
+    @Test
+    fun test_getSubscriptions_returnsAllActiveSubscriptions() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val realtime = RealtimeClientImpl(client, RealtimeConfig(autoReconnect = false))
+            val first = realtime.channel("room-a").subscribe()
+            val second = realtime.channel("room-b").subscribe()
+
+            val subscriptions = realtime.getSubscriptions()
+            assertEquals(2, subscriptions.size)
+            assertTrue(subscriptions.contains(first))
+            assertTrue(subscriptions.contains(second))
+        }
 }
 
 private class FakeSupabaseClient : SupabaseClient {
@@ -152,6 +162,7 @@ private class FakeSupabaseClient : SupabaseClient {
         body: String?,
         headers: Map<String, String>,
     ): SupabaseResult<String> = SupabaseResult.Failure(SupabaseError("not used"))
+
     override suspend fun put(
         endpoint: String,
         body: String?,

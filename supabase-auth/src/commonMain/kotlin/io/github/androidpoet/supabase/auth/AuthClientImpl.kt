@@ -1,18 +1,18 @@
 package io.github.androidpoet.supabase.auth
-import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevel
+import dev.whyoleg.cryptography.random.CryptographyRandom
 import io.github.androidpoet.supabase.auth.models.AnonymousSignInRequest
+import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevel
 import io.github.androidpoet.supabase.auth.models.ExchangeCodeRequest
 import io.github.androidpoet.supabase.auth.models.IdTokenRequest
+import io.github.androidpoet.supabase.auth.models.LinkIdentityResponse
 import io.github.androidpoet.supabase.auth.models.MfaChallengeResponse
 import io.github.androidpoet.supabase.auth.models.MfaEnrollRequest
 import io.github.androidpoet.supabase.auth.models.MfaEnrollResponse
-import io.github.androidpoet.supabase.auth.models.MfaFactor
 import io.github.androidpoet.supabase.auth.models.MfaFactorType
 import io.github.androidpoet.supabase.auth.models.MfaListFactorsResponse
 import io.github.androidpoet.supabase.auth.models.MfaUnenrollResponse
 import io.github.androidpoet.supabase.auth.models.MfaVerifyRequest
 import io.github.androidpoet.supabase.auth.models.MfaVerifyResponse
-import io.github.androidpoet.supabase.auth.models.LinkIdentityResponse
 import io.github.androidpoet.supabase.auth.models.OAuthAuthorizationDetails
 import io.github.androidpoet.supabase.auth.models.OAuthConsentRequest
 import io.github.androidpoet.supabase.auth.models.OAuthGrant
@@ -21,8 +21,8 @@ import io.github.androidpoet.supabase.auth.models.OAuthRedirect
 import io.github.androidpoet.supabase.auth.models.OAuthResponse
 import io.github.androidpoet.supabase.auth.models.OtpRequest
 import io.github.androidpoet.supabase.auth.models.OtpType
-import io.github.androidpoet.supabase.auth.models.OtpVerifyResult
 import io.github.androidpoet.supabase.auth.models.OtpVerifyRequest
+import io.github.androidpoet.supabase.auth.models.OtpVerifyResult
 import io.github.androidpoet.supabase.auth.models.Passkey
 import io.github.androidpoet.supabase.auth.models.PasskeyAuthenticationOptionsRequest
 import io.github.androidpoet.supabase.auth.models.PasskeyAuthenticationOptionsResponse
@@ -54,7 +54,7 @@ import io.github.androidpoet.supabase.core.util.urlEncode
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
-import dev.whyoleg.cryptography.random.CryptographyRandom
+
 internal class AuthClientImpl(
     private val client: SupabaseClient,
 ) : AuthClient {
@@ -67,6 +67,7 @@ internal class AuthClientImpl(
         val body = defaultJson.encodeToString(SignUpRequest(email = email, password = password, data = data))
         return client.post("/auth/v1/signup", body = body).deserialize()
     }
+
     override suspend fun signUpWithPhone(
         phone: String,
         password: String,
@@ -76,6 +77,7 @@ internal class AuthClientImpl(
         val body = defaultJson.encodeToString(SignUpRequest(phone = phone, password = password, data = data))
         return client.post("/auth/v1/signup", body = body).deserialize()
     }
+
     override suspend fun signInWithEmail(
         email: String,
         password: String,
@@ -83,18 +85,21 @@ internal class AuthClientImpl(
         val body = defaultJson.encodeToString(SignInRequest(email = email, password = password))
         return client.post("/auth/v1/token?grant_type=password", body = body).deserialize()
     }
+
     override suspend fun signInAnonymously(
         data: JsonObject?,
         captchaToken: String?,
     ): SupabaseResult<Session> {
-        val body = defaultJson.encodeToString(
-            AnonymousSignInRequest(
-                data = data,
-                captchaToken = captchaToken,
-            ),
-        )
+        val body =
+            defaultJson.encodeToString(
+                AnonymousSignInRequest(
+                    data = data,
+                    captchaToken = captchaToken,
+                ),
+            )
         return client.post("/auth/v1/signup", body = body).deserialize()
     }
+
     override suspend fun signInWithPhone(
         phone: String,
         password: String,
@@ -102,6 +107,7 @@ internal class AuthClientImpl(
         val body = defaultJson.encodeToString(SignInRequest(phone = phone, password = password))
         return client.post("/auth/v1/token?grant_type=password", body = body).deserialize()
     }
+
     override suspend fun signInWithIdToken(
         provider: OAuthProvider,
         idToken: String,
@@ -109,33 +115,37 @@ internal class AuthClientImpl(
         nonce: String?,
         captchaToken: String?,
     ): SupabaseResult<Session> {
-        val body = defaultJson.encodeToString(
-            IdTokenRequest(
-                idToken = idToken,
-                provider = provider.value,
-                accessToken = accessToken,
-                nonce = nonce,
-                captchaToken = captchaToken,
-            ),
-        )
+        val body =
+            defaultJson.encodeToString(
+                IdTokenRequest(
+                    idToken = idToken,
+                    provider = provider.value,
+                    accessToken = accessToken,
+                    nonce = nonce,
+                    captchaToken = captchaToken,
+                ),
+            )
         return client.post("/auth/v1/token?grant_type=id_token", body = body).deserialize()
     }
+
     override suspend fun signInWithWeb3(
         chain: Web3Chain,
         message: String,
         signature: String,
         captchaToken: String?,
     ): SupabaseResult<Session> {
-        val body = defaultJson.encodeToString(
-            Web3SignInRequest(
-                chain = chain,
-                message = message,
-                signature = signature,
-                captchaToken = captchaToken,
-            ),
-        )
+        val body =
+            defaultJson.encodeToString(
+                Web3SignInRequest(
+                    chain = chain,
+                    message = message,
+                    signature = signature,
+                    captchaToken = captchaToken,
+                ),
+            )
         return client.post("/auth/v1/token?grant_type=web3", body = body).deserialize()
     }
+
     override suspend fun signInWithOtp(
         email: String?,
         phone: String?,
@@ -143,17 +153,19 @@ internal class AuthClientImpl(
         captchaToken: String?,
         emailRedirectTo: String?,
     ): SupabaseResult<Unit> {
-        val body = defaultJson.encodeToString(
-            OtpRequest(
-                email = email,
-                phone = phone,
-                createUser = createUser,
-                captchaToken = captchaToken,
-                emailRedirectTo = emailRedirectTo,
-            ),
-        )
+        val body =
+            defaultJson.encodeToString(
+                OtpRequest(
+                    email = email,
+                    phone = phone,
+                    createUser = createUser,
+                    captchaToken = captchaToken,
+                    emailRedirectTo = emailRedirectTo,
+                ),
+            )
         return client.post("/auth/v1/otp", body = body).map { }
     }
+
     override suspend fun verifyOtp(
         email: String?,
         phone: String?,
@@ -161,31 +173,35 @@ internal class AuthClientImpl(
         type: OtpType,
         captchaToken: String?,
     ): SupabaseResult<Session> {
-        val body = defaultJson.encodeToString(
-            OtpVerifyRequest(
-                email = email,
-                phone = phone,
-                token = token,
-                type = type,
-                captchaToken = captchaToken,
-            ),
-        )
+        val body =
+            defaultJson.encodeToString(
+                OtpVerifyRequest(
+                    email = email,
+                    phone = phone,
+                    token = token,
+                    type = type,
+                    captchaToken = captchaToken,
+                ),
+            )
         return client.post("/auth/v1/verify", body = body).deserialize()
     }
+
     override suspend fun verifyOtpWithTokenHash(
         tokenHash: String,
         type: OtpType,
         captchaToken: String?,
     ): SupabaseResult<Session> {
-        val body = defaultJson.encodeToString(
-            OtpVerifyRequest(
-                tokenHash = tokenHash,
-                type = type,
-                captchaToken = captchaToken,
-            ),
-        )
+        val body =
+            defaultJson.encodeToString(
+                OtpVerifyRequest(
+                    tokenHash = tokenHash,
+                    type = type,
+                    captchaToken = captchaToken,
+                ),
+            )
         return client.post("/auth/v1/verify", body = body).deserialize()
     }
+
     override suspend fun verifyOtpWithResult(
         email: String?,
         phone: String?,
@@ -193,122 +209,144 @@ internal class AuthClientImpl(
         type: OtpType,
         captchaToken: String?,
     ): SupabaseResult<OtpVerifyResult> {
-        val body = defaultJson.encodeToString(
-            OtpVerifyRequest(
-                email = email,
-                phone = phone,
-                token = token,
-                type = type,
-                captchaToken = captchaToken,
-            ),
-        )
+        val body =
+            defaultJson.encodeToString(
+                OtpVerifyRequest(
+                    email = email,
+                    phone = phone,
+                    token = token,
+                    type = type,
+                    captchaToken = captchaToken,
+                ),
+            )
         return verifyOtpResultFromRawResponse(client.post("/auth/v1/verify", body = body))
     }
+
     override suspend fun verifyOtpWithTokenHashWithResult(
         tokenHash: String,
         type: OtpType,
         captchaToken: String?,
     ): SupabaseResult<OtpVerifyResult> {
-        val body = defaultJson.encodeToString(
-            OtpVerifyRequest(
-                tokenHash = tokenHash,
-                type = type,
-                captchaToken = captchaToken,
-            ),
-        )
+        val body =
+            defaultJson.encodeToString(
+                OtpVerifyRequest(
+                    tokenHash = tokenHash,
+                    type = type,
+                    captchaToken = captchaToken,
+                ),
+            )
         return verifyOtpResultFromRawResponse(client.post("/auth/v1/verify", body = body))
     }
+
     override suspend fun resendEmailOtp(
         type: OtpType,
         email: String,
         captchaToken: String?,
         redirectTo: String?,
     ): SupabaseResult<Unit> {
-        val body = defaultJson.encodeToString(
-            ResendOtpRequest(
-                type = type,
-                email = email,
-                captchaToken = captchaToken,
-                redirectTo = redirectTo,
-            ),
-        )
+        val body =
+            defaultJson.encodeToString(
+                ResendOtpRequest(
+                    type = type,
+                    email = email,
+                    captchaToken = captchaToken,
+                    redirectTo = redirectTo,
+                ),
+            )
         return client.post("/auth/v1/resend", body = body).map { }
     }
+
     override suspend fun resendPhoneOtp(
         type: OtpType,
         phone: String,
         captchaToken: String?,
     ): SupabaseResult<Unit> {
-        val body = defaultJson.encodeToString(
-            ResendOtpRequest(
-                type = type,
-                phone = phone,
-                captchaToken = captchaToken,
-            ),
-        )
+        val body =
+            defaultJson.encodeToString(
+                ResendOtpRequest(
+                    type = type,
+                    phone = phone,
+                    captchaToken = captchaToken,
+                ),
+            )
         return client.post("/auth/v1/resend", body = body).map { }
     }
+
     override suspend fun resetPasswordForEmail(
         email: String,
         redirectTo: String?,
         captchaToken: String?,
     ): SupabaseResult<Unit> {
-        val body = defaultJson.encodeToString(
-            OtpRequest(
-                email = email,
-                createUser = false,
-                captchaToken = captchaToken,
-            ),
-        )
-        val endpoint = buildString {
-            append("/auth/v1/recover")
-            if (redirectTo != null) {
-                append("?redirect_to=")
-                append(urlEncode(redirectTo))
+        val body =
+            defaultJson.encodeToString(
+                OtpRequest(
+                    email = email,
+                    createUser = false,
+                    captchaToken = captchaToken,
+                ),
+            )
+        val endpoint =
+            buildString {
+                append("/auth/v1/recover")
+                if (redirectTo != null) {
+                    append("?redirect_to=")
+                    append(urlEncode(redirectTo))
+                }
             }
-        }
         return client.post(endpoint = endpoint, body = body).map { }
     }
+
     override suspend fun reauthenticate(accessToken: String): SupabaseResult<Unit> =
-        client.get(
-            endpoint = "/auth/v1/reauthenticate",
-            headers = bearerHeaders(accessToken),
-        ).map { }
+        client
+            .get(
+                endpoint = "/auth/v1/reauthenticate",
+                headers = bearerHeaders(accessToken),
+            ).map { }
+
     override suspend fun refreshToken(refreshToken: String): SupabaseResult<Session> {
         val body = defaultJson.encodeToString(RefreshTokenRequest(refreshToken = refreshToken))
         return client.post("/auth/v1/token?grant_type=refresh_token", body = body).deserialize()
     }
+
     override suspend fun getUser(accessToken: String): SupabaseResult<User> =
-        client.get(
-            endpoint = "/auth/v1/user",
-            headers = bearerHeaders(accessToken),
-        ).deserialize()
+        client
+            .get(
+                endpoint = "/auth/v1/user",
+                headers = bearerHeaders(accessToken),
+            ).deserialize()
+
     override suspend fun getUserIdentities(accessToken: String): SupabaseResult<List<UserIdentity>> =
         when (val result = getUser(accessToken = accessToken)) {
             is SupabaseResult.Failure -> result
             is SupabaseResult.Success -> SupabaseResult.Success(result.value.identities ?: emptyList())
         }
+
     override suspend fun updateUser(
         accessToken: String,
         updates: UserUpdateRequest,
     ): SupabaseResult<User> {
         val body = defaultJson.encodeToString(updates)
-        return client.patch(
-            endpoint = "/auth/v1/user",
-            body = body,
-            headers = bearerHeaders(accessToken),
-        ).deserialize()
+        return client
+            .patch(
+                endpoint = "/auth/v1/user",
+                body = body,
+                headers = bearerHeaders(accessToken),
+            ).deserialize()
     }
+
     override suspend fun signOut(accessToken: String): SupabaseResult<Unit> =
         signOut(accessToken = accessToken, scope = SignOutScope.LOCAL)
+
     override suspend fun signOut(
         accessToken: String,
         scope: SignOutScope,
     ): SupabaseResult<Unit> =
-        client.post(
-            endpoint = "/auth/v1/logout?scope=${scope.name.lowercase()}",
-            headers = bearerHeaders(accessToken),
-        ).map { }
+        client
+            .post(
+                endpoint = "/auth/v1/logout?scope=${scope.name.lowercase()}",
+                headers = bearerHeaders(accessToken),
+            ).map { }
+
     override suspend fun linkIdentity(
         accessToken: String,
         provider: OAuthProvider,
@@ -316,26 +354,28 @@ internal class AuthClientImpl(
         scopes: List<String>,
         queryParams: Map<String, String>,
     ): SupabaseResult<LinkIdentityResponse> {
-        val endpoint = buildString {
-            append("/auth/v1/user/identities/authorize?provider=")
-            append(provider.value)
-            if (redirectTo != null) {
-                append("&redirect_to=")
-                append(urlEncode(redirectTo))
+        val endpoint =
+            buildString {
+                append("/auth/v1/user/identities/authorize?provider=")
+                append(provider.value)
+                if (redirectTo != null) {
+                    append("&redirect_to=")
+                    append(urlEncode(redirectTo))
+                }
+                if (scopes.isNotEmpty()) {
+                    append("&scopes=")
+                    append(urlEncode(scopes.joinToString(" ")))
+                }
+                for ((key, value) in queryParams) {
+                    append("&")
+                    append(urlEncode(key))
+                    append("=")
+                    append(urlEncode(value))
+                }
             }
-            if (scopes.isNotEmpty()) {
-                append("&scopes=")
-                append(urlEncode(scopes.joinToString(" ")))
-            }
-            for ((key, value) in queryParams) {
-                append("&")
-                append(urlEncode(key))
-                append("=")
-                append(urlEncode(value))
-            }
-        }
         return client.get(endpoint = endpoint, headers = bearerHeaders(accessToken)).deserialize()
     }
+
     override suspend fun linkIdentityWithIdToken(
         accessToken: String,
         provider: OAuthProvider,
@@ -343,29 +383,34 @@ internal class AuthClientImpl(
         providerAccessToken: String?,
         nonce: String?,
     ): SupabaseResult<Session> {
-        val body = defaultJson.encodeToString(
-            IdTokenRequest(
-                idToken = idToken,
-                provider = provider.value,
-                accessToken = providerAccessToken,
-                nonce = nonce,
-                linkIdentity = true,
-            ),
-        )
-        return client.post(
-            endpoint = "/auth/v1/token?grant_type=id_token",
-            body = body,
-            headers = bearerHeaders(accessToken),
-        ).deserialize()
+        val body =
+            defaultJson.encodeToString(
+                IdTokenRequest(
+                    idToken = idToken,
+                    provider = provider.value,
+                    accessToken = providerAccessToken,
+                    nonce = nonce,
+                    linkIdentity = true,
+                ),
+            )
+        return client
+            .post(
+                endpoint = "/auth/v1/token?grant_type=id_token",
+                body = body,
+                headers = bearerHeaders(accessToken),
+            ).deserialize()
     }
+
     override suspend fun unlinkIdentity(
         accessToken: String,
         identityId: String,
     ): SupabaseResult<Unit> =
-        client.delete(
-            endpoint = "/auth/v1/user/identities/$identityId",
-            headers = bearerHeaders(accessToken),
-        ).map { }
+        client
+            .delete(
+                endpoint = "/auth/v1/user/identities/$identityId",
+                headers = bearerHeaders(accessToken),
+            ).map { }
+
     override suspend fun retrieveSsoUrl(
         accessToken: String?,
         domain: String?,
@@ -376,19 +421,22 @@ internal class AuthClientImpl(
         val hasProviderId = !providerId.isNullOrBlank()
         require(hasDomain || hasProviderId) { "domain or providerId must be provided" }
         require(!(hasDomain && hasProviderId)) { "either domain or providerId must be set, not both" }
-        val body = defaultJson.encodeToString(
-            SsoRequest(
-                domain = domain,
-                providerId = providerId,
-                redirectTo = redirectTo,
-            ),
-        )
-        return client.post(
-            endpoint = "/auth/v1/sso",
-            body = body,
-            headers = accessToken?.let(::bearerHeaders).orEmpty(),
-        ).deserialize()
+        val body =
+            defaultJson.encodeToString(
+                SsoRequest(
+                    domain = domain,
+                    providerId = providerId,
+                    redirectTo = redirectTo,
+                ),
+            )
+        return client
+            .post(
+                endpoint = "/auth/v1/sso",
+                body = body,
+                headers = accessToken?.let(::bearerHeaders).orEmpty(),
+            ).deserialize()
     }
+
     override fun getOAuthSignInUrl(
         provider: OAuthProvider,
         redirectTo: String?,
@@ -396,34 +444,36 @@ internal class AuthClientImpl(
         queryParams: Map<String, String>,
         skipBrowserRedirect: Boolean,
         pkceParams: PkceParams?,
-    ): String = buildString {
-        append(client.projectUrl)
-        append("/auth/v1/authorize?provider=")
-        append(provider.value)
-        if (redirectTo != null) {
-            append("&redirect_to=")
-            append(urlEncode(redirectTo))
+    ): String =
+        buildString {
+            append(client.projectUrl)
+            append("/auth/v1/authorize?provider=")
+            append(provider.value)
+            if (redirectTo != null) {
+                append("&redirect_to=")
+                append(urlEncode(redirectTo))
+            }
+            if (scopes.isNotEmpty()) {
+                append("&scopes=")
+                append(urlEncode(scopes.joinToString(" ")))
+            }
+            if (pkceParams != null) {
+                append("&code_challenge=")
+                append(urlEncode(pkceParams.codeChallenge))
+                append("&code_challenge_method=")
+                append(pkceParams.codeChallengeMethod)
+            }
+            if (skipBrowserRedirect) {
+                append("&skip_http_redirect=true")
+            }
+            for ((key, value) in queryParams) {
+                append("&")
+                append(urlEncode(key))
+                append("=")
+                append(urlEncode(value))
+            }
         }
-        if (scopes.isNotEmpty()) {
-            append("&scopes=")
-            append(urlEncode(scopes.joinToString(" ")))
-        }
-        if (pkceParams != null) {
-            append("&code_challenge=")
-            append(urlEncode(pkceParams.codeChallenge))
-            append("&code_challenge_method=")
-            append(pkceParams.codeChallengeMethod)
-        }
-        if (skipBrowserRedirect) {
-            append("&skip_http_redirect=true")
-        }
-        for ((key, value) in queryParams) {
-            append("&")
-            append(urlEncode(key))
-            append("=")
-            append(urlEncode(value))
-        }
-    }
+
     override suspend fun signInWithOAuth(
         provider: OAuthProvider,
         redirectTo: String?,
@@ -435,24 +485,27 @@ internal class AuthClientImpl(
         SupabaseResult.Success(
             OAuthResponse(
                 provider = provider.value,
-                url = getOAuthSignInUrl(
-                    provider = provider,
-                    redirectTo = redirectTo,
-                    scopes = scopes,
-                    queryParams = queryParams,
-                    skipBrowserRedirect = skipBrowserRedirect,
-                    pkceParams = pkceParams,
-                ),
+                url =
+                    getOAuthSignInUrl(
+                        provider = provider,
+                        redirectTo = redirectTo,
+                        scopes = scopes,
+                        queryParams = queryParams,
+                        skipBrowserRedirect = skipBrowserRedirect,
+                        pkceParams = pkceParams,
+                    ),
             ),
         )
+
     override fun generatePkceParams(sha256: ((ByteArray) -> ByteArray)?): PkceParams {
         // PKCE verifiers are security tokens and MUST be drawn from a
         // cryptographically secure RNG (RFC 7636 §7.1), not kotlin.random.Random.
-        val verifier = buildString(PKCE_VERIFIER_LENGTH) {
-            repeat(PKCE_VERIFIER_LENGTH) {
-                append(PKCE_ALPHABET[CryptographyRandom.nextInt(PKCE_ALPHABET.length)])
+        val verifier =
+            buildString(PKCE_VERIFIER_LENGTH) {
+                repeat(PKCE_VERIFIER_LENGTH) {
+                    append(PKCE_ALPHABET[CryptographyRandom.nextInt(PKCE_ALPHABET.length)])
+                }
             }
-        }
         return if (sha256 != null) {
             val hash = sha256(verifier.encodeToByteArray())
             val challenge = base64UrlEncode(hash)
@@ -469,15 +522,18 @@ internal class AuthClientImpl(
             )
         }
     }
+
     override suspend fun exchangeCodeForSession(
         authCode: String,
         codeVerifier: String,
     ): SupabaseResult<Session> {
-        val body = defaultJson.encodeToString(
-            ExchangeCodeRequest(authCode = authCode, codeVerifier = codeVerifier),
-        )
+        val body =
+            defaultJson.encodeToString(
+                ExchangeCodeRequest(authCode = authCode, codeVerifier = codeVerifier),
+            )
         return client.post("/auth/v1/token?grant_type=pkce", body = body).deserialize()
     }
+
     override suspend fun mfaEnroll(
         factorType: MfaFactorType,
         friendlyName: String?,
@@ -485,62 +541,74 @@ internal class AuthClientImpl(
         phone: String?,
         accessToken: String,
     ): SupabaseResult<MfaEnrollResponse> {
-        val body = defaultJson.encodeToString(
-            MfaEnrollRequest(
-                factorType = factorType,
-                friendlyName = friendlyName,
-                issuer = issuer,
-                phone = phone,
-            ),
-        )
-        return client.post(
-            endpoint = "/auth/v1/factors",
-            body = body,
-            headers = bearerHeaders(accessToken),
-        ).deserialize()
+        val body =
+            defaultJson.encodeToString(
+                MfaEnrollRequest(
+                    factorType = factorType,
+                    friendlyName = friendlyName,
+                    issuer = issuer,
+                    phone = phone,
+                ),
+            )
+        return client
+            .post(
+                endpoint = "/auth/v1/factors",
+                body = body,
+                headers = bearerHeaders(accessToken),
+            ).deserialize()
     }
+
     override suspend fun mfaChallenge(
         factorId: String,
         accessToken: String,
     ): SupabaseResult<MfaChallengeResponse> =
-        client.post(
-            endpoint = "/auth/v1/factors/$factorId/challenge",
-            headers = bearerHeaders(accessToken),
-        ).deserialize()
+        client
+            .post(
+                endpoint = "/auth/v1/factors/$factorId/challenge",
+                headers = bearerHeaders(accessToken),
+            ).deserialize()
+
     override suspend fun mfaVerify(
         factorId: String,
         challengeId: String,
         code: String,
         accessToken: String,
     ): SupabaseResult<MfaVerifyResponse> {
-        val body = defaultJson.encodeToString(
-            MfaVerifyRequest(
-                factorId = factorId,
-                challengeId = challengeId,
-                code = code,
-            ),
-        )
-        return client.post(
-            endpoint = "/auth/v1/factors/$factorId/verify",
-            body = body,
-            headers = bearerHeaders(accessToken),
-        ).deserialize()
+        val body =
+            defaultJson.encodeToString(
+                MfaVerifyRequest(
+                    factorId = factorId,
+                    challengeId = challengeId,
+                    code = code,
+                ),
+            )
+        return client
+            .post(
+                endpoint = "/auth/v1/factors/$factorId/verify",
+                body = body,
+                headers = bearerHeaders(accessToken),
+            ).deserialize()
     }
+
     override suspend fun mfaUnenroll(
         factorId: String,
         accessToken: String,
     ): SupabaseResult<MfaUnenrollResponse> =
-        client.delete(
-            endpoint = "/auth/v1/factors/$factorId",
-            headers = bearerHeaders(accessToken),
-        ).deserialize()
+        client
+            .delete(
+                endpoint = "/auth/v1/factors/$factorId",
+                headers = bearerHeaders(accessToken),
+            ).deserialize()
+
     override suspend fun mfaListFactors(
         accessToken: String,
     ): SupabaseResult<MfaListFactorsResponse> {
-        val userResult: SupabaseResult<User> = client.get(
-            endpoint = "/auth/v1/user",
-            headers = bearerHeaders(accessToken),
-        ).deserialize()
+        val userResult: SupabaseResult<User> =
+            client
+                .get(
+                    endpoint = "/auth/v1/user",
+                    headers = bearerHeaders(accessToken),
+                ).deserialize()
         return when (userResult) {
             is SupabaseResult.Success -> {
                 val factors = userResult.value.factors.orEmpty()
@@ -556,22 +624,26 @@ internal class AuthClientImpl(
             is SupabaseResult.Failure -> SupabaseResult.Failure(userResult.error)
         }
     }
+
     override suspend fun mfaGetAuthenticatorAssuranceLevel(
         accessToken: String,
     ): SupabaseResult<AuthenticatorAssuranceLevel> {
-        val userResult: SupabaseResult<User> = client.get(
-            endpoint = "/auth/v1/user",
-            headers = bearerHeaders(accessToken),
-        ).deserialize()
+        val userResult: SupabaseResult<User> =
+            client
+                .get(
+                    endpoint = "/auth/v1/user",
+                    headers = bearerHeaders(accessToken),
+                ).deserialize()
         return when (userResult) {
             is SupabaseResult.Success -> {
                 val factors = userResult.value.factors.orEmpty()
                 val hasVerifiedFactor = factors.any { it.status == "verified" }
-                val level = if (hasVerifiedFactor) {
-                    AuthenticatorAssuranceLevel.AAL2
-                } else {
-                    AuthenticatorAssuranceLevel.AAL1
-                }
+                val level =
+                    if (hasVerifiedFactor) {
+                        AuthenticatorAssuranceLevel.AAL2
+                    } else {
+                        AuthenticatorAssuranceLevel.AAL1
+                    }
                 SupabaseResult.Success(level)
             }
             is SupabaseResult.Failure -> SupabaseResult.Failure(userResult.error)
@@ -581,57 +653,64 @@ internal class AuthClientImpl(
     override suspend fun passkeyStartRegistration(
         accessToken: String,
     ): SupabaseResult<PasskeyRegistrationOptionsResponse> =
-        client.post(
-            endpoint = "/auth/v1/passkeys/registration/options",
-            body = "{}",
-            headers = bearerHeaders(accessToken),
-        ).deserialize()
+        client
+            .post(
+                endpoint = "/auth/v1/passkeys/registration/options",
+                body = "{}",
+                headers = bearerHeaders(accessToken),
+            ).deserialize()
 
     override suspend fun passkeyVerifyRegistration(
         accessToken: String,
         challengeId: String,
         credential: JsonObject,
     ): SupabaseResult<PasskeyMetadata> {
-        val body = defaultJson.encodeToString(
-            PasskeyVerifyRequest(challengeId = challengeId, credential = credential),
-        )
-        return client.post(
-            endpoint = "/auth/v1/passkeys/registration/verify",
-            body = body,
-            headers = bearerHeaders(accessToken),
-        ).deserialize()
+        val body =
+            defaultJson.encodeToString(
+                PasskeyVerifyRequest(challengeId = challengeId, credential = credential),
+            )
+        return client
+            .post(
+                endpoint = "/auth/v1/passkeys/registration/verify",
+                body = body,
+                headers = bearerHeaders(accessToken),
+            ).deserialize()
     }
 
     override suspend fun passkeyStartAuthentication(
         captchaToken: String?,
     ): SupabaseResult<PasskeyAuthenticationOptionsResponse> {
         val body = defaultJson.encodeToString(PasskeyAuthenticationOptionsRequest(captchaToken = captchaToken))
-        return client.post(
-            endpoint = "/auth/v1/passkeys/authentication/options",
-            body = body,
-        ).deserialize()
+        return client
+            .post(
+                endpoint = "/auth/v1/passkeys/authentication/options",
+                body = body,
+            ).deserialize()
     }
 
     override suspend fun passkeyVerifyAuthentication(
         challengeId: String,
         credential: JsonObject,
     ): SupabaseResult<Session> {
-        val body = defaultJson.encodeToString(
-            PasskeyVerifyRequest(challengeId = challengeId, credential = credential),
-        )
-        return client.post(
-            endpoint = "/auth/v1/passkeys/authentication/verify",
-            body = body,
-        ).deserialize()
+        val body =
+            defaultJson.encodeToString(
+                PasskeyVerifyRequest(challengeId = challengeId, credential = credential),
+            )
+        return client
+            .post(
+                endpoint = "/auth/v1/passkeys/authentication/verify",
+                body = body,
+            ).deserialize()
     }
 
     override suspend fun passkeyList(
         accessToken: String,
     ): SupabaseResult<List<Passkey>> =
-        client.get(
-            endpoint = "/auth/v1/passkeys",
-            headers = bearerHeaders(accessToken),
-        ).deserialize()
+        client
+            .get(
+                endpoint = "/auth/v1/passkeys",
+                headers = bearerHeaders(accessToken),
+            ).deserialize()
 
     override suspend fun passkeyUpdate(
         accessToken: String,
@@ -639,30 +718,33 @@ internal class AuthClientImpl(
         friendlyName: String,
     ): SupabaseResult<Passkey> {
         val body = defaultJson.encodeToString(PasskeyUpdateRequest(friendlyName = friendlyName))
-        return client.patch(
-            endpoint = "/auth/v1/passkeys/$passkeyId",
-            body = body,
-            headers = bearerHeaders(accessToken),
-        ).deserialize()
+        return client
+            .patch(
+                endpoint = "/auth/v1/passkeys/$passkeyId",
+                body = body,
+                headers = bearerHeaders(accessToken),
+            ).deserialize()
     }
 
     override suspend fun passkeyDelete(
         accessToken: String,
         passkeyId: String,
     ): SupabaseResult<Unit> =
-        client.delete(
-            endpoint = "/auth/v1/passkeys/$passkeyId",
-            headers = bearerHeaders(accessToken),
-        ).map { }
+        client
+            .delete(
+                endpoint = "/auth/v1/passkeys/$passkeyId",
+                headers = bearerHeaders(accessToken),
+            ).map { }
 
     override suspend fun oauthGetAuthorizationDetails(
         accessToken: String,
         authorizationId: String,
     ): SupabaseResult<OAuthAuthorizationDetails> =
-        client.get(
-            endpoint = "/auth/v1/oauth/authorizations/$authorizationId",
-            headers = bearerHeaders(accessToken),
-        ).deserialize()
+        client
+            .get(
+                endpoint = "/auth/v1/oauth/authorizations/$authorizationId",
+                headers = bearerHeaders(accessToken),
+            ).deserialize()
 
     override suspend fun oauthApproveAuthorization(
         accessToken: String,
@@ -679,19 +761,21 @@ internal class AuthClientImpl(
     override suspend fun oauthListGrants(
         accessToken: String,
     ): SupabaseResult<List<OAuthGrant>> =
-        client.get(
-            endpoint = "/auth/v1/user/oauth/grants",
-            headers = bearerHeaders(accessToken),
-        ).deserialize()
+        client
+            .get(
+                endpoint = "/auth/v1/user/oauth/grants",
+                headers = bearerHeaders(accessToken),
+            ).deserialize()
 
     override suspend fun oauthRevokeGrant(
         accessToken: String,
         clientId: String,
     ): SupabaseResult<Unit> =
-        client.delete(
-            endpoint = "/auth/v1/user/oauth/grants?client_id=${urlEncode(clientId)}",
-            headers = bearerHeaders(accessToken),
-        ).map { }
+        client
+            .delete(
+                endpoint = "/auth/v1/user/oauth/grants?client_id=${urlEncode(clientId)}",
+                headers = bearerHeaders(accessToken),
+            ).map { }
 
     private suspend fun oauthConsent(
         accessToken: String,
@@ -699,12 +783,14 @@ internal class AuthClientImpl(
         action: String,
     ): SupabaseResult<OAuthRedirect> {
         val body = defaultJson.encodeToString(OAuthConsentRequest(action = action))
-        return client.post(
-            endpoint = "/auth/v1/oauth/authorizations/$authorizationId/consent",
-            body = body,
-            headers = bearerHeaders(accessToken),
-        ).deserialize()
+        return client
+            .post(
+                endpoint = "/auth/v1/oauth/authorizations/$authorizationId/consent",
+                body = body,
+                headers = bearerHeaders(accessToken),
+            ).deserialize()
     }
+
     private fun bearerHeaders(token: String): Map<String, String> =
         mapOf("Authorization" to "Bearer $token")
 
@@ -712,11 +798,13 @@ internal class AuthClientImpl(
         when (response) {
             is SupabaseResult.Failure -> SupabaseResult.Failure(response.error)
             is SupabaseResult.Success -> {
-                val element = runCatching { defaultJson.parseToJsonElement(response.value) }.getOrElse {
-                    return SupabaseResult.Failure(SupabaseError(message = "Invalid verify response: ${it.message}"))
-                }
-                val obj = element as? JsonObject
-                    ?: return SupabaseResult.Failure(SupabaseError(message = "Invalid verify response shape"))
+                val element =
+                    runCatching { defaultJson.parseToJsonElement(response.value) }.getOrElse {
+                        return SupabaseResult.Failure(SupabaseError(message = "Invalid verify response: ${it.message}"))
+                    }
+                val obj =
+                    element as? JsonObject
+                        ?: return SupabaseResult.Failure(SupabaseError(message = "Invalid verify response shape"))
                 if ("access_token" in obj) {
                     runCatching {
                         defaultJson.decodeFromJsonElement<Session>(obj)
@@ -731,6 +819,7 @@ internal class AuthClientImpl(
                 }
             }
         }
+
     private fun base64UrlEncode(bytes: ByteArray): String {
         val table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
         return buildString {
@@ -755,6 +844,7 @@ internal class AuthClientImpl(
             }
         }
     }
+
     private companion object {
         const val PKCE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
         const val PKCE_VERIFIER_LENGTH = 43

@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.concurrent.Volatile
+
 internal class SessionManagerImpl(
     private val authClient: AuthClient,
     private val supabaseClient: SupabaseClient,
@@ -48,23 +49,28 @@ internal class SessionManagerImpl(
 
     @Volatile
     private var inFlightRefresh: Deferred<SupabaseResult<Session>>? = null
+
     override suspend fun saveSession(session: Session) {
         storage.save(session)
         _sessionState.value = SessionState.Authenticated(session)
         supabaseClient.setAccessToken(session.accessToken)
         scheduleRefresh(session)
     }
+
     override suspend fun clearSession() {
         cancelRefresh()
         storage.clear()
         _sessionState.value = SessionState.NotAuthenticated
         supabaseClient.clearAccessToken()
     }
+
     override suspend fun refreshSession(): SupabaseResult<Session> {
-        val current = currentSession
-            ?: return SupabaseResult.Failure(SupabaseError(message = "No active session to refresh"))
+        val current =
+            currentSession
+                ?: return SupabaseResult.Failure(SupabaseError(message = "No active session to refresh"))
         return dedupedRefresh(current)
     }
+
     override suspend fun restoreSession(): SupabaseResult<Session> {
         _sessionState.value = SessionState.Loading
         val stored = storage.load()
@@ -76,9 +82,10 @@ internal class SessionManagerImpl(
     }
 
     private suspend fun dedupedRefresh(session: Session): SupabaseResult<Session> {
-        val deferred = refreshMutex.withLock {
-            inFlightRefresh ?: scope.async { handleRefresh(session) }.also { inFlightRefresh = it }
-        }
+        val deferred =
+            refreshMutex.withLock {
+                inFlightRefresh ?: scope.async { handleRefresh(session) }.also { inFlightRefresh = it }
+            }
         return try {
             deferred.await()
         } finally {
@@ -87,6 +94,7 @@ internal class SessionManagerImpl(
             }
         }
     }
+
     override suspend fun initialize(): SupabaseResult<Session> =
         restoreSession()
 
@@ -108,6 +116,7 @@ internal class SessionManagerImpl(
         cancelRefresh()
         scope.cancel()
     }
+
     private suspend fun handleRefresh(session: Session): SupabaseResult<Session> =
         when (val result = authClient.refreshToken(session.refreshToken)) {
             is SupabaseResult.Success -> {
@@ -118,16 +127,19 @@ internal class SessionManagerImpl(
                 _sessionState.value = SessionState.Expired(session)
                 result
             }
-    }
+        }
+
     private fun scheduleRefresh(session: Session) {
         if (!autoRefreshEnabled) return
         cancelRefresh()
         val delayMs = maxOf((session.expiresIn - refreshBufferSeconds) * 1000L, 0L)
-        refreshJob = scope.launch {
-            delay(delayMs)
-            refreshSession()
-        }
+        refreshJob =
+            scope.launch {
+                delay(delayMs)
+                refreshSession()
+            }
     }
+
     private fun cancelRefresh() {
         refreshJob?.cancel()
         refreshJob = null

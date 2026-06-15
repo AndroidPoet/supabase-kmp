@@ -1,16 +1,16 @@
 package io.github.androidpoet.supabase.auth
 
-import io.github.androidpoet.supabase.auth.models.OtpType
-import io.github.androidpoet.supabase.auth.models.OAuthProvider
-import io.github.androidpoet.supabase.auth.models.OtpVerifyResult
+import io.github.androidpoet.supabase.auth.models.LinkIdentityResponse
 import io.github.androidpoet.supabase.auth.models.MfaVerifyResponse
+import io.github.androidpoet.supabase.auth.models.OAuthProvider
+import io.github.androidpoet.supabase.auth.models.OtpType
+import io.github.androidpoet.supabase.auth.models.OtpVerifyResult
 import io.github.androidpoet.supabase.auth.models.Session
 import io.github.androidpoet.supabase.auth.models.SignOutScope
+import io.github.androidpoet.supabase.auth.models.SsoResponse
 import io.github.androidpoet.supabase.auth.models.User
 import io.github.androidpoet.supabase.auth.models.UserIdentity
-import io.github.androidpoet.supabase.auth.models.LinkIdentityResponse
 import io.github.androidpoet.supabase.auth.models.UserUpdateRequest
-import io.github.androidpoet.supabase.auth.models.SsoResponse
 import io.github.androidpoet.supabase.auth.session.SessionManager
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
@@ -198,8 +198,9 @@ public suspend fun AuthClient.getUserForCurrentSession(
     sessionManager: SessionManager,
     updateStoredSession: Boolean = false,
 ): SupabaseResult<User> {
-    val token = sessionManager.accessToken
-        ?: return SupabaseResult.Failure(SupabaseError(message = "No active session"))
+    val token =
+        sessionManager.accessToken
+            ?: return SupabaseResult.Failure(SupabaseError(message = "No active session"))
     return when (val userResult = getUser(token)) {
         is SupabaseResult.Failure -> userResult
         is SupabaseResult.Success -> {
@@ -217,8 +218,9 @@ public suspend fun AuthClient.getUserForCurrentSession(
 public suspend fun AuthClient.reauthenticateCurrentSession(
     sessionManager: SessionManager,
 ): SupabaseResult<Unit> {
-    val token = sessionManager.accessToken
-        ?: return SupabaseResult.Failure(SupabaseError(message = "No active session"))
+    val token =
+        sessionManager.accessToken
+            ?: return SupabaseResult.Failure(SupabaseError(message = "No active session"))
     return reauthenticate(token)
 }
 
@@ -229,12 +231,13 @@ public suspend fun AuthClient.mfaChallengeAndVerify(
 ): SupabaseResult<MfaVerifyResponse> =
     when (val challenge = mfaChallenge(factorId = factorId, accessToken = accessToken)) {
         is SupabaseResult.Failure -> SupabaseResult.Failure(challenge.error)
-        is SupabaseResult.Success -> mfaVerify(
-            factorId = factorId,
-            challengeId = challenge.value.id,
-            code = code,
-            accessToken = accessToken,
-        )
+        is SupabaseResult.Success ->
+            mfaVerify(
+                factorId = factorId,
+                challengeId = challenge.value.id,
+                code = code,
+                accessToken = accessToken,
+            )
     }
 
 public suspend fun AuthClient.signOutCurrentSession(
@@ -270,8 +273,9 @@ public suspend fun AuthClient.updateUserForCurrentSession(
     updates: UserUpdateRequest,
     updateStoredSession: Boolean = true,
 ): SupabaseResult<User> {
-    val token = sessionManager.accessToken
-        ?: return SupabaseResult.Failure(SupabaseError(message = "No active session"))
+    val token =
+        sessionManager.accessToken
+            ?: return SupabaseResult.Failure(SupabaseError(message = "No active session"))
     return when (val result = updateUser(token, updates)) {
         is SupabaseResult.Failure -> result
         is SupabaseResult.Success -> {
@@ -298,24 +302,26 @@ public suspend fun AuthClient.importAuthToken(
     tokenType: String = "bearer",
     retrieveUser: Boolean = true,
 ): SupabaseResult<Session> {
-    val user = if (retrieveUser) {
-        when (val result = getUser(accessToken)) {
-            is SupabaseResult.Failure -> return result
-            is SupabaseResult.Success -> result.value
+    val user =
+        if (retrieveUser) {
+            when (val result = getUser(accessToken)) {
+                is SupabaseResult.Failure -> return result
+                is SupabaseResult.Success -> result.value
+            }
+        } else {
+            sessionManager.currentSession?.user
+                ?: return SupabaseResult.Failure(
+                    SupabaseError(message = "No user available. Pass retrieveUser=true or provide an existing session"),
+                )
         }
-    } else {
-        sessionManager.currentSession?.user
-            ?: return SupabaseResult.Failure(
-                SupabaseError(message = "No user available. Pass retrieveUser=true or provide an existing session"),
-            )
-    }
-    val session = Session(
-        accessToken = accessToken,
-        refreshToken = refreshToken,
-        expiresIn = expiresIn,
-        tokenType = tokenType,
-        user = user,
-    )
+    val session =
+        Session(
+            accessToken = accessToken,
+            refreshToken = refreshToken,
+            expiresIn = expiresIn,
+            tokenType = tokenType,
+            user = user,
+        )
     sessionManager.saveSession(session)
     return SupabaseResult.Success(session)
 }
@@ -429,13 +435,14 @@ public suspend fun AuthClient.verifyOtpWithResultAndSaveSession(
     captchaToken: String? = null,
 ): SupabaseResult<OtpVerifyResult> =
     when (
-        val result = verifyOtpWithResult(
-            email = email,
-            phone = phone,
-            token = token,
-            type = type,
-            captchaToken = captchaToken,
-        )
+        val result =
+            verifyOtpWithResult(
+                email = email,
+                phone = phone,
+                token = token,
+                type = type,
+                captchaToken = captchaToken,
+            )
     ) {
         is SupabaseResult.Failure -> result
         is SupabaseResult.Success -> {
@@ -454,11 +461,12 @@ public suspend fun AuthClient.verifyOtpWithTokenHashWithResultAndSaveSession(
     captchaToken: String? = null,
 ): SupabaseResult<OtpVerifyResult> =
     when (
-        val result = verifyOtpWithTokenHashWithResult(
-            tokenHash = tokenHash,
-            type = type,
-            captchaToken = captchaToken,
-        )
+        val result =
+            verifyOtpWithTokenHashWithResult(
+                tokenHash = tokenHash,
+                type = type,
+                captchaToken = captchaToken,
+            )
     ) {
         is SupabaseResult.Failure -> result
         is SupabaseResult.Success -> {
@@ -500,9 +508,10 @@ public suspend fun AuthClient.unlinkIdentityAndUpdateSession(
             if (updateStoredSession) {
                 val current = sessionManager.currentSession
                 if (current != null) {
-                    val updatedUser = current.user.copy(
-                        identities = current.user.identities?.filterNot { it.id == identityId },
-                    )
+                    val updatedUser =
+                        current.user.copy(
+                            identities = current.user.identities?.filterNot { it.id == identityId },
+                        )
                     sessionManager.saveSession(current.copy(user = updatedUser))
                 }
             }
@@ -513,8 +522,9 @@ public suspend fun AuthClient.unlinkIdentityAndUpdateSession(
 public suspend fun AuthClient.getUserIdentitiesForCurrentSession(
     sessionManager: SessionManager,
 ): SupabaseResult<List<UserIdentity>> {
-    val token = sessionManager.accessToken
-        ?: return SupabaseResult.Failure(SupabaseError(message = "No active session"))
+    val token =
+        sessionManager.accessToken
+            ?: return SupabaseResult.Failure(SupabaseError(message = "No active session"))
     return getUserIdentities(accessToken = token)
 }
 
@@ -525,8 +535,9 @@ public suspend fun AuthClient.linkIdentityForCurrentSession(
     scopes: List<String> = emptyList(),
     queryParams: Map<String, String> = emptyMap(),
 ): SupabaseResult<LinkIdentityResponse> {
-    val token = sessionManager.accessToken
-        ?: return SupabaseResult.Failure(SupabaseError(message = "No active session"))
+    val token =
+        sessionManager.accessToken
+            ?: return SupabaseResult.Failure(SupabaseError(message = "No active session"))
     return linkIdentity(
         accessToken = token,
         provider = provider,
@@ -544,16 +555,18 @@ public suspend fun AuthClient.linkIdentityWithIdTokenForCurrentSession(
     nonce: String? = null,
     updateStoredSession: Boolean = true,
 ): SupabaseResult<Session> {
-    val token = sessionManager.accessToken
-        ?: return SupabaseResult.Failure(SupabaseError(message = "No active session"))
+    val token =
+        sessionManager.accessToken
+            ?: return SupabaseResult.Failure(SupabaseError(message = "No active session"))
     return when (
-        val result = linkIdentityWithIdToken(
-            accessToken = token,
-            provider = provider,
-            idToken = idToken,
-            providerAccessToken = providerAccessToken,
-            nonce = nonce,
-        )
+        val result =
+            linkIdentityWithIdToken(
+                accessToken = token,
+                provider = provider,
+                idToken = idToken,
+                providerAccessToken = providerAccessToken,
+                nonce = nonce,
+            )
     ) {
         is SupabaseResult.Failure -> result
         is SupabaseResult.Success -> {
@@ -570,8 +583,9 @@ public suspend fun AuthClient.unlinkIdentityForCurrentSession(
     identityId: String,
     updateStoredSession: Boolean = true,
 ): SupabaseResult<Unit> {
-    val token = sessionManager.accessToken
-        ?: return SupabaseResult.Failure(SupabaseError(message = "No active session"))
+    val token =
+        sessionManager.accessToken
+            ?: return SupabaseResult.Failure(SupabaseError(message = "No active session"))
     return unlinkIdentityAndUpdateSession(
         accessToken = token,
         identityId = identityId,
@@ -589,24 +603,28 @@ public data class ParsedSessionTokens(
 
 public fun parseSessionTokensFromFragment(fragment: String): SupabaseResult<ParsedSessionTokens> {
     val normalized = fragment.removePrefix("#")
-    val pairs = normalized
-        .split("&")
-        .mapNotNull { part ->
-            if (part.isBlank()) return@mapNotNull null
-            val i = part.indexOf('=')
-            if (i < 0) return@mapNotNull decodeQueryComponent(part) to ""
-            decodeQueryComponent(part.substring(0, i)) to decodeQueryComponent(part.substring(i + 1))
-        }
-        .toMap()
+    val pairs =
+        normalized
+            .split("&")
+            .mapNotNull { part ->
+                if (part.isBlank()) return@mapNotNull null
+                val i = part.indexOf('=')
+                if (i < 0) return@mapNotNull decodeQueryComponent(part) to ""
+                decodeQueryComponent(part.substring(0, i)) to decodeQueryComponent(part.substring(i + 1))
+            }.toMap()
 
-    val accessToken = pairs["access_token"]
-        ?: return SupabaseResult.Failure(SupabaseError(message = "No access token found in fragment"))
-    val refreshToken = pairs["refresh_token"]
-        ?: return SupabaseResult.Failure(SupabaseError(message = "No refresh token found in fragment"))
-    val expiresIn = pairs["expires_in"]?.toLongOrNull()
-        ?: return SupabaseResult.Failure(SupabaseError(message = "No expires_in found in fragment"))
-    val tokenType = pairs["token_type"]
-        ?: return SupabaseResult.Failure(SupabaseError(message = "No token_type found in fragment"))
+    val accessToken =
+        pairs["access_token"]
+            ?: return SupabaseResult.Failure(SupabaseError(message = "No access token found in fragment"))
+    val refreshToken =
+        pairs["refresh_token"]
+            ?: return SupabaseResult.Failure(SupabaseError(message = "No refresh token found in fragment"))
+    val expiresIn =
+        pairs["expires_in"]?.toLongOrNull()
+            ?: return SupabaseResult.Failure(SupabaseError(message = "No expires_in found in fragment"))
+    val tokenType =
+        pairs["token_type"]
+            ?: return SupabaseResult.Failure(SupabaseError(message = "No token_type found in fragment"))
 
     return SupabaseResult.Success(
         ParsedSessionTokens(
@@ -660,13 +678,14 @@ private suspend fun AuthClient.importParsedSessionTokens(
             when (val userResult = getUser(parsed.value.accessToken)) {
                 is SupabaseResult.Failure -> userResult
                 is SupabaseResult.Success -> {
-                    val session = Session(
-                        accessToken = parsed.value.accessToken,
-                        refreshToken = parsed.value.refreshToken,
-                        expiresIn = parsed.value.expiresIn,
-                        tokenType = parsed.value.tokenType,
-                        user = userResult.value,
-                    )
+                    val session =
+                        Session(
+                            accessToken = parsed.value.accessToken,
+                            refreshToken = parsed.value.refreshToken,
+                            expiresIn = parsed.value.expiresIn,
+                            tokenType = parsed.value.tokenType,
+                            user = userResult.value,
+                        )
                     sessionManager.saveSession(session)
                     SupabaseResult.Success(session)
                 }
@@ -680,7 +699,7 @@ private fun decodeQueryComponent(input: String): String {
     var i = 0
     while (i < input.length) {
         val c = input[i]
-        if (c == '+' ) {
+        if (c == '+') {
             out.append(' ')
             i++
             continue
@@ -705,12 +724,14 @@ public fun parseJwtClaims(jwt: String): SupabaseResult<JsonObject> {
     if (parts.size < 2) {
         return SupabaseResult.Failure(SupabaseError(message = "Invalid JWT format"))
     }
-    val payload = decodeBase64Url(parts[1])
-        ?: return SupabaseResult.Failure(SupabaseError(message = "Invalid JWT payload encoding"))
+    val payload =
+        decodeBase64Url(parts[1])
+            ?: return SupabaseResult.Failure(SupabaseError(message = "Invalid JWT payload encoding"))
     return try {
         val element = Json.parseToJsonElement(payload)
-        val claims = element as? JsonObject
-            ?: return SupabaseResult.Failure(SupabaseError(message = "JWT payload is not a JSON object"))
+        val claims =
+            element as? JsonObject
+                ?: return SupabaseResult.Failure(SupabaseError(message = "JWT payload is not a JSON object"))
         SupabaseResult.Success(claims)
     } catch (e: Throwable) {
         if (e is CancellationException) throw e
@@ -719,22 +740,24 @@ public fun parseJwtClaims(jwt: String): SupabaseResult<JsonObject> {
 }
 
 public fun SessionManager.parseCurrentSessionJwtClaims(): SupabaseResult<JsonObject> {
-    val token = accessToken
-        ?: return SupabaseResult.Failure(SupabaseError(message = "No active session"))
+    val token =
+        accessToken
+            ?: return SupabaseResult.Failure(SupabaseError(message = "No active session"))
     return parseJwtClaims(token)
 }
 
 private fun decodeBase64Url(input: String): String? {
-    val normalized = input
-        .replace('-', '+')
-        .replace('_', '/')
-        .let {
-            when (it.length % 4) {
-                2 -> "$it=="
-                3 -> "$it="
-                else -> it
+    val normalized =
+        input
+            .replace('-', '+')
+            .replace('_', '/')
+            .let {
+                when (it.length % 4) {
+                    2 -> "$it=="
+                    3 -> "$it="
+                    else -> it
+                }
             }
-        }
     val table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
     val output = ArrayList<Byte>((normalized.length * 3) / 4)
     var i = 0
