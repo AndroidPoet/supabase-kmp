@@ -2,15 +2,6 @@ package io.github.androidpoet.supabase.storage
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import kotlinx.coroutines.flow.StateFlow
 
-/**
- * Supabase Storage HTTP endpoint paths, centralized so the literals live in one
- * place. (Existing object/bucket paths in [StorageClientImpl] can migrate here
- * in a follow-up.)
- */
-internal object StoragePaths {
-    const val RESUMABLE_UPLOAD: String = "/storage/v1/upload/resumable"
-}
-
 /** TUS protocol version Supabase Storage speaks. */
 internal const val TUS_VERSION: String = "1.0.0"
 
