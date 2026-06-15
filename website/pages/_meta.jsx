@@ -9,7 +9,8 @@ export default {
   functions: 'Edge Functions',
   platforms: 'Platforms',
   github_link: {
-    title: 'GitHub ↗',
+    title: 'GitHub',
+    type: 'page',
     href: 'https://github.com/AndroidPoet/supabase-kmp',
     newWindow: true,
   },
