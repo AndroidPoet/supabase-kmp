@@ -1,6 +1,7 @@
 package io.github.androidpoet.supabase.client.transport
 import io.github.androidpoet.supabase.client.SupabaseConfig
 import io.github.androidpoet.supabase.core.result.SupabaseError
+import io.github.androidpoet.supabase.core.result.SupabaseErrorCodes
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngineFactory
@@ -23,6 +24,9 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 import kotlin.concurrent.Volatile
 
 private const val CLIENT_VERSION = "supabase-kmp/0.1.0"
@@ -246,16 +250,36 @@ internal class HttpTransport(
                     attempt++
                     continue
                 }
-                val error = parseError(text, statusCode)
+                val retryAfter = response.headers["Retry-After"]?.toLongOrNull()
+                val error = parseError(text, statusCode, retryAfter)
                 return SupabaseResult.Failure(error)
             }
-            SupabaseResult.Failure(SupabaseError(message = "Retry attempts exhausted"))
+            SupabaseResult.Failure(networkError(message = "Retry attempts exhausted"))
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
-            SupabaseResult.Failure(
-                SupabaseError(message = e.message ?: "Unknown network error"),
-            )
+            SupabaseResult.Failure(networkError(throwable = e))
         }
+    }
+
+    // A request that throws (rather than returning a response) never reached a
+    // usable server response: offline, DNS/TLS failure, connection refused, or a
+    // timeout. Tag it with a synthetic [SupabaseErrorCodes.Client] code so
+    // callers see [SupabaseErrorCategory.Network] instead of Unknown.
+    private fun networkError(
+        throwable: Throwable? = null,
+        message: String? = null,
+    ): SupabaseError {
+        val name = throwable?.let { it::class.simpleName.orEmpty() } ?: ""
+        val code =
+            when {
+                name.contains("Timeout", ignoreCase = true) -> SupabaseErrorCodes.Client.TIMEOUT
+                name.contains("Connect", ignoreCase = true) -> SupabaseErrorCodes.Client.CONNECTION_FAILED
+                else -> SupabaseErrorCodes.Client.NETWORK_ERROR
+            }
+        return SupabaseError(
+            message = message ?: throwable?.message ?: "Network request failed",
+            code = code,
+        )
     }
 
     private fun io.ktor.client.statement.HttpResponse.retryDelayMillis(attempt: Int): Long {
@@ -275,15 +299,36 @@ internal class HttpTransport(
             this == 504 ||
             this == 520
 
-    private fun parseError(body: String, statusCode: Int): SupabaseError =
-        try {
-            errorJson.decodeFromString<SupabaseError>(body)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (_: Exception) {
-            SupabaseError(
-                message = body.ifBlank { "HTTP $statusCode" },
-                code = statusCode.toString(),
-            )
-        }
+    // Supabase services return heterogeneous error bodies: PostgREST uses
+    // {code,message,details,hint}; GoTrue uses {error_code,msg} or
+    // {error,error_description}; Storage uses {statusCode,error,message}. Parse
+    // tolerantly across all of them and ALWAYS record the HTTP status so
+    // categorization works even when the body carries no machine-readable code.
+    private fun parseError(body: String, statusCode: Int, retryAfterSeconds: Long?): SupabaseError {
+        val obj =
+            try {
+                (errorJson.parseToJsonElement(body) as? JsonObject)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            }
+
+        fun str(vararg keys: String): String? =
+            keys.firstNotNullOfOrNull { key -> (obj?.get(key) as? JsonPrimitive)?.contentOrNull?.takeIf { it.isNotBlank() } }
+
+        val message =
+            str("message", "msg", "error_description", "error_message", "error")
+                ?: body.ifBlank { "HTTP $statusCode" }
+        val code = str("code", "error_code", "statusCode")
+
+        return SupabaseError(
+            message = message,
+            code = code,
+            details = obj?.get("details"),
+            hint = str("hint"),
+            httpStatus = statusCode,
+            retryAfterSeconds = retryAfterSeconds,
+        )
+    }
 }

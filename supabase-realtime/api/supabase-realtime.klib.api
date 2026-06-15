@@ -65,6 +65,7 @@ abstract interface io.github.androidpoet.supabase.realtime/RealtimeSubscription 
         abstract fun <get-status>(): kotlinx.coroutines.flow/StateFlow<io.github.androidpoet.supabase.realtime/RealtimeSubscription.Status> // io.github.androidpoet.supabase.realtime/RealtimeSubscription.status.<get-status>|<get-status>(){}[0]
 
     abstract fun asFlow(): kotlinx.coroutines.flow/Flow<io.github.androidpoet.supabase.realtime/RealtimeEvent> // io.github.androidpoet.supabase.realtime/RealtimeSubscription.asFlow|asFlow(){}[0]
+    abstract fun presenceState(): kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.realtime/RealtimeSubscription.presenceState|presenceState(){}[0]
     abstract suspend fun broadcast(kotlin/String, kotlinx.serialization.json/JsonObject) // io.github.androidpoet.supabase.realtime/RealtimeSubscription.broadcast|broadcast(kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
     abstract suspend fun send(io.github.androidpoet.supabase.realtime/RealtimeSubscription.SendType, kotlin/String, kotlinx.serialization.json/JsonObject? = ...) // io.github.androidpoet.supabase.realtime/RealtimeSubscription.send|send(io.github.androidpoet.supabase.realtime.RealtimeSubscription.SendType;kotlin.String;kotlinx.serialization.json.JsonObject?){}[0]
     abstract suspend fun track(kotlinx.serialization.json/JsonObject) // io.github.androidpoet.supabase.realtime/RealtimeSubscription.track|track(kotlinx.serialization.json.JsonObject){}[0]

@@ -21,6 +21,26 @@ public suspend inline fun <reified T> DatabaseClient.selectTyped(
     return if (single) result.deserialize<T>().map { listOf(it) } else result.deserialize()
 }
 
+/**
+ * Selects rows as a GeoJSON `FeatureCollection` (PostGIS), returned as the raw
+ * JSON string. Requests `Accept: application/geo+json`.
+ */
+public suspend fun DatabaseClient.selectGeoJson(
+    table: String,
+    schema: String? = null,
+    columns: String = "*",
+    headers: Map<String, String> = emptyMap(),
+    filters: FilterBuilder.() -> Unit = {},
+): SupabaseResult<String> =
+    select(
+        table = table,
+        schema = schema,
+        columns = columns,
+        geojson = true,
+        headers = headers,
+        filters = filters,
+    )
+
 public suspend inline fun <reified T> DatabaseClient.selectSingleTyped(
     table: String,
     schema: String? = null,

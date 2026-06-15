@@ -1,4 +1,5 @@
 package io.github.androidpoet.supabase.realtime
+import io.github.androidpoet.supabase.realtime.models.PresenceState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.json.JsonObject
@@ -24,6 +25,13 @@ public interface RealtimeSubscription {
     public val status: StateFlow<Status>
 
     public fun asFlow(): Flow<RealtimeEvent>
+
+    /**
+     * The current cumulative presence state — every member currently tracked on
+     * this channel, keyed by presence key — as of the last `presence_state` or
+     * `presence_diff` received. Returns an empty map before the first sync.
+     */
+    public fun presenceState(): PresenceState
 
     public suspend fun unsubscribe()
 

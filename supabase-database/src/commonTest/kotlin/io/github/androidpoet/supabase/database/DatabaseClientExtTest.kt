@@ -657,6 +657,7 @@ private class FakeDatabaseClient(
         head: Boolean,
         single: Boolean,
         csv: Boolean,
+        geojson: Boolean,
         count: CountOption?,
         stripNulls: Boolean,
         explain: ExplainOptions?,

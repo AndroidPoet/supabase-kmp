@@ -16,6 +16,7 @@ internal class DatabaseClientImpl(
         head: Boolean,
         single: Boolean,
         csv: Boolean,
+        geojson: Boolean,
         count: CountOption?,
         stripNulls: Boolean,
         explain: ExplainOptions?,
@@ -25,6 +26,8 @@ internal class DatabaseClientImpl(
     ): SupabaseResult<String> {
         require(!(single && csv)) { "single and csv cannot both be true" }
         require(!(csv && stripNulls)) { "stripNulls cannot be used with csv" }
+        require(!(geojson && csv)) { "geojson and csv cannot both be true" }
+        require(!(geojson && single)) { "geojson and single cannot both be true" }
         val safeTable = validatePathSegment(table, "table")
         val safeSchema = schema?.let { validatePathSegment(it, "schema") }
         val queryParams =
@@ -43,7 +46,7 @@ internal class DatabaseClientImpl(
                 client.get(
                     endpoint = "/rest/v1/$safeTable",
                     queryParams = queryParams,
-                    headers = headersWithSchema + ("Accept" to acceptHeader(single, csv, stripNulls, explain)),
+                    headers = headersWithSchema + ("Accept" to acceptHeader(single, csv, stripNulls, explain, geojson)),
                 )
             return when (result) {
                 is SupabaseResult.Success -> SupabaseResult.Success("")
@@ -53,7 +56,7 @@ internal class DatabaseClientImpl(
         return client.get(
             endpoint = "/rest/v1/$safeTable",
             queryParams = queryParams,
-            headers = headersWithSchema + ("Accept" to acceptHeader(single, csv, stripNulls, explain)),
+            headers = headersWithSchema + ("Accept" to acceptHeader(single, csv, stripNulls, explain, geojson)),
         )
     }
 
@@ -307,12 +310,14 @@ internal class DatabaseClientImpl(
         csv: Boolean = false,
         stripNulls: Boolean = false,
         explain: ExplainOptions? = null,
+        geojson: Boolean = false,
     ): String {
         val base =
             when {
                 single && stripNulls -> "application/vnd.pgrst.object+json;nulls=stripped"
                 single -> "application/vnd.pgrst.object+json"
                 csv -> "text/csv"
+                geojson -> "application/geo+json"
                 stripNulls -> "application/vnd.pgrst.array+json;nulls=stripped"
                 else -> "application/json"
             }
