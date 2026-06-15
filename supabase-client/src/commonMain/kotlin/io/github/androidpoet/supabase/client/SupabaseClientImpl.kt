@@ -61,6 +61,23 @@ internal class SupabaseClientImpl(
     ): SupabaseResult<String> =
         transport.putRaw(url = "$projectUrl$url", body = body, contentType = contentType, headers = headers)
 
+    override suspend fun rawRequest(
+        method: SupabaseHttpMethod,
+        url: String,
+        body: ByteArray?,
+        contentType: String?,
+        headers: Map<String, String>,
+    ): SupabaseResult<SupabaseHttpResponse> {
+        val fullUrl = if (url.startsWith("http://") || url.startsWith("https://")) url else "$projectUrl$url"
+        return transport.rawRequest(
+            method = method.name,
+            url = fullUrl,
+            body = body,
+            contentType = contentType,
+            requestHeaders = headers,
+        )
+    }
+
     override fun setAccessToken(token: String) {
         transport.setAccessToken(token)
     }

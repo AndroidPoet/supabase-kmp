@@ -440,6 +440,17 @@ private class FakeStorageClient : StorageClient {
 
     override suspend fun upload(bucket: String, path: String, data: ByteArray, contentType: String, upsert: Boolean, cacheControl: Int?): SupabaseResult<String> = error("not used")
 
+    override fun createResumableUpload(
+        bucket: String,
+        path: String,
+        data: ByteArray,
+        contentType: String,
+        upsert: Boolean,
+        cacheControl: Int?,
+        chunkSize: Int,
+        uploadUrl: String?,
+    ): ResumableUpload = error("not used")
+
     override suspend fun update(bucket: String, path: String, data: ByteArray, contentType: String, upsert: Boolean, cacheControl: Int?): SupabaseResult<String> = error("not used")
 
     override suspend fun download(bucket: String, path: String): SupabaseResult<String> = error("not used")

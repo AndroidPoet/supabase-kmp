@@ -17,6 +17,7 @@ public abstract interface class io/github/androidpoet/supabase/client/SupabaseCl
 	public abstract fun postRaw (Ljava/lang/String;[BLjava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun put (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun putRaw (Ljava/lang/String;[BLjava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun rawRequest (Lio/github/androidpoet/supabase/client/SupabaseHttpMethod;Ljava/lang/String;[BLjava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun setAccessToken (Ljava/lang/String;)V
 }
 
@@ -28,6 +29,7 @@ public final class io/github/androidpoet/supabase/client/SupabaseClient$DefaultI
 	public static synthetic fun postRaw$default (Lio/github/androidpoet/supabase/client/SupabaseClient;Ljava/lang/String;[BLjava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun put$default (Lio/github/androidpoet/supabase/client/SupabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun putRaw$default (Lio/github/androidpoet/supabase/client/SupabaseClient;Ljava/lang/String;[BLjava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun rawRequest$default (Lio/github/androidpoet/supabase/client/SupabaseClient;Lio/github/androidpoet/supabase/client/SupabaseHttpMethod;Ljava/lang/String;[BLjava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 }
 
 public final class io/github/androidpoet/supabase/client/SupabaseClientExtKt {
@@ -59,6 +61,26 @@ public final class io/github/androidpoet/supabase/client/SupabaseConfigBuilder {
 }
 
 public abstract interface annotation class io/github/androidpoet/supabase/client/SupabaseDsl : java/lang/annotation/Annotation {
+}
+
+public final class io/github/androidpoet/supabase/client/SupabaseHttpMethod : java/lang/Enum {
+	public static final field DELETE Lio/github/androidpoet/supabase/client/SupabaseHttpMethod;
+	public static final field GET Lio/github/androidpoet/supabase/client/SupabaseHttpMethod;
+	public static final field HEAD Lio/github/androidpoet/supabase/client/SupabaseHttpMethod;
+	public static final field PATCH Lio/github/androidpoet/supabase/client/SupabaseHttpMethod;
+	public static final field POST Lio/github/androidpoet/supabase/client/SupabaseHttpMethod;
+	public static final field PUT Lio/github/androidpoet/supabase/client/SupabaseHttpMethod;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/client/SupabaseHttpMethod;
+	public static fun values ()[Lio/github/androidpoet/supabase/client/SupabaseHttpMethod;
+}
+
+public final class io/github/androidpoet/supabase/client/SupabaseHttpResponse {
+	public fun <init> (ILjava/util/Map;[B)V
+	public final fun getBody ()[B
+	public final fun getHeaders ()Ljava/util/Map;
+	public final fun getStatus ()I
+	public final fun header (Ljava/lang/String;)Ljava/lang/String;
 }
 
 public abstract interface class io/github/androidpoet/supabase/client/auth/AuthState {

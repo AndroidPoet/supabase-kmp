@@ -189,6 +189,23 @@ public interface StorageClient {
         cacheControl: Int? = null,
     ): SupabaseResult<String>
 
+    /**
+     * Creates a resumable (TUS) upload handle. The upload is not started until
+     * [ResumableUpload.await] is called. Pass [uploadUrl] (a previously captured
+     * [ResumableUpload.uploadUrl]) to resume an interrupted upload instead of
+     * starting a new one.
+     */
+    public fun createResumableUpload(
+        bucket: String,
+        path: String,
+        data: ByteArray,
+        contentType: String = "application/octet-stream",
+        upsert: Boolean = false,
+        cacheControl: Int? = null,
+        chunkSize: Int = RESUMABLE_DEFAULT_CHUNK_SIZE,
+        uploadUrl: String? = null,
+    ): ResumableUpload
+
     public suspend fun update(
         bucket: String,
         path: String,
