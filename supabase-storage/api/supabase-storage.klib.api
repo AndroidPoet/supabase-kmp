@@ -89,8 +89,18 @@ abstract interface io.github.androidpoet.supabase.storage/AnalyticsCatalogClient
     abstract suspend fun updateTable(kotlin.collections/List<kotlin/String>, kotlin/String, kotlinx.serialization.json/JsonObject): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.updateTable|updateTable(kotlin.collections.List<kotlin.String>;kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
 }
 
+abstract interface io.github.androidpoet.supabase.storage/ResumableUpload { // io.github.androidpoet.supabase.storage/ResumableUpload|null[0]
+    abstract val progress // io.github.androidpoet.supabase.storage/ResumableUpload.progress|{}progress[0]
+        abstract fun <get-progress>(): kotlinx.coroutines.flow/StateFlow<io.github.androidpoet.supabase.storage/ResumableUploadProgress> // io.github.androidpoet.supabase.storage/ResumableUpload.progress.<get-progress>|<get-progress>(){}[0]
+    abstract val uploadUrl // io.github.androidpoet.supabase.storage/ResumableUpload.uploadUrl|{}uploadUrl[0]
+        abstract fun <get-uploadUrl>(): kotlin/String? // io.github.androidpoet.supabase.storage/ResumableUpload.uploadUrl.<get-uploadUrl>|<get-uploadUrl>(){}[0]
+
+    abstract suspend fun await(): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.storage/ResumableUpload.await|await(){}[0]
+}
+
 abstract interface io.github.androidpoet.supabase.storage/StorageClient { // io.github.androidpoet.supabase.storage/StorageClient|null[0]
     abstract fun analyticsCatalog(kotlin/String): io.github.androidpoet.supabase.storage/AnalyticsCatalogClient // io.github.androidpoet.supabase.storage/StorageClient.analyticsCatalog|analyticsCatalog(kotlin.String){}[0]
+    abstract fun createResumableUpload(kotlin/String, kotlin/String, kotlin/ByteArray, kotlin/String = ..., kotlin/Boolean = ..., kotlin/Int? = ..., kotlin/Int = ..., kotlin/String? = ...): io.github.androidpoet.supabase.storage/ResumableUpload // io.github.androidpoet.supabase.storage/StorageClient.createResumableUpload|createResumableUpload(kotlin.String;kotlin.String;kotlin.ByteArray;kotlin.String;kotlin.Boolean;kotlin.Int?;kotlin.Int;kotlin.String?){}[0]
     abstract fun getAuthenticatedRenderUrl(kotlin/String, kotlin/String, io.github.androidpoet.supabase.storage/ImageTransformOptions? = ...): kotlin/String // io.github.androidpoet.supabase.storage/StorageClient.getAuthenticatedRenderUrl|getAuthenticatedRenderUrl(kotlin.String;kotlin.String;io.github.androidpoet.supabase.storage.ImageTransformOptions?){}[0]
     abstract fun getAuthenticatedUrl(kotlin/String, kotlin/String, io.github.androidpoet.supabase.storage/ImageTransformOptions? = ...): kotlin/String // io.github.androidpoet.supabase.storage/StorageClient.getAuthenticatedUrl|getAuthenticatedUrl(kotlin.String;kotlin.String;io.github.androidpoet.supabase.storage.ImageTransformOptions?){}[0]
     abstract fun getAuthenticatedUrl(kotlin/String, kotlin/String, kotlin/Boolean = ..., kotlin/String? = ..., io.github.androidpoet.supabase.storage/ImageTransformOptions? = ...): kotlin/String // io.github.androidpoet.supabase.storage/StorageClient.getAuthenticatedUrl|getAuthenticatedUrl(kotlin.String;kotlin.String;kotlin.Boolean;kotlin.String?;io.github.androidpoet.supabase.storage.ImageTransformOptions?){}[0]
@@ -2110,6 +2120,26 @@ final class io.github.androidpoet.supabase.storage/ImageTransformOptions { // io
     final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage/ImageTransformOptions.toString|toString(){}[0]
 }
 
+final class io.github.androidpoet.supabase.storage/ResumableUploadProgress { // io.github.androidpoet.supabase.storage/ResumableUploadProgress|null[0]
+    constructor <init>(kotlin/Long, kotlin/Long) // io.github.androidpoet.supabase.storage/ResumableUploadProgress.<init>|<init>(kotlin.Long;kotlin.Long){}[0]
+
+    final val bytesUploaded // io.github.androidpoet.supabase.storage/ResumableUploadProgress.bytesUploaded|{}bytesUploaded[0]
+        final fun <get-bytesUploaded>(): kotlin/Long // io.github.androidpoet.supabase.storage/ResumableUploadProgress.bytesUploaded.<get-bytesUploaded>|<get-bytesUploaded>(){}[0]
+    final val fraction // io.github.androidpoet.supabase.storage/ResumableUploadProgress.fraction|{}fraction[0]
+        final fun <get-fraction>(): kotlin/Float // io.github.androidpoet.supabase.storage/ResumableUploadProgress.fraction.<get-fraction>|<get-fraction>(){}[0]
+    final val isComplete // io.github.androidpoet.supabase.storage/ResumableUploadProgress.isComplete|{}isComplete[0]
+        final fun <get-isComplete>(): kotlin/Boolean // io.github.androidpoet.supabase.storage/ResumableUploadProgress.isComplete.<get-isComplete>|<get-isComplete>(){}[0]
+    final val totalBytes // io.github.androidpoet.supabase.storage/ResumableUploadProgress.totalBytes|{}totalBytes[0]
+        final fun <get-totalBytes>(): kotlin/Long // io.github.androidpoet.supabase.storage/ResumableUploadProgress.totalBytes.<get-totalBytes>|<get-totalBytes>(){}[0]
+
+    final fun component1(): kotlin/Long // io.github.androidpoet.supabase.storage/ResumableUploadProgress.component1|component1(){}[0]
+    final fun component2(): kotlin/Long // io.github.androidpoet.supabase.storage/ResumableUploadProgress.component2|component2(){}[0]
+    final fun copy(kotlin/Long = ..., kotlin/Long = ...): io.github.androidpoet.supabase.storage/ResumableUploadProgress // io.github.androidpoet.supabase.storage/ResumableUploadProgress.copy|copy(kotlin.Long;kotlin.Long){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage/ResumableUploadProgress.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage/ResumableUploadProgress.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage/ResumableUploadProgress.toString|toString(){}[0]
+}
+
 final class io.github.androidpoet.supabase.storage/UploadSignedUrl { // io.github.androidpoet.supabase.storage/UploadSignedUrl|null[0]
     constructor <init>(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.storage/UploadSignedUrl.<init>|<init>(kotlin.String;kotlin.String){}[0]
 
@@ -2125,6 +2155,9 @@ final class io.github.androidpoet.supabase.storage/UploadSignedUrl { // io.githu
     final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage/UploadSignedUrl.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage/UploadSignedUrl.toString|toString(){}[0]
 }
+
+final const val io.github.androidpoet.supabase.storage/RESUMABLE_DEFAULT_CHUNK_SIZE // io.github.androidpoet.supabase.storage/RESUMABLE_DEFAULT_CHUNK_SIZE|{}RESUMABLE_DEFAULT_CHUNK_SIZE[0]
+    final fun <get-RESUMABLE_DEFAULT_CHUNK_SIZE>(): kotlin/Int // io.github.androidpoet.supabase.storage/RESUMABLE_DEFAULT_CHUNK_SIZE.<get-RESUMABLE_DEFAULT_CHUNK_SIZE>|<get-RESUMABLE_DEFAULT_CHUNK_SIZE>(){}[0]
 
 final fun (io.github.androidpoet.supabase.storage/StorageClient).io.github.androidpoet.supabase.storage/getAuthenticatedRenderUrls(kotlin/String, io.github.androidpoet.supabase.storage/ImageTransformOptions? = ..., kotlin/Array<out kotlin/String>...): kotlin.collections/List<kotlin/String> // io.github.androidpoet.supabase.storage/getAuthenticatedRenderUrls|getAuthenticatedRenderUrls@io.github.androidpoet.supabase.storage.StorageClient(kotlin.String;io.github.androidpoet.supabase.storage.ImageTransformOptions?;kotlin.Array<out|kotlin.String>...){}[0]
 final fun (io.github.androidpoet.supabase.storage/StorageClient).io.github.androidpoet.supabase.storage/getAuthenticatedRenderUrls(kotlin/String, kotlin.collections/List<kotlin/String>, io.github.androidpoet.supabase.storage/ImageTransformOptions? = ...): kotlin.collections/List<kotlin/String> // io.github.androidpoet.supabase.storage/getAuthenticatedRenderUrls|getAuthenticatedRenderUrls@io.github.androidpoet.supabase.storage.StorageClient(kotlin.String;kotlin.collections.List<kotlin.String>;io.github.androidpoet.supabase.storage.ImageTransformOptions?){}[0]
@@ -2162,3 +2195,4 @@ final suspend fun (io.github.androidpoet.supabase.storage/StorageClient).io.gith
 final suspend fun (io.github.androidpoet.supabase.storage/StorageClient).io.github.androidpoet.supabase.storage/createSignedRenderUrlsByPath(kotlin/String, kotlin/Long, io.github.androidpoet.supabase.storage/ImageTransformOptions, kotlin/Array<out kotlin/String>...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin.collections/Map<kotlin/String, kotlin/String>> // io.github.androidpoet.supabase.storage/createSignedRenderUrlsByPath|createSignedRenderUrlsByPath@io.github.androidpoet.supabase.storage.StorageClient(kotlin.String;kotlin.Long;io.github.androidpoet.supabase.storage.ImageTransformOptions;kotlin.Array<out|kotlin.String>...){}[0]
 final suspend fun (io.github.androidpoet.supabase.storage/StorageClient).io.github.androidpoet.supabase.storage/remove(kotlin/String, kotlin/Array<out kotlin/String>...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.storage/remove|remove@io.github.androidpoet.supabase.storage.StorageClient(kotlin.String;kotlin.Array<out|kotlin.String>...){}[0]
 final suspend fun (io.github.androidpoet.supabase.storage/StorageClient).io.github.androidpoet.supabase.storage/removeWithResult(kotlin/String, kotlin/Array<out kotlin/String>...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin.collections/List<io.github.androidpoet.supabase.storage.models/FileObject>> // io.github.androidpoet.supabase.storage/removeWithResult|removeWithResult@io.github.androidpoet.supabase.storage.StorageClient(kotlin.String;kotlin.Array<out|kotlin.String>...){}[0]
+final suspend fun (io.github.androidpoet.supabase.storage/StorageClient).io.github.androidpoet.supabase.storage/uploadResumable(kotlin/String, kotlin/String, kotlin/ByteArray, kotlin/String = ..., kotlin/Boolean = ..., kotlin/Int? = ..., kotlin/Int = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.storage/uploadResumable|uploadResumable@io.github.androidpoet.supabase.storage.StorageClient(kotlin.String;kotlin.String;kotlin.ByteArray;kotlin.String;kotlin.Boolean;kotlin.Int?;kotlin.Int){}[0]

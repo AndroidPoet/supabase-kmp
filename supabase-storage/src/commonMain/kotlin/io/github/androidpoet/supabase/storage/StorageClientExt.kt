@@ -2,6 +2,30 @@ package io.github.androidpoet.supabase.storage
 
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 
+/**
+ * Uploads [data] in resumable (TUS) chunks and suspends until it completes.
+ * One-shot convenience over [StorageClient.createResumableUpload]; for progress
+ * or pause/resume, use that directly and observe [ResumableUpload.progress].
+ */
+public suspend fun StorageClient.uploadResumable(
+    bucket: String,
+    path: String,
+    data: ByteArray,
+    contentType: String = "application/octet-stream",
+    upsert: Boolean = false,
+    cacheControl: Int? = null,
+    chunkSize: Int = RESUMABLE_DEFAULT_CHUNK_SIZE,
+): SupabaseResult<Unit> =
+    createResumableUpload(
+        bucket = bucket,
+        path = path,
+        data = data,
+        contentType = contentType,
+        upsert = upsert,
+        cacheControl = cacheControl,
+        chunkSize = chunkSize,
+    ).await()
+
 public suspend fun StorageClient.createSignedDownloadUrl(
     bucket: String,
     path: String,

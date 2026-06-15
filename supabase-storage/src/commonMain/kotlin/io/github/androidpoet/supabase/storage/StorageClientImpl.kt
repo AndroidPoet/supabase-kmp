@@ -90,11 +90,11 @@ internal class StorageClientImpl(
                 sortOrder?.let { add("sortOrder" to it.name.lowercase()) }
                 search?.let { add("search" to it) }
             }
-        return client.get("/storage/v1/bucket", queryParams = query).deserialize()
+        return client.get(StoragePaths.BUCKET, queryParams = query).deserialize()
     }
 
     override suspend fun getBucket(id: String): SupabaseResult<Bucket> =
-        client.get("/storage/v1/bucket/$id").deserialize()
+        client.get("${StoragePaths.BUCKET}/$id").deserialize()
 
     override suspend fun createBucket(
         id: String,
@@ -113,7 +113,7 @@ internal class StorageClientImpl(
                     allowedMimeTypes = allowedMimeTypes,
                 ),
             )
-        return client.post("/storage/v1/bucket", body = body).deserialize()
+        return client.post(StoragePaths.BUCKET, body = body).deserialize()
     }
 
     override suspend fun updateBucket(
@@ -132,14 +132,14 @@ internal class StorageClientImpl(
                     allowedMimeTypes = allowedMimeTypes,
                 ),
             )
-        return client.put("/storage/v1/bucket/$id", body = body).deserialize()
+        return client.put("${StoragePaths.BUCKET}/$id", body = body).deserialize()
     }
 
     override suspend fun deleteBucket(id: String): SupabaseResult<Unit> =
-        client.delete("/storage/v1/bucket/$id").map { }
+        client.delete("${StoragePaths.BUCKET}/$id").map { }
 
     override suspend fun emptyBucket(id: String): SupabaseResult<Unit> =
-        client.post("/storage/v1/bucket/$id/empty").map { }
+        client.post("${StoragePaths.BUCKET}/$id/empty").map { }
 
     override suspend fun upload(
         bucket: String,
@@ -153,7 +153,7 @@ internal class StorageClientImpl(
             buildMap {
                 if (upsert) put("x-upsert", "true")
             }
-        val endpoint = withCacheControl("/storage/v1/object/${objectRef(bucket, path)}", cacheControl)
+        val endpoint = withCacheControl("${StoragePaths.OBJECT}/${objectRef(bucket, path)}", cacheControl)
         return client.postRaw(
             url = endpoint,
             body = data,
@@ -174,7 +174,7 @@ internal class StorageClientImpl(
             buildMap {
                 if (upsert) put("x-upsert", "true")
             }
-        val endpoint = withCacheControl("/storage/v1/object/${objectRef(bucket, path)}", cacheControl)
+        val endpoint = withCacheControl("${StoragePaths.OBJECT}/${objectRef(bucket, path)}", cacheControl)
         return client.putRaw(
             url = endpoint,
             body = data,
@@ -183,11 +183,33 @@ internal class StorageClientImpl(
         )
     }
 
+    override fun createResumableUpload(
+        bucket: String,
+        path: String,
+        data: ByteArray,
+        contentType: String,
+        upsert: Boolean,
+        cacheControl: Int?,
+        chunkSize: Int,
+        uploadUrl: String?,
+    ): ResumableUpload =
+        ResumableUploadImpl(
+            client = client,
+            bucket = bucket,
+            path = path,
+            data = data,
+            contentType = contentType,
+            upsert = upsert,
+            cacheControl = cacheControl,
+            chunkSize = chunkSize,
+            initialUploadUrl = uploadUrl,
+        )
+
     override suspend fun download(bucket: String, path: String): SupabaseResult<String> =
-        client.get("/storage/v1/object/authenticated/${objectRef(bucket, path)}")
+        client.get("${StoragePaths.OBJECT_AUTHENTICATED}/${objectRef(bucket, path)}")
 
     override suspend fun downloadPublic(bucket: String, path: String): SupabaseResult<String> =
-        client.get("/storage/v1/object/public/${objectRef(bucket, path)}")
+        client.get("${StoragePaths.OBJECT_PUBLIC}/${objectRef(bucket, path)}")
 
     override suspend fun download(
         bucket: String,
@@ -195,7 +217,7 @@ internal class StorageClientImpl(
         download: Boolean,
         fileName: String?,
     ): SupabaseResult<String> =
-        client.get("/storage/v1/object/authenticated/${objectRef(bucket, path)}${buildDownloadQuery(download, fileName)}")
+        client.get("${StoragePaths.OBJECT_AUTHENTICATED}/${objectRef(bucket, path)}${buildDownloadQuery(download, fileName)}")
 
     override suspend fun downloadPublic(
         bucket: String,
@@ -203,13 +225,13 @@ internal class StorageClientImpl(
         download: Boolean,
         fileName: String?,
     ): SupabaseResult<String> =
-        client.get("/storage/v1/object/public/${objectRef(bucket, path)}${buildDownloadQuery(download, fileName)}")
+        client.get("${StoragePaths.OBJECT_PUBLIC}/${objectRef(bucket, path)}${buildDownloadQuery(download, fileName)}")
 
     override suspend fun info(bucket: String, path: String): SupabaseResult<FileObject> =
-        client.get("/storage/v1/object/info/${objectRef(bucket, path)}").deserialize()
+        client.get("${StoragePaths.OBJECT_INFO}/${objectRef(bucket, path)}").deserialize()
 
     override suspend fun infoPublic(bucket: String, path: String): SupabaseResult<FileObject> =
-        client.get("/storage/v1/object/info/public/${objectRef(bucket, path)}").deserialize()
+        client.get("${StoragePaths.OBJECT_INFO_PUBLIC}/${objectRef(bucket, path)}").deserialize()
 
     override suspend fun exists(bucket: String, path: String): SupabaseResult<Boolean> =
         when (val result = info(bucket, path)) {
@@ -255,7 +277,7 @@ internal class StorageClientImpl(
                     search = search,
                 ),
             )
-        return client.post("/storage/v1/object/list/$bucket", body = body).deserialize()
+        return client.post("${StoragePaths.OBJECT_LIST}/$bucket", body = body).deserialize()
     }
 
     override suspend fun listV2(
@@ -280,7 +302,7 @@ internal class StorageClientImpl(
                         },
                 ),
             )
-        return client.post("/storage/v1/object/list-v2/$bucket", body = body).deserialize()
+        return client.post("${StoragePaths.OBJECT_LIST_V2}/$bucket", body = body).deserialize()
     }
 
     override suspend fun move(
@@ -298,14 +320,14 @@ internal class StorageClientImpl(
                     destinationBucketId = destinationBucket,
                 ),
             )
-        return client.post("/storage/v1/object/move", body = body).map { }
+        return client.post(StoragePaths.OBJECT_MOVE, body = body).map { }
     }
 
     override suspend fun deleteObject(
         bucket: String,
         path: String,
     ): SupabaseResult<Unit> =
-        client.delete("/storage/v1/object/${objectRef(bucket, path)}").map { }
+        client.delete("${StoragePaths.OBJECT}/${objectRef(bucket, path)}").map { }
 
     override suspend fun copy(
         bucket: String,
@@ -324,7 +346,7 @@ internal class StorageClientImpl(
                     copyMetadata = copyMetadata,
                 ),
             )
-        return client.post("/storage/v1/object/copy", body = body).map { }
+        return client.post(StoragePaths.OBJECT_COPY, body = body).map { }
     }
 
     override suspend fun remove(bucket: String, paths: List<String>): SupabaseResult<Unit> = removeWithResult(bucket, paths).map { }
@@ -336,7 +358,7 @@ internal class StorageClientImpl(
         val body = defaultJson.encodeToString(mapOf("prefixes" to paths))
         return client
             .post(
-                endpoint = "/storage/v1/object/remove/$bucket",
+                endpoint = "${StoragePaths.OBJECT_REMOVE}/$bucket",
                 body = body,
             ).deserialize()
     }
@@ -357,7 +379,7 @@ internal class StorageClientImpl(
                 ),
             )
         return client
-            .post("/storage/v1/object/sign/${objectRef(bucket, path)}", body = body)
+            .post("${StoragePaths.OBJECT_SIGN}/${objectRef(bucket, path)}", body = body)
             .deserialize<SignedUrlResponse>()
             .map { appendDownloadQuery(resolveStorageUrl(it.signedUrl), download, fileName) }
     }
@@ -371,7 +393,7 @@ internal class StorageClientImpl(
     ): SupabaseResult<List<String>> {
         val body = defaultJson.encodeToString(SignedUrlsRequest(paths = paths, expiresIn = expiresIn))
         return client
-            .post("/storage/v1/object/sign/$bucket", body = body)
+            .post("${StoragePaths.OBJECT_SIGN}/$bucket", body = body)
             .deserialize<List<SignedUrlItemResponse>>()
             .map { list -> list.map { appendDownloadQuery(resolveStorageUrl(it.signedUrl), download, fileName) } }
     }
@@ -391,7 +413,7 @@ internal class StorageClientImpl(
     ): SupabaseResult<UploadSignedUrl> =
         client
             .post(
-                endpoint = "/storage/v1/object/upload/sign/${objectRef(bucket, path)}",
+                endpoint = "${StoragePaths.OBJECT_UPLOAD_SIGN}/${objectRef(bucket, path)}",
                 headers = if (upsert) mapOf("x-upsert" to "true") else emptyMap(),
             ).deserialize<UploadSignedUrlResponse>()
             .map { UploadSignedUrl(url = resolveStorageUrl(it.url), token = it.token) }
@@ -415,7 +437,7 @@ internal class StorageClientImpl(
                 cacheControl?.let { add("cacheControl=$it") }
             }.joinToString("&")
         return client.postRaw(
-            url = "/storage/v1/object/upload/sign/${objectRef(bucket, path)}?$qs",
+            url = "${StoragePaths.OBJECT_UPLOAD_SIGN}/${objectRef(bucket, path)}?$qs",
             body = data,
             contentType = contentType,
             headers = headers,
@@ -431,7 +453,7 @@ internal class StorageClientImpl(
     ): String {
         val downloadQuery = buildDownloadQuery(download, fileName)
         val join = if (downloadQuery.isEmpty()) "" else "&${downloadQuery.removePrefix("?")}"
-        return "${client.projectUrl}/storage/v1/object/sign/${objectRef(bucket, path)}?token=${encodeQueryComponent(token)}$join"
+        return "${client.projectUrl}${StoragePaths.OBJECT_SIGN}/${objectRef(bucket, path)}?token=${encodeQueryComponent(token)}$join"
     }
 
     override fun getPublicUrl(
@@ -467,7 +489,7 @@ internal class StorageClientImpl(
         fileName: String?,
         transform: ImageTransformOptions?,
     ): String {
-        val base = "${client.projectUrl}/storage/v1/object/public/${objectRef(bucket, path)}"
+        val base = "${client.projectUrl}${StoragePaths.OBJECT_PUBLIC}/${objectRef(bucket, path)}"
         val queryParts = mutableListOf<String>()
         val transformQuery = transform?.toQueryString()
         if (!transformQuery.isNullOrBlank()) {
@@ -487,7 +509,7 @@ internal class StorageClientImpl(
         fileName: String?,
         transform: ImageTransformOptions?,
     ): String {
-        val base = "${client.projectUrl}/storage/v1/object/authenticated/${objectRef(bucket, path)}"
+        val base = "${client.projectUrl}${StoragePaths.OBJECT_AUTHENTICATED}/${objectRef(bucket, path)}"
         val queryParts = mutableListOf<String>()
         val transformQuery = transform?.toQueryString()
         if (!transformQuery.isNullOrBlank()) {
@@ -505,7 +527,7 @@ internal class StorageClientImpl(
         path: String,
         transform: ImageTransformOptions?,
     ): String {
-        val base = "${client.projectUrl}/storage/v1/render/image/public/${objectRef(bucket, path)}"
+        val base = "${client.projectUrl}${StoragePaths.RENDER_IMAGE_PUBLIC}/${objectRef(bucket, path)}"
         val transformQuery = transform?.toQueryString().orEmpty()
         return if (transformQuery.isBlank()) base else "$base?$transformQuery"
     }
@@ -515,14 +537,14 @@ internal class StorageClientImpl(
         path: String,
         transform: ImageTransformOptions?,
     ): String {
-        val base = "${client.projectUrl}/storage/v1/render/image/authenticated/${objectRef(bucket, path)}"
+        val base = "${client.projectUrl}${StoragePaths.RENDER_IMAGE_AUTHENTICATED}/${objectRef(bucket, path)}"
         val transformQuery = transform?.toQueryString().orEmpty()
         return if (transformQuery.isBlank()) base else "$base?$transformQuery"
     }
 
     override suspend fun createAnalyticsBucket(name: String): SupabaseResult<AnalyticsBucket> {
         val body = defaultJson.encodeToString(AnalyticsBucketCreateRequest(name = name))
-        return client.post("/storage/v1/iceberg/bucket", body = body).deserialize()
+        return client.post("${StoragePaths.ICEBERG}/bucket", body = body).deserialize()
     }
 
     override suspend fun listAnalyticsBuckets(
@@ -542,15 +564,15 @@ internal class StorageClientImpl(
             }
         val endpoint =
             if (query.isEmpty()) {
-                "/storage/v1/iceberg/bucket"
+                "${StoragePaths.ICEBERG}/bucket"
             } else {
-                "/storage/v1/iceberg/bucket?${query.joinToString("&") { (k, v) -> "${encodeQueryComponent(k)}=${encodeQueryComponent(v)}" }}"
+                "${StoragePaths.ICEBERG}/bucket?${query.joinToString("&") { (k, v) -> "${encodeQueryComponent(k)}=${encodeQueryComponent(v)}" }}"
             }
         return client.get(endpoint).deserialize()
     }
 
     override suspend fun deleteAnalyticsBucket(name: String): SupabaseResult<Unit> =
-        client.delete("/storage/v1/iceberg/bucket/$name").map { }
+        client.delete("${StoragePaths.ICEBERG}/bucket/$name").map { }
 
     override fun analyticsCatalog(bucketName: String): AnalyticsCatalogClient {
         validateAnalyticsBucketName(bucketName)
@@ -559,13 +581,13 @@ internal class StorageClientImpl(
 
     override suspend fun createVectorBucket(vectorBucketName: String): SupabaseResult<Unit> {
         val body = defaultJson.encodeToString(VectorBucketCreateRequest(vectorBucketName = vectorBucketName))
-        return client.post("/storage/v1/vector/CreateVectorBucket", body = body).map { }
+        return client.post("${StoragePaths.VECTOR}/CreateVectorBucket", body = body).map { }
     }
 
     override suspend fun getVectorBucket(vectorBucketName: String): SupabaseResult<VectorBucket> {
         val body = defaultJson.encodeToString(VectorBucketRequest(vectorBucketName = vectorBucketName))
         return client
-            .post("/storage/v1/vector/GetVectorBucket", body = body)
+            .post("${StoragePaths.VECTOR}/GetVectorBucket", body = body)
             .deserialize<VectorBucketResponse>()
             .map { it.vectorBucket }
     }
@@ -583,12 +605,12 @@ internal class StorageClientImpl(
                     nextToken = nextToken,
                 ),
             )
-        return client.post("/storage/v1/vector/ListVectorBuckets", body = body).deserialize()
+        return client.post("${StoragePaths.VECTOR}/ListVectorBuckets", body = body).deserialize()
     }
 
     override suspend fun deleteVectorBucket(vectorBucketName: String): SupabaseResult<Unit> {
         val body = defaultJson.encodeToString(VectorBucketRequest(vectorBucketName = vectorBucketName))
-        return client.post("/storage/v1/vector/DeleteVectorBucket", body = body).map { }
+        return client.post("${StoragePaths.VECTOR}/DeleteVectorBucket", body = body).map { }
     }
 
     override suspend fun createVectorIndex(
@@ -610,7 +632,7 @@ internal class StorageClientImpl(
                     metadataConfiguration = metadataConfiguration,
                 ),
             )
-        return client.post("/storage/v1/vector/CreateIndex", body = body).map { }
+        return client.post("${StoragePaths.VECTOR}/CreateIndex", body = body).map { }
     }
 
     override suspend fun getVectorIndex(
@@ -622,7 +644,7 @@ internal class StorageClientImpl(
                 VectorIndexRequest(vectorBucketName = vectorBucketName, indexName = indexName),
             )
         return client
-            .post("/storage/v1/vector/GetIndex", body = body)
+            .post("${StoragePaths.VECTOR}/GetIndex", body = body)
             .deserialize<VectorIndexResponse>()
             .map { it.index }
     }
@@ -642,7 +664,7 @@ internal class StorageClientImpl(
                     nextToken = nextToken,
                 ),
             )
-        return client.post("/storage/v1/vector/ListIndexes", body = body).deserialize()
+        return client.post("${StoragePaths.VECTOR}/ListIndexes", body = body).deserialize()
     }
 
     override suspend fun deleteVectorIndex(
@@ -653,7 +675,7 @@ internal class StorageClientImpl(
             defaultJson.encodeToString(
                 VectorIndexRequest(vectorBucketName = vectorBucketName, indexName = indexName),
             )
-        return client.post("/storage/v1/vector/DeleteIndex", body = body).map { }
+        return client.post("${StoragePaths.VECTOR}/DeleteIndex", body = body).map { }
     }
 
     override suspend fun putVectors(
@@ -666,7 +688,7 @@ internal class StorageClientImpl(
             defaultJson.encodeToString(
                 VectorPutRequest(vectorBucketName = vectorBucketName, indexName = indexName, vectors = vectors),
             )
-        return client.post("/storage/v1/vector/PutVectors", body = body).map { }
+        return client.post("${StoragePaths.VECTOR}/PutVectors", body = body).map { }
     }
 
     override suspend fun getVectors(
@@ -687,7 +709,7 @@ internal class StorageClientImpl(
                 ),
             )
         return client
-            .post("/storage/v1/vector/GetVectors", body = body)
+            .post("${StoragePaths.VECTOR}/GetVectors", body = body)
             .deserialize<VectorMatchesResponse>()
             .map { it.vectors }
     }
@@ -723,7 +745,7 @@ internal class StorageClientImpl(
                     segmentIndex = segmentIndex,
                 ),
             )
-        return client.post("/storage/v1/vector/ListVectors", body = body).deserialize()
+        return client.post("${StoragePaths.VECTOR}/ListVectors", body = body).deserialize()
     }
 
     override suspend fun queryVectors(
@@ -747,7 +769,7 @@ internal class StorageClientImpl(
                     returnMetadata = returnMetadata,
                 ),
             )
-        return client.post("/storage/v1/vector/QueryVectors", body = body).deserialize()
+        return client.post("${StoragePaths.VECTOR}/QueryVectors", body = body).deserialize()
     }
 
     override suspend fun deleteVectors(
@@ -760,7 +782,7 @@ internal class StorageClientImpl(
             defaultJson.encodeToString(
                 VectorDeleteRequest(vectorBucketName = vectorBucketName, indexName = indexName, keys = keys),
             )
-        return client.post("/storage/v1/vector/DeleteVectors", body = body).map { }
+        return client.post("${StoragePaths.VECTOR}/DeleteVectors", body = body).map { }
     }
 
     private fun resolveStorageUrl(pathOrUrl: String): String =
@@ -852,14 +874,14 @@ internal class AnalyticsCatalogClientImpl(
     override suspend fun loadConfig(): SupabaseResult<JsonObject> =
         client
             .get(
-                endpoint = "/storage/v1/iceberg/v1/config",
+                endpoint = "${StoragePaths.ICEBERG}/v1/config",
                 queryParams = listOf("warehouse" to bucketName),
             ).toJsonObject()
 
     override suspend fun loadConfigTyped(): SupabaseResult<IcebergCatalogConfig> =
         client
             .get(
-                endpoint = "/storage/v1/iceberg/v1/config",
+                endpoint = "${StoragePaths.ICEBERG}/v1/config",
                 queryParams = listOf("warehouse" to bucketName),
             ).deserialize()
 
@@ -1136,7 +1158,7 @@ internal class AnalyticsCatalogClientImpl(
                 is SupabaseResult.Success -> config.value.extractIcebergPrefix()
                 is SupabaseResult.Failure -> null
             } ?: bucketName
-        return "/storage/v1/iceberg/v1/$prefix".also { resolvedPrefix = it }
+        return "${StoragePaths.ICEBERG}/v1/$prefix".also { resolvedPrefix = it }
     }
 
     private fun JsonObject.extractIcebergPrefix(): String? =
