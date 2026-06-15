@@ -1,0 +1,53 @@
+---
+title: Sessions
+---
+
+import { Callout } from 'nextra/components'
+
+# Sessions
+
+`SessionManager` holds the current session, refreshes it, and emits state changes.
+
+## Observing session state
+
+```kotlin
+sessionManager.sessionState.collect { state ->
+    when (state) {
+        is SessionState.Authenticated -> println("User: ${state.session.user.id}")
+        is SessionState.Expired -> println("Session expired, refreshing...")
+        SessionState.NotAuthenticated -> println("Signed out")
+        SessionState.Loading -> println("Loading...")
+    }
+}
+```
+
+## Persisting across restarts
+
+The default `InMemorySessionStorage` keeps the session only for the process
+lifetime. To keep users signed in across restarts, back `KeyValueSessionStorage`
+with your platform's secure store — Keychain (Apple), EncryptedSharedPreferences
+or DataStore (Android), `localStorage` (Web), a file (desktop). You implement
+three string operations; serialization is handled for you:
+
+```kotlin
+class KeychainStore : KeyValueStore {
+    override suspend fun get(key: String): String? = /* read */
+    override suspend fun set(key: String, value: String) { /* write */ }
+    override suspend fun remove(key: String) { /* delete */ }
+}
+
+val sessionManager = createSessionManager(
+    authClient = auth,
+    supabaseClient = client,
+    config = SessionConfig(storage = KeyValueSessionStorage(KeychainStore())),
+)
+
+// On launch: load the stored session and refresh it in one call.
+sessionManager.restoreSession()
+```
+
+<Callout type="info">
+  Storage is intentionally pluggable — the SDK bundles no Keychain or
+  EncryptedSharedPreferences dependency, so you choose exactly how sessions are
+  stored.
+</Callout>

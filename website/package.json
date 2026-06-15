@@ -1,0 +1,18 @@
+{
+  "name": "supabase-kmp-docs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "^14.2.15",
+    "nextra": "^3.3.1",
+    "nextra-theme-docs": "^3.3.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}

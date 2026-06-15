@@ -1,0 +1,84 @@
+---
+title: Getting Started
+---
+
+import { Steps, Callout, Tabs } from 'nextra/components'
+
+# Getting Started
+
+## Install
+
+Supabase KMP is published to Maven Central under `io.github.androidpoet`. Add the
+version and the modules you need to your version catalog.
+
+```toml filename="gradle/libs.versions.toml"
+[versions]
+supabase-kmp = "0.3.5"
+
+[libraries]
+supabase-client = { module = "io.github.androidpoet:supabase-client", version.ref = "supabase-kmp" }
+supabase-auth = { module = "io.github.androidpoet:supabase-auth", version.ref = "supabase-kmp" }
+supabase-database = { module = "io.github.androidpoet:supabase-database", version.ref = "supabase-kmp" }
+supabase-storage = { module = "io.github.androidpoet:supabase-storage", version.ref = "supabase-kmp" }
+supabase-realtime = { module = "io.github.androidpoet:supabase-realtime", version.ref = "supabase-kmp" }
+supabase-functions = { module = "io.github.androidpoet:supabase-functions", version.ref = "supabase-kmp" }
+```
+
+```kotlin filename="build.gradle.kts"
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation(libs.supabase.client)
+            implementation(libs.supabase.auth)
+            implementation(libs.supabase.database)
+            implementation(libs.supabase.storage)
+            implementation(libs.supabase.realtime)
+            implementation(libs.supabase.functions)
+        }
+    }
+}
+```
+
+<Callout type="info">
+  Only depend on the modules you use — each one is published independently, so a
+  small app can pull in just `supabase-client` + `supabase-auth`.
+</Callout>
+
+## Create a client
+
+Everything starts from a `SupabaseClient`. Create one with your project URL and
+anon key, then build the feature clients you need from it.
+
+```kotlin
+val client = Supabase.create(
+    projectUrl = "https://your-project.supabase.co",
+    apiKey = "your-anon-key",
+) {
+    logging = true
+}
+
+val auth = createAuthClient(client)
+val database = createDatabaseClient(client)
+val storage = createStorageClient(client)
+val realtime = createRealtimeClient(client)
+val functions = createFunctionsClient(client)
+```
+
+<Callout type="warning">
+  Use the **anon** key in client apps — never the service-role key. The
+  `supabase-auth-admin` module uses the service-role key and is for trusted
+  server-side contexts only.
+</Callout>
+
+## Next steps
+
+<Steps>
+### Authenticate a user
+Head to [Authentication](/auth) for email, phone, OTP, OAuth and native sign-in.
+
+### Read and write data
+See [Database](/database) for the typed PostgREST DSL.
+
+### Go realtime
+Subscribe to changes with [Realtime](/realtime).
+</Steps>
