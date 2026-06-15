@@ -409,6 +409,8 @@ public final class io/github/androidpoet/supabase/core/result/SupabaseResult$Suc
 
 public final class io/github/androidpoet/supabase/core/result/SupabaseResultKt {
 	public static final fun flatMap (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function1;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
+	public static final fun flatMapError (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function1;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
+	public static final fun flatMapErrorSuspend (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun fold (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
 	public static final fun foldSuspend (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun getOrElse (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
@@ -433,6 +435,8 @@ public final class io/github/androidpoet/supabase/core/result/SupabaseResultKt {
 	public static final fun toKotlinResult (Lio/github/androidpoet/supabase/core/result/SupabaseResult;)Ljava/lang/Object;
 	public static final fun toSupabaseResult (Ljava/lang/Object;Lkotlin/jvm/functions/Function1;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
 	public static synthetic fun toSupabaseResult$default (Ljava/lang/Object;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
+	public static final fun validate (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
+	public static final fun zip (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function2;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
 }
 
 public final class io/github/androidpoet/supabase/core/types/BucketId {

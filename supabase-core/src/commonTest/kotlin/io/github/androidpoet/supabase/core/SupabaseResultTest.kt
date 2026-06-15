@@ -3,6 +3,8 @@ import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseException
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.core.result.flatMap
+import io.github.androidpoet.supabase.core.result.flatMapError
+import io.github.androidpoet.supabase.core.result.flatMapErrorSuspend
 import io.github.androidpoet.supabase.core.result.fold
 import io.github.androidpoet.supabase.core.result.foldSuspend
 import io.github.androidpoet.supabase.core.result.getOrElse
@@ -19,6 +21,8 @@ import io.github.androidpoet.supabase.core.result.recover
 import io.github.androidpoet.supabase.core.result.recoverSuspend
 import io.github.androidpoet.supabase.core.result.toKotlinResult
 import io.github.androidpoet.supabase.core.result.toSupabaseResult
+import io.github.androidpoet.supabase.core.result.validate
+import io.github.androidpoet.supabase.core.result.zip
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -406,4 +410,79 @@ class SupabaseResultTest {
             ) { called = true }
             assertFalse(called)
         }
+
+    @Test
+    fun test_flatMapError_recoversFailure() {
+        val recovered: SupabaseResult<Int> =
+            SupabaseResult.Failure(error).flatMapError { SupabaseResult.Success(7) }
+        assertEquals(7, recovered.getOrNull())
+    }
+
+    @Test
+    fun test_flatMapError_passesThroughSuccess() {
+        val result: SupabaseResult<Int> = SupabaseResult.Success(1)
+        val out = result.flatMapError { SupabaseResult.Success(99) }
+        assertEquals(1, out.getOrNull())
+    }
+
+    @Test
+    fun test_flatMapError_canStayFailure() {
+        val out: SupabaseResult<Int> =
+            SupabaseResult.Failure(error).flatMapError { SupabaseResult.Failure(it) }
+        assertEquals("not found", out.errorOrNull()?.message)
+    }
+
+    @Test
+    fun test_flatMapErrorSuspend_recoversFailure() =
+        runTest {
+            val recovered: SupabaseResult<Int> =
+                SupabaseResult.Failure(error).flatMapErrorSuspend { SupabaseResult.Success(5) }
+            assertEquals(5, recovered.getOrNull())
+        }
+
+    @Test
+    fun test_validate_passesWhenPredicateHolds() {
+        val result: SupabaseResult<Int> = SupabaseResult.Success(10)
+        val out = result.validate({ it > 0 }) { SupabaseError("non-positive") }
+        assertEquals(10, out.getOrNull())
+    }
+
+    @Test
+    fun test_validate_failsWhenPredicateRejects() {
+        val result: SupabaseResult<Int> = SupabaseResult.Success(-1)
+        val out = result.validate({ it > 0 }) { SupabaseError("non-positive: $it") }
+        assertTrue(out.isFailure)
+        assertEquals("non-positive: -1", out.errorOrNull()?.message)
+    }
+
+    @Test
+    fun test_validate_passesThroughExistingFailure() {
+        val out: SupabaseResult<Int> =
+            SupabaseResult.Failure(error).validate({ true }) { SupabaseError("never") }
+        assertEquals("not found", out.errorOrNull()?.message)
+    }
+
+    @Test
+    fun test_zip_combinesTwoSuccesses() {
+        val a: SupabaseResult<Int> = SupabaseResult.Success(2)
+        val b: SupabaseResult<Int> = SupabaseResult.Success(3)
+        assertEquals(6, a.zip(b) { x, y -> x * y }.getOrNull())
+    }
+
+    @Test
+    fun test_zip_returnsFirstFailure() {
+        val a: SupabaseResult<Int> = SupabaseResult.Failure(error)
+        val b: SupabaseResult<Int> = SupabaseResult.Success(3)
+        val out = a.zip(b) { x, y -> x + y }
+        assertEquals("not found", out.errorOrNull()?.message)
+    }
+
+    @Test
+    fun test_zip_returnsOtherFailureWhenReceiverSucceeds() {
+        val other = SupabaseError(message = "other failed")
+        val a: SupabaseResult<Int> = SupabaseResult.Success(1)
+        val b: SupabaseResult<Int> = SupabaseResult.Failure(other)
+        val out = a.zip(b) { x, y -> x + y }
+        assertEquals("other failed", out.errorOrNull()?.message)
+    }
 }

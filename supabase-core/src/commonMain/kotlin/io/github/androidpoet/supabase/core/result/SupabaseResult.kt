@@ -73,6 +73,54 @@ public inline fun <T, R> SupabaseResult<T>.flatMap(
         is SupabaseResult.Failure -> this
     }
 
+/**
+ * Recovers from a [SupabaseResult.Failure] by mapping its error to another
+ * result; a [SupabaseResult.Success] passes through unchanged. The failure-side
+ * mirror of [flatMap], for fallback chains such as retrying after a refresh.
+ */
+public inline fun <T> SupabaseResult<T>.flatMapError(
+    transform: (SupabaseError) -> SupabaseResult<T>,
+): SupabaseResult<T> =
+    when (this) {
+        is SupabaseResult.Success -> this
+        is SupabaseResult.Failure -> transform(error)
+    }
+
+/**
+ * Turns a [SupabaseResult.Success] whose value fails [predicate] into a
+ * [SupabaseResult.Failure] built by [lazyError]; a passing value and any
+ * existing [SupabaseResult.Failure] pass through unchanged. Asserts an
+ * invariant on a payload without an explicit `flatMap`/`if` dance.
+ */
+public inline fun <T> SupabaseResult<T>.validate(
+    predicate: (T) -> Boolean,
+    lazyError: (T) -> SupabaseError,
+): SupabaseResult<T> =
+    when (this) {
+        is SupabaseResult.Success ->
+            if (predicate(value)) this else SupabaseResult.Failure(lazyError(value))
+        is SupabaseResult.Failure -> this
+    }
+
+/**
+ * Combines two results: a [SupabaseResult.Success] of [transform] applied to
+ * both values when both succeed, otherwise the first [SupabaseResult.Failure]
+ * encountered (receiver before [other]). Lets independent calls compose without
+ * nested `flatMap`s.
+ */
+public inline fun <A, B, R> SupabaseResult<A>.zip(
+    other: SupabaseResult<B>,
+    transform: (A, B) -> R,
+): SupabaseResult<R> =
+    when (this) {
+        is SupabaseResult.Failure -> this
+        is SupabaseResult.Success ->
+            when (other) {
+                is SupabaseResult.Failure -> other
+                is SupabaseResult.Success -> SupabaseResult.Success(transform(value, other.value))
+            }
+    }
+
 public inline fun <T> SupabaseResult<T>.onSuccess(
     action: (T) -> Unit,
 ): SupabaseResult<T> =
@@ -219,6 +267,14 @@ public suspend inline fun <T> SupabaseResult<T>.recoverSuspend(
     when (this) {
         is SupabaseResult.Success -> this
         is SupabaseResult.Failure -> SupabaseResult.Success(transform(error))
+    }
+
+public suspend inline fun <T> SupabaseResult<T>.flatMapErrorSuspend(
+    crossinline transform: suspend (SupabaseError) -> SupabaseResult<T>,
+): SupabaseResult<T> =
+    when (this) {
+        is SupabaseResult.Success -> this
+        is SupabaseResult.Failure -> transform(error)
     }
 
 public fun <T> SupabaseResult<T>.toKotlinResult(): Result<T> =
