@@ -43,7 +43,7 @@ internal class AuthAdminClientImpl(
     ): SupabaseResult<Unit> =
         client
             .post(
-                endpoint = "/auth/v1/logout?scope=${scope.name.lowercase()}",
+                endpoint = "${AuthAdminPaths.LOGOUT}?scope=${scope.name.lowercase()}",
                 headers = mapOf("Authorization" to "Bearer $jwt"),
             ).map { }
 
@@ -55,7 +55,7 @@ internal class AuthAdminClientImpl(
         val body = defaultJson.encodeToString(InviteUserRequest(email = email, data = data))
         return client
             .post(
-                endpoint = withRedirectTo("/auth/v1/invite", redirectTo),
+                endpoint = withRedirectTo(AuthAdminPaths.INVITE, redirectTo),
                 body = body,
                 headers = adminHeaders,
             ).deserializeUserResponse()
@@ -65,7 +65,7 @@ internal class AuthAdminClientImpl(
         val body = defaultJson.encodeToString(request)
         return client
             .post(
-                endpoint = withRedirectTo("/auth/v1/admin/generate_link", request.redirectTo),
+                endpoint = withRedirectTo(AuthAdminPaths.ADMIN_GENERATE_LINK, request.redirectTo),
                 body = body,
                 headers = adminHeaders,
             ).deserialize()
@@ -75,7 +75,7 @@ internal class AuthAdminClientImpl(
         val body = defaultJson.encodeToString(attributes)
         return client
             .post(
-                endpoint = "/auth/v1/admin/users",
+                endpoint = AuthAdminPaths.ADMIN_USERS,
                 body = body,
                 headers = adminHeaders,
             ).deserializeUserResponse()
@@ -92,7 +92,7 @@ internal class AuthAdminClientImpl(
             }
         return client
             .get(
-                endpoint = "/auth/v1/admin/users",
+                endpoint = AuthAdminPaths.ADMIN_USERS,
                 queryParams = queryParams,
                 headers = adminHeaders,
             ).deserialize()
@@ -101,7 +101,7 @@ internal class AuthAdminClientImpl(
     override suspend fun getUserById(userId: String): SupabaseResult<User> =
         client
             .get(
-                endpoint = "/auth/v1/admin/users/$userId",
+                endpoint = "${AuthAdminPaths.ADMIN_USERS}/$userId",
                 headers = adminHeaders,
             ).deserializeUserResponse()
 
@@ -112,7 +112,7 @@ internal class AuthAdminClientImpl(
         val body = defaultJson.encodeToString(attributes)
         return client
             .put(
-                endpoint = "/auth/v1/admin/users/$userId",
+                endpoint = "${AuthAdminPaths.ADMIN_USERS}/$userId",
                 body = body,
                 headers = adminHeaders,
             ).deserializeUserResponse()
@@ -125,7 +125,7 @@ internal class AuthAdminClientImpl(
         val body = defaultJson.encodeToString(UserDeleteRequest(shouldSoftDelete = shouldSoftDelete))
         return client
             .delete(
-                endpoint = "/auth/v1/admin/users/$userId",
+                endpoint = "${AuthAdminPaths.ADMIN_USERS}/$userId",
                 body = body,
                 headers = adminHeaders,
             ).map { }
@@ -134,7 +134,7 @@ internal class AuthAdminClientImpl(
     override suspend fun listFactors(userId: String): SupabaseResult<MfaAdminListFactorsResponse> =
         client
             .get(
-                endpoint = "/auth/v1/admin/users/$userId/factors",
+                endpoint = "${AuthAdminPaths.ADMIN_USERS}/$userId/factors",
                 headers = adminHeaders,
             ).deserialize()
 
@@ -144,7 +144,7 @@ internal class AuthAdminClientImpl(
     ): SupabaseResult<MfaAdminDeleteFactorResponse> =
         client
             .delete(
-                endpoint = "/auth/v1/admin/users/$userId/factors/$factorId",
+                endpoint = "${AuthAdminPaths.ADMIN_USERS}/$userId/factors/$factorId",
                 headers = adminHeaders,
             ).deserialize()
 
@@ -159,7 +159,7 @@ internal class AuthAdminClientImpl(
             }
         return client
             .get(
-                endpoint = "/auth/v1/admin/oauth/clients",
+                endpoint = AuthAdminPaths.ADMIN_OAUTH_CLIENTS,
                 queryParams = queryParams,
                 headers = adminHeaders,
             ).deserialize()
@@ -169,7 +169,7 @@ internal class AuthAdminClientImpl(
         val body = defaultJson.encodeToString(request)
         return client
             .post(
-                endpoint = "/auth/v1/admin/oauth/clients",
+                endpoint = AuthAdminPaths.ADMIN_OAUTH_CLIENTS,
                 body = body,
                 headers = adminHeaders,
             ).deserialize()
@@ -178,7 +178,7 @@ internal class AuthAdminClientImpl(
     override suspend fun getOAuthClient(clientId: String): SupabaseResult<OAuthClient> =
         client
             .get(
-                endpoint = "/auth/v1/admin/oauth/clients/$clientId",
+                endpoint = "${AuthAdminPaths.ADMIN_OAUTH_CLIENTS}/$clientId",
                 headers = adminHeaders,
             ).deserialize()
 
@@ -189,7 +189,7 @@ internal class AuthAdminClientImpl(
         val body = defaultJson.encodeToString(request)
         return client
             .put(
-                endpoint = "/auth/v1/admin/oauth/clients/$clientId",
+                endpoint = "${AuthAdminPaths.ADMIN_OAUTH_CLIENTS}/$clientId",
                 body = body,
                 headers = adminHeaders,
             ).deserialize()
@@ -198,14 +198,14 @@ internal class AuthAdminClientImpl(
     override suspend fun deleteOAuthClient(clientId: String): SupabaseResult<Unit> =
         client
             .delete(
-                endpoint = "/auth/v1/admin/oauth/clients/$clientId",
+                endpoint = "${AuthAdminPaths.ADMIN_OAUTH_CLIENTS}/$clientId",
                 headers = adminHeaders,
             ).map { }
 
     override suspend fun regenerateOAuthClientSecret(clientId: String): SupabaseResult<OAuthClient> =
         client
             .post(
-                endpoint = "/auth/v1/admin/oauth/clients/$clientId/regenerate_secret",
+                endpoint = "${AuthAdminPaths.ADMIN_OAUTH_CLIENTS}/$clientId/regenerate_secret",
                 headers = adminHeaders,
             ).deserialize()
 
@@ -216,7 +216,7 @@ internal class AuthAdminClientImpl(
             }
         return client
             .get(
-                endpoint = "/auth/v1/admin/custom-providers",
+                endpoint = AuthAdminPaths.ADMIN_CUSTOM_PROVIDERS,
                 queryParams = queryParams,
                 headers = adminHeaders,
             ).deserialize()
@@ -226,7 +226,7 @@ internal class AuthAdminClientImpl(
         val body = defaultJson.encodeToString(request)
         return client
             .post(
-                endpoint = "/auth/v1/admin/custom-providers",
+                endpoint = AuthAdminPaths.ADMIN_CUSTOM_PROVIDERS,
                 body = body,
                 headers = adminHeaders,
             ).deserialize()
@@ -235,7 +235,7 @@ internal class AuthAdminClientImpl(
     override suspend fun getCustomProvider(identifier: String): SupabaseResult<CustomProvider> =
         client
             .get(
-                endpoint = "/auth/v1/admin/custom-providers/$identifier",
+                endpoint = "${AuthAdminPaths.ADMIN_CUSTOM_PROVIDERS}/$identifier",
                 headers = adminHeaders,
             ).deserialize()
 
@@ -246,7 +246,7 @@ internal class AuthAdminClientImpl(
         val body = defaultJson.encodeToString(request)
         return client
             .put(
-                endpoint = "/auth/v1/admin/custom-providers/$identifier",
+                endpoint = "${AuthAdminPaths.ADMIN_CUSTOM_PROVIDERS}/$identifier",
                 body = body,
                 headers = adminHeaders,
             ).deserialize()
@@ -255,14 +255,14 @@ internal class AuthAdminClientImpl(
     override suspend fun deleteCustomProvider(identifier: String): SupabaseResult<Unit> =
         client
             .delete(
-                endpoint = "/auth/v1/admin/custom-providers/$identifier",
+                endpoint = "${AuthAdminPaths.ADMIN_CUSTOM_PROVIDERS}/$identifier",
                 headers = adminHeaders,
             ).map { }
 
     override suspend fun listPasskeys(userId: String): SupabaseResult<List<Passkey>> =
         client
             .get(
-                endpoint = "/auth/v1/admin/users/$userId/passkeys",
+                endpoint = "${AuthAdminPaths.ADMIN_USERS}/$userId/passkeys",
                 headers = adminHeaders,
             ).deserialize()
 
@@ -272,7 +272,7 @@ internal class AuthAdminClientImpl(
     ): SupabaseResult<Unit> =
         client
             .delete(
-                endpoint = "/auth/v1/admin/users/$userId/passkeys/$passkeyId",
+                endpoint = "${AuthAdminPaths.ADMIN_USERS}/$userId/passkeys/$passkeyId",
                 headers = adminHeaders,
             ).map { }
 
