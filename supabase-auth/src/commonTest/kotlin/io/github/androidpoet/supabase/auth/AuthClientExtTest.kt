@@ -39,7 +39,18 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
+
+// JWT fixtures (header.payload.signature, base64url, no padding):
+//   header  = {"alg":"ES256","typ":"JWT","kid":"key-1"}
+//   valid   = {"sub":"u1","role":"authenticated","email":"a@b.com","exp":4102444800,...}
+//   expired = {"sub":"u1","role":"authenticated","exp":1700000000}
+private const val JWT_HEADER = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImtleS0xIn0"
+private const val JWT_VALID_PAYLOAD =
+    "eyJzdWIiOiJ1MSIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiZW1haWwiOiJhQGIuY29tIiwiZXhwIjo0" +
+        "MTAyNDQ0ODAwLCJpYXQiOjE3MDAwMDAwMDAsInNlc3Npb25faWQiOiJzZXNzLTEiLCJhYWwiOiJhYWwxIn0"
+private const val JWT_EXPIRED_PAYLOAD = "eyJzdWIiOiJ1MSIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzAwMDAwMDAwfQ"
 
 class AuthClientExtTest {
     @Test
@@ -356,6 +367,95 @@ class AuthClientExtTest {
 
             assertTrue(result is SupabaseResult.Success)
             assertEquals("u1", result.value["sub"]?.toString()?.trim('"'))
+        }
+
+    @Test
+    fun test_getClaims_decodesTypedClaimsAndVerifiesWithServer() =
+        runTest {
+            val auth = FakeAuthClient()
+            val jwt = "$JWT_HEADER.$JWT_VALID_PAYLOAD.sig"
+
+            val result = auth.getClaims(jwt)
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals("u1", result.value.claims.subject)
+            assertEquals("authenticated", result.value.claims.role)
+            assertEquals("a@b.com", result.value.claims.email)
+            assertEquals("sess-1", result.value.claims.sessionId)
+            assertEquals("ES256", result.value.header.algorithm)
+            assertEquals("key-1", result.value.header.keyId)
+            assertEquals("sig", result.value.signature)
+            // verify defaults to true → the token is validated against the Auth server.
+            assertEquals(jwt, auth.lastGetUserAccessToken)
+        }
+
+    @Test
+    fun test_getClaims_skipsServerVerificationWhenVerifyFalse() =
+        runTest {
+            val auth = FakeAuthClient()
+
+            val result = auth.getClaims("$JWT_HEADER.$JWT_VALID_PAYLOAD.", verify = false)
+
+            assertTrue(result is SupabaseResult.Success)
+            assertNull(auth.lastGetUserAccessToken)
+        }
+
+    @Test
+    fun test_getClaims_rejectsExpiredTokenByDefault() =
+        runTest {
+            val auth = FakeAuthClient()
+
+            val result = auth.getClaims("$JWT_HEADER.$JWT_EXPIRED_PAYLOAD.")
+
+            assertTrue(result is SupabaseResult.Failure)
+            // Expiry is rejected locally, so no network call is made.
+            assertNull(auth.lastGetUserAccessToken)
+        }
+
+    @Test
+    fun test_getClaims_allowsExpiredWhenRequested() =
+        runTest {
+            val auth = FakeAuthClient()
+
+            val result = auth.getClaims("$JWT_HEADER.$JWT_EXPIRED_PAYLOAD.", verify = false, allowExpired = true)
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals("u1", result.value.claims.subject)
+        }
+
+    @Test
+    fun test_getClaims_failsOnMalformedJwt() =
+        runTest {
+            val result = FakeAuthClient().getClaims("not-a-jwt")
+
+            assertTrue(result is SupabaseResult.Failure)
+        }
+
+    @Test
+    fun test_getClaimsForCurrentSession_usesSessionAccessToken() =
+        runTest {
+            val auth = FakeAuthClient()
+            val jwt = "$JWT_HEADER.$JWT_VALID_PAYLOAD."
+            val sessionManager = FakeSessionManager(session = auth.dummySession.copy(accessToken = jwt))
+
+            val result = sessionManager.getClaimsForCurrentSession(auth, verify = false)
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals("u1", result.value.claims.subject)
+        }
+
+    @Test
+    fun test_mfaChallengeAndVerify_chainsChallengeThenVerify() =
+        runTest {
+            val auth = FakeAuthClient()
+
+            val result = auth.mfaChallengeAndVerify(factorId = "factor-1", code = "123456", accessToken = "tok")
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals("factor-1", auth.lastMfaChallengeFactorId)
+            assertEquals("challenge-1", auth.lastMfaVerifyChallengeId)
+            assertEquals("123456", auth.lastMfaVerifyCode)
+            assertEquals("tok", auth.lastMfaVerifyAccessToken)
         }
 
     @Test

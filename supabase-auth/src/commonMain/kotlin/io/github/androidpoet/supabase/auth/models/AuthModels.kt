@@ -461,3 +461,36 @@ public data class PasskeyAuthenticationOptionsRequest(
 public data class GotrueMetaSecurity(
     @SerialName("captcha_token") public val captchaToken: String,
 )
+
+/** Decoded header of a Supabase JWT. */
+@Serializable
+public data class JwtHeader(
+    @SerialName("alg") public val algorithm: String? = null,
+    @SerialName("typ") public val type: String? = null,
+    @SerialName("kid") public val keyId: String? = null,
+)
+
+/** Strongly-typed view of the standard Supabase JWT claims. Use [JwtClaimsResult.raw] for any non-standard claim. */
+@Serializable
+public data class JwtClaims(
+    @SerialName("sub") public val subject: String? = null,
+    @SerialName("email") public val email: String? = null,
+    @SerialName("phone") public val phone: String? = null,
+    @SerialName("role") public val role: String? = null,
+    @SerialName("iss") public val issuer: String? = null,
+    @SerialName("exp") public val expiresAt: Long? = null,
+    @SerialName("iat") public val issuedAt: Long? = null,
+    @SerialName("session_id") public val sessionId: String? = null,
+    @SerialName("aal") public val authenticatorAssuranceLevel: String? = null,
+    @SerialName("is_anonymous") public val isAnonymous: Boolean? = null,
+    @SerialName("app_metadata") public val appMetadata: JsonObject? = null,
+    @SerialName("user_metadata") public val userMetadata: JsonObject? = null,
+)
+
+/** Result of decoding a JWT: typed [claims], the [header], the raw [signature] segment, and the full [raw] payload. */
+public data class JwtClaimsResult(
+    public val claims: JwtClaims,
+    public val header: JwtHeader,
+    public val signature: String,
+    public val raw: JsonObject,
+)
