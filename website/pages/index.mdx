@@ -1,0 +1,40 @@
+---
+title: Supabase KMP — Kotlin Multiplatform client for Supabase
+---
+
+import { Cards } from 'nextra/components'
+
+# Supabase KMP
+
+A fully typed **Kotlin Multiplatform** client for Supabase — Auth, Database (PostgREST),
+Storage, Realtime and Edge Functions, from one shared codebase across **13 targets**:
+Android, iOS, macOS, tvOS, watchOS, JVM, Linux, Windows and WebAssembly.
+
+```kotlin
+val client = Supabase.create(
+    projectUrl = "https://your-project.supabase.co",
+    apiKey = "your-anon-key",
+)
+
+val auth = createAuthClient(client)
+val session = auth.signInWithEmail("user@example.com", "secure-password")
+```
+
+## Why Supabase KMP
+
+- **Typed end to end** — a `SupabaseResult` monad, value-class IDs and a PostgREST filter DSL. No stringly-typed surprises.
+- **One codebase, every platform** — share auth, data and realtime logic across mobile, desktop and web.
+- **Local JWT verification** — `getClaims()` verifies asymmetric tokens on-device against the JWKS, no server round-trip.
+- **Native sign-in, your way** — optional Google & Apple modules built on a pluggable `NativeAuthProvider`; bring your own for anything else.
+- **Bring-your-own everything** — pluggable session storage, HTTP engine and crypto. Nothing heavy is bundled behind your back.
+
+## Explore
+
+<Cards>
+  <Cards.Card title="Getting Started" href="/getting-started" arrow />
+  <Cards.Card title="Authentication" href="/auth" arrow />
+  <Cards.Card title="Database" href="/database" arrow />
+  <Cards.Card title="Storage" href="/storage" arrow />
+  <Cards.Card title="Realtime" href="/realtime" arrow />
+  <Cards.Card title="Edge Functions" href="/functions" arrow />
+</Cards>

@@ -1,0 +1,107 @@
+---
+title: Storage
+---
+
+import { Callout } from 'nextra/components'
+
+# Storage
+
+`supabase-storage` covers buckets, file CRUD, signed URLs, and on-the-fly image
+transforms.
+
+```kotlin
+val storage = createStorageClient(client)
+```
+
+## Buckets
+
+```kotlin
+storage.createBucket(id = "avatars", public = true)
+storage.getBucket("avatars")
+storage.listBuckets()
+storage.updateBucket(id = "avatars", public = false)
+storage.emptyBucket("avatars")
+storage.deleteBucket("avatars")
+```
+
+## Upload & download
+
+```kotlin
+storage.upload(
+    bucket = "avatars",
+    path = "user-123/photo.png",
+    data = bytes,                       // ByteArray
+    contentType = "image/png",
+    upsert = false,
+)
+
+val bytes: SupabaseResult<ByteArray> = storage.download("avatars", "user-123/photo.png")
+```
+
+| Method | Purpose |
+| --- | --- |
+| `upload(bucket, path, data, contentType, upsert, cacheControl?)` | create a file |
+| `update(bucket, path, data, …)` | overwrite an existing file |
+| `download(bucket, path)` | fetch bytes |
+| `move(bucket, from, to)` / `copy(bucket, from, to)` | relocate / duplicate |
+| `remove(bucket, paths)` / `removeWithResult(…)` | delete one or many |
+| `info(bucket, path)` / `exists(bucket, path)` | metadata / existence |
+
+## Listing
+
+```kotlin
+val files: SupabaseResult<List<FileObject>> = storage.list(
+    bucket = "avatars",
+    prefix = "user-123/",
+    limit = 100,
+    offset = 0,
+    sortBy = "name",
+    sortOrder = SortOrder.ASC,
+)
+```
+
+## URLs
+
+```kotlin
+// Public bucket — no expiry:
+val url = storage.getPublicUrl("avatars", "user-123/photo.png")
+
+// Private bucket — time-limited:
+val signed = storage.createSignedUrl(
+    bucket = "avatars",
+    path = "user-123/photo.png",
+    expiresIn = 3600,           // seconds
+    download = false,
+)
+
+// Many at once:
+storage.createSignedUrls("avatars", listOf("a.png", "b.png"), expiresIn = 3600)
+
+// Browser-side uploads (pre-signed token):
+val token = storage.createUploadSignedUrl("avatars", "user-123/new.png")
+storage.uploadToSignedUrl("avatars", "user-123/new.png", token = token.token, data = bytes)
+```
+
+## Image transforms
+
+`getPublicUrl`, `createSignedUrl`, and `download` accept an
+`ImageTransformOptions` to resize/convert on the fly:
+
+```kotlin
+storage.getPublicUrl(
+    bucket = "avatars",
+    path = "user-123/photo.png",
+    transform = ImageTransformOptions(
+        width = 200,
+        height = 200,
+        resize = ResizeMode.COVER,   // COVER | CONTAIN | FILL
+        quality = 80,                // 20–100
+    ),
+)
+```
+
+<Callout type="info">
+  Supabase Storage also exposes **Analytics** (Iceberg catalog) and **S3 Vectors**
+  endpoints. Those surfaces are available on `StorageClient` for advanced
+  workloads but most apps only need the bucket/file APIs above.
+</Callout>

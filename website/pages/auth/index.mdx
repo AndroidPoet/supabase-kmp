@@ -1,0 +1,80 @@
+---
+title: Authentication
+---
+
+import { Callout } from 'nextra/components'
+
+# Authentication
+
+`supabase-auth` covers the full Supabase Auth surface: email & phone, magic-link
+and SMS OTP, anonymous sessions, OAuth (17 providers), SSO, Web3, passkeys, MFA
+and PKCE — all returning a typed `SupabaseResult<Session>`.
+
+## Sign up & sign in
+
+```kotlin
+val auth = createAuthClient(client)
+val sessionManager = createSessionManager(authClient = auth, supabaseClient = client)
+
+auth.signUpWithEmail(
+    email = "user@example.com",
+    password = "secure-password",
+).onSuccess { session ->
+    sessionManager.saveSession(session)
+}
+
+auth.signInWithEmail(
+    email = "user@example.com",
+    password = "secure-password",
+).onSuccess { session ->
+    sessionManager.saveSession(session)
+}
+```
+
+## OAuth & PKCE
+
+```kotlin
+val oauthUrl = auth.getOAuthSignInUrl(
+    provider = OAuthProvider.GOOGLE,
+    redirectTo = "myapp://callback",
+)
+
+val pkce = auth.generatePkceParams()
+auth.exchangeCodeForSession(
+    authCode = "code-from-callback",
+    codeVerifier = pkce.codeVerifier,
+)
+```
+
+<Callout type="info">
+  Prefer a native account picker over a browser redirect? See
+  [Native Sign-In](/auth/native-sign-in) for Google & Apple.
+</Callout>
+
+## Multi-factor authentication
+
+```kotlin
+val accessToken = sessionManager.accessToken!!
+
+auth.mfaEnroll(factorType = MfaFactorType.TOTP, accessToken = accessToken).onSuccess { factor ->
+    auth.mfaVerify(
+        factorId = factor.id,
+        challengeId = "challenge-id",
+        code = "123456",
+        accessToken = accessToken,
+    )
+}
+```
+
+## Verifying claims locally
+
+`getClaims()` decodes and verifies a JWT. For asymmetric (`ES256`) tokens it
+verifies the signature **on-device** against the project's JWKS — no server
+round-trip — falling back to the Auth server for anything it can't verify locally.
+
+```kotlin
+val claims = auth.getClaims(jwt = sessionManager.accessToken!!)
+claims.onSuccess { result ->
+    println("Subject: ${result.claims.subject}")
+}
+```

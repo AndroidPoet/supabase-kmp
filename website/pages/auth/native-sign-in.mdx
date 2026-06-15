@@ -1,0 +1,69 @@
+---
+title: Native Sign-In
+---
+
+import { Callout } from 'nextra/components'
+
+# Native Sign-In (Google & Apple)
+
+Every native sign-in flow ends by producing an OIDC **ID token** — which
+`signInWithIdToken` already exchanges for a session. So native sign-in is not a
+new login method; it's the platform glue that gets a native token to the method
+you already have.
+
+```
+[provider's native UI]  →  NativeAuthCredential  →  auth.signInWith(provider)  →  Session
+        ↑ per-module, opt-in              ↑ core contract              ↑ already in the SDK
+```
+
+The optional `supabase-auth-google` and `supabase-auth-apple` modules wrap the
+platform UIs and hand you a `NativeAuthProvider`. The core never depends on a
+provider SDK you didn't add.
+
+## Google (Android)
+
+Backed by Android's Credential Manager + Google Identity Services. Construct the
+provider in `androidMain` (it needs an `Activity` context):
+
+```kotlin
+val provider = googleAuthProvider(
+    context = activity,
+    config = GoogleSignInConfig(
+        serverClientId = "<web-client-id>",
+        nonce = rawNonce,
+    ),
+)
+
+val session = auth.signInWith(provider) // → SupabaseResult<Session>
+```
+
+## Apple (iOS & macOS)
+
+Backed by `AuthenticationServices` (pod-free). Construct it in `iosMain` /
+`macosMain`:
+
+```kotlin
+val session = auth.signInWith(
+    appleAuthProvider(AppleSignInConfig(nonce = rawNonce)),
+)
+```
+
+## Bring your own
+
+`NativeAuthProvider` is just an interface — implement it for any provider,
+platform, or SDK and hand it to the same `signInWith`:
+
+```kotlin
+class MyProvider : NativeAuthProvider {
+    override val provider = OAuthProvider.GITHUB
+    override suspend fun signIn(): SupabaseResult<NativeAuthCredential> =
+        SupabaseResult.Success(
+            NativeAuthCredential(provider = OAuthProvider.GITHUB, idToken = myIdToken),
+        )
+}
+```
+
+<Callout type="info">
+  On platforms without a bundled provider, use the redirect flow
+  (`signInWithOAuth`) or supply your own `NativeAuthProvider`.
+</Callout>

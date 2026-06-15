@@ -1,0 +1,124 @@
+---
+title: Results & Errors
+---
+
+import { Callout } from 'nextra/components'
+
+# Results & Errors
+
+Every fallible call in Supabase KMP returns a `SupabaseResult<T>` — a sealed type
+with exactly two cases. There are no thrown exceptions to catch on the happy path.
+
+```kotlin
+public sealed interface SupabaseResult<out T> {
+    public data class Success<out T>(val value: T) : SupabaseResult<T>
+    public data class Failure(val error: SupabaseError) : SupabaseResult<Nothing>
+}
+```
+
+## Consuming a result
+
+```kotlin
+val result = database.selectTyped<Todo>(table = "todos")
+
+result
+    .onSuccess { todos -> render(todos) }
+    .onFailure { error -> log(error.message) }
+```
+
+### Extracting a value
+
+| Function | Returns | Notes |
+| --- | --- | --- |
+| `getOrNull()` | `T?` | `null` on failure |
+| `getOrThrow()` | `T` | throws `SupabaseException` on failure |
+| `getOrElse { error -> … }` | `T` | compute a fallback from the error |
+| `errorOrNull()` | `SupabaseError?` | `null` on success |
+| `fold(onSuccess, onFailure)` | `R` | collapse both branches to one value |
+| `toKotlinResult()` | `kotlin.Result<T>` | interop with stdlib |
+
+### Transforming & chaining
+
+| Function | Purpose |
+| --- | --- |
+| `map { value -> … }` | transform the success value |
+| `flatMap { value -> SupabaseResult<R> }` | chain another fallible call |
+| `mapError { error -> … }` | rewrite the error |
+| `recover { error -> value }` | turn a failure into a success |
+
+Suspending variants exist for async transforms: `mapSuspend`, `foldSuspend`,
+`recoverSuspend`, `onSuccessSuspend`, `onFailureSuspend`.
+
+### Side-effects
+
+```kotlin
+auth.signInWithEmail(email, password)
+    .onSuccess { sessionManager.saveSession(it) }
+    .onUnauthorized { showInvalidCredentials() }
+    .onRateLimited { showTryLater() }
+    .onFailure { logUnexpected(it) }
+```
+
+`onSuccess`, `onFailure`, `onConflict`, `onNotFound`, `onUnauthorized`,
+`onRateLimited`, and `onFailureCategory(category) { … }` all return the result
+so you can keep chaining.
+
+### Wrapping your own code
+
+```kotlin
+val result = SupabaseResult.catching { riskyParse() }
+val asyncResult = SupabaseResult.suspendCatching { fetchSomething() }
+```
+
+## Errors
+
+```kotlin
+@Serializable
+public data class SupabaseError(
+    val message: String,
+    val code: String? = null,
+    val details: JsonElement? = null,
+    val hint: String? = null,
+)
+```
+
+### Categories
+
+Every `SupabaseError` maps to a `category` for branching without parsing codes:
+
+```kotlin
+when (result.errorOrNull()?.category) {
+    SupabaseErrorCategory.Conflict -> /* 409, unique/constraint */
+    SupabaseErrorCategory.NotFound -> /* 404 */
+    SupabaseErrorCategory.Unauthorized -> /* 401 / 403 */
+    SupabaseErrorCategory.RateLimited -> /* 429 */
+    SupabaseErrorCategory.Validation -> /* 422 */
+    SupabaseErrorCategory.Internal -> /* 5xx */
+    SupabaseErrorCategory.Unknown, null -> /* fallback */
+}
+```
+
+### Predicates
+
+Convenience checks for common cases:
+
+```kotlin
+error.isUniquenessViolation()
+error.isForeignKeyViolation()
+error.isInvalidCredentials()
+error.isUserAlreadyExists()
+error.isFileNotFound()
+```
+
+<Callout type="info">
+  Known error codes are catalogued in `SupabaseErrorCodes` — grouped by service
+  (`Database`, `Auth`, `Storage`, `Realtime`, `Functions`) — e.g.
+  `SupabaseErrorCodes.Auth.INVALID_CREDENTIALS` or
+  `SupabaseErrorCodes.Database.UNIQUENESS_VIOLATION` (`"23505"`).
+</Callout>
+
+### Exceptions (when you want them)
+
+```kotlin
+val value = result.getOrThrow() // throws SupabaseException(error) on failure
+```

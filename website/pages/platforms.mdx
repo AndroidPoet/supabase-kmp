@@ -1,0 +1,71 @@
+---
+title: Platforms
+---
+
+import { Callout } from 'nextra/components'
+
+# Platforms
+
+Supabase KMP publishes for **13 Kotlin Multiplatform targets**. The core, auth,
+database, storage, realtime, and functions modules are available on every target
+below. The native sign-in modules are the only ones with a narrower reach (see
+the table).
+
+## Supported targets
+
+| Group | Targets |
+| --- | --- |
+| **Android** | `androidTarget` (minSdk 21) |
+| **JVM** | `jvm` (desktop / server) |
+| **iOS** | `iosX64`, `iosArm64`, `iosSimulatorArm64` |
+| **macOS** | `macosX64`, `macosArm64` |
+| **tvOS** | `tvosX64`, `tvosArm64`, `tvosSimulatorArm64` |
+| **watchOS** | `watchosX64`, `watchosArm64`, `watchosSimulatorArm64` |
+| **Linux** | `linuxX64` |
+| **Windows** | `mingwX64` |
+| **Web** | `wasmJs` |
+
+## HTTP engines per platform
+
+Networking is Ktor. Each target ships with a sensible default engine via
+`platformEngine()`, so you usually pass nothing:
+
+| Platform | Default engine |
+| --- | --- |
+| Android / JVM | OkHttp |
+| Apple (iOS/macOS/tvOS/watchOS) | Darwin |
+| Linux / Windows | CIO |
+| wasmJs | Js (Fetch) |
+
+```kotlin
+// Override only if you need to:
+val client = Supabase.create(url, key, engineFactory = myCustomEngine) { }
+```
+
+## Module availability
+
+| Module | Targets |
+| --- | --- |
+| `supabase-core`, `-auth`, `-database`, `-storage`, `-realtime`, `-functions` | all 13 |
+| `supabase-auth-google` | android, jvm, ios\*, macos\*, wasmJs |
+| `supabase-auth-apple` | apple targets (ios\*, macos\*, tvos\*, watchos\*) |
+
+<Callout type="info">
+  Native Google sign-in uses Android Credential Manager on Android; on other
+  targets the module exposes the seam for you to feed an ID token. Native Apple
+  sign-in uses `AuthenticationServices` and runs on Apple targets only.
+</Callout>
+
+## Crypto backends
+
+Local JWT verification (`getClaims`) uses
+[whyoleg/cryptography-kotlin](https://github.com/whyoleg/cryptography-kotlin),
+which delegates to each platform's audited native backend — no rolled-from-scratch
+crypto:
+
+| Platform | Backend |
+| --- | --- |
+| JVM / Android | JDK (`java.security`) |
+| Apple | CryptoKit / Security framework |
+| Linux / Windows | OpenSSL 3 (prebuilt) |
+| wasmJs | Web Crypto |

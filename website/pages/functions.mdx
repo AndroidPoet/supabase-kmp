@@ -1,0 +1,58 @@
+---
+title: Edge Functions
+---
+
+import { Callout } from 'nextra/components'
+
+# Edge Functions
+
+`supabase-functions` invokes Supabase Edge Functions with typed request and
+response bodies.
+
+```kotlin
+val functions = createFunctionsClient(client)
+```
+
+## Typed invoke
+
+```kotlin
+@Serializable data class HelloRequest(val name: String)
+@Serializable data class HelloResponse(val message: String)
+
+val result: SupabaseResult<HelloResponse> =
+    functions.invokeTyped<HelloRequest, HelloResponse>(
+        functionName = "hello-world",
+        body = HelloRequest(name = "Ada"),
+    )
+
+result.onSuccess { println(it.message) }
+```
+
+## Variants
+
+| Method | Body | Returns |
+| --- | --- | --- |
+| `invokeTyped<Req, Resp>(functionName, body, …)` | `@Serializable Req` | `Resp` |
+| `invokeTyped<Resp>(functionName, …)` | none | `Resp` |
+| `invokeWithBodyTyped<Resp>(functionName, body, …)` | raw JSON `String` | `Resp` |
+| `invokeUnit(functionName, body?, …)` | optional | `Unit` (fire-and-forget) |
+| `invoke(functionName, body?, headers, region?)` | optional | raw `String` |
+
+## Regions
+
+Pin a function to a region for latency-sensitive calls:
+
+```kotlin
+functions.invokeTyped<HelloResponse>(
+    functionName = "hello-world",
+    region = FunctionRegion.US_EAST_1,
+)
+```
+
+`FunctionRegion` values: `US_EAST_1`, `US_WEST_1`, `EU_WEST_1`,
+`AP_SOUTHEAST_1`, `AP_NORTHEAST_1`.
+
+<Callout type="info">
+  Every invoke accepts a `headers: Map<String, String>` — handy for forwarding a
+  user's access token so the function runs under their RLS context.
+</Callout>

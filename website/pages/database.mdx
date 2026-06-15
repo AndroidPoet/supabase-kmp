@@ -1,0 +1,143 @@
+---
+title: Database
+---
+
+import { Callout } from 'nextra/components'
+
+# Database — PostgREST
+
+`supabase-database` wraps PostgREST with a typed CRUD surface, a Kotlin filter
+DSL, and RPC. Every method has a **typed** variant (deserialize into your
+`@Serializable` model) and a **raw** variant (returns the JSON string).
+
+```kotlin
+val database = createDatabaseClient(client)
+
+@Serializable
+data class Todo(val id: String, val title: String, val done: Boolean)
+```
+
+## Select
+
+```kotlin
+val todos: SupabaseResult<List<Todo>> = database.selectTyped<Todo>(table = "todos") {
+    eq("done", "false")
+    order("created_at", ascending = false)
+    limit(25)
+}
+```
+
+| Method | Returns | Use |
+| --- | --- | --- |
+| `selectTyped<T>(table, columns, …) { filters }` | `List<T>` | the common case |
+| `selectSingleTyped<T>(…) { … }` | `T` | expects exactly one row |
+| `selectMaybeSingleTyped<T>(…) { … }` | `T?` | 0 or 1 row |
+| `selectCsv(…) { … }` | `String` (CSV) | export |
+| `selectHead(…) { … }` | `Unit` (+ count) | counting only |
+| `select(table, …) { … }` | `String` (raw JSON) | escape hatch |
+
+`columns` accepts PostgREST projection syntax — `"*"`, `"id,title"`, or embedded
+relations like `"*,author(*)"`. All read methods accept an optional `schema`.
+
+## Insert, Update, Upsert, Delete
+
+```kotlin
+database.insertTyped(table = "todos", value = Todo("1", "Ship it", false))
+database.insertTypedMany(table = "todos", values = listOf(/* … */))
+
+database.updateTyped(table = "todos", value = TodoPatch(done = true)) {
+    eq("id", "1")
+}
+
+database.upsertTyped(table = "todos", value = todo, onConflict = "id")
+
+database.deleteTyped<Todo>(table = "todos") { eq("id", "1") }
+```
+
+Each has `*Typed`, `*TypedMany`, `*Unit` (discard the response body), and raw
+string forms. Insert/upsert accept `upsert`, `upsertResolution`
+(`MERGE_DUPLICATES` / `IGNORE_DUPLICATES`), `onConflict`, and `defaultToNull`.
+Mutations accept `returning` (`REPRESENTATION` / `MINIMAL`), `count`, and
+`maxAffected`.
+
+## Filter DSL
+
+All operators run inside the `filters: FilterBuilder.() -> Unit` lambda. Multiple
+calls combine with **AND**.
+
+### Comparison
+
+```kotlin
+eq("status", "active");  neq("role", "admin")
+gt("age", 18);  gte("age", 21);  lt("score", 100);  lte("score", 99)
+```
+
+(Each comparison accepts a `String` or a `Number`.)
+
+### Pattern matching & membership
+
+```kotlin
+like("name", "%ada%");       ilike("name", "%ADA%")
+likeAllOf("tag", listOf("a", "b"));  ilikeAnyOf("tag", listOf("x", "y"))
+`is`("deleted_at", "null")           // IS NULL
+`in`("status", listOf("active", "pending"))
+match(mapOf("org" to "1", "role" to "member"))
+```
+
+### Arrays, ranges & full-text
+
+```kotlin
+contains("tags", "{kotlin,kmp}");  containedBy("tags", "{a,b,c}");  overlaps("tags", "{x,y}")
+rangeGt("period", "[2024-01-01,2024-02-01)")  // also rangeGte/Lt/Lte/Adj + strictlyLeft/Right…
+textSearch("body", "kotlin & multiplatform", type = TextSearchType.Websearch)
+```
+
+### Logical & raw
+
+```kotlin
+or { eq("status", "active"); eq("status", "pending") }
+and { gte("age", 18); lt("age", 65) }
+not { eq("archived", "true") }
+filter("price", "gte", "10")   // arbitrary PostgREST operator
+```
+
+### Ordering & pagination
+
+```kotlin
+order("created_at", ascending = false, nullsFirst = false)
+limit(25)
+range(0, 24)   // rows 0..24 inclusive (offset pagination)
+```
+
+## RPC (stored functions)
+
+```kotlin
+@Serializable data class StatsReq(val user_id: String)
+@Serializable data class Stats(val total: Int)
+
+// POST with a JSON body:
+val stats: SupabaseResult<Stats> =
+    database.rpcTyped<StatsReq, Stats>(function = "get_dashboard_stats", params = StatsReq("123"))
+
+// GET (read-only function):
+val rows = database.rpcGetListTyped<Todo>(function = "list_todos", queryParams = listOf("limit" to "10"))
+```
+
+RPC mirrors the read API: `rpcTyped`, `rpcListTyped`, `rpcSingleTyped`,
+`rpcMaybeSingleTyped`, `rpcUnit`, `rpcCsv`, `rpcHead` — each with a matching
+`rpcGet*` GET form. Pass a `@Serializable` request object or a raw JSON string.
+
+## Options reference
+
+| Enum | Values |
+| --- | --- |
+| `CountOption` | `EXACT`, `PLANNED`, `ESTIMATED` |
+| `ReturnOption` | `MINIMAL`, `REPRESENTATION` |
+| `UpsertResolution` | `MERGE_DUPLICATES`, `IGNORE_DUPLICATES` |
+| `TextSearchType` | `Plain`, `Phrase`, `Websearch` |
+| `ExplainFormat` | `TEXT`, `JSON` |
+
+<Callout type="info">
+  Reads default to `retry = true` (transient failures are retried). Every method
+  accepts a `headers: Map<String, String>` for per-request overrides.
+</Callout>
