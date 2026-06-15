@@ -27,6 +27,10 @@ import io.github.androidpoet.supabase.auth.models.User
 import io.github.androidpoet.supabase.auth.models.UserIdentity
 import io.github.androidpoet.supabase.auth.models.UserUpdateRequest
 import io.github.androidpoet.supabase.auth.models.Web3Chain
+import io.github.androidpoet.supabase.auth.native.NativeAuthCredential
+import io.github.androidpoet.supabase.auth.native.NativeAuthProvider
+import io.github.androidpoet.supabase.auth.native.signInWith
+import io.github.androidpoet.supabase.auth.native.signInWithAndSaveSession
 import io.github.androidpoet.supabase.auth.session.SessionManager
 import io.github.androidpoet.supabase.auth.session.SessionState
 import io.github.androidpoet.supabase.core.result.SupabaseError
@@ -487,6 +491,61 @@ class AuthClientExtTest {
         }
 
     @Test
+    fun test_signInWith_nativeProvider_exchangesCredentialForSession() =
+        runTest {
+            val auth = FakeAuthClient()
+            val provider =
+                FakeNativeAuthProvider(
+                    SupabaseResult.Success(
+                        NativeAuthCredential(
+                            provider = OAuthProvider.GOOGLE,
+                            idToken = "google-id-token",
+                            nonce = "raw-nonce",
+                        ),
+                    ),
+                )
+
+            val result = auth.signInWith(provider)
+
+            assertTrue(result is SupabaseResult.Success)
+            // The native credential is forwarded verbatim to signInWithIdToken.
+            assertEquals(OAuthProvider.GOOGLE, auth.lastIdTokenProvider)
+            assertEquals("google-id-token", auth.lastIdToken)
+            assertEquals("raw-nonce", auth.lastIdTokenNonce)
+        }
+
+    @Test
+    fun test_signInWith_nativeProvider_propagatesFailureWithoutTokenExchange() =
+        runTest {
+            val auth = FakeAuthClient()
+            val provider = FakeNativeAuthProvider(SupabaseResult.Failure(SupabaseError(message = "user cancelled")))
+
+            val result = auth.signInWith(provider)
+
+            assertTrue(result is SupabaseResult.Failure)
+            // A cancelled/failed native flow must not attempt a token exchange.
+            assertNull(auth.lastIdToken)
+        }
+
+    @Test
+    fun test_signInWithAndSaveSession_persistsSessionOnSuccess() =
+        runTest {
+            val auth = FakeAuthClient()
+            val sessionManager = FakeSessionManager()
+            val provider =
+                FakeNativeAuthProvider(
+                    SupabaseResult.Success(
+                        NativeAuthCredential(provider = OAuthProvider.APPLE, idToken = "apple-id-token"),
+                    ),
+                )
+
+            val result = auth.signInWithAndSaveSession(sessionManager, provider)
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals("id-token-sign-in-acc", sessionManager.currentSession?.accessToken)
+        }
+
+    @Test
     fun test_getClaimsForCurrentSession_usesSessionAccessToken() =
         runTest {
             val auth = FakeAuthClient()
@@ -911,6 +970,14 @@ class AuthClientExtTest {
         }
 }
 
+private class FakeNativeAuthProvider(
+    private val result: SupabaseResult<NativeAuthCredential>,
+) : NativeAuthProvider {
+    override val provider: OAuthProvider = (result as? SupabaseResult.Success)?.value?.provider ?: OAuthProvider.GOOGLE
+
+    override suspend fun signIn(): SupabaseResult<NativeAuthCredential> = result
+}
+
 private class FakeAuthClient : AuthClient {
     var lastEmailSignUp: String? = null
     var lastEmailSignIn: String? = null
@@ -925,6 +992,9 @@ private class FakeAuthClient : AuthClient {
     var lastSignOutScope: SignOutScope? = null
     var lastSignOutAccessToken: String? = null
     var lastGetUserAccessToken: String? = null
+    var lastIdTokenProvider: OAuthProvider? = null
+    var lastIdToken: String? = null
+    var lastIdTokenNonce: String? = null
     var jwksResponse: SupabaseResult<String> = SupabaseResult.Success("{\"keys\":[]}")
     var lastReauthenticateAccessToken: String? = null
     var lastExchangeAuthCode: String? = null
@@ -985,10 +1055,14 @@ private class FakeAuthClient : AuthClient {
         accessToken: String?,
         nonce: String?,
         captchaToken: String?,
-    ): SupabaseResult<Session> =
-        SupabaseResult.Success(
+    ): SupabaseResult<Session> {
+        lastIdTokenProvider = provider
+        lastIdToken = idToken
+        lastIdTokenNonce = nonce
+        return SupabaseResult.Success(
             dummySession.copy(accessToken = "id-token-sign-in-acc", refreshToken = "id-token-sign-in-ref"),
         )
+    }
 
     override suspend fun signInWithWeb3(
         chain: Web3Chain,

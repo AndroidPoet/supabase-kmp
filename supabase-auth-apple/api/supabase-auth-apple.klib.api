@@ -1,0 +1,30 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, macosArm64, macosX64, wasmJs]
+// Alias: apple => [iosArm64, iosSimulatorArm64, iosX64, macosArm64, macosX64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <supabase-kmp:supabase-auth-apple>
+final class io.github.androidpoet.supabase.auth.apple/AppleSignInConfig { // io.github.androidpoet.supabase.auth.apple/AppleSignInConfig|null[0]
+    constructor <init>(kotlin/String? = ..., kotlin/Boolean = ..., kotlin/Boolean = ...) // io.github.androidpoet.supabase.auth.apple/AppleSignInConfig.<init>|<init>(kotlin.String?;kotlin.Boolean;kotlin.Boolean){}[0]
+
+    final val nonce // io.github.androidpoet.supabase.auth.apple/AppleSignInConfig.nonce|{}nonce[0]
+        final fun <get-nonce>(): kotlin/String? // io.github.androidpoet.supabase.auth.apple/AppleSignInConfig.nonce.<get-nonce>|<get-nonce>(){}[0]
+    final val requestEmail // io.github.androidpoet.supabase.auth.apple/AppleSignInConfig.requestEmail|{}requestEmail[0]
+        final fun <get-requestEmail>(): kotlin/Boolean // io.github.androidpoet.supabase.auth.apple/AppleSignInConfig.requestEmail.<get-requestEmail>|<get-requestEmail>(){}[0]
+    final val requestFullName // io.github.androidpoet.supabase.auth.apple/AppleSignInConfig.requestFullName|{}requestFullName[0]
+        final fun <get-requestFullName>(): kotlin/Boolean // io.github.androidpoet.supabase.auth.apple/AppleSignInConfig.requestFullName.<get-requestFullName>|<get-requestFullName>(){}[0]
+
+    final fun component1(): kotlin/String? // io.github.androidpoet.supabase.auth.apple/AppleSignInConfig.component1|component1(){}[0]
+    final fun component2(): kotlin/Boolean // io.github.androidpoet.supabase.auth.apple/AppleSignInConfig.component2|component2(){}[0]
+    final fun component3(): kotlin/Boolean // io.github.androidpoet.supabase.auth.apple/AppleSignInConfig.component3|component3(){}[0]
+    final fun copy(kotlin/String? = ..., kotlin/Boolean = ..., kotlin/Boolean = ...): io.github.androidpoet.supabase.auth.apple/AppleSignInConfig // io.github.androidpoet.supabase.auth.apple/AppleSignInConfig.copy|copy(kotlin.String?;kotlin.Boolean;kotlin.Boolean){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.auth.apple/AppleSignInConfig.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.auth.apple/AppleSignInConfig.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.auth.apple/AppleSignInConfig.toString|toString(){}[0]
+}
+
+// Targets: [apple]
+final fun io.github.androidpoet.supabase.auth.apple/appleAuthProvider(io.github.androidpoet.supabase.auth.apple/AppleSignInConfig): io.github.androidpoet.supabase.auth.native/NativeAuthProvider // io.github.androidpoet.supabase.auth.apple/appleAuthProvider|appleAuthProvider(io.github.androidpoet.supabase.auth.apple.AppleSignInConfig){}[0]
