@@ -22,6 +22,8 @@ val publishedModules =
         "supabase-client",
         "supabase-auth",
         "supabase-auth-admin",
+        "supabase-auth-google",
+        "supabase-auth-apple",
         "supabase-database",
         "supabase-storage",
         "supabase-realtime",

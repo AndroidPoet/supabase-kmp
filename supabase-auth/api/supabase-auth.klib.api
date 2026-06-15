@@ -141,6 +141,13 @@ final enum class io.github.androidpoet.supabase.auth.session/AuthStateChangeEven
     final fun values(): kotlin/Array<io.github.androidpoet.supabase.auth.session/AuthStateChangeEvent> // io.github.androidpoet.supabase.auth.session/AuthStateChangeEvent.values|values#static(){}[0]
 }
 
+abstract interface io.github.androidpoet.supabase.auth.native/NativeAuthProvider { // io.github.androidpoet.supabase.auth.native/NativeAuthProvider|null[0]
+    abstract val provider // io.github.androidpoet.supabase.auth.native/NativeAuthProvider.provider|{}provider[0]
+        abstract fun <get-provider>(): io.github.androidpoet.supabase.auth.models/OAuthProvider // io.github.androidpoet.supabase.auth.native/NativeAuthProvider.provider.<get-provider>|<get-provider>(){}[0]
+
+    abstract suspend fun signIn(): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth.native/NativeAuthCredential> // io.github.androidpoet.supabase.auth.native/NativeAuthProvider.signIn|signIn(){}[0]
+}
+
 abstract interface io.github.androidpoet.supabase.auth.session/KeyValueStore { // io.github.androidpoet.supabase.auth.session/KeyValueStore|null[0]
     abstract suspend fun get(kotlin/String): kotlin/String? // io.github.androidpoet.supabase.auth.session/KeyValueStore.get|get(kotlin.String){}[0]
     abstract suspend fun remove(kotlin/String) // io.github.androidpoet.supabase.auth.session/KeyValueStore.remove|remove(kotlin.String){}[0]
@@ -1917,6 +1924,28 @@ final class io.github.androidpoet.supabase.auth.models/Web3SignInRequest { // io
     }
 }
 
+final class io.github.androidpoet.supabase.auth.native/NativeAuthCredential { // io.github.androidpoet.supabase.auth.native/NativeAuthCredential|null[0]
+    constructor <init>(io.github.androidpoet.supabase.auth.models/OAuthProvider, kotlin/String, kotlin/String? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.auth.native/NativeAuthCredential.<init>|<init>(io.github.androidpoet.supabase.auth.models.OAuthProvider;kotlin.String;kotlin.String?;kotlin.String?){}[0]
+
+    final val accessToken // io.github.androidpoet.supabase.auth.native/NativeAuthCredential.accessToken|{}accessToken[0]
+        final fun <get-accessToken>(): kotlin/String? // io.github.androidpoet.supabase.auth.native/NativeAuthCredential.accessToken.<get-accessToken>|<get-accessToken>(){}[0]
+    final val idToken // io.github.androidpoet.supabase.auth.native/NativeAuthCredential.idToken|{}idToken[0]
+        final fun <get-idToken>(): kotlin/String // io.github.androidpoet.supabase.auth.native/NativeAuthCredential.idToken.<get-idToken>|<get-idToken>(){}[0]
+    final val nonce // io.github.androidpoet.supabase.auth.native/NativeAuthCredential.nonce|{}nonce[0]
+        final fun <get-nonce>(): kotlin/String? // io.github.androidpoet.supabase.auth.native/NativeAuthCredential.nonce.<get-nonce>|<get-nonce>(){}[0]
+    final val provider // io.github.androidpoet.supabase.auth.native/NativeAuthCredential.provider|{}provider[0]
+        final fun <get-provider>(): io.github.androidpoet.supabase.auth.models/OAuthProvider // io.github.androidpoet.supabase.auth.native/NativeAuthCredential.provider.<get-provider>|<get-provider>(){}[0]
+
+    final fun component1(): io.github.androidpoet.supabase.auth.models/OAuthProvider // io.github.androidpoet.supabase.auth.native/NativeAuthCredential.component1|component1(){}[0]
+    final fun component2(): kotlin/String // io.github.androidpoet.supabase.auth.native/NativeAuthCredential.component2|component2(){}[0]
+    final fun component3(): kotlin/String? // io.github.androidpoet.supabase.auth.native/NativeAuthCredential.component3|component3(){}[0]
+    final fun component4(): kotlin/String? // io.github.androidpoet.supabase.auth.native/NativeAuthCredential.component4|component4(){}[0]
+    final fun copy(io.github.androidpoet.supabase.auth.models/OAuthProvider = ..., kotlin/String = ..., kotlin/String? = ..., kotlin/String? = ...): io.github.androidpoet.supabase.auth.native/NativeAuthCredential // io.github.androidpoet.supabase.auth.native/NativeAuthCredential.copy|copy(io.github.androidpoet.supabase.auth.models.OAuthProvider;kotlin.String;kotlin.String?;kotlin.String?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.auth.native/NativeAuthCredential.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.auth.native/NativeAuthCredential.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.auth.native/NativeAuthCredential.toString|toString(){}[0]
+}
+
 final class io.github.androidpoet.supabase.auth.session/InMemorySessionStorage : io.github.androidpoet.supabase.auth.session/SessionStorage { // io.github.androidpoet.supabase.auth.session/InMemorySessionStorage|null[0]
     constructor <init>() // io.github.androidpoet.supabase.auth.session/InMemorySessionStorage.<init>|<init>(){}[0]
 
@@ -1987,6 +2016,8 @@ final fun io.github.androidpoet.supabase.auth/parseJwtClaims(kotlin/String): io.
 final fun io.github.androidpoet.supabase.auth/parseSessionTokensFromFragment(kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth/ParsedSessionTokens> // io.github.androidpoet.supabase.auth/parseSessionTokensFromFragment|parseSessionTokensFromFragment(kotlin.String){}[0]
 final fun io.github.androidpoet.supabase.auth/parseSessionTokensFromUrl(kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth/ParsedSessionTokens> // io.github.androidpoet.supabase.auth/parseSessionTokensFromUrl|parseSessionTokensFromUrl(kotlin.String){}[0]
 final suspend fun (io.github.androidpoet.supabase.auth.session/SessionManager).io.github.androidpoet.supabase.auth/getClaimsForCurrentSession(io.github.androidpoet.supabase.auth/AuthClient, kotlin/Boolean = ..., kotlin/Boolean = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth.models/JwtClaimsResult> // io.github.androidpoet.supabase.auth/getClaimsForCurrentSession|getClaimsForCurrentSession@io.github.androidpoet.supabase.auth.session.SessionManager(io.github.androidpoet.supabase.auth.AuthClient;kotlin.Boolean;kotlin.Boolean){}[0]
+final suspend fun (io.github.androidpoet.supabase.auth/AuthClient).io.github.androidpoet.supabase.auth.native/signInWith(io.github.androidpoet.supabase.auth.native/NativeAuthProvider, kotlin/String? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth.models/Session> // io.github.androidpoet.supabase.auth.native/signInWith|signInWith@io.github.androidpoet.supabase.auth.AuthClient(io.github.androidpoet.supabase.auth.native.NativeAuthProvider;kotlin.String?){}[0]
+final suspend fun (io.github.androidpoet.supabase.auth/AuthClient).io.github.androidpoet.supabase.auth.native/signInWithAndSaveSession(io.github.androidpoet.supabase.auth.session/SessionManager, io.github.androidpoet.supabase.auth.native/NativeAuthProvider, kotlin/String? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth.models/Session> // io.github.androidpoet.supabase.auth.native/signInWithAndSaveSession|signInWithAndSaveSession@io.github.androidpoet.supabase.auth.AuthClient(io.github.androidpoet.supabase.auth.session.SessionManager;io.github.androidpoet.supabase.auth.native.NativeAuthProvider;kotlin.String?){}[0]
 final suspend fun (io.github.androidpoet.supabase.auth/AuthClient).io.github.androidpoet.supabase.auth/exchangeCodeForSessionAndSave(kotlin/String, kotlin/String, io.github.androidpoet.supabase.auth.session/SessionManager): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth.models/Session> // io.github.androidpoet.supabase.auth/exchangeCodeForSessionAndSave|exchangeCodeForSessionAndSave@io.github.androidpoet.supabase.auth.AuthClient(kotlin.String;kotlin.String;io.github.androidpoet.supabase.auth.session.SessionManager){}[0]
 final suspend fun (io.github.androidpoet.supabase.auth/AuthClient).io.github.androidpoet.supabase.auth/forgotPassword(kotlin/String, kotlin/String? = ..., kotlin/String? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.auth/forgotPassword|forgotPassword@io.github.androidpoet.supabase.auth.AuthClient(kotlin.String;kotlin.String?;kotlin.String?){}[0]
 final suspend fun (io.github.androidpoet.supabase.auth/AuthClient).io.github.androidpoet.supabase.auth/getClaims(kotlin/String, kotlin/Boolean = ..., kotlin/Boolean = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth.models/JwtClaimsResult> // io.github.androidpoet.supabase.auth/getClaims|getClaims@io.github.androidpoet.supabase.auth.AuthClient(kotlin.String;kotlin.Boolean;kotlin.Boolean){}[0]

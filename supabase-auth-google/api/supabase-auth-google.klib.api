@@ -1,0 +1,29 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, macosArm64, macosX64, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <supabase-kmp:supabase-auth-google>
+final class io.github.androidpoet.supabase.auth.google/GoogleSignInConfig { // io.github.androidpoet.supabase.auth.google/GoogleSignInConfig|null[0]
+    constructor <init>(kotlin/String, kotlin/String? = ..., kotlin/Boolean = ..., kotlin/Boolean = ...) // io.github.androidpoet.supabase.auth.google/GoogleSignInConfig.<init>|<init>(kotlin.String;kotlin.String?;kotlin.Boolean;kotlin.Boolean){}[0]
+
+    final val autoSelectEnabled // io.github.androidpoet.supabase.auth.google/GoogleSignInConfig.autoSelectEnabled|{}autoSelectEnabled[0]
+        final fun <get-autoSelectEnabled>(): kotlin/Boolean // io.github.androidpoet.supabase.auth.google/GoogleSignInConfig.autoSelectEnabled.<get-autoSelectEnabled>|<get-autoSelectEnabled>(){}[0]
+    final val filterByAuthorizedAccounts // io.github.androidpoet.supabase.auth.google/GoogleSignInConfig.filterByAuthorizedAccounts|{}filterByAuthorizedAccounts[0]
+        final fun <get-filterByAuthorizedAccounts>(): kotlin/Boolean // io.github.androidpoet.supabase.auth.google/GoogleSignInConfig.filterByAuthorizedAccounts.<get-filterByAuthorizedAccounts>|<get-filterByAuthorizedAccounts>(){}[0]
+    final val nonce // io.github.androidpoet.supabase.auth.google/GoogleSignInConfig.nonce|{}nonce[0]
+        final fun <get-nonce>(): kotlin/String? // io.github.androidpoet.supabase.auth.google/GoogleSignInConfig.nonce.<get-nonce>|<get-nonce>(){}[0]
+    final val serverClientId // io.github.androidpoet.supabase.auth.google/GoogleSignInConfig.serverClientId|{}serverClientId[0]
+        final fun <get-serverClientId>(): kotlin/String // io.github.androidpoet.supabase.auth.google/GoogleSignInConfig.serverClientId.<get-serverClientId>|<get-serverClientId>(){}[0]
+
+    final fun component1(): kotlin/String // io.github.androidpoet.supabase.auth.google/GoogleSignInConfig.component1|component1(){}[0]
+    final fun component2(): kotlin/String? // io.github.androidpoet.supabase.auth.google/GoogleSignInConfig.component2|component2(){}[0]
+    final fun component3(): kotlin/Boolean // io.github.androidpoet.supabase.auth.google/GoogleSignInConfig.component3|component3(){}[0]
+    final fun component4(): kotlin/Boolean // io.github.androidpoet.supabase.auth.google/GoogleSignInConfig.component4|component4(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String? = ..., kotlin/Boolean = ..., kotlin/Boolean = ...): io.github.androidpoet.supabase.auth.google/GoogleSignInConfig // io.github.androidpoet.supabase.auth.google/GoogleSignInConfig.copy|copy(kotlin.String;kotlin.String?;kotlin.Boolean;kotlin.Boolean){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.auth.google/GoogleSignInConfig.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.auth.google/GoogleSignInConfig.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.auth.google/GoogleSignInConfig.toString|toString(){}[0]
+}

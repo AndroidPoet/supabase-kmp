@@ -40,6 +40,8 @@ supabase-core = { module = "io.github.androidpoet:supabase-core", version.ref = 
 supabase-client = { module = "io.github.androidpoet:supabase-client", version.ref = "supabase-kmp" }
 supabase-auth = { module = "io.github.androidpoet:supabase-auth", version.ref = "supabase-kmp" }
 supabase-auth-admin = { module = "io.github.androidpoet:supabase-auth-admin", version.ref = "supabase-kmp" }
+supabase-auth-google = { module = "io.github.androidpoet:supabase-auth-google", version.ref = "supabase-kmp" }
+supabase-auth-apple = { module = "io.github.androidpoet:supabase-auth-apple", version.ref = "supabase-kmp" }
 supabase-database = { module = "io.github.androidpoet:supabase-database", version.ref = "supabase-kmp" }
 supabase-storage = { module = "io.github.androidpoet:supabase-storage", version.ref = "supabase-kmp" }
 supabase-realtime = { module = "io.github.androidpoet:supabase-realtime", version.ref = "supabase-kmp" }
@@ -207,6 +209,33 @@ sessionManager.restoreSession()
 > `supabase-auth-admin` uses the service-role key — use it only in trusted
 > server-side contexts, never in an anon-key client app.
 
+### Native Sign-In (Google & Apple)
+
+Every native sign-in produces an OIDC ID token, which `signInWithIdToken`
+already exchanges for a session. The optional `supabase-auth-google` and
+`supabase-auth-apple` modules wrap the platform UIs and hand you a
+`NativeAuthProvider`; pass it to `auth.signInWith(...)`. The core never depends
+on a provider SDK you didn't add — implement `NativeAuthProvider` yourself for
+any other provider or platform.
+
+```kotlin
+// Android — Google via Credential Manager (androidMain):
+val provider = googleAuthProvider(
+    context = activity,
+    config = GoogleSignInConfig(serverClientId = "<web-client-id>", nonce = rawNonce),
+)
+val session = auth.signInWith(provider) // → SupabaseResult<Session>
+
+// Apple platforms — Sign in with Apple via AuthenticationServices (iosMain/macosMain):
+val session = auth.signInWith(appleAuthProvider(AppleSignInConfig(nonce = rawNonce)))
+```
+
+> [!NOTE]
+> The provider factories are platform-specific (they need an Android `Context`
+> or an Apple presentation anchor), so construct them in platform source sets.
+> On platforms without a bundled provider, use the redirect flow
+> (`signInWithOAuth`) or supply your own `NativeAuthProvider`.
+
 ### Storage — File Upload & Download
 
 ```kotlin
@@ -331,6 +360,8 @@ functions.invokeWithBody(
 | **supabase-core** | `io.github.androidpoet:supabase-core` | Result monad, error types, value class IDs, filter DSL |
 | **supabase-client** | `io.github.androidpoet:supabase-client` | HTTP transport, platform engines, auth state, factory wiring |
 | **supabase-auth** | `io.github.androidpoet:supabase-auth` | Email, phone, OTP, OAuth (17 providers), MFA, PKCE, session management |
+| **supabase-auth-google** | `io.github.androidpoet:supabase-auth-google` | Native Google sign-in (Android Credential Manager) → `NativeAuthProvider` |
+| **supabase-auth-apple** | `io.github.androidpoet:supabase-auth-apple` | Native Sign in with Apple (AuthenticationServices) → `NativeAuthProvider` |
 | **supabase-database** | `io.github.androidpoet:supabase-database` | PostgREST CRUD, RPC, typed filter extensions |
 | **supabase-storage** | `io.github.androidpoet:supabase-storage` | Bucket CRUD, file upload/download, signed & public URLs |
 | **supabase-realtime** | `io.github.androidpoet:supabase-realtime` | WebSocket (Phoenix protocol), auto-reconnect, broadcast, presence |
