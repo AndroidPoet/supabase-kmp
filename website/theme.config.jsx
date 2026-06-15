@@ -1,3 +1,5 @@
+import { useConfig } from 'nextra-theme-docs'
+
 const Logo = () => (
   <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700 }}>
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -31,20 +33,29 @@ export default {
       </span>
     ),
   },
-  head: (
-    <>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <meta name="description" content="Supabase KMP — a fully typed Kotlin Multiplatform client for Supabase Auth, Database, Storage, Realtime and Edge Functions." />
-      <meta property="og:title" content="Supabase KMP" />
-      <meta property="og:description" content="A fully typed Kotlin Multiplatform client for Supabase." />
-    </>
-  ),
+  head: function useHead() {
+    const { frontMatter } = useConfig()
+    const pageTitle = frontMatter?.title
+    const title = pageTitle ? `${pageTitle} – Supabase KMP` : 'Supabase KMP'
+    const description =
+      frontMatter?.description ??
+      'Supabase KMP — a fully typed Kotlin Multiplatform client for Supabase Auth, Database, Storage, Realtime and Edge Functions.'
+    return (
+      <>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{title}</title>
+        <meta name="description" content={description} />
+        <meta property="og:title" content={pageTitle ?? 'Supabase KMP'} />
+        <meta property="og:description" content={description} />
+      </>
+    )
+  },
   banner: {
     key: 'native-signin',
     content: (
       <span>
         🎉 Native Google &amp; Apple sign-in is here →{' '}
-        <a href="/auth/native-sign-in" style={{ textDecoration: 'underline' }}>
+        <a href="/supabase-kmp/auth/native-sign-in" style={{ textDecoration: 'underline' }}>
           read the guide
         </a>
       </span>
