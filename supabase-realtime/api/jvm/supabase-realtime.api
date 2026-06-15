@@ -346,6 +346,7 @@ public abstract interface class io/github/androidpoet/supabase/realtime/Realtime
 	public abstract fun broadcast (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getChannel ()Ljava/lang/String;
 	public abstract fun getStatus ()Lkotlinx/coroutines/flow/StateFlow;
+	public abstract fun presenceState ()Ljava/util/Map;
 	public abstract fun send (Lio/github/androidpoet/supabase/realtime/RealtimeSubscription$SendType;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun track (Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun unsubscribe (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

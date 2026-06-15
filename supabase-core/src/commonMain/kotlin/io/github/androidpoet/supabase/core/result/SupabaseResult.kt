@@ -124,6 +124,10 @@ public inline fun <T> SupabaseResult<T>.onRateLimited(
     action: (SupabaseError) -> Unit,
 ): SupabaseResult<T> = onFailureCategory(SupabaseErrorCategory.RateLimited, action)
 
+public inline fun <T> SupabaseResult<T>.onNetworkError(
+    action: (SupabaseError) -> Unit,
+): SupabaseResult<T> = onFailureCategory(SupabaseErrorCategory.Network, action)
+
 public inline fun <T> SupabaseResult<T>.mapError(
     transform: (SupabaseError) -> SupabaseError,
 ): SupabaseResult<T> =

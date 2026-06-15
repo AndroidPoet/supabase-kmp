@@ -8,6 +8,18 @@ public data class SupabaseError(
     public val code: String? = null,
     public val details: JsonElement? = null,
     public val hint: String? = null,
+    /**
+     * The HTTP status that produced this error, when one is known. Captured
+     * independently of [code] (which may hold a textual PostgREST/GoTrue code
+     * or a synthetic [SupabaseErrorCodes.Client] code), so categorization keeps
+     * working even when the error body carries no machine-readable code.
+     */
+    public val httpStatus: Int? = null,
+    /**
+     * The server's `Retry-After` hint in seconds, when present (typically on a
+     * `429`). Useful for surfacing "try again in N seconds" to users.
+     */
+    public val retryAfterSeconds: Long? = null,
 )
 
 public class SupabaseException(
@@ -23,8 +35,37 @@ public enum class SupabaseErrorCategory {
     RateLimited,
     Validation,
     Internal,
+
+    /**
+     * The request never reached the server or never produced a usable response:
+     * the device is offline, the connection timed out, or the body could not be
+     * decoded. Distinct from [Unknown] so callers can show offline/retry UI.
+     */
+    Network,
     Unknown,
 }
+
+/**
+ * Whether retrying the same request could plausibly succeed. True for transient
+ * categories ([RateLimited], [Internal], [Network]); false for client-fault
+ * categories that will fail again unchanged.
+ */
+public val SupabaseErrorCategory.isRetryable: Boolean
+    get() =
+        when (this) {
+            SupabaseErrorCategory.RateLimited,
+            SupabaseErrorCategory.Internal,
+            SupabaseErrorCategory.Network,
+            -> true
+            else -> false
+        }
+
+private val networkCodes =
+    setOf(
+        SupabaseErrorCodes.Client.NETWORK_ERROR,
+        SupabaseErrorCodes.Client.TIMEOUT,
+        SupabaseErrorCodes.Client.CONNECTION_FAILED,
+    )
 
 private val conflictCodes =
     setOf(
@@ -103,20 +144,30 @@ private val internalCodes =
 public val SupabaseError.category: SupabaseErrorCategory
     get() =
         when {
+            code in networkCodes -> SupabaseErrorCategory.Network
             code in conflictCodes -> SupabaseErrorCategory.Conflict
             code in notFoundCodes -> SupabaseErrorCategory.NotFound
             code in unauthorizedCodes -> SupabaseErrorCategory.Unauthorized
             code in rateLimitedCodes -> SupabaseErrorCategory.RateLimited
             code in validationCodes -> SupabaseErrorCategory.Validation
             code in internalCodes -> SupabaseErrorCategory.Internal
-            code?.toIntOrNull() in setOf(401, 403) -> SupabaseErrorCategory.Unauthorized
-            code?.toIntOrNull() == 404 -> SupabaseErrorCategory.NotFound
-            code?.toIntOrNull() == 409 -> SupabaseErrorCategory.Conflict
-            code?.toIntOrNull() == 422 -> SupabaseErrorCategory.Validation
-            code?.toIntOrNull() == 429 -> SupabaseErrorCategory.RateLimited
-            code?.toIntOrNull() in setOf(500, 502, 503, 504) -> SupabaseErrorCategory.Internal
-            else -> SupabaseErrorCategory.Unknown
+            else -> categorizeByStatus(httpStatus ?: code?.toIntOrNull())
         }
+
+// HTTP-status fallback. Uses [SupabaseError.httpStatus] first (always captured
+// by the transport, even when the body has no textual code) and only then a
+// numeric [SupabaseError.code], so structured error bodies without a `code`
+// field are still categorized instead of collapsing to Unknown.
+private fun categorizeByStatus(status: Int?): SupabaseErrorCategory =
+    when (status) {
+        401, 403 -> SupabaseErrorCategory.Unauthorized
+        404 -> SupabaseErrorCategory.NotFound
+        409 -> SupabaseErrorCategory.Conflict
+        400, 422 -> SupabaseErrorCategory.Validation
+        429 -> SupabaseErrorCategory.RateLimited
+        in 500..599 -> SupabaseErrorCategory.Internal
+        else -> SupabaseErrorCategory.Unknown
+    }
 
 public fun SupabaseError.isUniquenessViolation(): Boolean =
     code == SupabaseErrorCodes.Database.UNIQUENESS_VIOLATION
@@ -132,3 +183,11 @@ public fun SupabaseError.isUserAlreadyExists(): Boolean =
 
 public fun SupabaseError.isFileNotFound(): Boolean =
     code == SupabaseErrorCodes.Storage.NO_SUCH_KEY
+
+/**
+ * True when the request failed before producing a usable server response
+ * (offline, timeout, connection or decoding failure). Equivalent to
+ * `category == SupabaseErrorCategory.Network`.
+ */
+public fun SupabaseError.isNetworkError(): Boolean =
+    category == SupabaseErrorCategory.Network

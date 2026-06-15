@@ -48,6 +48,7 @@ public interface DatabaseClient {
         head: Boolean = false,
         single: Boolean = false,
         csv: Boolean = false,
+        geojson: Boolean = false,
         count: CountOption? = null,
         stripNulls: Boolean = false,
         explain: ExplainOptions? = null,

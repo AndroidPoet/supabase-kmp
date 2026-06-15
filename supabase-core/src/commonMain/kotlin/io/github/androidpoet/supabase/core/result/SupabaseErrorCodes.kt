@@ -130,6 +130,19 @@ public object SupabaseErrorCodes {
         public const val FUNCTION_NOT_RETURNING_RESPONSE: String = "EF028"
     }
 
+    /**
+     * Client-side (non-HTTP) error codes synthesized by the SDK when a request
+     * never produced a server response — e.g. the device is offline, the
+     * connection timed out, or a response body could not be parsed. These let
+     * [SupabaseError.category] resolve to [SupabaseErrorCategory.Network] instead
+     * of the catch-all [SupabaseErrorCategory.Unknown].
+     */
+    public object Client {
+        public const val NETWORK_ERROR: String = "network_error"
+        public const val TIMEOUT: String = "timeout"
+        public const val CONNECTION_FAILED: String = "connection_failed"
+    }
+
     public object Management {
         public const val PROJECT_NOT_FOUND: String = "PROJECT_NOT_FOUND"
         public const val ORGANIZATION_NOT_FOUND: String = "ORGANIZATION_NOT_FOUND"

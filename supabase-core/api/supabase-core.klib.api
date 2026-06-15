@@ -25,6 +25,7 @@ final enum class io.github.androidpoet.supabase.core.models/TextSearchType : kot
 final enum class io.github.androidpoet.supabase.core.result/SupabaseErrorCategory : kotlin/Enum<io.github.androidpoet.supabase.core.result/SupabaseErrorCategory> { // io.github.androidpoet.supabase.core.result/SupabaseErrorCategory|null[0]
     enum entry Conflict // io.github.androidpoet.supabase.core.result/SupabaseErrorCategory.Conflict|null[0]
     enum entry Internal // io.github.androidpoet.supabase.core.result/SupabaseErrorCategory.Internal|null[0]
+    enum entry Network // io.github.androidpoet.supabase.core.result/SupabaseErrorCategory.Network|null[0]
     enum entry NotFound // io.github.androidpoet.supabase.core.result/SupabaseErrorCategory.NotFound|null[0]
     enum entry RateLimited // io.github.androidpoet.supabase.core.result/SupabaseErrorCategory.RateLimited|null[0]
     enum entry Unauthorized // io.github.androidpoet.supabase.core.result/SupabaseErrorCategory.Unauthorized|null[0]
@@ -201,7 +202,7 @@ final class io.github.androidpoet.supabase.core.models/FilterBuilder { // io.git
 }
 
 final class io.github.androidpoet.supabase.core.result/SupabaseError { // io.github.androidpoet.supabase.core.result/SupabaseError|null[0]
-    constructor <init>(kotlin/String, kotlin/String? = ..., kotlinx.serialization.json/JsonElement? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.core.result/SupabaseError.<init>|<init>(kotlin.String;kotlin.String?;kotlinx.serialization.json.JsonElement?;kotlin.String?){}[0]
+    constructor <init>(kotlin/String, kotlin/String? = ..., kotlinx.serialization.json/JsonElement? = ..., kotlin/String? = ..., kotlin/Int? = ..., kotlin/Long? = ...) // io.github.androidpoet.supabase.core.result/SupabaseError.<init>|<init>(kotlin.String;kotlin.String?;kotlinx.serialization.json.JsonElement?;kotlin.String?;kotlin.Int?;kotlin.Long?){}[0]
 
     final val code // io.github.androidpoet.supabase.core.result/SupabaseError.code|{}code[0]
         final fun <get-code>(): kotlin/String? // io.github.androidpoet.supabase.core.result/SupabaseError.code.<get-code>|<get-code>(){}[0]
@@ -209,14 +210,20 @@ final class io.github.androidpoet.supabase.core.result/SupabaseError { // io.git
         final fun <get-details>(): kotlinx.serialization.json/JsonElement? // io.github.androidpoet.supabase.core.result/SupabaseError.details.<get-details>|<get-details>(){}[0]
     final val hint // io.github.androidpoet.supabase.core.result/SupabaseError.hint|{}hint[0]
         final fun <get-hint>(): kotlin/String? // io.github.androidpoet.supabase.core.result/SupabaseError.hint.<get-hint>|<get-hint>(){}[0]
+    final val httpStatus // io.github.androidpoet.supabase.core.result/SupabaseError.httpStatus|{}httpStatus[0]
+        final fun <get-httpStatus>(): kotlin/Int? // io.github.androidpoet.supabase.core.result/SupabaseError.httpStatus.<get-httpStatus>|<get-httpStatus>(){}[0]
     final val message // io.github.androidpoet.supabase.core.result/SupabaseError.message|{}message[0]
         final fun <get-message>(): kotlin/String // io.github.androidpoet.supabase.core.result/SupabaseError.message.<get-message>|<get-message>(){}[0]
+    final val retryAfterSeconds // io.github.androidpoet.supabase.core.result/SupabaseError.retryAfterSeconds|{}retryAfterSeconds[0]
+        final fun <get-retryAfterSeconds>(): kotlin/Long? // io.github.androidpoet.supabase.core.result/SupabaseError.retryAfterSeconds.<get-retryAfterSeconds>|<get-retryAfterSeconds>(){}[0]
 
     final fun component1(): kotlin/String // io.github.androidpoet.supabase.core.result/SupabaseError.component1|component1(){}[0]
     final fun component2(): kotlin/String? // io.github.androidpoet.supabase.core.result/SupabaseError.component2|component2(){}[0]
     final fun component3(): kotlinx.serialization.json/JsonElement? // io.github.androidpoet.supabase.core.result/SupabaseError.component3|component3(){}[0]
     final fun component4(): kotlin/String? // io.github.androidpoet.supabase.core.result/SupabaseError.component4|component4(){}[0]
-    final fun copy(kotlin/String = ..., kotlin/String? = ..., kotlinx.serialization.json/JsonElement? = ..., kotlin/String? = ...): io.github.androidpoet.supabase.core.result/SupabaseError // io.github.androidpoet.supabase.core.result/SupabaseError.copy|copy(kotlin.String;kotlin.String?;kotlinx.serialization.json.JsonElement?;kotlin.String?){}[0]
+    final fun component5(): kotlin/Int? // io.github.androidpoet.supabase.core.result/SupabaseError.component5|component5(){}[0]
+    final fun component6(): kotlin/Long? // io.github.androidpoet.supabase.core.result/SupabaseError.component6|component6(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String? = ..., kotlinx.serialization.json/JsonElement? = ..., kotlin/String? = ..., kotlin/Int? = ..., kotlin/Long? = ...): io.github.androidpoet.supabase.core.result/SupabaseError // io.github.androidpoet.supabase.core.result/SupabaseError.copy|copy(kotlin.String;kotlin.String?;kotlinx.serialization.json.JsonElement?;kotlin.String?;kotlin.Int?;kotlin.Long?){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.core.result/SupabaseError.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.core.result/SupabaseError.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // io.github.androidpoet.supabase.core.result/SupabaseError.toString|toString(){}[0]
@@ -412,6 +419,15 @@ final object io.github.androidpoet.supabase.core.result/SupabaseErrorCodes { // 
             final fun <get-USER_NOT_FOUND>(): kotlin/String // io.github.androidpoet.supabase.core.result/SupabaseErrorCodes.Auth.USER_NOT_FOUND.<get-USER_NOT_FOUND>|<get-USER_NOT_FOUND>(){}[0]
         final const val WEAK_PASSWORD // io.github.androidpoet.supabase.core.result/SupabaseErrorCodes.Auth.WEAK_PASSWORD|{}WEAK_PASSWORD[0]
             final fun <get-WEAK_PASSWORD>(): kotlin/String // io.github.androidpoet.supabase.core.result/SupabaseErrorCodes.Auth.WEAK_PASSWORD.<get-WEAK_PASSWORD>|<get-WEAK_PASSWORD>(){}[0]
+    }
+
+    final object Client { // io.github.androidpoet.supabase.core.result/SupabaseErrorCodes.Client|null[0]
+        final const val CONNECTION_FAILED // io.github.androidpoet.supabase.core.result/SupabaseErrorCodes.Client.CONNECTION_FAILED|{}CONNECTION_FAILED[0]
+            final fun <get-CONNECTION_FAILED>(): kotlin/String // io.github.androidpoet.supabase.core.result/SupabaseErrorCodes.Client.CONNECTION_FAILED.<get-CONNECTION_FAILED>|<get-CONNECTION_FAILED>(){}[0]
+        final const val NETWORK_ERROR // io.github.androidpoet.supabase.core.result/SupabaseErrorCodes.Client.NETWORK_ERROR|{}NETWORK_ERROR[0]
+            final fun <get-NETWORK_ERROR>(): kotlin/String // io.github.androidpoet.supabase.core.result/SupabaseErrorCodes.Client.NETWORK_ERROR.<get-NETWORK_ERROR>|<get-NETWORK_ERROR>(){}[0]
+        final const val TIMEOUT // io.github.androidpoet.supabase.core.result/SupabaseErrorCodes.Client.TIMEOUT|{}TIMEOUT[0]
+            final fun <get-TIMEOUT>(): kotlin/String // io.github.androidpoet.supabase.core.result/SupabaseErrorCodes.Client.TIMEOUT.<get-TIMEOUT>|<get-TIMEOUT>(){}[0]
     }
 
     final object Database { // io.github.androidpoet.supabase.core.result/SupabaseErrorCodes.Database|null[0]
@@ -634,10 +650,13 @@ final object io.github.androidpoet.supabase.core.result/SupabaseErrorCodes { // 
 
 final val io.github.androidpoet.supabase.core.result/category // io.github.androidpoet.supabase.core.result/category|@io.github.androidpoet.supabase.core.result.SupabaseError{}category[0]
     final fun (io.github.androidpoet.supabase.core.result/SupabaseError).<get-category>(): io.github.androidpoet.supabase.core.result/SupabaseErrorCategory // io.github.androidpoet.supabase.core.result/category.<get-category>|<get-category>@io.github.androidpoet.supabase.core.result.SupabaseError(){}[0]
+final val io.github.androidpoet.supabase.core.result/isRetryable // io.github.androidpoet.supabase.core.result/isRetryable|@io.github.androidpoet.supabase.core.result.SupabaseErrorCategory{}isRetryable[0]
+    final fun (io.github.androidpoet.supabase.core.result/SupabaseErrorCategory).<get-isRetryable>(): kotlin/Boolean // io.github.androidpoet.supabase.core.result/isRetryable.<get-isRetryable>|<get-isRetryable>@io.github.androidpoet.supabase.core.result.SupabaseErrorCategory(){}[0]
 
 final fun (io.github.androidpoet.supabase.core.result/SupabaseError).io.github.androidpoet.supabase.core.result/isFileNotFound(): kotlin/Boolean // io.github.androidpoet.supabase.core.result/isFileNotFound|isFileNotFound@io.github.androidpoet.supabase.core.result.SupabaseError(){}[0]
 final fun (io.github.androidpoet.supabase.core.result/SupabaseError).io.github.androidpoet.supabase.core.result/isForeignKeyViolation(): kotlin/Boolean // io.github.androidpoet.supabase.core.result/isForeignKeyViolation|isForeignKeyViolation@io.github.androidpoet.supabase.core.result.SupabaseError(){}[0]
 final fun (io.github.androidpoet.supabase.core.result/SupabaseError).io.github.androidpoet.supabase.core.result/isInvalidCredentials(): kotlin/Boolean // io.github.androidpoet.supabase.core.result/isInvalidCredentials|isInvalidCredentials@io.github.androidpoet.supabase.core.result.SupabaseError(){}[0]
+final fun (io.github.androidpoet.supabase.core.result/SupabaseError).io.github.androidpoet.supabase.core.result/isNetworkError(): kotlin/Boolean // io.github.androidpoet.supabase.core.result/isNetworkError|isNetworkError@io.github.androidpoet.supabase.core.result.SupabaseError(){}[0]
 final fun (io.github.androidpoet.supabase.core.result/SupabaseError).io.github.androidpoet.supabase.core.result/isUniquenessViolation(): kotlin/Boolean // io.github.androidpoet.supabase.core.result/isUniquenessViolation|isUniquenessViolation@io.github.androidpoet.supabase.core.result.SupabaseError(){}[0]
 final fun (io.github.androidpoet.supabase.core.result/SupabaseError).io.github.androidpoet.supabase.core.result/isUserAlreadyExists(): kotlin/Boolean // io.github.androidpoet.supabase.core.result/isUserAlreadyExists|isUserAlreadyExists@io.github.androidpoet.supabase.core.result.SupabaseError(){}[0]
 final fun (io.github.androidpoet.supabase.core.result/SupabaseError).io.github.androidpoet.supabase.core.result/toException(): io.github.androidpoet.supabase.core.result/SupabaseException // io.github.androidpoet.supabase.core.result/toException|toException@io.github.androidpoet.supabase.core.result.SupabaseError(){}[0]
@@ -652,6 +671,7 @@ final inline fun <#A: kotlin/Any?> (io.github.androidpoet.supabase.core.result/S
 final inline fun <#A: kotlin/Any?> (io.github.androidpoet.supabase.core.result/SupabaseResult<#A>).io.github.androidpoet.supabase.core.result/onConflict(kotlin/Function1<io.github.androidpoet.supabase.core.result/SupabaseError, kotlin/Unit>): io.github.androidpoet.supabase.core.result/SupabaseResult<#A> // io.github.androidpoet.supabase.core.result/onConflict|onConflict@io.github.androidpoet.supabase.core.result.SupabaseResult<0:0>(kotlin.Function1<io.github.androidpoet.supabase.core.result.SupabaseError,kotlin.Unit>){0§<kotlin.Any?>}[0]
 final inline fun <#A: kotlin/Any?> (io.github.androidpoet.supabase.core.result/SupabaseResult<#A>).io.github.androidpoet.supabase.core.result/onFailure(kotlin/Function1<io.github.androidpoet.supabase.core.result/SupabaseError, kotlin/Unit>): io.github.androidpoet.supabase.core.result/SupabaseResult<#A> // io.github.androidpoet.supabase.core.result/onFailure|onFailure@io.github.androidpoet.supabase.core.result.SupabaseResult<0:0>(kotlin.Function1<io.github.androidpoet.supabase.core.result.SupabaseError,kotlin.Unit>){0§<kotlin.Any?>}[0]
 final inline fun <#A: kotlin/Any?> (io.github.androidpoet.supabase.core.result/SupabaseResult<#A>).io.github.androidpoet.supabase.core.result/onFailureCategory(io.github.androidpoet.supabase.core.result/SupabaseErrorCategory, kotlin/Function1<io.github.androidpoet.supabase.core.result/SupabaseError, kotlin/Unit>): io.github.androidpoet.supabase.core.result/SupabaseResult<#A> // io.github.androidpoet.supabase.core.result/onFailureCategory|onFailureCategory@io.github.androidpoet.supabase.core.result.SupabaseResult<0:0>(io.github.androidpoet.supabase.core.result.SupabaseErrorCategory;kotlin.Function1<io.github.androidpoet.supabase.core.result.SupabaseError,kotlin.Unit>){0§<kotlin.Any?>}[0]
+final inline fun <#A: kotlin/Any?> (io.github.androidpoet.supabase.core.result/SupabaseResult<#A>).io.github.androidpoet.supabase.core.result/onNetworkError(kotlin/Function1<io.github.androidpoet.supabase.core.result/SupabaseError, kotlin/Unit>): io.github.androidpoet.supabase.core.result/SupabaseResult<#A> // io.github.androidpoet.supabase.core.result/onNetworkError|onNetworkError@io.github.androidpoet.supabase.core.result.SupabaseResult<0:0>(kotlin.Function1<io.github.androidpoet.supabase.core.result.SupabaseError,kotlin.Unit>){0§<kotlin.Any?>}[0]
 final inline fun <#A: kotlin/Any?> (io.github.androidpoet.supabase.core.result/SupabaseResult<#A>).io.github.androidpoet.supabase.core.result/onNotFound(kotlin/Function1<io.github.androidpoet.supabase.core.result/SupabaseError, kotlin/Unit>): io.github.androidpoet.supabase.core.result/SupabaseResult<#A> // io.github.androidpoet.supabase.core.result/onNotFound|onNotFound@io.github.androidpoet.supabase.core.result.SupabaseResult<0:0>(kotlin.Function1<io.github.androidpoet.supabase.core.result.SupabaseError,kotlin.Unit>){0§<kotlin.Any?>}[0]
 final inline fun <#A: kotlin/Any?> (io.github.androidpoet.supabase.core.result/SupabaseResult<#A>).io.github.androidpoet.supabase.core.result/onRateLimited(kotlin/Function1<io.github.androidpoet.supabase.core.result/SupabaseError, kotlin/Unit>): io.github.androidpoet.supabase.core.result/SupabaseResult<#A> // io.github.androidpoet.supabase.core.result/onRateLimited|onRateLimited@io.github.androidpoet.supabase.core.result.SupabaseResult<0:0>(kotlin.Function1<io.github.androidpoet.supabase.core.result.SupabaseError,kotlin.Unit>){0§<kotlin.Any?>}[0]
 final inline fun <#A: kotlin/Any?> (io.github.androidpoet.supabase.core.result/SupabaseResult<#A>).io.github.androidpoet.supabase.core.result/onSuccess(kotlin/Function1<#A, kotlin/Unit>): io.github.androidpoet.supabase.core.result/SupabaseResult<#A> // io.github.androidpoet.supabase.core.result/onSuccess|onSuccess@io.github.androidpoet.supabase.core.result.SupabaseResult<0:0>(kotlin.Function1<0:0,kotlin.Unit>){0§<kotlin.Any?>}[0]

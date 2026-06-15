@@ -130,19 +130,23 @@ public final class io/github/androidpoet/supabase/core/models/TextSearchType : j
 
 public final class io/github/androidpoet/supabase/core/result/SupabaseError {
 	public static final field Companion Lio/github/androidpoet/supabase/core/result/SupabaseError$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Long;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Long;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Ljava/lang/String;
 	public final fun component3 ()Lkotlinx/serialization/json/JsonElement;
 	public final fun component4 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;)Lio/github/androidpoet/supabase/core/result/SupabaseError;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/core/result/SupabaseError;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/core/result/SupabaseError;
+	public final fun component5 ()Ljava/lang/Integer;
+	public final fun component6 ()Ljava/lang/Long;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Long;)Lio/github/androidpoet/supabase/core/result/SupabaseError;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/core/result/SupabaseError;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Long;ILjava/lang/Object;)Lio/github/androidpoet/supabase/core/result/SupabaseError;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getCode ()Ljava/lang/String;
 	public final fun getDetails ()Lkotlinx/serialization/json/JsonElement;
 	public final fun getHint ()Ljava/lang/String;
+	public final fun getHttpStatus ()Ljava/lang/Integer;
 	public final fun getMessage ()Ljava/lang/String;
+	public final fun getRetryAfterSeconds ()Ljava/lang/Long;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -164,6 +168,7 @@ public final class io/github/androidpoet/supabase/core/result/SupabaseError$Comp
 public final class io/github/androidpoet/supabase/core/result/SupabaseErrorCategory : java/lang/Enum {
 	public static final field Conflict Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
 	public static final field Internal Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
+	public static final field Network Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
 	public static final field NotFound Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
 	public static final field RateLimited Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
 	public static final field Unauthorized Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
@@ -199,6 +204,13 @@ public final class io/github/androidpoet/supabase/core/result/SupabaseErrorCodes
 	public static final field USER_ALREADY_EXISTS Ljava/lang/String;
 	public static final field USER_NOT_FOUND Ljava/lang/String;
 	public static final field WEAK_PASSWORD Ljava/lang/String;
+}
+
+public final class io/github/androidpoet/supabase/core/result/SupabaseErrorCodes$Client {
+	public static final field CONNECTION_FAILED Ljava/lang/String;
+	public static final field INSTANCE Lio/github/androidpoet/supabase/core/result/SupabaseErrorCodes$Client;
+	public static final field NETWORK_ERROR Ljava/lang/String;
+	public static final field TIMEOUT Ljava/lang/String;
 }
 
 public final class io/github/androidpoet/supabase/core/result/SupabaseErrorCodes$Database {
@@ -327,6 +339,8 @@ public final class io/github/androidpoet/supabase/core/result/SupabaseErrorKt {
 	public static final fun isFileNotFound (Lio/github/androidpoet/supabase/core/result/SupabaseError;)Z
 	public static final fun isForeignKeyViolation (Lio/github/androidpoet/supabase/core/result/SupabaseError;)Z
 	public static final fun isInvalidCredentials (Lio/github/androidpoet/supabase/core/result/SupabaseError;)Z
+	public static final fun isNetworkError (Lio/github/androidpoet/supabase/core/result/SupabaseError;)Z
+	public static final fun isRetryable (Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;)Z
 	public static final fun isUniquenessViolation (Lio/github/androidpoet/supabase/core/result/SupabaseError;)Z
 	public static final fun isUserAlreadyExists (Lio/github/androidpoet/supabase/core/result/SupabaseError;)Z
 	public static final fun toException (Lio/github/androidpoet/supabase/core/result/SupabaseError;)Lio/github/androidpoet/supabase/core/result/SupabaseException;
@@ -408,6 +422,7 @@ public final class io/github/androidpoet/supabase/core/result/SupabaseResultKt {
 	public static final fun onFailureCategorySuspend (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun onFailureCategorySuspend (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Ljava/lang/Object;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun onFailureSuspend (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun onNetworkError (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function1;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
 	public static final fun onNotFound (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function1;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
 	public static final fun onRateLimited (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function1;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
 	public static final fun onSuccess (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function1;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;

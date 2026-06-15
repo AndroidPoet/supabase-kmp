@@ -581,12 +581,19 @@ internal class ChannelSubscriptionImpl(
     private val _status = MutableStateFlow(RealtimeSubscription.Status.SUBSCRIBING)
 
     // Cumulative presence state, mutated only on the single inbound dispatch loop.
-    private val presenceState = mutableMapOf<String, JsonObject>()
+    private val presenceMembers = mutableMapOf<String, JsonObject>()
+
+    // Immutable snapshot of [presenceMembers], republished on every change so
+    // presenceState() can be read safely from any thread.
+    @Volatile
+    private var presenceSnapshot: PresenceState = emptyMap()
     internal var joinRef: String? = null
     internal val hasPresenceTracking: Boolean = presenceCallback != null
     override val status: StateFlow<RealtimeSubscription.Status> = _status.asStateFlow()
 
     override fun asFlow(): Flow<RealtimeEvent> = eventFlow
+
+    override fun presenceState(): PresenceState = presenceSnapshot
 
     internal fun markJoinTimedOut() {
         if (_status.value == RealtimeSubscription.Status.SUBSCRIBING) {
@@ -705,23 +712,26 @@ internal class ChannelSubscriptionImpl(
         val leaves = payload["leaves"]?.jsonObject
         joins?.forEach { (key, value) ->
             val presence = value.jsonObject
-            presenceState[key] = presence
+            presenceMembers[key] = presence
             eventFlow.emit(RealtimeEvent.PresenceJoin(key = key, newPresence = presence))
         }
         leaves?.forEach { (key, value) ->
             val presence = value.jsonObject
-            presenceState.remove(key)
+            presenceMembers.remove(key)
             eventFlow.emit(RealtimeEvent.PresenceLeave(key = key, leftPresence = presence))
         }
         // Hand the callback the full, cumulative presence state — not just the
         // members in this diff — so callers always see who is currently present.
-        presenceCallback?.invoke(presenceState.toMap())
+        val state: PresenceState = presenceMembers.toMap()
+        presenceSnapshot = state
+        presenceCallback?.invoke(state)
     }
 
     private suspend fun handlePresenceState(payload: JsonObject) {
-        presenceState.clear()
-        payload.forEach { (key, value) -> presenceState[key] = value.jsonObject }
-        val state: PresenceState = presenceState.toMap()
+        presenceMembers.clear()
+        payload.forEach { (key, value) -> presenceMembers[key] = value.jsonObject }
+        val state: PresenceState = presenceMembers.toMap()
+        presenceSnapshot = state
         eventFlow.emit(RealtimeEvent.PresenceSync(state = state))
         presenceCallback?.invoke(state)
     }
