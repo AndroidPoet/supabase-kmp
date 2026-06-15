@@ -641,5 +641,17 @@ private class FakeSupabaseClient : SupabaseClient {
 
     override fun clearAccessToken() = Unit
 
+    override suspend fun rawRequest(
+        method: io.github.androidpoet.supabase.client.SupabaseHttpMethod,
+        url: String,
+        body: ByteArray?,
+        contentType: String?,
+        headers: Map<String, String>,
+    ): io.github.androidpoet.supabase.core.result.SupabaseResult<io.github.androidpoet.supabase.client.SupabaseHttpResponse> =
+        io.github.androidpoet.supabase.core.result.SupabaseResult.Failure(
+            io.github.androidpoet.supabase.core.result
+                .SupabaseError("rawRequest not supported in test fake"),
+        )
+
     override fun close() = Unit
 }

@@ -10,6 +10,21 @@ open annotation class io.github.androidpoet.supabase.client/SupabaseDsl : kotlin
     constructor <init>() // io.github.androidpoet.supabase.client/SupabaseDsl.<init>|<init>(){}[0]
 }
 
+final enum class io.github.androidpoet.supabase.client/SupabaseHttpMethod : kotlin/Enum<io.github.androidpoet.supabase.client/SupabaseHttpMethod> { // io.github.androidpoet.supabase.client/SupabaseHttpMethod|null[0]
+    enum entry DELETE // io.github.androidpoet.supabase.client/SupabaseHttpMethod.DELETE|null[0]
+    enum entry GET // io.github.androidpoet.supabase.client/SupabaseHttpMethod.GET|null[0]
+    enum entry HEAD // io.github.androidpoet.supabase.client/SupabaseHttpMethod.HEAD|null[0]
+    enum entry PATCH // io.github.androidpoet.supabase.client/SupabaseHttpMethod.PATCH|null[0]
+    enum entry POST // io.github.androidpoet.supabase.client/SupabaseHttpMethod.POST|null[0]
+    enum entry PUT // io.github.androidpoet.supabase.client/SupabaseHttpMethod.PUT|null[0]
+
+    final val entries // io.github.androidpoet.supabase.client/SupabaseHttpMethod.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.androidpoet.supabase.client/SupabaseHttpMethod> // io.github.androidpoet.supabase.client/SupabaseHttpMethod.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.androidpoet.supabase.client/SupabaseHttpMethod // io.github.androidpoet.supabase.client/SupabaseHttpMethod.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.androidpoet.supabase.client/SupabaseHttpMethod> // io.github.androidpoet.supabase.client/SupabaseHttpMethod.values|values#static(){}[0]
+}
+
 abstract interface io.github.androidpoet.supabase.client/SupabaseClient : kotlin/AutoCloseable { // io.github.androidpoet.supabase.client/SupabaseClient|null[0]
     abstract val accessTokenOrNull // io.github.androidpoet.supabase.client/SupabaseClient.accessTokenOrNull|{}accessTokenOrNull[0]
         abstract fun <get-accessTokenOrNull>(): kotlin/String? // io.github.androidpoet.supabase.client/SupabaseClient.accessTokenOrNull.<get-accessTokenOrNull>|<get-accessTokenOrNull>(){}[0]
@@ -28,6 +43,7 @@ abstract interface io.github.androidpoet.supabase.client/SupabaseClient : kotlin
     abstract suspend fun postRaw(kotlin/String, kotlin/ByteArray, kotlin/String, kotlin.collections/Map<kotlin/String, kotlin/String> = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/String> // io.github.androidpoet.supabase.client/SupabaseClient.postRaw|postRaw(kotlin.String;kotlin.ByteArray;kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
     abstract suspend fun put(kotlin/String, kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/String> // io.github.androidpoet.supabase.client/SupabaseClient.put|put(kotlin.String;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
     abstract suspend fun putRaw(kotlin/String, kotlin/ByteArray, kotlin/String, kotlin.collections/Map<kotlin/String, kotlin/String> = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/String> // io.github.androidpoet.supabase.client/SupabaseClient.putRaw|putRaw(kotlin.String;kotlin.ByteArray;kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+    abstract suspend fun rawRequest(io.github.androidpoet.supabase.client/SupabaseHttpMethod, kotlin/String, kotlin/ByteArray? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.client/SupabaseHttpResponse> // io.github.androidpoet.supabase.client/SupabaseClient.rawRequest|rawRequest(io.github.androidpoet.supabase.client.SupabaseHttpMethod;kotlin.String;kotlin.ByteArray?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
 }
 
 sealed interface io.github.androidpoet.supabase.client.auth/AuthState { // io.github.androidpoet.supabase.client.auth/AuthState|null[0]
@@ -95,6 +111,19 @@ final class io.github.androidpoet.supabase.client/SupabaseConfigBuilder { // io.
     final var logging // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.logging|{}logging[0]
         final fun <get-logging>(): kotlin/Boolean // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.logging.<get-logging>|<get-logging>(){}[0]
         final fun <set-logging>(kotlin/Boolean) // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.logging.<set-logging>|<set-logging>(kotlin.Boolean){}[0]
+}
+
+final class io.github.androidpoet.supabase.client/SupabaseHttpResponse { // io.github.androidpoet.supabase.client/SupabaseHttpResponse|null[0]
+    constructor <init>(kotlin/Int, kotlin.collections/Map<kotlin/String, kotlin/String>, kotlin/ByteArray) // io.github.androidpoet.supabase.client/SupabaseHttpResponse.<init>|<init>(kotlin.Int;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.ByteArray){}[0]
+
+    final val body // io.github.androidpoet.supabase.client/SupabaseHttpResponse.body|{}body[0]
+        final fun <get-body>(): kotlin/ByteArray // io.github.androidpoet.supabase.client/SupabaseHttpResponse.body.<get-body>|<get-body>(){}[0]
+    final val headers // io.github.androidpoet.supabase.client/SupabaseHttpResponse.headers|{}headers[0]
+        final fun <get-headers>(): kotlin.collections/Map<kotlin/String, kotlin/String> // io.github.androidpoet.supabase.client/SupabaseHttpResponse.headers.<get-headers>|<get-headers>(){}[0]
+    final val status // io.github.androidpoet.supabase.client/SupabaseHttpResponse.status|{}status[0]
+        final fun <get-status>(): kotlin/Int // io.github.androidpoet.supabase.client/SupabaseHttpResponse.status.<get-status>|<get-status>(){}[0]
+
+    final fun header(kotlin/String): kotlin/String? // io.github.androidpoet.supabase.client/SupabaseHttpResponse.header|header(kotlin.String){}[0]
 }
 
 final object io.github.androidpoet.supabase.client/Supabase { // io.github.androidpoet.supabase.client/Supabase|null[0]

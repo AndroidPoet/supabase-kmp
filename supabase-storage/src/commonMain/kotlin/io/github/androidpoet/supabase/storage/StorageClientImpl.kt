@@ -183,6 +183,28 @@ internal class StorageClientImpl(
         )
     }
 
+    override fun createResumableUpload(
+        bucket: String,
+        path: String,
+        data: ByteArray,
+        contentType: String,
+        upsert: Boolean,
+        cacheControl: Int?,
+        chunkSize: Int,
+        uploadUrl: String?,
+    ): ResumableUpload =
+        ResumableUploadImpl(
+            client = client,
+            bucket = bucket,
+            path = path,
+            data = data,
+            contentType = contentType,
+            upsert = upsert,
+            cacheControl = cacheControl,
+            chunkSize = chunkSize,
+            initialUploadUrl = uploadUrl,
+        )
+
     override suspend fun download(bucket: String, path: String): SupabaseResult<String> =
         client.get("/storage/v1/object/authenticated/${objectRef(bucket, path)}")
 

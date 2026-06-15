@@ -1,6 +1,8 @@
 package io.github.androidpoet.supabase.storage
 
 import io.github.androidpoet.supabase.client.SupabaseClient
+import io.github.androidpoet.supabase.client.SupabaseHttpMethod
+import io.github.androidpoet.supabase.client.SupabaseHttpResponse
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.storage.models.IcebergCreateNamespaceRequest
@@ -23,6 +25,48 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class StorageClientImplTest {
+    @Test
+    fun test_resumableUpload_chunksAndCompletes() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = StorageClientImpl(client)
+            val data = ByteArray(10) { it.toByte() }
+
+            val upload = sut.createResumableUpload(bucket = "videos", path = "a/b.bin", data = data, chunkSize = 4)
+            val result = upload.await()
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals(1, client.resumableCreateCount)
+            assertEquals(listOf(4, 4, 2), client.resumableChunkSizes)
+            assertEquals(10L, upload.progress.value.bytesUploaded)
+            assertTrue(upload.progress.value.isComplete)
+            assertEquals(client.resumableUploadUrl, upload.uploadUrl)
+        }
+
+    @Test
+    fun test_resumableUpload_resumesFromExistingOffset() =
+        runTest {
+            val client = FakeSupabaseClient()
+            client.presetResumableReceived(6L) // server already holds 6 of 10 bytes
+            val sut = StorageClientImpl(client)
+            val data = ByteArray(10) { it.toByte() }
+
+            val upload =
+                sut.createResumableUpload(
+                    bucket = "videos",
+                    path = "a/b.bin",
+                    data = data,
+                    chunkSize = 4,
+                    uploadUrl = client.resumableUploadUrl,
+                )
+            val result = upload.await()
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals(0, client.resumableCreateCount) // resumed, did not re-create
+            assertEquals(listOf(4), client.resumableChunkSizes) // only the remaining 4 bytes
+            assertTrue(upload.progress.value.isComplete)
+        }
+
     @Test
     fun test_listBuckets_includesQueryParams() =
         runTest {
@@ -933,6 +977,18 @@ private class FakeSupabaseClient : SupabaseClient {
     var lastPutRawUrl: String? = null
     var lastPutRawHeaders: Map<String, String> = emptyMap()
 
+    // Resumable (TUS) upload simulation state.
+    val resumableUploadUrl: String = "https://example.supabase.co/storage/v1/upload/resumable/upload-1"
+    var resumableCreateCount: Int = 0
+    val resumableChunkSizes: MutableList<Int> = mutableListOf()
+    var resumableMetadata: String? = null
+    var resumableUpsertHeader: String? = null
+    private var resumableReceived: Long = 0L
+
+    fun presetResumableReceived(bytes: Long) {
+        resumableReceived = bytes
+    }
+
     override suspend fun get(
         endpoint: String,
         queryParams: List<Pair<String, String>>,
@@ -1078,6 +1134,37 @@ private class FakeSupabaseClient : SupabaseClient {
         lastPutRawHeaders = headers
         return SupabaseResult.Success("ok")
     }
+
+    override suspend fun rawRequest(
+        method: SupabaseHttpMethod,
+        url: String,
+        body: ByteArray?,
+        contentType: String?,
+        headers: Map<String, String>,
+    ): SupabaseResult<SupabaseHttpResponse> =
+        when (method) {
+            SupabaseHttpMethod.POST -> {
+                resumableCreateCount++
+                resumableReceived = 0L
+                resumableMetadata = headers["Upload-Metadata"]
+                resumableUpsertHeader = headers["x-upsert"]
+                SupabaseResult.Success(
+                    SupabaseHttpResponse(201, mapOf("Location" to resumableUploadUrl), ByteArray(0)),
+                )
+            }
+            SupabaseHttpMethod.HEAD ->
+                SupabaseResult.Success(
+                    SupabaseHttpResponse(200, mapOf("Upload-Offset" to resumableReceived.toString()), ByteArray(0)),
+                )
+            SupabaseHttpMethod.PATCH -> {
+                resumableChunkSizes.add(body?.size ?: 0)
+                resumableReceived += (body?.size ?: 0).toLong()
+                SupabaseResult.Success(
+                    SupabaseHttpResponse(204, mapOf("Upload-Offset" to resumableReceived.toString()), ByteArray(0)),
+                )
+            }
+            else -> SupabaseResult.Failure(SupabaseError("unexpected method $method"))
+        }
 
     override fun setAccessToken(token: String) = Unit
 

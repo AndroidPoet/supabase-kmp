@@ -1,6 +1,31 @@
 package io.github.androidpoet.supabase.client
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 
+/** HTTP method for [SupabaseClient.rawRequest]. */
+public enum class SupabaseHttpMethod {
+    GET,
+    POST,
+    PUT,
+    PATCH,
+    DELETE,
+    HEAD,
+}
+
+/**
+ * A low-level HTTP response exposing the status code, response headers and raw
+ * body bytes — used by features that need to read response headers (e.g. the
+ * resumable-upload `Location` / `Upload-Offset`) rather than just the body.
+ */
+public class SupabaseHttpResponse(
+    public val status: Int,
+    public val headers: Map<String, String>,
+    public val body: ByteArray,
+) {
+    /** Case-insensitive header lookup. */
+    public fun header(name: String): String? =
+        headers.entries.firstOrNull { it.key.equals(name, ignoreCase = true) }?.value
+}
+
 public interface SupabaseClient : AutoCloseable {
     public val projectUrl: String
     public val apiKey: String
@@ -49,6 +74,21 @@ public interface SupabaseClient : AutoCloseable {
         contentType: String,
         headers: Map<String, String> = emptyMap(),
     ): SupabaseResult<String>
+
+    /**
+     * Performs an arbitrary HTTP request and returns the status, headers and raw
+     * body bytes. [url] may be an absolute URL (`http(s)://…`) or an endpoint
+     * path (prefixed with the project URL). Supports method/header/body needs
+     * that the typed helpers above don't expose — notably `HEAD` and reading
+     * response headers, as required by resumable (TUS) uploads.
+     */
+    public suspend fun rawRequest(
+        method: SupabaseHttpMethod,
+        url: String,
+        body: ByteArray? = null,
+        contentType: String? = null,
+        headers: Map<String, String> = emptyMap(),
+    ): SupabaseResult<SupabaseHttpResponse>
 
     public fun setAccessToken(token: String)
 

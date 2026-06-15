@@ -1,5 +1,6 @@
 package io.github.androidpoet.supabase.client.transport
 import io.github.androidpoet.supabase.client.SupabaseConfig
+import io.github.androidpoet.supabase.client.SupabaseHttpResponse
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseErrorCodes
 import io.github.androidpoet.supabase.core.result.SupabaseResult
@@ -15,9 +16,12 @@ import io.ktor.client.request.headers
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.put
+import io.ktor.client.request.request
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.client.statement.readRawBytes
 import io.ktor.http.ContentType
+import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
@@ -207,6 +211,37 @@ internal class HttpTransport(
             }
         }
     }
+
+    suspend fun rawRequest(
+        method: String,
+        url: String,
+        body: ByteArray?,
+        contentType: String?,
+        requestHeaders: Map<String, String>,
+    ): SupabaseResult<SupabaseHttpResponse> =
+        try {
+            val response =
+                httpClient.request(url) {
+                    this.method = HttpMethod.parse(method)
+                    requestHeaders.forEach { (k, v) -> header(k, v) }
+                    if ("Authorization" !in requestHeaders) {
+                        header("Authorization", "Bearer ${accessToken ?: apiKey}")
+                    }
+                    contentType?.let { contentType(ContentType.parse(it)) }
+                    body?.let { setBody(it) }
+                }
+            val bytes = response.readRawBytes()
+            if (response.status.isSuccess()) {
+                val flatHeaders = response.headers.entries().associate { (k, v) -> k to v.joinToString(",") }
+                SupabaseResult.Success(SupabaseHttpResponse(response.status.value, flatHeaders, bytes))
+            } else {
+                val retryAfter = response.headers["Retry-After"]?.toLongOrNull()
+                SupabaseResult.Failure(parseError(bytes.decodeToString(), response.status.value, retryAfter))
+            }
+        } catch (e: Throwable) {
+            if (e is CancellationException) throw e
+            SupabaseResult.Failure(networkError(throwable = e))
+        }
 
     fun setAccessToken(token: String) {
         accessToken = token
