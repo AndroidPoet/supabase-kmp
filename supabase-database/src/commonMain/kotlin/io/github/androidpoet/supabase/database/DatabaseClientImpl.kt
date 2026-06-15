@@ -44,7 +44,7 @@ internal class DatabaseClientImpl(
         if (head) {
             val result =
                 client.get(
-                    endpoint = "/rest/v1/$safeTable",
+                    endpoint = "${DatabasePaths.BASE}/$safeTable",
                     queryParams = queryParams,
                     headers = headersWithSchema + ("Accept" to acceptHeader(single, csv, stripNulls, explain, geojson)),
                 )
@@ -54,7 +54,7 @@ internal class DatabaseClientImpl(
             }
         }
         return client.get(
-            endpoint = "/rest/v1/$safeTable",
+            endpoint = "${DatabasePaths.BASE}/$safeTable",
             queryParams = queryParams,
             headers = headersWithSchema + ("Accept" to acceptHeader(single, csv, stripNulls, explain, geojson)),
         )
@@ -78,7 +78,7 @@ internal class DatabaseClientImpl(
         val safeTable = validatePathSegment(table, "table")
         val safeSchema = schema?.let { validatePathSegment(it, "schema") }
         val endpoint =
-            buildEndpoint("/rest/v1/$safeTable") {
+            buildEndpoint("${DatabasePaths.BASE}/$safeTable") {
                 if (onConflict != null) add("on_conflict" to onConflict)
                 if (!columns.isNullOrEmpty()) add("columns" to columns.joinToString(","))
             }
@@ -118,7 +118,7 @@ internal class DatabaseClientImpl(
         val safeTable = validatePathSegment(table, "table")
         val safeSchema = schema?.let { validatePathSegment(it, "schema") }
         val filterParams = FilterBuilder().apply(filters).build()
-        val endpoint = buildEndpoint("/rest/v1/$safeTable", filterParams)
+        val endpoint = buildEndpoint("${DatabasePaths.BASE}/$safeTable", filterParams)
         val requestHeaders =
             headers +
                 buildPreferHeader {
@@ -156,7 +156,7 @@ internal class DatabaseClientImpl(
         val safeTable = validatePathSegment(table, "table")
         val safeSchema = schema?.let { validatePathSegment(it, "schema") }
         val filterParams = FilterBuilder().apply(filters).build()
-        val endpoint = buildEndpoint("/rest/v1/$safeTable", filterParams)
+        val endpoint = buildEndpoint("${DatabasePaths.BASE}/$safeTable", filterParams)
         val requestHeaders =
             headers +
                 buildPreferHeader {
@@ -208,7 +208,7 @@ internal class DatabaseClientImpl(
         if (head) {
             val result =
                 client.post(
-                    endpoint = "/rest/v1/rpc/$safeFunction",
+                    endpoint = "${DatabasePaths.RPC}/$safeFunction",
                     body = params,
                     headers =
                         addSchemaHeaders(requestHeaders, safeSchema, isReadRequest = true) +
@@ -220,7 +220,7 @@ internal class DatabaseClientImpl(
             }
         }
         return client.post(
-            endpoint = "/rest/v1/rpc/$safeFunction",
+            endpoint = "${DatabasePaths.RPC}/$safeFunction",
             body = params,
             headers =
                 addSchemaHeaders(requestHeaders, safeSchema, isReadRequest = false) +
@@ -252,7 +252,7 @@ internal class DatabaseClientImpl(
                     count?.let { add("count=${it.headerValue}") }
                 } + retryHeader(retry)
         val readHeaders = addSchemaHeaders(requestHeaders, safeSchema, isReadRequest = true)
-        val endpoint = buildEndpoint("/rest/v1/rpc/$safeFunction", queryParams)
+        val endpoint = buildEndpoint("${DatabasePaths.RPC}/$safeFunction", queryParams)
         if (head) {
             val result =
                 client.get(

@@ -65,7 +65,7 @@ internal class AuthClientImpl(
     ): SupabaseResult<Session> {
         require(email.isNotBlank()) { "email must not be blank" }
         val body = defaultJson.encodeToString(SignUpRequest(email = email, password = password, data = data))
-        return client.post("/auth/v1/signup", body = body).deserialize()
+        return client.post(AuthPaths.SIGNUP, body = body).deserialize()
     }
 
     override suspend fun signUpWithPhone(
@@ -75,7 +75,7 @@ internal class AuthClientImpl(
     ): SupabaseResult<Session> {
         require(phone.isNotBlank()) { "phone must not be blank" }
         val body = defaultJson.encodeToString(SignUpRequest(phone = phone, password = password, data = data))
-        return client.post("/auth/v1/signup", body = body).deserialize()
+        return client.post(AuthPaths.SIGNUP, body = body).deserialize()
     }
 
     override suspend fun signInWithEmail(
@@ -83,7 +83,7 @@ internal class AuthClientImpl(
         password: String,
     ): SupabaseResult<Session> {
         val body = defaultJson.encodeToString(SignInRequest(email = email, password = password))
-        return client.post("/auth/v1/token?grant_type=password", body = body).deserialize()
+        return client.post("${AuthPaths.TOKEN}?grant_type=password", body = body).deserialize()
     }
 
     override suspend fun signInAnonymously(
@@ -97,7 +97,7 @@ internal class AuthClientImpl(
                     captchaToken = captchaToken,
                 ),
             )
-        return client.post("/auth/v1/signup", body = body).deserialize()
+        return client.post(AuthPaths.SIGNUP, body = body).deserialize()
     }
 
     override suspend fun signInWithPhone(
@@ -105,7 +105,7 @@ internal class AuthClientImpl(
         password: String,
     ): SupabaseResult<Session> {
         val body = defaultJson.encodeToString(SignInRequest(phone = phone, password = password))
-        return client.post("/auth/v1/token?grant_type=password", body = body).deserialize()
+        return client.post("${AuthPaths.TOKEN}?grant_type=password", body = body).deserialize()
     }
 
     override suspend fun signInWithIdToken(
@@ -125,7 +125,7 @@ internal class AuthClientImpl(
                     captchaToken = captchaToken,
                 ),
             )
-        return client.post("/auth/v1/token?grant_type=id_token", body = body).deserialize()
+        return client.post("${AuthPaths.TOKEN}?grant_type=id_token", body = body).deserialize()
     }
 
     override suspend fun signInWithWeb3(
@@ -143,7 +143,7 @@ internal class AuthClientImpl(
                     captchaToken = captchaToken,
                 ),
             )
-        return client.post("/auth/v1/token?grant_type=web3", body = body).deserialize()
+        return client.post("${AuthPaths.TOKEN}?grant_type=web3", body = body).deserialize()
     }
 
     override suspend fun signInWithOtp(
@@ -163,7 +163,7 @@ internal class AuthClientImpl(
                     emailRedirectTo = emailRedirectTo,
                 ),
             )
-        return client.post("/auth/v1/otp", body = body).map { }
+        return client.post(AuthPaths.OTP, body = body).map { }
     }
 
     override suspend fun verifyOtp(
@@ -183,7 +183,7 @@ internal class AuthClientImpl(
                     captchaToken = captchaToken,
                 ),
             )
-        return client.post("/auth/v1/verify", body = body).deserialize()
+        return client.post(AuthPaths.VERIFY, body = body).deserialize()
     }
 
     override suspend fun verifyOtpWithTokenHash(
@@ -199,7 +199,7 @@ internal class AuthClientImpl(
                     captchaToken = captchaToken,
                 ),
             )
-        return client.post("/auth/v1/verify", body = body).deserialize()
+        return client.post(AuthPaths.VERIFY, body = body).deserialize()
     }
 
     override suspend fun verifyOtpWithResult(
@@ -219,7 +219,7 @@ internal class AuthClientImpl(
                     captchaToken = captchaToken,
                 ),
             )
-        return verifyOtpResultFromRawResponse(client.post("/auth/v1/verify", body = body))
+        return verifyOtpResultFromRawResponse(client.post(AuthPaths.VERIFY, body = body))
     }
 
     override suspend fun verifyOtpWithTokenHashWithResult(
@@ -235,7 +235,7 @@ internal class AuthClientImpl(
                     captchaToken = captchaToken,
                 ),
             )
-        return verifyOtpResultFromRawResponse(client.post("/auth/v1/verify", body = body))
+        return verifyOtpResultFromRawResponse(client.post(AuthPaths.VERIFY, body = body))
     }
 
     override suspend fun resendEmailOtp(
@@ -253,7 +253,7 @@ internal class AuthClientImpl(
                     redirectTo = redirectTo,
                 ),
             )
-        return client.post("/auth/v1/resend", body = body).map { }
+        return client.post(AuthPaths.RESEND, body = body).map { }
     }
 
     override suspend fun resendPhoneOtp(
@@ -269,7 +269,7 @@ internal class AuthClientImpl(
                     captchaToken = captchaToken,
                 ),
             )
-        return client.post("/auth/v1/resend", body = body).map { }
+        return client.post(AuthPaths.RESEND, body = body).map { }
     }
 
     override suspend fun resetPasswordForEmail(
@@ -287,7 +287,7 @@ internal class AuthClientImpl(
             )
         val endpoint =
             buildString {
-                append("/auth/v1/recover")
+                append(AuthPaths.RECOVER)
                 if (redirectTo != null) {
                     append("?redirect_to=")
                     append(urlEncode(redirectTo))
@@ -299,23 +299,23 @@ internal class AuthClientImpl(
     override suspend fun reauthenticate(accessToken: String): SupabaseResult<Unit> =
         client
             .get(
-                endpoint = "/auth/v1/reauthenticate",
+                endpoint = AuthPaths.REAUTHENTICATE,
                 headers = bearerHeaders(accessToken),
             ).map { }
 
     override suspend fun refreshToken(refreshToken: String): SupabaseResult<Session> {
         val body = defaultJson.encodeToString(RefreshTokenRequest(refreshToken = refreshToken))
-        return client.post("/auth/v1/token?grant_type=refresh_token", body = body).deserialize()
+        return client.post("${AuthPaths.TOKEN}?grant_type=refresh_token", body = body).deserialize()
     }
 
     override suspend fun getUser(accessToken: String): SupabaseResult<User> =
         client
             .get(
-                endpoint = "/auth/v1/user",
+                endpoint = AuthPaths.USER,
                 headers = bearerHeaders(accessToken),
             ).deserialize()
 
-    override suspend fun fetchJwks(): SupabaseResult<String> = client.get(endpoint = "/auth/v1/.well-known/jwks.json")
+    override suspend fun fetchJwks(): SupabaseResult<String> = client.get(endpoint = AuthPaths.JWKS)
 
     override suspend fun getUserIdentities(accessToken: String): SupabaseResult<List<UserIdentity>> =
         when (val result = getUser(accessToken = accessToken)) {
@@ -330,7 +330,7 @@ internal class AuthClientImpl(
         val body = defaultJson.encodeToString(updates)
         return client
             .patch(
-                endpoint = "/auth/v1/user",
+                endpoint = AuthPaths.USER,
                 body = body,
                 headers = bearerHeaders(accessToken),
             ).deserialize()
@@ -345,7 +345,7 @@ internal class AuthClientImpl(
     ): SupabaseResult<Unit> =
         client
             .post(
-                endpoint = "/auth/v1/logout?scope=${scope.name.lowercase()}",
+                endpoint = "${AuthPaths.LOGOUT}?scope=${scope.name.lowercase()}",
                 headers = bearerHeaders(accessToken),
             ).map { }
 
@@ -358,7 +358,7 @@ internal class AuthClientImpl(
     ): SupabaseResult<LinkIdentityResponse> {
         val endpoint =
             buildString {
-                append("/auth/v1/user/identities/authorize?provider=")
+                append("${AuthPaths.USER_IDENTITIES_AUTHORIZE}?provider=")
                 append(provider.value)
                 if (redirectTo != null) {
                     append("&redirect_to=")
@@ -397,7 +397,7 @@ internal class AuthClientImpl(
             )
         return client
             .post(
-                endpoint = "/auth/v1/token?grant_type=id_token",
+                endpoint = "${AuthPaths.TOKEN}?grant_type=id_token",
                 body = body,
                 headers = bearerHeaders(accessToken),
             ).deserialize()
@@ -409,7 +409,7 @@ internal class AuthClientImpl(
     ): SupabaseResult<Unit> =
         client
             .delete(
-                endpoint = "/auth/v1/user/identities/$identityId",
+                endpoint = "${AuthPaths.USER_IDENTITIES}/$identityId",
                 headers = bearerHeaders(accessToken),
             ).map { }
 
@@ -433,7 +433,7 @@ internal class AuthClientImpl(
             )
         return client
             .post(
-                endpoint = "/auth/v1/sso",
+                endpoint = AuthPaths.SSO,
                 body = body,
                 headers = accessToken?.let(::bearerHeaders).orEmpty(),
             ).deserialize()
@@ -449,7 +449,7 @@ internal class AuthClientImpl(
     ): String =
         buildString {
             append(client.projectUrl)
-            append("/auth/v1/authorize?provider=")
+            append("${AuthPaths.AUTHORIZE}?provider=")
             append(provider.value)
             if (redirectTo != null) {
                 append("&redirect_to=")
@@ -533,7 +533,7 @@ internal class AuthClientImpl(
             defaultJson.encodeToString(
                 ExchangeCodeRequest(authCode = authCode, codeVerifier = codeVerifier),
             )
-        return client.post("/auth/v1/token?grant_type=pkce", body = body).deserialize()
+        return client.post("${AuthPaths.TOKEN}?grant_type=pkce", body = body).deserialize()
     }
 
     override suspend fun mfaEnroll(
@@ -554,7 +554,7 @@ internal class AuthClientImpl(
             )
         return client
             .post(
-                endpoint = "/auth/v1/factors",
+                endpoint = AuthPaths.FACTORS,
                 body = body,
                 headers = bearerHeaders(accessToken),
             ).deserialize()
@@ -566,7 +566,7 @@ internal class AuthClientImpl(
     ): SupabaseResult<MfaChallengeResponse> =
         client
             .post(
-                endpoint = "/auth/v1/factors/$factorId/challenge",
+                endpoint = "${AuthPaths.FACTORS}/$factorId/challenge",
                 headers = bearerHeaders(accessToken),
             ).deserialize()
 
@@ -586,7 +586,7 @@ internal class AuthClientImpl(
             )
         return client
             .post(
-                endpoint = "/auth/v1/factors/$factorId/verify",
+                endpoint = "${AuthPaths.FACTORS}/$factorId/verify",
                 body = body,
                 headers = bearerHeaders(accessToken),
             ).deserialize()
@@ -598,7 +598,7 @@ internal class AuthClientImpl(
     ): SupabaseResult<MfaUnenrollResponse> =
         client
             .delete(
-                endpoint = "/auth/v1/factors/$factorId",
+                endpoint = "${AuthPaths.FACTORS}/$factorId",
                 headers = bearerHeaders(accessToken),
             ).deserialize()
 
@@ -608,7 +608,7 @@ internal class AuthClientImpl(
         val userResult: SupabaseResult<User> =
             client
                 .get(
-                    endpoint = "/auth/v1/user",
+                    endpoint = AuthPaths.USER,
                     headers = bearerHeaders(accessToken),
                 ).deserialize()
         return when (userResult) {
@@ -633,7 +633,7 @@ internal class AuthClientImpl(
         val userResult: SupabaseResult<User> =
             client
                 .get(
-                    endpoint = "/auth/v1/user",
+                    endpoint = AuthPaths.USER,
                     headers = bearerHeaders(accessToken),
                 ).deserialize()
         return when (userResult) {
@@ -657,7 +657,7 @@ internal class AuthClientImpl(
     ): SupabaseResult<PasskeyRegistrationOptionsResponse> =
         client
             .post(
-                endpoint = "/auth/v1/passkeys/registration/options",
+                endpoint = AuthPaths.PASSKEYS_REG_OPTIONS,
                 body = "{}",
                 headers = bearerHeaders(accessToken),
             ).deserialize()
@@ -673,7 +673,7 @@ internal class AuthClientImpl(
             )
         return client
             .post(
-                endpoint = "/auth/v1/passkeys/registration/verify",
+                endpoint = AuthPaths.PASSKEYS_REG_VERIFY,
                 body = body,
                 headers = bearerHeaders(accessToken),
             ).deserialize()
@@ -685,7 +685,7 @@ internal class AuthClientImpl(
         val body = defaultJson.encodeToString(PasskeyAuthenticationOptionsRequest(captchaToken = captchaToken))
         return client
             .post(
-                endpoint = "/auth/v1/passkeys/authentication/options",
+                endpoint = AuthPaths.PASSKEYS_AUTH_OPTIONS,
                 body = body,
             ).deserialize()
     }
@@ -700,7 +700,7 @@ internal class AuthClientImpl(
             )
         return client
             .post(
-                endpoint = "/auth/v1/passkeys/authentication/verify",
+                endpoint = AuthPaths.PASSKEYS_AUTH_VERIFY,
                 body = body,
             ).deserialize()
     }
@@ -710,7 +710,7 @@ internal class AuthClientImpl(
     ): SupabaseResult<List<Passkey>> =
         client
             .get(
-                endpoint = "/auth/v1/passkeys",
+                endpoint = AuthPaths.PASSKEYS,
                 headers = bearerHeaders(accessToken),
             ).deserialize()
 
@@ -722,7 +722,7 @@ internal class AuthClientImpl(
         val body = defaultJson.encodeToString(PasskeyUpdateRequest(friendlyName = friendlyName))
         return client
             .patch(
-                endpoint = "/auth/v1/passkeys/$passkeyId",
+                endpoint = "${AuthPaths.PASSKEYS}/$passkeyId",
                 body = body,
                 headers = bearerHeaders(accessToken),
             ).deserialize()
@@ -734,7 +734,7 @@ internal class AuthClientImpl(
     ): SupabaseResult<Unit> =
         client
             .delete(
-                endpoint = "/auth/v1/passkeys/$passkeyId",
+                endpoint = "${AuthPaths.PASSKEYS}/$passkeyId",
                 headers = bearerHeaders(accessToken),
             ).map { }
 
@@ -744,7 +744,7 @@ internal class AuthClientImpl(
     ): SupabaseResult<OAuthAuthorizationDetails> =
         client
             .get(
-                endpoint = "/auth/v1/oauth/authorizations/$authorizationId",
+                endpoint = "${AuthPaths.OAUTH_AUTHORIZATIONS}/$authorizationId",
                 headers = bearerHeaders(accessToken),
             ).deserialize()
 
@@ -765,7 +765,7 @@ internal class AuthClientImpl(
     ): SupabaseResult<List<OAuthGrant>> =
         client
             .get(
-                endpoint = "/auth/v1/user/oauth/grants",
+                endpoint = AuthPaths.USER_OAUTH_GRANTS,
                 headers = bearerHeaders(accessToken),
             ).deserialize()
 
@@ -775,7 +775,7 @@ internal class AuthClientImpl(
     ): SupabaseResult<Unit> =
         client
             .delete(
-                endpoint = "/auth/v1/user/oauth/grants?client_id=${urlEncode(clientId)}",
+                endpoint = "${AuthPaths.USER_OAUTH_GRANTS}?client_id=${urlEncode(clientId)}",
                 headers = bearerHeaders(accessToken),
             ).map { }
 
@@ -787,7 +787,7 @@ internal class AuthClientImpl(
         val body = defaultJson.encodeToString(OAuthConsentRequest(action = action))
         return client
             .post(
-                endpoint = "/auth/v1/oauth/authorizations/$authorizationId/consent",
+                endpoint = "${AuthPaths.OAUTH_AUTHORIZATIONS}/$authorizationId/consent",
                 body = body,
                 headers = bearerHeaders(accessToken),
             ).deserialize()

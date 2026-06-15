@@ -19,7 +19,7 @@ internal class FunctionsClientImpl(
     ): SupabaseResult<String> {
         val merged = buildHeaders(headers, region)
         return client.post(
-            endpoint = "/functions/v1/$functionName",
+            endpoint = "${FunctionsPaths.BASE}/$functionName",
             body = body,
             headers = merged,
         )
@@ -36,7 +36,7 @@ internal class FunctionsClientImpl(
         // postRaw already prepends projectUrl (see SupabaseClientImpl.postRaw);
         // pass a relative path or the project URL is duplicated.
         return client.postRaw(
-            url = "/functions/v1/$functionName",
+            url = "${FunctionsPaths.BASE}/$functionName",
             body = body,
             contentType = contentType,
             headers = merged,
