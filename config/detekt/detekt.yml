@@ -17,6 +17,10 @@ complexity:
     # ktlint (ktlint_official) expands single-line builder calls onto multiple
     # lines via trailing commas, so a few wide test bodies land just over 80.
     threshold: 100
+  LargeClass:
+    # Test classes accumulate many small @Test methods; this rule targets
+    # production design smells, not exhaustive test suites.
+    excludes: ['**/test/**', '**/commonTest/**', '**/androidUnitTest/**', '**/*Test.kt']
   TooManyFunctions:
     active: false
   CyclomaticComplexMethod:

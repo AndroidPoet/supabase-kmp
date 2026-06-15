@@ -1,5 +1,8 @@
 package io.github.androidpoet.supabase.auth
 
+import io.github.androidpoet.supabase.auth.models.JwtClaims
+import io.github.androidpoet.supabase.auth.models.JwtClaimsResult
+import io.github.androidpoet.supabase.auth.models.JwtHeader
 import io.github.androidpoet.supabase.auth.models.LinkIdentityResponse
 import io.github.androidpoet.supabase.auth.models.MfaVerifyResponse
 import io.github.androidpoet.supabase.auth.models.OAuthProvider
@@ -15,6 +18,7 @@ import io.github.androidpoet.supabase.auth.session.SessionManager
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import kotlinx.coroutines.CancellationException
+import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 
@@ -744,6 +748,95 @@ public fun SessionManager.parseCurrentSessionJwtClaims(): SupabaseResult<JsonObj
         accessToken
             ?: return SupabaseResult.Failure(SupabaseError(message = "No active session"))
     return parseJwtClaims(token)
+}
+
+private val claimsJson = Json { ignoreUnknownKeys = true }
+
+private fun decodeJwtHeader(segment: String): JwtHeader? {
+    val json = decodeBase64Url(segment) ?: return null
+    return try {
+        claimsJson.decodeFromString(JwtHeader.serializer(), json)
+    } catch (e: Throwable) {
+        if (e is CancellationException) throw e
+        null
+    }
+}
+
+private fun decodeJwt(jwt: String): SupabaseResult<JwtClaimsResult> {
+    val parts = jwt.split('.')
+    if (parts.size < 2) {
+        return SupabaseResult.Failure(SupabaseError(message = "Invalid JWT format"))
+    }
+    val header =
+        decodeJwtHeader(parts[0])
+            ?: return SupabaseResult.Failure(SupabaseError(message = "Invalid JWT header encoding"))
+    val payload =
+        when (val parsed = parseJwtClaims(jwt)) {
+            is SupabaseResult.Failure -> return parsed
+            is SupabaseResult.Success -> parsed.value
+        }
+    val claims =
+        try {
+            claimsJson.decodeFromJsonElement(JwtClaims.serializer(), payload)
+        } catch (e: Throwable) {
+            if (e is CancellationException) throw e
+            return SupabaseResult.Failure(SupabaseError(message = "Failed to decode JWT claims: ${e.message}"))
+        }
+    return SupabaseResult.Success(
+        JwtClaimsResult(
+            claims = claims,
+            header = header,
+            signature = parts.getOrNull(2).orEmpty(),
+            raw = payload,
+        ),
+    )
+}
+
+/**
+ * Decodes and (by default) verifies the claims of a Supabase JWT — the analogue of supabase-js
+ * `auth.getClaims()`.
+ *
+ * The header and payload are decoded locally into [JwtClaims] (use [JwtClaimsResult.raw] for any
+ * non-standard claim). When [verify] is true the token's authenticity is confirmed against the
+ * Auth server (the same validation [AuthClient.getUser] performs), which covers both symmetric
+ * (HS256) and asymmetric signing. Local JWKS signature verification is not yet implemented, so a
+ * server round-trip is used when [verify] is true.
+ *
+ * @param jwt the JWT to inspect, e.g. a session access token.
+ * @param verify when true, validate the token against the Auth server before returning the claims.
+ * @param allowExpired when false, a token whose `exp` is in the past is rejected without a network call.
+ */
+public suspend fun AuthClient.getClaims(
+    jwt: String,
+    verify: Boolean = true,
+    allowExpired: Boolean = false,
+): SupabaseResult<JwtClaimsResult> {
+    val decoded =
+        when (val result = decodeJwt(jwt)) {
+            is SupabaseResult.Failure -> return result
+            is SupabaseResult.Success -> result.value
+        }
+    val expiresAt = decoded.claims.expiresAt
+    if (!allowExpired && expiresAt != null && expiresAt <= Clock.System.now().epochSeconds) {
+        return SupabaseResult.Failure(SupabaseError(message = "JWT has expired"))
+    }
+    if (verify) {
+        val validation = getUser(accessToken = jwt)
+        if (validation is SupabaseResult.Failure) return validation
+    }
+    return SupabaseResult.Success(decoded)
+}
+
+/** Decodes and verifies the claims of the current session's access token. See [getClaims]. */
+public suspend fun SessionManager.getClaimsForCurrentSession(
+    authClient: AuthClient,
+    verify: Boolean = true,
+    allowExpired: Boolean = false,
+): SupabaseResult<JwtClaimsResult> {
+    val token =
+        accessToken
+            ?: return SupabaseResult.Failure(SupabaseError(message = "No active session"))
+    return authClient.getClaims(jwt = token, verify = verify, allowExpired = allowExpired)
 }
 
 private fun decodeBase64Url(input: String): String? {
