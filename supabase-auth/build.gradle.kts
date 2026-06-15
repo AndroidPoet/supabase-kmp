@@ -37,11 +37,20 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.cryptography.random)
+            implementation(libs.cryptography.core)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
         }
+        // Local JWT (ES256) verification delegates to each platform's native crypto backend.
+        // cryptography-kotlin has no single multiplatform provider for 0.4.x, so wire one per target.
+        jvmMain.dependencies { implementation(libs.cryptography.provider.jdk) }
+        androidMain.dependencies { implementation(libs.cryptography.provider.jdk) }
+        appleMain.dependencies { implementation(libs.cryptography.provider.apple) }
+        wasmJsMain.dependencies { implementation(libs.cryptography.provider.webcrypto) }
+        val linuxX64Main by getting { dependencies { implementation(libs.cryptography.provider.openssl3.prebuilt) } }
+        val mingwX64Main by getting { dependencies { implementation(libs.cryptography.provider.openssl3.prebuilt) } }
     }
 }
 

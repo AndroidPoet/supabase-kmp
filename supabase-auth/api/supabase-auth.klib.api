@@ -176,6 +176,7 @@ abstract interface io.github.androidpoet.supabase.auth/AuthClient { // io.github
     abstract fun generatePkceParams(kotlin/Function1<kotlin/ByteArray, kotlin/ByteArray>? = ...): io.github.androidpoet.supabase.auth.models/PkceParams // io.github.androidpoet.supabase.auth/AuthClient.generatePkceParams|generatePkceParams(kotlin.Function1<kotlin.ByteArray,kotlin.ByteArray>?){}[0]
     abstract fun getOAuthSignInUrl(io.github.androidpoet.supabase.auth.models/OAuthProvider, kotlin/String? = ..., kotlin.collections/List<kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin/Boolean = ..., io.github.androidpoet.supabase.auth.models/PkceParams? = ...): kotlin/String // io.github.androidpoet.supabase.auth/AuthClient.getOAuthSignInUrl|getOAuthSignInUrl(io.github.androidpoet.supabase.auth.models.OAuthProvider;kotlin.String?;kotlin.collections.List<kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.Boolean;io.github.androidpoet.supabase.auth.models.PkceParams?){}[0]
     abstract suspend fun exchangeCodeForSession(kotlin/String, kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth.models/Session> // io.github.androidpoet.supabase.auth/AuthClient.exchangeCodeForSession|exchangeCodeForSession(kotlin.String;kotlin.String){}[0]
+    abstract suspend fun fetchJwks(): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/String> // io.github.androidpoet.supabase.auth/AuthClient.fetchJwks|fetchJwks(){}[0]
     abstract suspend fun getUser(kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth.models/User> // io.github.androidpoet.supabase.auth/AuthClient.getUser|getUser(kotlin.String){}[0]
     abstract suspend fun getUserIdentities(kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin.collections/List<io.github.androidpoet.supabase.auth.models/UserIdentity>> // io.github.androidpoet.supabase.auth/AuthClient.getUserIdentities|getUserIdentities(kotlin.String){}[0]
     abstract suspend fun linkIdentity(kotlin/String, io.github.androidpoet.supabase.auth.models/OAuthProvider, kotlin/String? = ..., kotlin.collections/List<kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth.models/LinkIdentityResponse> // io.github.androidpoet.supabase.auth/AuthClient.linkIdentity|linkIdentity(kotlin.String;io.github.androidpoet.supabase.auth.models.OAuthProvider;kotlin.String?;kotlin.collections.List<kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
@@ -406,6 +407,84 @@ final class io.github.androidpoet.supabase.auth.models/IdTokenRequest { // io.gi
 
     final object Companion { // io.github.androidpoet.supabase.auth.models/IdTokenRequest.Companion|null[0]
         final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.auth.models/IdTokenRequest> // io.github.androidpoet.supabase.auth.models/IdTokenRequest.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class io.github.androidpoet.supabase.auth.models/Jwk { // io.github.androidpoet.supabase.auth.models/Jwk|null[0]
+    constructor <init>(kotlin/String, kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.auth.models/Jwk.<init>|<init>(kotlin.String;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?){}[0]
+
+    final val algorithm // io.github.androidpoet.supabase.auth.models/Jwk.algorithm|{}algorithm[0]
+        final fun <get-algorithm>(): kotlin/String? // io.github.androidpoet.supabase.auth.models/Jwk.algorithm.<get-algorithm>|<get-algorithm>(){}[0]
+    final val curve // io.github.androidpoet.supabase.auth.models/Jwk.curve|{}curve[0]
+        final fun <get-curve>(): kotlin/String? // io.github.androidpoet.supabase.auth.models/Jwk.curve.<get-curve>|<get-curve>(){}[0]
+    final val exponent // io.github.androidpoet.supabase.auth.models/Jwk.exponent|{}exponent[0]
+        final fun <get-exponent>(): kotlin/String? // io.github.androidpoet.supabase.auth.models/Jwk.exponent.<get-exponent>|<get-exponent>(){}[0]
+    final val keyId // io.github.androidpoet.supabase.auth.models/Jwk.keyId|{}keyId[0]
+        final fun <get-keyId>(): kotlin/String? // io.github.androidpoet.supabase.auth.models/Jwk.keyId.<get-keyId>|<get-keyId>(){}[0]
+    final val keyType // io.github.androidpoet.supabase.auth.models/Jwk.keyType|{}keyType[0]
+        final fun <get-keyType>(): kotlin/String // io.github.androidpoet.supabase.auth.models/Jwk.keyType.<get-keyType>|<get-keyType>(){}[0]
+    final val modulus // io.github.androidpoet.supabase.auth.models/Jwk.modulus|{}modulus[0]
+        final fun <get-modulus>(): kotlin/String? // io.github.androidpoet.supabase.auth.models/Jwk.modulus.<get-modulus>|<get-modulus>(){}[0]
+    final val use // io.github.androidpoet.supabase.auth.models/Jwk.use|{}use[0]
+        final fun <get-use>(): kotlin/String? // io.github.androidpoet.supabase.auth.models/Jwk.use.<get-use>|<get-use>(){}[0]
+    final val x // io.github.androidpoet.supabase.auth.models/Jwk.x|{}x[0]
+        final fun <get-x>(): kotlin/String? // io.github.androidpoet.supabase.auth.models/Jwk.x.<get-x>|<get-x>(){}[0]
+    final val y // io.github.androidpoet.supabase.auth.models/Jwk.y|{}y[0]
+        final fun <get-y>(): kotlin/String? // io.github.androidpoet.supabase.auth.models/Jwk.y.<get-y>|<get-y>(){}[0]
+
+    final fun component1(): kotlin/String // io.github.androidpoet.supabase.auth.models/Jwk.component1|component1(){}[0]
+    final fun component2(): kotlin/String? // io.github.androidpoet.supabase.auth.models/Jwk.component2|component2(){}[0]
+    final fun component3(): kotlin/String? // io.github.androidpoet.supabase.auth.models/Jwk.component3|component3(){}[0]
+    final fun component4(): kotlin/String? // io.github.androidpoet.supabase.auth.models/Jwk.component4|component4(){}[0]
+    final fun component5(): kotlin/String? // io.github.androidpoet.supabase.auth.models/Jwk.component5|component5(){}[0]
+    final fun component6(): kotlin/String? // io.github.androidpoet.supabase.auth.models/Jwk.component6|component6(){}[0]
+    final fun component7(): kotlin/String? // io.github.androidpoet.supabase.auth.models/Jwk.component7|component7(){}[0]
+    final fun component8(): kotlin/String? // io.github.androidpoet.supabase.auth.models/Jwk.component8|component8(){}[0]
+    final fun component9(): kotlin/String? // io.github.androidpoet.supabase.auth.models/Jwk.component9|component9(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ...): io.github.androidpoet.supabase.auth.models/Jwk // io.github.androidpoet.supabase.auth.models/Jwk.copy|copy(kotlin.String;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.auth.models/Jwk.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.auth.models/Jwk.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.auth.models/Jwk.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.auth.models/Jwk> { // io.github.androidpoet.supabase.auth.models/Jwk.$serializer|null[0]
+        final val descriptor // io.github.androidpoet.supabase.auth.models/Jwk.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.auth.models/Jwk.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.auth.models/Jwk.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.auth.models/Jwk // io.github.androidpoet.supabase.auth.models/Jwk.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.auth.models/Jwk) // io.github.androidpoet.supabase.auth.models/Jwk.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.auth.models.Jwk){}[0]
+    }
+
+    final object Companion { // io.github.androidpoet.supabase.auth.models/Jwk.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.auth.models/Jwk> // io.github.androidpoet.supabase.auth.models/Jwk.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class io.github.androidpoet.supabase.auth.models/JwkSet { // io.github.androidpoet.supabase.auth.models/JwkSet|null[0]
+    constructor <init>(kotlin.collections/List<io.github.androidpoet.supabase.auth.models/Jwk> = ...) // io.github.androidpoet.supabase.auth.models/JwkSet.<init>|<init>(kotlin.collections.List<io.github.androidpoet.supabase.auth.models.Jwk>){}[0]
+
+    final val keys // io.github.androidpoet.supabase.auth.models/JwkSet.keys|{}keys[0]
+        final fun <get-keys>(): kotlin.collections/List<io.github.androidpoet.supabase.auth.models/Jwk> // io.github.androidpoet.supabase.auth.models/JwkSet.keys.<get-keys>|<get-keys>(){}[0]
+
+    final fun component1(): kotlin.collections/List<io.github.androidpoet.supabase.auth.models/Jwk> // io.github.androidpoet.supabase.auth.models/JwkSet.component1|component1(){}[0]
+    final fun copy(kotlin.collections/List<io.github.androidpoet.supabase.auth.models/Jwk> = ...): io.github.androidpoet.supabase.auth.models/JwkSet // io.github.androidpoet.supabase.auth.models/JwkSet.copy|copy(kotlin.collections.List<io.github.androidpoet.supabase.auth.models.Jwk>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.auth.models/JwkSet.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.auth.models/JwkSet.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.auth.models/JwkSet.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.auth.models/JwkSet> { // io.github.androidpoet.supabase.auth.models/JwkSet.$serializer|null[0]
+        final val descriptor // io.github.androidpoet.supabase.auth.models/JwkSet.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.auth.models/JwkSet.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.auth.models/JwkSet.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.auth.models/JwkSet // io.github.androidpoet.supabase.auth.models/JwkSet.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.auth.models/JwkSet) // io.github.androidpoet.supabase.auth.models/JwkSet.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.auth.models.JwkSet){}[0]
+    }
+
+    final object Companion { // io.github.androidpoet.supabase.auth.models/JwkSet.Companion|null[0]
+        final val $childSerializers // io.github.androidpoet.supabase.auth.models/JwkSet.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.auth.models/JwkSet> // io.github.androidpoet.supabase.auth.models/JwkSet.Companion.serializer|serializer(){}[0]
     }
 }
 

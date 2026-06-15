@@ -315,6 +315,8 @@ internal class AuthClientImpl(
                 headers = bearerHeaders(accessToken),
             ).deserialize()
 
+    override suspend fun fetchJwks(): SupabaseResult<String> = client.get(endpoint = "/auth/v1/.well-known/jwks.json")
+
     override suspend fun getUserIdentities(accessToken: String): SupabaseResult<List<UserIdentity>> =
         when (val result = getUser(accessToken = accessToken)) {
             is SupabaseResult.Failure -> result
