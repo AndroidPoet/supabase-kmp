@@ -25,11 +25,11 @@ class AuthE2eTest {
             val signUp =
                 auth
                     .signUpWithEmail(email = email, password = password)
-                    .getOrThrow()
+                    .unwrap("signUp")
             val signIn =
                 auth
                     .signInWithEmail(email = email, password = password)
-                    .getOrThrow()
+                    .unwrap("signIn")
 
             client.close()
 

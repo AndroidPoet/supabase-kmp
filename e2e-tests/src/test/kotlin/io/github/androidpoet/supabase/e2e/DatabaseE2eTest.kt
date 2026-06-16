@@ -36,14 +36,14 @@ class DatabaseE2eTest {
                     .insert(
                         table = E2E_MESSAGES_TABLE,
                         body = payload,
-                    ).getOrThrow()
+                    ).unwrap("insert")
             val selected =
                 database
                     .select(
                         table = E2E_MESSAGES_TABLE,
                     ) {
                         eq("body", messageBody)
-                    }.getOrThrow()
+                    }.unwrap("select")
 
             client.close()
             assertTrue(inserted.contains(messageBody), inserted)

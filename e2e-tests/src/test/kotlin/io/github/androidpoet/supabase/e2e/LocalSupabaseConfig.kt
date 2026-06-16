@@ -1,11 +1,27 @@
 package io.github.androidpoet.supabase.e2e
 
+import io.github.androidpoet.supabase.core.result.SupabaseResult
 import java.io.File
 
 internal data class LocalSupabaseConfig(
     val apiUrl: String,
     val anonKey: String,
 )
+
+/**
+ * Returns the success value or fails the test with the full error detail
+ * (message, code, HTTP status). Clearer than [SupabaseResult.getOrThrow] when an
+ * E2E call fails in CI, where the bare exception message is easy to lose.
+ */
+internal fun <T> SupabaseResult<T>.unwrap(label: String): T =
+    when (this) {
+        is SupabaseResult.Success -> value
+        is SupabaseResult.Failure ->
+            error(
+                "$label failed: message='${error.message}' code='${error.code}' " +
+                    "httpStatus=${error.httpStatus} details='${error.details}'",
+            )
+    }
 
 /**
  * Resolves the local Supabase connection details for E2E tests.
