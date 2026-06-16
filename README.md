@@ -439,6 +439,7 @@ the full workflow.
 - Release notes: [`CHANGELOG.md`](CHANGELOG.md)
 - Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md)
 - Security policy: [`SECURITY.md`](SECURITY.md)
+- AI Agent Skill (Claude Code / Cursor / Copilot): [`skills/`](skills/)
 - GitBook-ready pages: [`docs/`](docs/)
 - GitBook config: [`.gitbook.yaml`](.gitbook.yaml)
 - Publishing guide: [`docs/guides/gitbook-publishing.md`](docs/guides/gitbook-publishing.md)
