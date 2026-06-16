@@ -37,7 +37,8 @@ val todos: SupabaseResult<List<Todo>> = database.selectTyped<Todo>(table = "todo
 | `select(table, …) { … }` | `String` (raw JSON) | escape hatch |
 
 `columns` accepts PostgREST projection syntax — `"*"`, `"id,title"`, or embedded
-relations like `"*,author(*)"`. All read methods accept an optional `schema`.
+relations like `"*,author(*)"`. All read methods accept an optional `schema`, and
+`geojson = true` returns PostGIS rows as a GeoJSON `FeatureCollection`.
 
 ## Insert, Update, Upsert, Delete
 

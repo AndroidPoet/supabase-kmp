@@ -1,0 +1,113 @@
+---
+title: Configuration
+---
+
+import { Callout } from 'nextra/components'
+
+# Configuration
+
+Every client is created from `Supabase.create`. The trailing `configure { }`
+lambda is a `SupabaseConfigBuilder` — it tunes logging, retries, custom headers,
+and observability hooks. All options have sensible defaults, so you only set what
+you need.
+
+```kotlin
+val client = Supabase.create(
+    projectUrl = "https://your-project.supabase.co",
+    apiKey = "your-anon-key",
+) {
+    logging = true
+    logLevel = LogLevel.HEADERS
+    headers["X-App-Version"] = "1.4.0"
+    retry = RetryConfig(maxRetries = 5)
+    logger = MyTimberLogger()
+    interceptor = MyTelemetryInterceptor()
+}
+```
+
+| Option | Type | Default | Purpose |
+| --- | --- | --- | --- |
+| `logging` | `Boolean` | `false` | Enable HTTP wire logging. |
+| `logLevel` | `LogLevel` | `NONE` | Ktor verbosity: `NONE`, `INFO`, `HEADERS`, `BODY`, `ALL`. |
+| `headers` | `MutableMap` | empty | Extra headers sent on every request. |
+| `retry` | `RetryConfig` | `RetryConfig.Default` | Backoff policy for transient failures. |
+| `logger` | `SupabaseLogger?` | `null` | Route wire logs into your logging framework. |
+| `interceptor` | `SupabaseInterceptor?` | `null` | Telemetry hooks around every request. |
+
+## Retries
+
+Retries are **opt-in per call** — read methods like PostgREST `select` default to
+`retry = true` because reads are idempotent; mutations don't retry unless you ask.
+`RetryConfig` controls *how* a retried call backs off and which statuses count as
+transient.
+
+```kotlin
+retry = RetryConfig(
+    maxRetries = 3,                                  // attempts after the initial try
+    baseDelayMillis = 1_000,                         // first backoff; doubles each retry
+    maxDelayMillis = 30_000,                         // cap on a single delay
+    retryableStatuses = setOf(429, 500, 502, 503, 504, 520),
+)
+```
+
+Backoff is exponential — `min(maxDelayMillis, baseDelayMillis shl attempt)` — so
+with the defaults a retried call waits ~1s, 2s, then 4s. A `Retry-After` response
+header always wins over the computed delay.
+
+<Callout type="info">
+  `RetryConfig.Default` is 3 retries, 1s base, 30s cap, retrying `429` and the
+  transient `5xx` codes. The constructor validates its inputs (non-negative
+  delays, `maxDelayMillis >= baseDelayMillis`).
+</Callout>
+
+## Logging
+
+Set `logging = true` and pick a `logLevel` to see requests on the console. To send
+those lines somewhere structured — Timber on Android, OSLog on iOS, SLF4J on the
+JVM — provide a `SupabaseLogger`. Verbosity is still governed by `logLevel`; the
+logger only changes *where* the lines go.
+
+```kotlin
+class TimberLogger : SupabaseLogger {
+    override fun log(level: SupabaseLogLevel, message: String, throwable: Throwable?) {
+        when (level) {
+            SupabaseLogLevel.DEBUG -> Timber.d(throwable, message)
+            SupabaseLogLevel.INFO  -> Timber.i(throwable, message)
+            SupabaseLogLevel.WARN  -> Timber.w(throwable, message)
+            SupabaseLogLevel.ERROR -> Timber.e(throwable, message)
+        }
+    }
+}
+```
+
+## Observability
+
+A `SupabaseInterceptor` gives you telemetry hooks around every request — emit
+spans, record latency histograms, count error categories, attach correlation IDs.
+All methods are `suspend` (so they may do async work) and default to no-ops, so
+you implement only what you need.
+
+```kotlin
+class TelemetryInterceptor : SupabaseInterceptor {
+    override suspend fun onRequest(method: String, url: String) {
+        tracer.startSpan("$method $url")
+    }
+
+    override suspend fun onResponse(method: String, url: String, statusCode: Int, durationMillis: Long) {
+        metrics.recordLatency(url, durationMillis, statusCode)
+    }
+
+    override suspend fun onError(method: String, url: String, error: SupabaseError, durationMillis: Long) {
+        metrics.countError(error.category)
+    }
+}
+```
+
+Exactly one terminal hook fires per call: `onResponse` when an HTTP response is
+received (**any** status — a `404` is a response, not an error), or `onError` when
+no response was obtained (offline, DNS/TLS failure, timeout).
+
+<Callout type="warning">
+  Hooks are observational — they must not throw, and they cannot alter the request
+  or its result. Keep them fast; they run on the request path.
+</Callout>
