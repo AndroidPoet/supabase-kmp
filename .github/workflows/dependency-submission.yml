@@ -1,0 +1,28 @@
+name: Dependency Submission
+
+# Resolves the full (transitive) Gradle dependency graph and submits it to
+# GitHub's Dependency Graph. This is what powers Dependabot alerts against
+# transitive dependencies and gives dependency-review.yml a baseline to diff
+# pull requests against.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+
+      - name: Submit dependency graph
+        uses: gradle/actions/dependency-submission@v4
