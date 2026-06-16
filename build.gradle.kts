@@ -129,6 +129,19 @@ dependencies {
     publishedModules.forEach { kover(project(":$it")) }
 }
 
+// Coverage gate: fail the build if aggregate line coverage regresses below the
+// floor. Current is ~71%; the floor sits a little below to leave headroom for
+// honest refactors without letting coverage rot. Run via `./gradlew koverVerify`.
+kover {
+    reports {
+        verify {
+            rule("Aggregate line coverage") {
+                minBound(65)
+            }
+        }
+    }
+}
+
 val supabaseStart by tasks.registering(Exec::class) {
     group = "verification"
     description = "Starts the local Supabase Docker stack."
