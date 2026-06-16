@@ -391,7 +391,12 @@ internal class HttpTransport(
         val message =
             str("message", "msg", "error_description", "error_message", "error")
                 ?: body.ifBlank { "HTTP $statusCode" }
-        val code = str("code", "error_code", "statusCode")
+        // Prefer the textual machine code. Legacy GoTrue puts the numeric HTTP
+        // status in `code` and the real string code in `error_code`, so reading
+        // `error_code` first surfaces e.g. "weak_password" instead of "400".
+        // PostgREST (only `code`, the SQLSTATE) and new GoTrue/Storage (string
+        // `code`) are unaffected since they don't send `error_code`.
+        val code = str("error_code", "code", "statusCode")
 
         return SupabaseError(
             message = message,

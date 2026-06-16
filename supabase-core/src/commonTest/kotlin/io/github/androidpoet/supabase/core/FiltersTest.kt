@@ -43,6 +43,65 @@ class FiltersTest {
         assertEquals(listOf("verified" to "is.true"), result)
     }
 
+    // --- Value quoting / injection safety -------------------------------------
+    // PostgREST treats comma, parentheses and double-quote as structural in a
+    // filter value; an unquoted value containing one would change the query's
+    // meaning. These lock the quoting/escaping so filter values can't be used to
+    // inject query structure.
+
+    @Test
+    fun test_eq_valueWithComma_isDoubleQuoted() {
+        assertEquals(listOf("tag" to """eq."a,b""""), filters { eq("tag", "a,b") })
+    }
+
+    @Test
+    fun test_eq_valueWithParentheses_isDoubleQuoted() {
+        assertEquals(listOf("note" to """eq."f(x)""""), filters { eq("note", "f(x)") })
+    }
+
+    @Test
+    fun test_eq_valueWithDoubleQuote_isEscapedAndQuoted() {
+        assertEquals(listOf("name" to """eq."a\"b""""), filters { eq("name", "a\"b") })
+    }
+
+    @Test
+    fun test_eq_valueWithBackslash_isEscapedAndQuoted() {
+        assertEquals(listOf("path" to """eq."a\\b""""), filters { eq("path", "a\\b") })
+    }
+
+    @Test
+    fun test_eq_emptyValue_isQuoted() {
+        assertEquals(listOf("name" to """eq."""""), filters { eq("name", "") })
+    }
+
+    @Test
+    fun test_eq_plainValue_isNotQuoted() {
+        assertEquals(listOf("status" to "eq.active"), filters { eq("status", "active") })
+    }
+
+    @Test
+    fun test_in_quotesElementsContainingSeparators() {
+        assertEquals(
+            listOf("tag" to """in.("a,b",plain)"""),
+            filters { `in`("tag", listOf("a,b", "plain")) },
+        )
+    }
+
+    @Test
+    fun test_nested_and_within_or_combinesCorrectly() {
+        val result =
+            filters {
+                or {
+                    eq("status", "active")
+                    and {
+                        gte("age", "18")
+                        lt("age", "65")
+                    }
+                }
+            }
+        assertEquals(listOf("or" to "(status.eq.active,and.(age.gte.18,age.lt.65))"), result)
+    }
+
     @Test
     fun test_gt_producesCorrectParam() {
         val result = filters { gt("age", "18") }
