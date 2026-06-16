@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **Configurable retry:** `SupabaseConfigBuilder.retry` takes a `RetryConfig`
+  (max attempts, exponential base/cap delays, retryable status set). Replaces the
+  previously hardcoded transport retry constants; a `Retry-After` header still
+  wins over the computed backoff.
+- **Observability hooks** on `SupabaseConfig`:
+  - `logger: SupabaseLogger?` — route HTTP wire logs into your own logging
+    framework (Timber/OSLog/SLF4J) instead of Ktor's default sink.
+  - `interceptor: SupabaseInterceptor?` — `onRequest` / `onResponse(status,
+    durationMillis)` / `onError(error, durationMillis)` hooks fired around every
+    request, for tracing/metrics. All `suspend`, all default no-ops.
+
 ## 0.4.0
 
 ### Added

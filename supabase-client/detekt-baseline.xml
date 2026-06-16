@@ -2,11 +2,11 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>ComplexCondition:HttpTransport.kt$HttpTransport$retryEnabled &amp;&amp; retryableMethod &amp;&amp; statusCode.isRetryableStatus() &amp;&amp; attempt &lt; DEFAULT_MAX_RETRIES</ID>
+    <ID>ComplexCondition:HttpTransport.kt$HttpTransport$retryEnabled &amp;&amp; retryableMethod &amp;&amp; statusCode in retry.retryableStatuses &amp;&amp; attempt &lt; retry.maxRetries</ID>
     <ID>InstanceOfCheckForException:HttpTransport.kt$HttpTransport$e is CancellationException</ID>
     <ID>LoopWithTooManyJumpStatements:HttpTransport.kt$HttpTransport$while</ID>
-    <ID>NestedBlockDepth:HttpTransport.kt$HttpTransport$private suspend inline fun execute( retryEnabled: Boolean = false, retryableMethod: Boolean = false, crossinline request: suspend (attempt: Int) -> io.ktor.client.statement.HttpResponse, ): SupabaseResult&lt;String></ID>
-    <ID>ThrowsCount:HttpTransport.kt$HttpTransport$private suspend inline fun execute( retryEnabled: Boolean = false, retryableMethod: Boolean = false, crossinline request: suspend (attempt: Int) -> io.ktor.client.statement.HttpResponse, ): SupabaseResult&lt;String></ID>
+    <ID>NestedBlockDepth:HttpTransport.kt$HttpTransport$private suspend inline fun execute( method: String, url: String, retryEnabled: Boolean = false, retryableMethod: Boolean = false, crossinline request: suspend (attempt: Int) -> io.ktor.client.statement.HttpResponse, ): SupabaseResult&lt;String></ID>
+    <ID>ThrowsCount:HttpTransport.kt$HttpTransport$private suspend inline fun execute( method: String, url: String, retryEnabled: Boolean = false, retryableMethod: Boolean = false, crossinline request: suspend (attempt: Int) -> io.ktor.client.statement.HttpResponse, ): SupabaseResult&lt;String></ID>
     <ID>UnusedPrivateProperty:HttpTransport.kt$HttpTransport$private val projectUrl: String</ID>
   </CurrentIssues>
 </SmellBaseline>

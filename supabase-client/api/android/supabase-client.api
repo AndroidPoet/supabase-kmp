@@ -1,3 +1,32 @@
+public final class io/github/androidpoet/supabase/client/RetryConfig {
+	public static final field Companion Lio/github/androidpoet/supabase/client/RetryConfig$Companion;
+	public static final field DEFAULT_BASE_DELAY_MILLIS J
+	public static final field DEFAULT_MAX_DELAY_MILLIS J
+	public static final field DEFAULT_MAX_RETRIES I
+	public fun <init> ()V
+	public fun <init> (IJJLjava/util/Set;)V
+	public synthetic fun <init> (IJJLjava/util/Set;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun backoffMillis (I)J
+	public final fun component1 ()I
+	public final fun component2 ()J
+	public final fun component3 ()J
+	public final fun component4 ()Ljava/util/Set;
+	public final fun copy (IJJLjava/util/Set;)Lio/github/androidpoet/supabase/client/RetryConfig;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/client/RetryConfig;IJJLjava/util/Set;ILjava/lang/Object;)Lio/github/androidpoet/supabase/client/RetryConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBaseDelayMillis ()J
+	public final fun getMaxDelayMillis ()J
+	public final fun getMaxRetries ()I
+	public final fun getRetryableStatuses ()Ljava/util/Set;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/androidpoet/supabase/client/RetryConfig$Companion {
+	public final fun getDEFAULT_RETRYABLE_STATUSES ()Ljava/util/Set;
+	public final fun getDefault ()Lio/github/androidpoet/supabase/client/RetryConfig;
+}
+
 public final class io/github/androidpoet/supabase/client/Supabase {
 	public static final field INSTANCE Lio/github/androidpoet/supabase/client/Supabase;
 	public final fun create (Ljava/lang/String;Ljava/lang/String;Lio/ktor/client/engine/HttpClientEngineFactory;Lkotlin/jvm/functions/Function1;)Lio/github/androidpoet/supabase/client/SupabaseClient;
@@ -37,16 +66,23 @@ public final class io/github/androidpoet/supabase/client/SupabaseClientExtKt {
 }
 
 public final class io/github/androidpoet/supabase/client/SupabaseConfig {
-	public fun <init> (ZLio/ktor/client/plugins/logging/LogLevel;Ljava/util/Map;)V
+	public fun <init> (ZLio/ktor/client/plugins/logging/LogLevel;Ljava/util/Map;Lio/github/androidpoet/supabase/client/RetryConfig;Lio/github/androidpoet/supabase/client/SupabaseLogger;Lio/github/androidpoet/supabase/client/SupabaseInterceptor;)V
+	public synthetic fun <init> (ZLio/ktor/client/plugins/logging/LogLevel;Ljava/util/Map;Lio/github/androidpoet/supabase/client/RetryConfig;Lio/github/androidpoet/supabase/client/SupabaseLogger;Lio/github/androidpoet/supabase/client/SupabaseInterceptor;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Z
 	public final fun component2 ()Lio/ktor/client/plugins/logging/LogLevel;
 	public final fun component3 ()Ljava/util/Map;
-	public final fun copy (ZLio/ktor/client/plugins/logging/LogLevel;Ljava/util/Map;)Lio/github/androidpoet/supabase/client/SupabaseConfig;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/client/SupabaseConfig;ZLio/ktor/client/plugins/logging/LogLevel;Ljava/util/Map;ILjava/lang/Object;)Lio/github/androidpoet/supabase/client/SupabaseConfig;
+	public final fun component4 ()Lio/github/androidpoet/supabase/client/RetryConfig;
+	public final fun component5 ()Lio/github/androidpoet/supabase/client/SupabaseLogger;
+	public final fun component6 ()Lio/github/androidpoet/supabase/client/SupabaseInterceptor;
+	public final fun copy (ZLio/ktor/client/plugins/logging/LogLevel;Ljava/util/Map;Lio/github/androidpoet/supabase/client/RetryConfig;Lio/github/androidpoet/supabase/client/SupabaseLogger;Lio/github/androidpoet/supabase/client/SupabaseInterceptor;)Lio/github/androidpoet/supabase/client/SupabaseConfig;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/client/SupabaseConfig;ZLio/ktor/client/plugins/logging/LogLevel;Ljava/util/Map;Lio/github/androidpoet/supabase/client/RetryConfig;Lio/github/androidpoet/supabase/client/SupabaseLogger;Lio/github/androidpoet/supabase/client/SupabaseInterceptor;ILjava/lang/Object;)Lio/github/androidpoet/supabase/client/SupabaseConfig;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getHeaders ()Ljava/util/Map;
+	public final fun getInterceptor ()Lio/github/androidpoet/supabase/client/SupabaseInterceptor;
 	public final fun getLogLevel ()Lio/ktor/client/plugins/logging/LogLevel;
+	public final fun getLogger ()Lio/github/androidpoet/supabase/client/SupabaseLogger;
 	public final fun getLogging ()Z
+	public final fun getRetry ()Lio/github/androidpoet/supabase/client/RetryConfig;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -54,10 +90,16 @@ public final class io/github/androidpoet/supabase/client/SupabaseConfig {
 public final class io/github/androidpoet/supabase/client/SupabaseConfigBuilder {
 	public fun <init> ()V
 	public final fun getHeaders ()Ljava/util/Map;
+	public final fun getInterceptor ()Lio/github/androidpoet/supabase/client/SupabaseInterceptor;
 	public final fun getLogLevel ()Lio/ktor/client/plugins/logging/LogLevel;
+	public final fun getLogger ()Lio/github/androidpoet/supabase/client/SupabaseLogger;
 	public final fun getLogging ()Z
+	public final fun getRetry ()Lio/github/androidpoet/supabase/client/RetryConfig;
+	public final fun setInterceptor (Lio/github/androidpoet/supabase/client/SupabaseInterceptor;)V
 	public final fun setLogLevel (Lio/ktor/client/plugins/logging/LogLevel;)V
+	public final fun setLogger (Lio/github/androidpoet/supabase/client/SupabaseLogger;)V
 	public final fun setLogging (Z)V
+	public final fun setRetry (Lio/github/androidpoet/supabase/client/RetryConfig;)V
 }
 
 public abstract interface annotation class io/github/androidpoet/supabase/client/SupabaseDsl : java/lang/annotation/Annotation {
@@ -81,6 +123,36 @@ public final class io/github/androidpoet/supabase/client/SupabaseHttpResponse {
 	public final fun getHeaders ()Ljava/util/Map;
 	public final fun getStatus ()I
 	public final fun header (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public abstract interface class io/github/androidpoet/supabase/client/SupabaseInterceptor {
+	public abstract fun onError (Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/core/result/SupabaseError;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun onRequest (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun onResponse (Ljava/lang/String;Ljava/lang/String;IJLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/github/androidpoet/supabase/client/SupabaseInterceptor$DefaultImpls {
+	public static fun onError (Lio/github/androidpoet/supabase/client/SupabaseInterceptor;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/core/result/SupabaseError;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun onRequest (Lio/github/androidpoet/supabase/client/SupabaseInterceptor;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun onResponse (Lio/github/androidpoet/supabase/client/SupabaseInterceptor;Ljava/lang/String;Ljava/lang/String;IJLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/github/androidpoet/supabase/client/SupabaseLogLevel : java/lang/Enum {
+	public static final field DEBUG Lio/github/androidpoet/supabase/client/SupabaseLogLevel;
+	public static final field ERROR Lio/github/androidpoet/supabase/client/SupabaseLogLevel;
+	public static final field INFO Lio/github/androidpoet/supabase/client/SupabaseLogLevel;
+	public static final field WARN Lio/github/androidpoet/supabase/client/SupabaseLogLevel;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/client/SupabaseLogLevel;
+	public static fun values ()[Lio/github/androidpoet/supabase/client/SupabaseLogLevel;
+}
+
+public abstract interface class io/github/androidpoet/supabase/client/SupabaseLogger {
+	public abstract fun log (Lio/github/androidpoet/supabase/client/SupabaseLogLevel;Ljava/lang/String;Ljava/lang/Throwable;)V
+}
+
+public final class io/github/androidpoet/supabase/client/SupabaseLogger$DefaultImpls {
+	public static synthetic fun log$default (Lio/github/androidpoet/supabase/client/SupabaseLogger;Lio/github/androidpoet/supabase/client/SupabaseLogLevel;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)V
 }
 
 public abstract interface class io/github/androidpoet/supabase/client/auth/AuthState {
