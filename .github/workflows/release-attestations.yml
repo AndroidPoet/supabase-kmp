@@ -1,0 +1,57 @@
+name: Release attestations
+
+# Runs alongside (not inside) publish.yml so the known-good Maven Central release
+# pipeline is never touched. Generates an SBOM and signed build-provenance/SBOM
+# attestations for the published artifacts, and attaches the SBOM to the release.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write # upload the SBOM as a release asset
+  id-token: write # sign attestations via OIDC
+  attestations: write # write the attestations
+
+jobs:
+  attest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # Build the publishable JARs locally so we have concrete artifacts to
+      # attest and describe. (Publishing itself is handled by publish.yml.)
+      - name: Assemble artifacts
+        run: ./gradlew assemble --no-configuration-cache
+
+      - name: Generate SBOM (CycloneDX)
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: cyclonedx-json
+          output-file: sbom.cyclonedx.json
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: '**/build/libs/*.jar'
+
+      - name: Attest SBOM
+        uses: actions/attest-sbom@v2
+        with:
+          subject-path: '**/build/libs/*.jar'
+          sbom-path: sbom.cyclonedx.json
+
+      - name: Attach SBOM to the release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" sbom.cyclonedx.json --clobber

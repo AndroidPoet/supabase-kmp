@@ -1,0 +1,39 @@
+name: Supply chain
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: supply-chain-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Fails if gradle-wrapper.jar does not match a known-good Gradle release —
+  # the wrapper jar is executable code committed to the repo, so a tampered one
+  # is a classic supply-chain attack vector.
+  wrapper-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+  # Blocks PRs that introduce dependencies with known high-severity
+  # vulnerabilities or disallowed licenses. Compares the dependency graph of the
+  # PR head against main (populated by dependency-submission.yml).
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependency review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
