@@ -121,6 +121,84 @@ public inline fun <A, B, R> SupabaseResult<A>.zip(
             }
     }
 
+/**
+ * Combines three results: a [SupabaseResult.Success] of [transform] applied to
+ * all three values when every result succeeds, otherwise the first
+ * [SupabaseResult.Failure] in receiver → [second] → [third] order.
+ */
+public inline fun <A, B, C, R> SupabaseResult<A>.zip(
+    second: SupabaseResult<B>,
+    third: SupabaseResult<C>,
+    transform: (A, B, C) -> R,
+): SupabaseResult<R> =
+    when (this) {
+        is SupabaseResult.Failure -> this
+        is SupabaseResult.Success ->
+            when (second) {
+                is SupabaseResult.Failure -> second
+                is SupabaseResult.Success ->
+                    when (third) {
+                        is SupabaseResult.Failure -> third
+                        is SupabaseResult.Success ->
+                            SupabaseResult.Success(transform(value, second.value, third.value))
+                    }
+            }
+    }
+
+/**
+ * Collapses many homogeneous results into a single [SupabaseResult] of the list
+ * of values, preserving order. Short-circuits and returns the first
+ * [SupabaseResult.Failure] encountered, so the success path guarantees every
+ * input succeeded.
+ */
+public fun <T> mergeAll(results: List<SupabaseResult<T>>): SupabaseResult<List<T>> {
+    val values = ArrayList<T>(results.size)
+    for (result in results) {
+        when (result) {
+            is SupabaseResult.Success -> values += result.value
+            is SupabaseResult.Failure -> return result
+        }
+    }
+    return SupabaseResult.Success(values)
+}
+
+/** [mergeAll] over a vararg of results. */
+public fun <T> mergeAll(vararg results: SupabaseResult<T>): SupabaseResult<List<T>> =
+    mergeAll(results.asList())
+
+/**
+ * Keeps a [SupabaseResult.Success] only while its value satisfies [predicate];
+ * otherwise it becomes a [SupabaseResult.Failure] built by [lazyError]. A lighter
+ * [validate] for quick guards where a generic error message is acceptable.
+ */
+public inline fun <T> SupabaseResult<T>.filter(
+    lazyError: (T) -> SupabaseError = { SupabaseError(message = "Value did not match the predicate") },
+    predicate: (T) -> Boolean,
+): SupabaseResult<T> =
+    when (this) {
+        is SupabaseResult.Success ->
+            if (predicate(value)) this else SupabaseResult.Failure(lazyError(value))
+        is SupabaseResult.Failure -> this
+    }
+
+/** The negation of [filter]: a [SupabaseResult.Success] survives only when [predicate] is false. */
+public inline fun <T> SupabaseResult<T>.filterNot(
+    lazyError: (T) -> SupabaseError = { SupabaseError(message = "Value matched the excluded predicate") },
+    predicate: (T) -> Boolean,
+): SupabaseResult<T> =
+    when (this) {
+        is SupabaseResult.Success ->
+            if (!predicate(value)) this else SupabaseResult.Failure(lazyError(value))
+        is SupabaseResult.Failure -> this
+    }
+
+/** Returns the success value, or [defaultValue] on failure. The eager sibling of [getOrElse]. */
+public fun <T> SupabaseResult<T>.getOrDefault(defaultValue: T): T =
+    when (this) {
+        is SupabaseResult.Success -> value
+        is SupabaseResult.Failure -> defaultValue
+    }
+
 public inline fun <T> SupabaseResult<T>.onSuccess(
     action: (T) -> Unit,
 ): SupabaseResult<T> =
