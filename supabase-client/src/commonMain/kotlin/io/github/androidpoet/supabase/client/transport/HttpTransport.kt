@@ -1,6 +1,7 @@
 package io.github.androidpoet.supabase.client.transport
 import io.github.androidpoet.supabase.client.SupabaseConfig
 import io.github.androidpoet.supabase.client.SupabaseHttpResponse
+import io.github.androidpoet.supabase.client.SupabaseLogLevel
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseErrorCodes
 import io.github.androidpoet.supabase.core.result.SupabaseResult
@@ -32,11 +33,12 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlin.concurrent.Volatile
+import kotlin.time.TimeSource
+import io.ktor.client.plugins.logging.Logger as KtorLogger
 
 private const val CLIENT_VERSION = "supabase-kmp/0.1.0"
 private const val INTERNAL_RETRY_HEADER = "X-Supabase-Kmp-Retry"
 private const val RETRY_COUNT_HEADER = "X-Retry-Count"
-private const val DEFAULT_MAX_RETRIES = 3
 
 internal class HttpTransport(
     private val config: SupabaseConfig,
@@ -51,6 +53,7 @@ internal class HttpTransport(
     private var accessToken: String? = null
     internal val accessTokenOrNull: String? get() = accessToken
     private val errorJson = Json { ignoreUnknownKeys = true }
+    private val retry = config.retry
     internal val httpClient: HttpClient =
         HttpClient(engineFactory) {
             install(ContentNegotiation) {
@@ -65,6 +68,16 @@ internal class HttpTransport(
             if (config.logging) {
                 install(Logging) {
                     level = config.logLevel
+                    // Route wire logs into the caller's framework when a logger is supplied;
+                    // otherwise fall back to Ktor's default sink.
+                    config.logger?.let { sink ->
+                        logger =
+                            object : KtorLogger {
+                                override fun log(message: String) {
+                                    sink.log(SupabaseLogLevel.DEBUG, message)
+                                }
+                            }
+                    }
                     // Never let credentials reach the log sink. This covers the anon/service
                     // apikey header and every Bearer token (including the auth-admin
                     // service-role key, which flows through this same client).
@@ -88,7 +101,7 @@ internal class HttpTransport(
     ): SupabaseResult<String> {
         val retryEnabled = headers[INTERNAL_RETRY_HEADER]?.toBooleanStrictOrNull() ?: false
         val outgoingHeaders = headers - INTERNAL_RETRY_HEADER
-        return execute(retryEnabled = retryEnabled, retryableMethod = true) { attempt ->
+        return execute(method = "GET", url = url, retryEnabled = retryEnabled, retryableMethod = true) { attempt ->
             httpClient.get(url) {
                 queryParams.forEach { (k, v) -> this.url.parameters.append(k, v) }
                 outgoingHeaders.forEach { (k, v) -> header(k, v) }
@@ -106,7 +119,7 @@ internal class HttpTransport(
         headers: Map<String, String> = emptyMap(),
     ): SupabaseResult<String> {
         val outgoingHeaders = headers - INTERNAL_RETRY_HEADER
-        return execute {
+        return execute(method = "POST", url = url) {
             httpClient.post(url) {
                 contentType(ContentType.Application.Json)
                 body?.let { setBody(it) }
@@ -124,7 +137,7 @@ internal class HttpTransport(
         headers: Map<String, String> = emptyMap(),
     ): SupabaseResult<String> {
         val outgoingHeaders = headers - INTERNAL_RETRY_HEADER
-        return execute {
+        return execute(method = "PUT", url = url) {
             httpClient.put(url) {
                 contentType(ContentType.Application.Json)
                 body?.let { setBody(it) }
@@ -142,7 +155,7 @@ internal class HttpTransport(
         headers: Map<String, String> = emptyMap(),
     ): SupabaseResult<String> {
         val outgoingHeaders = headers - INTERNAL_RETRY_HEADER
-        return execute {
+        return execute(method = "PATCH", url = url) {
             httpClient.patch(url) {
                 contentType(ContentType.Application.Json)
                 body?.let { setBody(it) }
@@ -160,7 +173,7 @@ internal class HttpTransport(
         headers: Map<String, String> = emptyMap(),
     ): SupabaseResult<String> {
         val outgoingHeaders = headers - INTERNAL_RETRY_HEADER
-        return execute {
+        return execute(method = "DELETE", url = url) {
             httpClient.delete(url) {
                 if (body != null) {
                     contentType(ContentType.Application.Json)
@@ -181,7 +194,7 @@ internal class HttpTransport(
         headers: Map<String, String> = emptyMap(),
     ): SupabaseResult<String> {
         val outgoingHeaders = headers - INTERNAL_RETRY_HEADER
-        return execute {
+        return execute(method = "POST", url = url) {
             httpClient.post(url) {
                 contentType(ContentType.parse(contentType))
                 setBody(body)
@@ -200,7 +213,7 @@ internal class HttpTransport(
         headers: Map<String, String> = emptyMap(),
     ): SupabaseResult<String> {
         val outgoingHeaders = headers - INTERNAL_RETRY_HEADER
-        return execute {
+        return execute(method = "PUT", url = url) {
             httpClient.put(url) {
                 contentType(ContentType.parse(contentType))
                 setBody(body)
@@ -218,8 +231,10 @@ internal class HttpTransport(
         body: ByteArray?,
         contentType: String?,
         requestHeaders: Map<String, String>,
-    ): SupabaseResult<SupabaseHttpResponse> =
-        try {
+    ): SupabaseResult<SupabaseHttpResponse> {
+        val mark = TimeSource.Monotonic.markNow()
+        config.interceptor?.onRequest(method, url)
+        return try {
             val response =
                 httpClient.request(url) {
                     this.method = HttpMethod.parse(method)
@@ -231,6 +246,7 @@ internal class HttpTransport(
                     body?.let { setBody(it) }
                 }
             val bytes = response.readRawBytes()
+            config.interceptor?.onResponse(method, url, response.status.value, mark.elapsedNow().inWholeMilliseconds)
             if (response.status.isSuccess()) {
                 val flatHeaders = response.headers.entries().associate { (k, v) -> k to v.joinToString(",") }
                 SupabaseResult.Success(SupabaseHttpResponse(response.status.value, flatHeaders, bytes))
@@ -240,8 +256,11 @@ internal class HttpTransport(
             }
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
-            SupabaseResult.Failure(networkError(throwable = e))
+            val error = networkError(throwable = e)
+            config.interceptor?.onError(method, url, error, mark.elapsedNow().inWholeMilliseconds)
+            SupabaseResult.Failure(error)
         }
+    }
 
     fun setAccessToken(token: String) {
         accessToken = token
@@ -256,20 +275,24 @@ internal class HttpTransport(
     }
 
     private suspend inline fun execute(
+        method: String,
+        url: String,
         retryEnabled: Boolean = false,
         retryableMethod: Boolean = false,
         crossinline request: suspend (attempt: Int) -> io.ktor.client.statement.HttpResponse,
     ): SupabaseResult<String> {
+        val mark = TimeSource.Monotonic.markNow()
+        config.interceptor?.onRequest(method, url)
         return try {
             var attempt = 0
-            while (attempt <= DEFAULT_MAX_RETRIES) {
+            while (attempt <= retry.maxRetries) {
                 val response =
                     try {
                         request(attempt)
                     } catch (e: Throwable) {
                         if (e is CancellationException) throw e
-                        if (retryEnabled && retryableMethod && attempt < DEFAULT_MAX_RETRIES) {
-                            delay(retryDelayMillis(attempt))
+                        if (retryEnabled && retryableMethod && attempt < retry.maxRetries) {
+                            delay(retry.backoffMillis(attempt))
                             attempt++
                             continue
                         }
@@ -278,21 +301,29 @@ internal class HttpTransport(
                 val text = response.bodyAsText()
                 val statusCode = response.status.value
                 if (response.status.isSuccess()) {
+                    config.interceptor?.onResponse(method, url, statusCode, mark.elapsedNow().inWholeMilliseconds)
                     return SupabaseResult.Success(text)
                 }
-                if (retryEnabled && retryableMethod && statusCode.isRetryableStatus() && attempt < DEFAULT_MAX_RETRIES) {
+                if (retryEnabled && retryableMethod &&
+                    statusCode in retry.retryableStatuses && attempt < retry.maxRetries
+                ) {
                     delay(response.retryDelayMillis(attempt))
                     attempt++
                     continue
                 }
                 val retryAfter = response.headers["Retry-After"]?.toLongOrNull()
                 val error = parseError(text, statusCode, retryAfter)
+                config.interceptor?.onResponse(method, url, statusCode, mark.elapsedNow().inWholeMilliseconds)
                 return SupabaseResult.Failure(error)
             }
-            SupabaseResult.Failure(networkError(message = "Retry attempts exhausted"))
+            val exhausted = networkError(message = "Retry attempts exhausted")
+            config.interceptor?.onError(method, url, exhausted, mark.elapsedNow().inWholeMilliseconds)
+            SupabaseResult.Failure(exhausted)
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
-            SupabaseResult.Failure(networkError(throwable = e))
+            val error = networkError(throwable = e)
+            config.interceptor?.onError(method, url, error, mark.elapsedNow().inWholeMilliseconds)
+            SupabaseResult.Failure(error)
         }
     }
 
@@ -317,22 +348,15 @@ internal class HttpTransport(
         )
     }
 
+    // A Retry-After header (seconds) wins over the configured exponential backoff.
     private fun io.ktor.client.statement.HttpResponse.retryDelayMillis(attempt: Int): Long {
         val retryAfterSeconds = headers["Retry-After"]?.toLongOrNull()
-        return if (retryAfterSeconds != null) retryAfterSeconds.coerceAtLeast(0) * 1_000 else retryDelayMillis(attempt)
+        return if (retryAfterSeconds != null) {
+            retryAfterSeconds.coerceAtLeast(0) * 1_000
+        } else {
+            retry.backoffMillis(attempt)
+        }
     }
-
-    private fun retryDelayMillis(attempt: Int): Long =
-        1_000L shl attempt
-
-    private fun Int.isRetryableStatus(): Boolean =
-        this == 429 ||
-            // Too Many Requests — Retry-After is honored above
-            this == 500 ||
-            this == 502 ||
-            this == 503 ||
-            this == 504 ||
-            this == 520
 
     // Supabase services return heterogeneous error bodies: PostgREST uses
     // {code,message,details,hint}; GoTrue uses {error_code,msg} or

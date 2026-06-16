@@ -10,11 +10,23 @@ public class SupabaseConfigBuilder {
     public var logLevel: LogLevel = LogLevel.NONE
     public val headers: MutableMap<String, String> = mutableMapOf()
 
+    /** Retry policy for transient failures. See [RetryConfig]. */
+    public var retry: RetryConfig = RetryConfig.Default
+
+    /** Optional sink for HTTP wire logs (routes Ktor logging into your framework). */
+    public var logger: SupabaseLogger? = null
+
+    /** Optional observation hooks fired around every request. */
+    public var interceptor: SupabaseInterceptor? = null
+
     internal fun build(): SupabaseConfig =
         SupabaseConfig(
             logging = logging,
             logLevel = logLevel,
             headers = headers.toMap(),
+            retry = retry,
+            logger = logger,
+            interceptor = interceptor,
         )
 }
 
@@ -22,4 +34,7 @@ public data class SupabaseConfig(
     val logging: Boolean,
     val logLevel: LogLevel,
     val headers: Map<String, String>,
+    val retry: RetryConfig = RetryConfig.Default,
+    val logger: SupabaseLogger? = null,
+    val interceptor: SupabaseInterceptor? = null,
 )
