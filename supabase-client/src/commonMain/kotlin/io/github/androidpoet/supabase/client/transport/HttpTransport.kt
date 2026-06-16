@@ -304,8 +304,10 @@ internal class HttpTransport(
                     config.interceptor?.onResponse(method, url, statusCode, mark.elapsedNow().inWholeMilliseconds)
                     return SupabaseResult.Success(text)
                 }
-                if (retryEnabled && retryableMethod &&
-                    statusCode in retry.retryableStatuses && attempt < retry.maxRetries
+                if (retryEnabled &&
+                    retryableMethod &&
+                    statusCode in retry.retryableStatuses &&
+                    attempt < retry.maxRetries
                 ) {
                     delay(response.retryDelayMillis(attempt))
                     attempt++
