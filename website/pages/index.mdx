@@ -23,6 +23,7 @@ val session = auth.signInWithEmail("user@example.com", "secure-password")
 - **One codebase, every platform** — share auth, data and realtime logic across mobile, desktop and web.
 - **Local JWT verification** — `getClaims()` verifies asymmetric tokens on-device against the JWKS, no server round-trip.
 - **Native sign-in, your way** — optional Google & Apple modules built on a pluggable `NativeAuthProvider`; bring your own for anything else.
+- **Built for production** — configurable retry with exponential backoff, a `Network` error category for offline UI, and `suspend` observability hooks for tracing and metrics.
 - **Bring-your-own everything** — pluggable session storage, HTTP engine and crypto. Nothing heavy is bundled behind your back.
 
 ## Explore

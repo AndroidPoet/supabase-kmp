@@ -13,7 +13,7 @@ version and the modules you need to your version catalog.
 
 ```toml filename="gradle/libs.versions.toml"
 [versions]
-supabase-kmp = "0.3.5"
+supabase-kmp = "0.4.0"
 
 [libraries]
 supabase-client = { module = "io.github.androidpoet:supabase-client", version.ref = "supabase-kmp" }
@@ -69,6 +69,9 @@ val functions = createFunctionsClient(client)
   `supabase-auth-admin` module uses the service-role key and is for trusted
   server-side contexts only.
 </Callout>
+
+The `configure { }` block tunes logging, retries, custom headers, and
+observability hooks. See [Configuration](/configuration) for the full surface.
 
 ## Next steps
 

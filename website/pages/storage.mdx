@@ -47,6 +47,49 @@ val bytes: SupabaseResult<ByteArray> = storage.download("avatars", "user-123/pho
 | `remove(bucket, paths)` / `removeWithResult(…)` | delete one or many |
 | `info(bucket, path)` / `exists(bucket, path)` | metadata / existence |
 
+## Resumable uploads
+
+For large files or flaky networks, upload in chunks over the **TUS** protocol. The
+server tracks the offset, so an interrupted transfer resumes from where it stopped
+instead of restarting.
+
+```kotlin
+// One-shot — suspends until done:
+storage.uploadResumable(
+    bucket = "videos",
+    path = "user-123/clip.mp4",
+    data = bytes,
+    contentType = "video/mp4",
+)
+```
+
+For progress and pause/resume, create the handle directly and observe its
+`progress` flow:
+
+```kotlin
+val upload = storage.createResumableUpload(
+    bucket = "videos",
+    path = "user-123/clip.mp4",
+    data = bytes,
+    contentType = "video/mp4",
+)
+
+scope.launch {
+    upload.progress.collect { p -> render(p.fraction) }   // 0f..1f
+}
+
+val job = scope.launch { upload.await() }   // runs to completion
+```
+
+<Callout type="info">
+  **Pause / resume across restarts.** Cancelling the coroutine running `await()`
+  pauses the upload, leaving uploaded bytes on the server. Persist
+  `upload.uploadUrl`; later, recreate the handle with `createResumableUpload(…,
+  uploadUrl = saved)` and call `await()` again — it `HEAD`s the server for the
+  current offset and continues. Chunks default to 6 MiB
+  (`RESUMABLE_DEFAULT_CHUNK_SIZE`), the size Supabase requires.
+</Callout>
+
 ## Listing
 
 ```kotlin

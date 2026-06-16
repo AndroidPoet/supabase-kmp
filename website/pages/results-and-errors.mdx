@@ -44,10 +44,22 @@ result
 | `map { value -> … }` | transform the success value |
 | `flatMap { value -> SupabaseResult<R> }` | chain another fallible call |
 | `mapError { error -> … }` | rewrite the error |
+| `flatMapError { error -> SupabaseResult<T> }` | recover via another fallible call |
 | `recover { error -> value }` | turn a failure into a success |
+| `validate(lazyError) { value -> Boolean }` | fail a success that breaks an invariant |
+| `zip(other) { a, b -> … }` | combine two results, short-circuiting on the first failure |
+
+```kotlin
+// Guard a success value, then combine two independent reads:
+val profile = database.selectSingleTyped<Profile>(table = "profiles") { eq("id", uid) }
+    .validate(lazyError = { SupabaseError("Profile is incomplete") }) { it.isComplete }
+
+val dashboard = profile.zip(loadSettings()) { p, settings -> Dashboard(p, settings) }
+```
 
 Suspending variants exist for async transforms: `mapSuspend`, `foldSuspend`,
-`recoverSuspend`, `onSuccessSuspend`, `onFailureSuspend`.
+`recoverSuspend`, `flatMapErrorSuspend`, `onSuccessSuspend`, `onFailureSuspend`,
+`onFailureCategorySuspend`.
 
 ### Side-effects
 
@@ -56,12 +68,13 @@ auth.signInWithEmail(email, password)
     .onSuccess { sessionManager.saveSession(it) }
     .onUnauthorized { showInvalidCredentials() }
     .onRateLimited { showTryLater() }
+    .onNetworkError { showOfflineBanner() }
     .onFailure { logUnexpected(it) }
 ```
 
 `onSuccess`, `onFailure`, `onConflict`, `onNotFound`, `onUnauthorized`,
-`onRateLimited`, and `onFailureCategory(category) { … }` all return the result
-so you can keep chaining.
+`onRateLimited`, `onNetworkError`, and `onFailureCategory(category) { … }` all
+return the result so you can keep chaining.
 
 ### Wrapping your own code
 
@@ -79,8 +92,14 @@ public data class SupabaseError(
     val code: String? = null,
     val details: JsonElement? = null,
     val hint: String? = null,
+    val httpStatus: Int? = null,        // HTTP status, even when the body carries no code
+    val retryAfterSeconds: Long? = null, // parsed from a Retry-After header (429/503)
 )
 ```
+
+`httpStatus` is always captured when a response was received — so a `404` or a
+GoTrue error body without a machine code still categorizes correctly instead of
+collapsing to `Unknown`.
 
 ### Categories
 
@@ -92,10 +111,21 @@ when (result.errorOrNull()?.category) {
     SupabaseErrorCategory.NotFound -> /* 404 */
     SupabaseErrorCategory.Unauthorized -> /* 401 / 403 */
     SupabaseErrorCategory.RateLimited -> /* 429 */
-    SupabaseErrorCategory.Validation -> /* 422 */
+    SupabaseErrorCategory.Validation -> /* 400 / 422 */
     SupabaseErrorCategory.Internal -> /* 5xx */
+    SupabaseErrorCategory.Network -> /* offline, DNS/TLS, timeout — no response */
     SupabaseErrorCategory.Unknown, null -> /* fallback */
 }
+```
+
+`Network` is distinct from `Unknown` so you can show offline/retry UI when no
+response was received at all. Two helpers make the common branches terse:
+
+```kotlin
+error.isNetworkError()           // category == Network
+error.category.isRetryable       // true for RateLimited, Internal, Network
+
+result.onNetworkError { showOfflineBanner() }   // chainable, like onRateLimited
 ```
 
 ### Predicates
