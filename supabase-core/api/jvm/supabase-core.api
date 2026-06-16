@@ -407,6 +407,12 @@ public final class io/github/androidpoet/supabase/core/result/SupabaseResult$Suc
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class io/github/androidpoet/supabase/core/result/SupabaseResultAsyncKt {
+	public static final fun awaitMerged (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun awaitMerged ([Lkotlinx/coroutines/Deferred;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun deferredResult (Lkotlinx/coroutines/CoroutineScope;Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/Deferred;
+}
+
 public final class io/github/androidpoet/supabase/core/result/SupabaseResultFlowKt {
 	public static final fun toFlow (Lio/github/androidpoet/supabase/core/result/SupabaseResult;)Lkotlinx/coroutines/flow/Flow;
 	public static final fun toFlow (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/Flow;
