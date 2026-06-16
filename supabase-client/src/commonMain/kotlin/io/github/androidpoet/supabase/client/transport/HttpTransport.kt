@@ -52,6 +52,16 @@ internal class HttpTransport(
     @Volatile
     private var accessToken: String? = null
     internal val accessTokenOrNull: String? get() = accessToken
+
+    // The project key is sent as the `apikey` header on every request and is the
+    // authenticator for anonymous requests. Only a JWT belongs in
+    // `Authorization: Bearer`: a real session token, or a legacy anon/service_role
+    // key (PostgREST derives the DB role from that JWT). The newer non-JWT keys
+    // (`sb_publishable_…`/`sb_secret_…`) must NEVER be sent as a Bearer token —
+    // for those we omit Authorization and let the `apikey` header authorize the
+    // request. JWTs always start with `eyJ` (base64url of `{"alg"…`).
+    private fun bearerTokenOrNull(): String? = accessToken ?: apiKey.takeIf { it.startsWith("eyJ") }
+
     private val errorJson = Json { ignoreUnknownKeys = true }
     private val retry = config.retry
     internal val httpClient: HttpClient =
@@ -107,7 +117,7 @@ internal class HttpTransport(
                 outgoingHeaders.forEach { (k, v) -> header(k, v) }
                 if (attempt > 0) header(RETRY_COUNT_HEADER, attempt.toString())
                 if ("Authorization" !in outgoingHeaders) {
-                    header("Authorization", "Bearer ${accessToken ?: apiKey}")
+                    bearerTokenOrNull()?.let { header("Authorization", "Bearer $it") }
                 }
             }
         }
@@ -125,7 +135,7 @@ internal class HttpTransport(
                 body?.let { setBody(it) }
                 outgoingHeaders.forEach { (k, v) -> header(k, v) }
                 if ("Authorization" !in outgoingHeaders) {
-                    header("Authorization", "Bearer ${accessToken ?: apiKey}")
+                    bearerTokenOrNull()?.let { header("Authorization", "Bearer $it") }
                 }
             }
         }
@@ -143,7 +153,7 @@ internal class HttpTransport(
                 body?.let { setBody(it) }
                 outgoingHeaders.forEach { (k, v) -> header(k, v) }
                 if ("Authorization" !in outgoingHeaders) {
-                    header("Authorization", "Bearer ${accessToken ?: apiKey}")
+                    bearerTokenOrNull()?.let { header("Authorization", "Bearer $it") }
                 }
             }
         }
@@ -161,7 +171,7 @@ internal class HttpTransport(
                 body?.let { setBody(it) }
                 outgoingHeaders.forEach { (k, v) -> header(k, v) }
                 if ("Authorization" !in outgoingHeaders) {
-                    header("Authorization", "Bearer ${accessToken ?: apiKey}")
+                    bearerTokenOrNull()?.let { header("Authorization", "Bearer $it") }
                 }
             }
         }
@@ -181,7 +191,7 @@ internal class HttpTransport(
                 }
                 outgoingHeaders.forEach { (k, v) -> header(k, v) }
                 if ("Authorization" !in outgoingHeaders) {
-                    header("Authorization", "Bearer ${accessToken ?: apiKey}")
+                    bearerTokenOrNull()?.let { header("Authorization", "Bearer $it") }
                 }
             }
         }
@@ -200,7 +210,7 @@ internal class HttpTransport(
                 setBody(body)
                 outgoingHeaders.forEach { (k, v) -> header(k, v) }
                 if ("Authorization" !in outgoingHeaders) {
-                    header("Authorization", "Bearer ${accessToken ?: apiKey}")
+                    bearerTokenOrNull()?.let { header("Authorization", "Bearer $it") }
                 }
             }
         }
@@ -219,7 +229,7 @@ internal class HttpTransport(
                 setBody(body)
                 outgoingHeaders.forEach { (k, v) -> header(k, v) }
                 if ("Authorization" !in outgoingHeaders) {
-                    header("Authorization", "Bearer ${accessToken ?: apiKey}")
+                    bearerTokenOrNull()?.let { header("Authorization", "Bearer $it") }
                 }
             }
         }
@@ -240,7 +250,7 @@ internal class HttpTransport(
                     this.method = HttpMethod.parse(method)
                     requestHeaders.forEach { (k, v) -> header(k, v) }
                     if ("Authorization" !in requestHeaders) {
-                        header("Authorization", "Bearer ${accessToken ?: apiKey}")
+                        bearerTokenOrNull()?.let { header("Authorization", "Bearer $it") }
                     }
                     contentType?.let { contentType(ContentType.parse(it)) }
                     body?.let { setBody(it) }
