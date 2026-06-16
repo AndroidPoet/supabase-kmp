@@ -24,11 +24,19 @@ public class FilterBuilder {
         params += column to "eq.$value"
     }
 
+    public fun eq(column: String, value: Boolean) {
+        params += column to "eq.$value"
+    }
+
     public fun neq(column: String, value: String) {
         params += column to "neq.${encodeValue(value)}"
     }
 
     public fun neq(column: String, value: Number) {
+        params += column to "neq.$value"
+    }
+
+    public fun neq(column: String, value: Boolean) {
         params += column to "neq.$value"
     }
 
@@ -90,6 +98,15 @@ public class FilterBuilder {
 
     public fun `is`(column: String, value: String) {
         params += column to "is.$value"
+    }
+
+    /**
+     * `IS` check for the three values PostgREST accepts here: `null` (pass `null`),
+     * `true`, or `false`. Use this for nullable/boolean columns — e.g.
+     * `is("deleted_at", null)` → `deleted_at=is.null`.
+     */
+    public fun `is`(column: String, value: Boolean?) {
+        params += column to "is.${value ?: "null"}"
     }
 
     public fun `in`(column: String, values: List<String>) {

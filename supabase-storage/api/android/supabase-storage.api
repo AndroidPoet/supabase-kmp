@@ -101,6 +101,10 @@ public final class io/github/androidpoet/supabase/storage/SortOrder : java/lang/
 	public static fun values ()[Lio/github/androidpoet/supabase/storage/SortOrder;
 }
 
+public final class io/github/androidpoet/supabase/storage/StorageAccessorKt {
+	public static final fun getStorage (Lio/github/androidpoet/supabase/client/SupabaseClient;)Lio/github/androidpoet/supabase/storage/StorageClient;
+}
+
 public abstract interface class io/github/androidpoet/supabase/storage/StorageClient {
 	public abstract fun analyticsCatalog (Ljava/lang/String;)Lio/github/androidpoet/supabase/storage/AnalyticsCatalogClient;
 	public abstract fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
