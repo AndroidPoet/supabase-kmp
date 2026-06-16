@@ -7,6 +7,10 @@ public final class io/github/androidpoet/supabase/database/CountOption : java/la
 	public static fun values ()[Lio/github/androidpoet/supabase/database/CountOption;
 }
 
+public final class io/github/androidpoet/supabase/database/DatabaseAccessorKt {
+	public static final fun getDatabase (Lio/github/androidpoet/supabase/client/SupabaseClient;)Lio/github/androidpoet/supabase/database/DatabaseClient;
+}
+
 public abstract interface class io/github/androidpoet/supabase/database/DatabaseClient {
 	public abstract fun delete (Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/database/ReturnOption;Lio/github/androidpoet/supabase/database/CountOption;ZZLjava/lang/Integer;Lio/github/androidpoet/supabase/database/ExplainOptions;Ljava/util/Map;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun insert (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ZLio/github/androidpoet/supabase/database/UpsertResolution;ZLjava/lang/String;Lio/github/androidpoet/supabase/database/ReturnOption;Lio/github/androidpoet/supabase/database/CountOption;ZZLjava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

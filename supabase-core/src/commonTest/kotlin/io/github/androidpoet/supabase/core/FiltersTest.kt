@@ -20,6 +20,30 @@ class FiltersTest {
     }
 
     @Test
+    fun test_eq_booleanOverload_producesCorrectParam() {
+        val result = filters { eq("is_active", true) }
+        assertEquals(listOf("is_active" to "eq.true"), result)
+    }
+
+    @Test
+    fun test_neq_booleanOverload_producesCorrectParam() {
+        val result = filters { neq("archived", false) }
+        assertEquals(listOf("archived" to "neq.false"), result)
+    }
+
+    @Test
+    fun test_is_nullOverload_producesIsNull() {
+        val result = filters { `is`("deleted_at", null) }
+        assertEquals(listOf("deleted_at" to "is.null"), result)
+    }
+
+    @Test
+    fun test_is_booleanOverload_producesIsBoolean() {
+        val result = filters { `is`("verified", true) }
+        assertEquals(listOf("verified" to "is.true"), result)
+    }
+
+    @Test
     fun test_gt_producesCorrectParam() {
         val result = filters { gt("age", "18") }
         assertEquals(listOf("age" to "gt.18"), result)

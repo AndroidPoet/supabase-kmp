@@ -341,6 +341,29 @@ public final class io/github/androidpoet/supabase/realtime/RealtimeFactoryKt {
 	public static synthetic fun createRealtimeClient$default (Lio/github/androidpoet/supabase/client/SupabaseClient;Lio/github/androidpoet/supabase/realtime/RealtimeConfig;ILjava/lang/Object;)Lio/github/androidpoet/supabase/realtime/RealtimeClient;
 }
 
+public final class io/github/androidpoet/supabase/realtime/RealtimeFilter {
+	public fun <init> ()V
+	public final fun build ()Ljava/lang/String;
+	public final fun eq (Ljava/lang/String;Ljava/lang/Number;)V
+	public final fun eq (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun eq (Ljava/lang/String;Z)V
+	public final fun gt (Ljava/lang/String;Ljava/lang/Number;)V
+	public final fun gte (Ljava/lang/String;Ljava/lang/Number;)V
+	public final fun isIn (Ljava/lang/String;Ljava/util/List;)V
+	public final fun lt (Ljava/lang/String;Ljava/lang/Number;)V
+	public final fun lte (Ljava/lang/String;Ljava/lang/Number;)V
+	public final fun neq (Ljava/lang/String;Ljava/lang/Number;)V
+	public final fun neq (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun neq (Ljava/lang/String;Z)V
+}
+
+public abstract interface annotation class io/github/androidpoet/supabase/realtime/RealtimeFilterDsl : java/lang/annotation/Annotation {
+}
+
+public final class io/github/androidpoet/supabase/realtime/RealtimeFilterKt {
+	public static final fun realtimeFilter (Lkotlin/jvm/functions/Function1;)Ljava/lang/String;
+}
+
 public abstract interface class io/github/androidpoet/supabase/realtime/RealtimeSubscription {
 	public abstract fun asFlow ()Lkotlinx/coroutines/flow/Flow;
 	public abstract fun broadcast (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
