@@ -28,14 +28,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # build-mode: none analyses the Kotlin/Java sources directly, so CodeQL
-      # does not need to compile the multiplatform build (its autobuilder can't
-      # drive the KMP/native targets reliably).
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # Kotlin extraction requires a traced compile (build-mode: none only sees
+      # Java, and this project is ~all Kotlin). Manual mode lets us compile just
+      # the JVM source sets of the library modules — enough for CodeQL to trace
+      # every published module without pulling in the Android sample build.
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: java-kotlin
-          build-mode: none
+          build-mode: manual
+
+      - name: Compile JVM sources (traced by CodeQL)
+        run: ./gradlew compileKotlinJvm --no-daemon
 
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@v3
