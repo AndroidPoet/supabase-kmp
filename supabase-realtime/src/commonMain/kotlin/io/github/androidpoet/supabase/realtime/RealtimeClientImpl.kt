@@ -88,8 +88,10 @@ internal class RealtimeClientImpl(
     // Set when a heartbeat is sent, cleared when its reply arrives. If it is still
     // set at the next heartbeat tick, the server went silent: tear the socket down
     // so the normal reconnect path runs (otherwise the connection is a zombie).
-    @Volatile
-    private var pendingHeartbeatRef: String? = null
+    // The heartbeat tick (one coroutine) and the inbound reply handler (another)
+    // race on this, so it is atomic: the tick takes the value with a single
+    // getAndSet, which can't observe a half-applied reply and false-positive.
+    private val pendingHeartbeatRef = atomic<String?>(null)
 
     // Outbound messages issued while the socket is down (e.g. a broadcast sent
     // mid-reconnect) would otherwise be silently dropped by `session?.send`.
@@ -318,7 +320,7 @@ internal class RealtimeClientImpl(
         val url = "$wsScheme://$host/realtime/v1/websocket?apikey=${supabaseClient.apiKey}&vsn=1.0.0"
         val newScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         scope = newScope
-        pendingHeartbeatRef = null
+        pendingHeartbeatRef.value = null
         // Bound the handshake so a stalled connect surfaces as a timeout (and
         // triggers reconnect/Failed) instead of hanging on the platform default.
         val ws = withTimeout(config.connectionTimeoutMs) { httpClient.webSocketSession(url) }
@@ -346,11 +348,11 @@ internal class RealtimeClientImpl(
             newScope.launch {
                 while (isActive) {
                     delay(config.heartbeatIntervalMs)
-                    if (pendingHeartbeatRef != null) {
+                    if (pendingHeartbeatRef.getAndSet(null) != null) {
                         // Previous heartbeat was never acknowledged → server is gone.
                         // Closing the socket wakes the incoming loop, whose finally
-                        // block runs the reconnect path.
-                        pendingHeartbeatRef = null
+                        // block runs the reconnect path. getAndSet clears and reads
+                        // atomically, so a reply landing concurrently can't be missed.
                         session?.close()
                         break
                     }
@@ -361,7 +363,7 @@ internal class RealtimeClientImpl(
 
     private suspend fun sendHeartbeatMessage() {
         val ref = nextRef()
-        pendingHeartbeatRef = ref
+        pendingHeartbeatRef.value = ref
         sendMessage(
             RealtimeMessage(
                 topic = "phoenix",
@@ -394,7 +396,7 @@ internal class RealtimeClientImpl(
             )
         _debugEvents.tryEmit(RealtimeDebugEvent.InboundMessage(message))
         if (message.isHeartbeatReply()) {
-            pendingHeartbeatRef = null
+            pendingHeartbeatRef.value = null
             _debugEvents.tryEmit(RealtimeDebugEvent.HeartbeatReceived(message.ref))
         }
     }
