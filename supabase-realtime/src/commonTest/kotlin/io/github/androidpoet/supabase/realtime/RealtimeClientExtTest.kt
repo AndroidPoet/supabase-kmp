@@ -6,6 +6,7 @@ import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.realtime.models.PostgresChangeEvent
 import io.github.androidpoet.supabase.realtime.models.PresenceState
 import io.github.androidpoet.supabase.realtime.models.RealtimeChannel
+import io.github.androidpoet.supabase.realtime.models.RealtimeMessage
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -224,6 +225,42 @@ class RealtimeClientExtTest {
             assertEquals(1, realtime.debugState.value.outboundMessageCount)
             assertEquals(1, realtime.debugState.value.heartbeatSentCount)
             assertEquals("1", realtime.debugState.value.lastOutboundRef)
+        }
+
+    @Test
+    fun test_sendMessage_dropsOldestAndSignalsWhenOfflineBufferFull() =
+        runTest {
+            val realtime = RealtimeClientImpl(ExtFakeSupabaseClient(), RealtimeConfig(autoReconnect = false))
+
+            // Never connected -> the socket is null, so application messages buffer
+            // offline instead of being sent.
+            val dropped =
+                async {
+                    realtime.debugEvents
+                        .filterIsInstance<RealtimeDebugEvent.OutboundMessageDropped>()
+                        .first()
+                }
+            yield()
+
+            // Fill the 100-message buffer, then send one more to force an eviction.
+            // Yield each iteration so the debug collector drains events as they are
+            // emitted instead of overflowing the SharedFlow's replay buffer.
+            repeat(101) { i ->
+                realtime.sendMessage(
+                    RealtimeMessage(
+                        topic = "realtime:test",
+                        event = "broadcast",
+                        payload = buildJsonObject { put("i", i) },
+                        ref = i.toString(),
+                    ),
+                )
+                yield()
+            }
+
+            val event = dropped.await()
+            // The oldest message (ref "0") is the one discarded.
+            assertEquals("0", event.message.ref)
+            assertEquals(100, event.capacity)
         }
 }
 
