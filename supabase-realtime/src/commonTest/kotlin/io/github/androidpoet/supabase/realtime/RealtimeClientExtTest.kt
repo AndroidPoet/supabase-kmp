@@ -262,6 +262,23 @@ class RealtimeClientExtTest {
             assertEquals("0", event.message.ref)
             assertEquals(100, event.capacity)
         }
+
+    @Test
+    fun test_subscribeWithResult_failsWhenJoinNeverCompletes() =
+        runTest {
+            val realtime =
+                RealtimeClientImpl(
+                    ExtFakeSupabaseClient(),
+                    RealtimeConfig(autoReconnect = false, connectionTimeoutMs = 100),
+                )
+
+            // Not connected, so the phx_join is never acknowledged. Instead of
+            // returning a subscription stuck in SUBSCRIBING, the result reports the
+            // failure directly.
+            val result = realtime.channel("room").subscribeWithResult()
+
+            assertTrue(result is SupabaseResult.Failure)
+        }
 }
 
 private class ExtFakeSupabaseClient : SupabaseClient {

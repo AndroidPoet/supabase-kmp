@@ -1,5 +1,7 @@
 package io.github.androidpoet.supabase.realtime
 import io.github.androidpoet.supabase.client.SupabaseClient
+import io.github.androidpoet.supabase.core.result.SupabaseError
+import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.realtime.models.PostgresChangeEvent
 import io.github.androidpoet.supabase.realtime.models.PresenceState
 import io.github.androidpoet.supabase.realtime.models.RealtimeChannel
@@ -265,6 +267,31 @@ internal class RealtimeClientImpl(
         synchronized(subscriptionsLock) { activeSubscriptions[topic] = subscription }
         sendJoinMessage(subscription)
         return subscription
+    }
+
+    internal suspend fun subscribeWithResult(
+        builder: RealtimeChannelBuilder,
+    ): SupabaseResult<RealtimeSubscription> {
+        val subscription = subscribe(builder)
+        // Wait for the join to resolve instead of handing back a still-SUBSCRIBING
+        // subscription. Bound it ourselves: if the socket is down the internal
+        // join watchdog never launches, so the status would otherwise hang here.
+        val terminal =
+            withTimeoutOrNull(config.connectionTimeoutMs) {
+                subscription.status.first { it != RealtimeSubscription.Status.SUBSCRIBING }
+            }
+        return if (terminal == RealtimeSubscription.Status.SUBSCRIBED) {
+            SupabaseResult.Success(subscription)
+        } else {
+            // Timed out (null) or reached a non-subscribed terminal state (ERROR).
+            // Ensure a timed-out join is marked failed for any status observers.
+            (subscription as? ChannelSubscriptionImpl)?.markJoinTimedOut()
+            SupabaseResult.Failure(
+                SupabaseError(
+                    message = "Channel '${builder.channelName}' failed to subscribe: ${terminal ?: "join timed out"}",
+                ),
+            )
+        }
     }
 
     internal suspend fun leaveChannel(topic: String) {

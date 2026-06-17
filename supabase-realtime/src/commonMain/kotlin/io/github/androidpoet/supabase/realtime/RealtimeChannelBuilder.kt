@@ -1,4 +1,5 @@
 package io.github.androidpoet.supabase.realtime
+import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.realtime.models.PostgresChangeEvent
 import io.github.androidpoet.supabase.realtime.models.PresenceState
 import kotlinx.serialization.json.JsonObject
@@ -102,6 +103,17 @@ public class RealtimeChannelBuilder internal constructor(
 
     public suspend fun subscribe(): RealtimeSubscription =
         client.subscribe(this)
+
+    /**
+     * Like [subscribe], but suspends until the channel join resolves and reports
+     * the outcome as a [SupabaseResult] instead of handing back a subscription
+     * that may still be joining. Returns [SupabaseResult.Failure] if the join is
+     * rejected by the server or times out (after `connectionTimeoutMs`), so a
+     * failed subscription no longer has to be detected by polling
+     * [RealtimeSubscription.status].
+     */
+    public suspend fun subscribeWithResult(): SupabaseResult<RealtimeSubscription> =
+        client.subscribeWithResult(this)
 }
 
 internal sealed class PostgresCallbackConfig {
