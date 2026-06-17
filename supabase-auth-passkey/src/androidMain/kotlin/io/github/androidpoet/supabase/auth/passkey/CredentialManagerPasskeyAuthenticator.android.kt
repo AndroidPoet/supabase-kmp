@@ -7,8 +7,13 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetPublicKeyCredentialOption
 import androidx.credentials.PublicKeyCredential
+import androidx.credentials.exceptions.CreateCredentialCancellationException
 import androidx.credentials.exceptions.CreateCredentialException
+import androidx.credentials.exceptions.CreateCredentialUnsupportedException
+import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.GetCredentialUnsupportedException
+import androidx.credentials.exceptions.NoCredentialException
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import kotlinx.serialization.json.Json
@@ -33,43 +38,48 @@ public class CredentialManagerPasskeyAuthenticator(
 ) : PasskeyAuthenticator {
     override suspend fun createCredential(options: JsonObject): SupabaseResult<JsonObject> =
         try {
-            val request = CreatePublicKeyCredentialRequest(requestJson = options.toRequestJson())
+            // Options are already normalized to the W3C JSON form by
+            // registerPasskey, and Credential Manager consumes that JSON directly.
+            val request = CreatePublicKeyCredentialRequest(requestJson = options.toString())
             val response = credentialManager.createCredential(context, request)
             val registration = (response as CreatePublicKeyCredentialResponse).registrationResponseJson
             SupabaseResult.Success(parseJsonObject(registration))
         } catch (e: CreateCredentialException) {
-            ceremonyFailure("Passkey registration failed or was cancelled", e)
+            ceremonyFailure(e)
         }
 
     override suspend fun getCredential(options: JsonObject): SupabaseResult<JsonObject> =
         try {
-            val option = GetPublicKeyCredentialOption(requestJson = options.toRequestJson())
+            val option = GetPublicKeyCredentialOption(requestJson = options.toString())
             val request = GetCredentialRequest(listOf(option))
             val response = credentialManager.getCredential(context, request)
             val assertion = (response.credential as PublicKeyCredential).authenticationResponseJson
             SupabaseResult.Success(parseJsonObject(assertion))
         } catch (e: GetCredentialException) {
-            ceremonyFailure("Passkey sign-in failed or was cancelled", e)
+            ceremonyFailure(e)
         }
 
-    private fun ceremonyFailure(fallback: String, cause: Throwable): SupabaseResult.Failure =
-        SupabaseResult.Failure(
-            SupabaseError(
-                message = cause.message ?: fallback,
-                code = PASSKEY_CEREMONY_FAILED,
-            ),
-        )
+    // Translate Credential Manager's exception types into stable, branchable
+    // error codes (mirroring the distinctions the Flutter SDK surfaces) so callers
+    // can tell a user cancellation from a missing passkey or an unsupported device.
+    private fun ceremonyFailure(cause: Throwable): SupabaseResult.Failure {
+        val code =
+            when (cause) {
+                is CreateCredentialCancellationException, is GetCredentialCancellationException -> PASSKEY_CANCELLED
+                is NoCredentialException -> PASSKEY_NO_CREDENTIALS
+                is CreateCredentialUnsupportedException, is GetCredentialUnsupportedException -> PASSKEY_UNSUPPORTED
+                else -> PASSKEY_CEREMONY_FAILED
+            }
+        return SupabaseResult.Failure(SupabaseError(message = cause.message ?: code, code = code))
+    }
 
     private companion object {
+        const val PASSKEY_CANCELLED = "passkey_cancelled"
+        const val PASSKEY_NO_CREDENTIALS = "passkey_no_credentials"
+        const val PASSKEY_UNSUPPORTED = "passkey_unsupported"
         const val PASSKEY_CEREMONY_FAILED = "passkey_ceremony_failed"
         val json = Json { ignoreUnknownKeys = true }
 
         fun parseJsonObject(raw: String): JsonObject = json.parseToJsonElement(raw).jsonObject
-
-        // Credential Manager expects the bare PublicKeyCredential(Creation|Request)
-        // OptionsJSON. Supabase may wrap it under a "publicKey" key (the shape of a
-        // browser CredentialCreationOptions); unwrap it when present.
-        fun JsonObject.toRequestJson(): String =
-            ((this["publicKey"] as? JsonObject) ?: this).toString()
     }
 }

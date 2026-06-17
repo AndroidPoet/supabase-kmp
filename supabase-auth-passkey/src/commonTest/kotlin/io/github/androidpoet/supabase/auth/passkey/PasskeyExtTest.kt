@@ -57,6 +57,46 @@ class PasskeyExtTest {
             // The ceremony failed, so the credential is never verified.
             assertFalse(client.postedEndpoints.any { it.endsWith("/passkeys/registration/verify") })
         }
+
+    @Test
+    fun test_clientSignInWithPasskey_appliesSessionOnSuccess() =
+        runTest {
+            val client = FakePasskeySupabaseClient()
+            val authenticator = FakePasskeyAuthenticator()
+
+            val result = client.signInWithPasskey(authenticator)
+
+            assertTrue(result is SupabaseResult.Success)
+            // The returned access token is persisted onto the client.
+            assertEquals("acc", client.appliedToken)
+            assertEquals("acc", client.accessTokenOrNull)
+        }
+
+    @Test
+    fun test_clientRegisterPasskey_failsWithoutSession() =
+        runTest {
+            val client = FakePasskeySupabaseClient(sessionToken = null)
+            val authenticator = FakePasskeyAuthenticator()
+
+            val result = client.registerPasskey(authenticator)
+
+            assertTrue(result is SupabaseResult.Failure)
+            // No options are ever requested because there is no token to start with.
+            assertTrue(client.postedEndpoints.isEmpty())
+        }
+
+    @Test
+    fun test_clientRegisterPasskey_usesSessionTokenWhenPresent() =
+        runTest {
+            val client = FakePasskeySupabaseClient(sessionToken = "session-token")
+            val authenticator = FakePasskeyAuthenticator()
+
+            val result = client.registerPasskey(authenticator)
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals("pk-1", result.value.id)
+            assertTrue(client.postedEndpoints.any { it.endsWith("/passkeys/registration/verify") })
+        }
 }
 
 private fun kotlinx.serialization.json.JsonElement?.asContent(): String? =
@@ -89,15 +129,25 @@ private class FakePasskeyAuthenticator(
     }
 }
 
-private class FakePasskeySupabaseClient : SupabaseClient {
+private class FakePasskeySupabaseClient(
+    private val sessionToken: String? = null,
+) : SupabaseClient {
     override val projectUrl: String = "https://example.supabase.co"
     override val apiKey: String = "anon"
-    override val accessTokenOrNull: String? = null
+    override val accessTokenOrNull: String? get() = appliedToken ?: sessionToken
     val postedEndpoints: MutableList<String> = mutableListOf()
 
-    override fun setAccessToken(token: String) = Unit
+    /** The token applied via [setAccessToken] — lets tests assert the session was persisted. */
+    var appliedToken: String? = null
+        private set
 
-    override fun clearAccessToken() = Unit
+    override fun setAccessToken(token: String) {
+        appliedToken = token
+    }
+
+    override fun clearAccessToken() {
+        appliedToken = null
+    }
 
     override fun close() = Unit
 

@@ -26,15 +26,16 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(project(":supabase-auth"))
+            // The SupabaseClient-level passkey helpers take a SupabaseClient
+            // receiver, so it must be on the API surface — supabase-auth depends on
+            // it only as `implementation`, which isn't transitive.
+            api(project(":supabase-client"))
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
-            // The tests build a fake SupabaseClient to exercise the orchestration;
-            // supabase-auth depends on supabase-client only as `implementation`.
-            implementation(project(":supabase-client"))
         }
         androidMain.dependencies {
             implementation(libs.androidx.credentials)

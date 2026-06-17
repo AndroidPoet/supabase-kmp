@@ -5,7 +5,10 @@ public abstract interface class io/github/androidpoet/supabase/auth/passkey/Pass
 
 public final class io/github/androidpoet/supabase/auth/passkey/PasskeyExtKt {
 	public static final fun registerPasskey (Lio/github/androidpoet/supabase/auth/AuthClient;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/passkey/PasskeyAuthenticator;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun registerPasskey (Lio/github/androidpoet/supabase/client/SupabaseClient;Lio/github/androidpoet/supabase/auth/passkey/PasskeyAuthenticator;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun signInWithPasskey (Lio/github/androidpoet/supabase/auth/AuthClient;Lio/github/androidpoet/supabase/auth/passkey/PasskeyAuthenticator;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun signInWithPasskey (Lio/github/androidpoet/supabase/client/SupabaseClient;Lio/github/androidpoet/supabase/auth/passkey/PasskeyAuthenticator;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun signInWithPasskey$default (Lio/github/androidpoet/supabase/auth/AuthClient;Lio/github/androidpoet/supabase/auth/passkey/PasskeyAuthenticator;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun signInWithPasskey$default (Lio/github/androidpoet/supabase/client/SupabaseClient;Lio/github/androidpoet/supabase/auth/passkey/PasskeyAuthenticator;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 }
 

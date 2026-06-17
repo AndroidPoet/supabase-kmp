@@ -1,8 +1,12 @@
 package io.github.androidpoet.supabase.auth.passkey
 
 import io.github.androidpoet.supabase.auth.AuthClient
+import io.github.androidpoet.supabase.auth.applySession
+import io.github.androidpoet.supabase.auth.auth
 import io.github.androidpoet.supabase.auth.models.PasskeyMetadata
 import io.github.androidpoet.supabase.auth.models.Session
+import io.github.androidpoet.supabase.client.SupabaseClient
+import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 
 /**
@@ -30,7 +34,7 @@ public suspend fun AuthClient.registerPasskey(
             is SupabaseResult.Failure -> return started
         }
     val credential =
-        when (val produced = authenticator.createCredential(options.options)) {
+        when (val produced = authenticator.createCredential(normalizePasskeyCeremonyOptions(options.options))) {
             is SupabaseResult.Success -> produced.value
             is SupabaseResult.Failure -> return produced
         }
@@ -65,7 +69,7 @@ public suspend fun AuthClient.signInWithPasskey(
             is SupabaseResult.Failure -> return started
         }
     val credential =
-        when (val produced = authenticator.getCredential(options.options)) {
+        when (val produced = authenticator.getCredential(normalizePasskeyCeremonyOptions(options.options))) {
             is SupabaseResult.Success -> produced.value
             is SupabaseResult.Failure -> return produced
         }
@@ -73,4 +77,36 @@ public suspend fun AuthClient.signInWithPasskey(
         challengeId = options.challengeId,
         credential = credential,
     )
+}
+
+/**
+ * Registers a passkey for the currently signed-in user using this client's
+ * access token, then runs the ceremony — the client-level convenience over
+ * [AuthClient.registerPasskey]. Fails if no session is active.
+ */
+public suspend fun SupabaseClient.registerPasskey(
+    authenticator: PasskeyAuthenticator,
+): SupabaseResult<PasskeyMetadata> {
+    val accessToken =
+        accessTokenOrNull
+            ?: return SupabaseResult.Failure(
+                SupabaseError(message = "No active session; sign in before registering a passkey"),
+            )
+    return auth.registerPasskey(accessToken, authenticator)
+}
+
+/**
+ * Signs in with a passkey and, on success, applies the returned access token to
+ * this client so subsequent requests are authenticated — the client-level
+ * counterpart to [AuthClient.signInWithPasskey], mirroring
+ * `SupabaseClient.signInWithEmail`. For persisted/multi-session apps, prefer a
+ * `SessionManager` (its `saveSession` also schedules refresh).
+ */
+public suspend fun SupabaseClient.signInWithPasskey(
+    authenticator: PasskeyAuthenticator,
+    captchaToken: String? = null,
+): SupabaseResult<Session> {
+    val result = auth.signInWithPasskey(authenticator, captchaToken)
+    if (result is SupabaseResult.Success) applySession(result.value)
+    return result
 }
