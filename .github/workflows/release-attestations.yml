@@ -45,7 +45,7 @@ jobs:
           subject-path: '**/build/libs/*.jar'
 
       - name: Attest SBOM
-        uses: actions/attest-sbom@v2
+        uses: actions/attest-sbom@v4
         with:
           subject-path: '**/build/libs/*.jar'
           sbom-path: sbom.cyclonedx.json
