@@ -769,6 +769,16 @@ private fun decodeJwtHeader(segment: String): JwtHeader? {
     }
 }
 
+/**
+ * Extracts the absolute `exp` claim (seconds since the Unix epoch) from an
+ * access token, or null when the token is not a decodable JWT. The session
+ * layer uses this to schedule auto-refresh against wall-clock time instead of a
+ * relative `expires_in`, which goes stale the moment a session is persisted and
+ * restored later.
+ */
+internal fun accessTokenExpiryEpochSeconds(accessToken: String): Long? =
+    (decodeJwt(accessToken) as? SupabaseResult.Success)?.value?.claims?.expiresAt
+
 private fun decodeJwt(jwt: String): SupabaseResult<JwtClaimsResult> {
     val parts = jwt.split('.')
     if (parts.size < 2) {

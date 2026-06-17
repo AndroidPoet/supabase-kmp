@@ -1,6 +1,7 @@
 package io.github.androidpoet.supabase.auth.session
 
 import io.github.androidpoet.supabase.auth.AuthClientImpl
+import io.github.androidpoet.supabase.auth.accessTokenExpiryEpochSeconds
 import io.github.androidpoet.supabase.auth.models.Session
 import io.github.androidpoet.supabase.auth.models.User
 import io.github.androidpoet.supabase.client.SupabaseClient
@@ -10,9 +11,27 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class SessionManagerImplTest {
+    @Test
+    fun test_accessTokenExpiry_readsAbsoluteExpClaimFromJwt() {
+        // header {"alg":"none","typ":"JWT"} . payload {"exp":1700000000,"sub":"u1"} .
+        val jwt =
+            "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0" +
+                ".eyJleHAiOjE3MDAwMDAwMDAsInN1YiI6InUxIn0."
+
+        // Refresh scheduling derives the delay from this absolute claim rather
+        // than the relative expires_in, so a restored session refreshes on time.
+        assertEquals(1700000000L, accessTokenExpiryEpochSeconds(jwt))
+    }
+
+    @Test
+    fun test_accessTokenExpiry_returnsNullForNonJwt() {
+        assertNull(accessTokenExpiryEpochSeconds("opaque-access-token"))
+    }
+
     @Test
     fun test_initialize_restoresAndRefreshesStoredSession() =
         runTest {
