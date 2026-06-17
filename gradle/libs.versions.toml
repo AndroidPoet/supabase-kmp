@@ -21,12 +21,15 @@ binaryCompatibilityValidator = "0.16.3"
 dokka = "1.9.20"
 spotless = "8.6.0"
 ktlint = "1.5.0"
+passkeys = "0.1.0"
 
 [libraries]
+passkeys = { module = "io.github.androidpoet:passkeys", version.ref = "passkeys" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "datetime" }
+kotlinx-browser = { module = "org.jetbrains.kotlinx:kotlinx-browser", version = "0.3" }
 
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }

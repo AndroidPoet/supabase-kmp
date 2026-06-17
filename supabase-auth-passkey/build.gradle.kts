@@ -30,6 +30,10 @@ kotlin {
             // receiver, so it must be on the API surface — supabase-auth depends on
             // it only as `implementation`, which isn't transitive.
             api(project(":supabase-client"))
+            // passkeys-kmp supplies the cross-platform PasskeyClient that
+            // PasskeysKmpAuthenticator wraps; api so consumers can construct the
+            // platform client (PasskeyClient is on the authenticator's surface).
+            api(libs.passkeys)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
         }

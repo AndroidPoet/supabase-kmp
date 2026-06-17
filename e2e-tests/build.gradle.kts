@@ -11,6 +11,7 @@ dependencies {
     testImplementation(project(":supabase-core"))
     testImplementation(project(":supabase-database"))
     testImplementation(project(":supabase-auth"))
+    testImplementation(project(":supabase-auth-passkey"))
     testImplementation(libs.kotlin.test)
     testImplementation(libs.kotlinx.coroutines.core)
     testImplementation(libs.kotlinx.coroutines.test)
