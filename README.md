@@ -42,6 +42,7 @@ supabase-auth = { module = "io.github.androidpoet:supabase-auth", version.ref = 
 supabase-auth-admin = { module = "io.github.androidpoet:supabase-auth-admin", version.ref = "supabase-kmp" }
 supabase-auth-google = { module = "io.github.androidpoet:supabase-auth-google", version.ref = "supabase-kmp" }
 supabase-auth-apple = { module = "io.github.androidpoet:supabase-auth-apple", version.ref = "supabase-kmp" }
+supabase-auth-passkey = { module = "io.github.androidpoet:supabase-auth-passkey", version.ref = "supabase-kmp" }
 supabase-database = { module = "io.github.androidpoet:supabase-database", version.ref = "supabase-kmp" }
 supabase-storage = { module = "io.github.androidpoet:supabase-storage", version.ref = "supabase-kmp" }
 supabase-realtime = { module = "io.github.androidpoet:supabase-realtime", version.ref = "supabase-kmp" }
@@ -236,6 +237,34 @@ val session = auth.signInWith(appleAuthProvider(AppleSignInConfig(nonce = rawNon
 > On platforms without a bundled provider, use the redirect flow
 > (`signInWithOAuth`) or supply your own `NativeAuthProvider`.
 
+### Passkeys (WebAuthn)
+
+`supabase-auth` exposes the full passkey HTTP surface
+(`passkeyStartRegistration`/`passkeyVerifyRegistration`,
+`passkeyStartAuthentication`/`passkeyVerifyAuthentication`, plus list/update/
+delete). The optional `supabase-auth-passkey` module adds the **device
+ceremony** so you don't have to call the platform authenticator yourself:
+`registerPasskey` and `signInWithPasskey` run start → ceremony → verify in one
+call, given a `PasskeyAuthenticator`.
+
+```kotlin
+// Android — Credential Manager (androidMain), pass an Activity context:
+val authenticator = CredentialManagerPasskeyAuthenticator(activity)
+
+// Register a passkey for the signed-in user:
+val passkey = client.auth.registerPasskey(accessToken, authenticator) // → SupabaseResult<PasskeyMetadata>
+
+// Passwordless sign-in with an existing passkey:
+val session = client.auth.signInWithPasskey(authenticator) // → SupabaseResult<Session>
+```
+
+> [!NOTE]
+> `PasskeyAuthenticator` is a two-method interface (`createCredential` /
+> `getCredential`) — Android ships in this module; on other platforms drive
+> iOS `AuthenticationServices` or the browser's `navigator.credentials`
+> yourself and pass your implementation in. Enable passkeys in the Supabase
+> dashboard first (beta).
+
 ### Storage — File Upload & Download
 
 ```kotlin
@@ -362,6 +391,7 @@ functions.invokeWithBody(
 | **supabase-auth** | `io.github.androidpoet:supabase-auth` | Email, phone, OTP, OAuth (17 providers), MFA, PKCE, session management |
 | **supabase-auth-google** | `io.github.androidpoet:supabase-auth-google` | Native Google sign-in (Android Credential Manager) → `NativeAuthProvider` |
 | **supabase-auth-apple** | `io.github.androidpoet:supabase-auth-apple` | Native Sign in with Apple (AuthenticationServices) → `NativeAuthProvider` |
+| **supabase-auth-passkey** | `io.github.androidpoet:supabase-auth-passkey` | Passkey/WebAuthn ceremony driver (Android Credential Manager) → `registerPasskey` / `signInWithPasskey` |
 | **supabase-database** | `io.github.androidpoet:supabase-database` | PostgREST CRUD, RPC, typed filter extensions |
 | **supabase-storage** | `io.github.androidpoet:supabase-storage` | Bucket CRUD, file upload/download, signed & public URLs |
 | **supabase-realtime** | `io.github.androidpoet:supabase-realtime` | WebSocket (Phoenix protocol), auto-reconnect, broadcast, presence |
