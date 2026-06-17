@@ -262,8 +262,17 @@ val session = client.auth.signInWithPasskey(authenticator) // → SupabaseResult
 > `PasskeyAuthenticator` is a two-method interface (`createCredential` /
 > `getCredential`) — Android ships in this module; on other platforms drive
 > iOS `AuthenticationServices` or the browser's `navigator.credentials`
-> yourself and pass your implementation in. Enable passkeys in the Supabase
-> dashboard first (beta).
+> yourself and pass your implementation in.
+
+> [!IMPORTANT]
+> Passkeys are a **beta** Supabase feature — enable them in the dashboard first
+> and configure the Relying Party settings under Auth, or the ceremony fails:
+> - **RP Display Name** — shown in the system prompt (e.g. `My App`).
+> - **RP ID** — your bare domain, no scheme/port/path (e.g. `example.com`). On
+>   Android this must match a Digital Asset Links (`assetlinks.json`)
+>   association for your app, since Credential Manager binds the passkey to it.
+> - **RP Origins** — up to 5 allowed origins (e.g.
+>   `https://example.com,https://app.example.com`).
 
 ### Storage — File Upload & Download
 
