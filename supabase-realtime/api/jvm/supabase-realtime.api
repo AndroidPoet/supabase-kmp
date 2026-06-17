@@ -71,6 +71,7 @@ public final class io/github/androidpoet/supabase/realtime/RealtimeChannelBuilde
 	public final fun setPrivate (Z)Lio/github/androidpoet/supabase/realtime/RealtimeChannelBuilder;
 	public static synthetic fun setPrivate$default (Lio/github/androidpoet/supabase/realtime/RealtimeChannelBuilder;ZILjava/lang/Object;)Lio/github/androidpoet/supabase/realtime/RealtimeChannelBuilder;
 	public final fun subscribe (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun subscribeWithResult (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public abstract interface class io/github/androidpoet/supabase/realtime/RealtimeClient {

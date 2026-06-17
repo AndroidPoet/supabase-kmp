@@ -487,6 +487,7 @@ final class io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder { // 
     final fun onPresence(kotlin.coroutines/SuspendFunction1<kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonObject>, kotlin/Unit>): io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder // io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder.onPresence|onPresence(kotlin.coroutines.SuspendFunction1<kotlin.collections.Map<kotlin.String,kotlinx.serialization.json.JsonObject>,kotlin.Unit>){}[0]
     final fun setPrivate(kotlin/Boolean = ...): io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder // io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder.setPrivate|setPrivate(kotlin.Boolean){}[0]
     final suspend fun subscribe(): io.github.androidpoet.supabase.realtime/RealtimeSubscription // io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder.subscribe|subscribe(){}[0]
+    final suspend fun subscribeWithResult(): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.realtime/RealtimeSubscription> // io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder.subscribeWithResult|subscribeWithResult(){}[0]
 }
 
 final class io.github.androidpoet.supabase.realtime/RealtimeConfig { // io.github.androidpoet.supabase.realtime/RealtimeConfig|null[0]
