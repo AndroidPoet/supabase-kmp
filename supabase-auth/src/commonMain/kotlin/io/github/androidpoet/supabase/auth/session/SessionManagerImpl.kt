@@ -1,5 +1,6 @@
 package io.github.androidpoet.supabase.auth.session
 import io.github.androidpoet.supabase.auth.AuthClient
+import io.github.androidpoet.supabase.auth.accessTokenExpiryEpochSeconds
 import io.github.androidpoet.supabase.auth.models.Session
 import io.github.androidpoet.supabase.client.SupabaseClient
 import io.github.androidpoet.supabase.core.result.SupabaseError
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.datetime.Clock
 import kotlin.concurrent.Volatile
 
 internal class SessionManagerImpl(
@@ -132,7 +134,7 @@ internal class SessionManagerImpl(
     private fun scheduleRefresh(session: Session) {
         if (!autoRefreshEnabled) return
         cancelRefresh()
-        val delayMs = maxOf((session.expiresIn - refreshBufferSeconds) * 1000L, 0L)
+        val delayMs = computeRefreshDelayMs(session)
         refreshJob =
             scope.launch {
                 delay(delayMs)
@@ -140,8 +142,43 @@ internal class SessionManagerImpl(
             }
     }
 
+    private fun computeRefreshDelayMs(session: Session): Long {
+        val remainingSeconds = remainingSecondsUntilExpiry(session)
+        // A session restored from storage may already be past its scheduled
+        // refresh (or expired); refresh promptly, but never with a zero delay
+        // that would spin the loop if the next token is also short-lived.
+        if (remainingSeconds <= 0) return MIN_REFRESH_DELAY_MS
+        // Cap the buffer at half the remaining lifetime so a token whose life is
+        // shorter than refreshBufferSeconds still schedules a positive delay
+        // instead of refreshing immediately in a tight loop. For normal,
+        // long-lived tokens this is exactly refreshBufferSeconds.
+        val effectiveBuffer = minOf(refreshBufferSeconds, remainingSeconds / 2)
+        val secondsUntilRefresh = remainingSeconds - effectiveBuffer
+        return maxOf(secondsUntilRefresh * 1000L, MIN_REFRESH_DELAY_MS)
+    }
+
+    // Prefer the access token's absolute `exp` claim: a persisted session
+    // carries a relative `expires_in` captured at issue time, so scheduling off
+    // it after the clock has advanced refreshes too late (or never). Fall back
+    // to `expires_in` when the token is not a decodable JWT.
+    private fun remainingSecondsUntilExpiry(session: Session): Long {
+        val expiryEpochSeconds = accessTokenExpiryEpochSeconds(session.accessToken)
+        return if (expiryEpochSeconds != null) {
+            expiryEpochSeconds - Clock.System.now().epochSeconds
+        } else {
+            session.expiresIn
+        }
+    }
+
     private fun cancelRefresh() {
         refreshJob?.cancel()
         refreshJob = null
+    }
+
+    private companion object {
+        // Lower bound on the scheduled delay. Prevents a 0 ms delay from busy-
+        // looping the refresh coroutine when a token is already past its refresh
+        // window, while still refreshing quickly.
+        private const val MIN_REFRESH_DELAY_MS = 1_000L
     }
 }
