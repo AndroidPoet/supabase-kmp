@@ -7,6 +7,9 @@ import io.github.androidpoet.supabase.core.result.SupabaseErrorCodes
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngineFactory
+import io.ktor.client.network.sockets.ConnectTimeoutException
+import io.ktor.client.network.sockets.SocketTimeoutException
+import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.Logging
@@ -28,6 +31,7 @@ import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
+import kotlinx.io.IOException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -347,12 +351,25 @@ internal class HttpTransport(
         throwable: Throwable? = null,
         message: String? = null,
     ): SupabaseError {
-        val name = throwable?.let { it::class.simpleName.orEmpty() } ?: ""
         val code =
-            when {
-                name.contains("Timeout", ignoreCase = true) -> SupabaseErrorCodes.Client.TIMEOUT
-                name.contains("Connect", ignoreCase = true) -> SupabaseErrorCodes.Client.CONNECTION_FAILED
-                else -> SupabaseErrorCodes.Client.NETWORK_ERROR
+            when (throwable) {
+                // Match Ktor's typed exceptions first so a future class rename can't
+                // silently misroute the error. Fall back to name matching only for
+                // engine-specific exceptions we don't model directly.
+                is HttpRequestTimeoutException,
+                is ConnectTimeoutException,
+                is SocketTimeoutException,
+                -> SupabaseErrorCodes.Client.TIMEOUT
+                is IOException -> SupabaseErrorCodes.Client.CONNECTION_FAILED
+                null -> SupabaseErrorCodes.Client.NETWORK_ERROR
+                else -> {
+                    val name = throwable::class.simpleName.orEmpty()
+                    when {
+                        name.contains("Timeout", ignoreCase = true) -> SupabaseErrorCodes.Client.TIMEOUT
+                        name.contains("Connect", ignoreCase = true) -> SupabaseErrorCodes.Client.CONNECTION_FAILED
+                        else -> SupabaseErrorCodes.Client.NETWORK_ERROR
+                    }
+                }
             }
         return SupabaseError(
             message = message ?: throwable?.message ?: "Network request failed",

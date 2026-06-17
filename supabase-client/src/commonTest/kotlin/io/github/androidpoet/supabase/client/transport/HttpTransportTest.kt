@@ -72,6 +72,36 @@ class HttpTransportTest {
         }
 
     @Test
+    fun test_get_typedIOExceptionMapsToConnectionFailed() =
+        runTest {
+            val transport =
+                HttpTransport(
+                    config =
+                        SupabaseConfig(
+                            logging = false,
+                            logLevel = io.ktor.client.plugins.logging.LogLevel.NONE,
+                            headers = emptyMap(),
+                        ),
+                    engineFactory =
+                        TestMockEngineFactory {
+                            throw kotlinx.io.IOException("connection refused")
+                        },
+                    projectUrl = "https://example.supabase.co",
+                    apiKey = "anon",
+                )
+
+            val result = transport.get(url = "https://example.supabase.co/rest/v1/messages")
+
+            // An IOException carries neither "Timeout" nor "Connect" in its class name,
+            // so the old string-matching path mislabeled it NETWORK_ERROR. Typed
+            // classification recognizes it as a connection failure.
+            assertEquals(
+                io.github.androidpoet.supabase.core.result.SupabaseErrorCodes.Client.CONNECTION_FAILED,
+                result.errorOrNull()?.code,
+            )
+        }
+
+    @Test
     fun test_get_propagatesCoroutineCancellation() =
         runTest {
             val transport =
