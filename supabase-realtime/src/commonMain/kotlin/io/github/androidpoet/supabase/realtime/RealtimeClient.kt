@@ -70,6 +70,17 @@ public sealed interface RealtimeDebugEvent {
         public val message: RealtimeMessage,
     ) : RealtimeDebugEvent
 
+    /**
+     * Emitted when an outbound application message is dropped from the offline
+     * send buffer because it was already full ([capacity] messages). The oldest
+     * buffered message is discarded to make room for the newest. Fire-and-forget
+     * senders can observe this to detect data lost during a prolonged disconnect.
+     */
+    public data class OutboundMessageDropped(
+        public val message: RealtimeMessage,
+        public val capacity: Int,
+    ) : RealtimeDebugEvent
+
     public data class InboundMessage(
         public val message: RealtimeMessage,
     ) : RealtimeDebugEvent

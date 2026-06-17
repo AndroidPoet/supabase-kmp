@@ -189,6 +189,19 @@ public final class io/github/androidpoet/supabase/realtime/RealtimeDebugEvent$Ou
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class io/github/androidpoet/supabase/realtime/RealtimeDebugEvent$OutboundMessageDropped : io/github/androidpoet/supabase/realtime/RealtimeDebugEvent {
+	public fun <init> (Lio/github/androidpoet/supabase/realtime/models/RealtimeMessage;I)V
+	public final fun component1 ()Lio/github/androidpoet/supabase/realtime/models/RealtimeMessage;
+	public final fun component2 ()I
+	public final fun copy (Lio/github/androidpoet/supabase/realtime/models/RealtimeMessage;I)Lio/github/androidpoet/supabase/realtime/RealtimeDebugEvent$OutboundMessageDropped;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/realtime/RealtimeDebugEvent$OutboundMessageDropped;Lio/github/androidpoet/supabase/realtime/models/RealtimeMessage;IILjava/lang/Object;)Lio/github/androidpoet/supabase/realtime/RealtimeDebugEvent$OutboundMessageDropped;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCapacity ()I
+	public final fun getMessage ()Lio/github/androidpoet/supabase/realtime/models/RealtimeMessage;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class io/github/androidpoet/supabase/realtime/RealtimeDebugState {
 	public fun <init> ()V
 	public fun <init> (JJJJLjava/lang/String;Ljava/lang/String;)V

@@ -289,7 +289,12 @@ internal class RealtimeClientImpl(
         // regenerated on reconnect, so only buffer application messages.
         if (message.event in NON_BUFFERED_EVENTS) return
         outboundBufferLock.withLock {
-            if (outboundBuffer.size >= MAX_OUTBOUND_BUFFER) outboundBuffer.removeAt(0)
+            if (outboundBuffer.size >= MAX_OUTBOUND_BUFFER) {
+                // The buffer is full: drop the oldest message to make room. Signal
+                // the loss so fire-and-forget senders aren't silently truncated.
+                val dropped = outboundBuffer.removeAt(0)
+                _debugEvents.tryEmit(RealtimeDebugEvent.OutboundMessageDropped(dropped, MAX_OUTBOUND_BUFFER))
+            }
             outboundBuffer.add(message)
         }
     }
