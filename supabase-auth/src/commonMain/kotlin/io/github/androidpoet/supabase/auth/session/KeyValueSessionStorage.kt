@@ -43,8 +43,21 @@ public class KeyValueSessionStorage(
         val raw = store.get(key) ?: return null
         // A corrupt or schema-changed payload should read as "no session" rather
         // than crash the caller; the next sign-in overwrites it.
-        return runCatching { json.decodeFromString(Session.serializer(), raw) }.getOrNull()
+        val session = runCatching { json.decodeFromString(Session.serializer(), raw) }.getOrNull()
+        // Valid JSON can still decode into a structurally unusable session —
+        // empty tokens or a negative expiry from partial corruption or a tampered
+        // store. Treat those as "no session" too, so the caller doesn't restore a
+        // token that can only fail with a surprising 401 on the first request.
+        return session?.takeIf(::isUsable)
     }
+
+    // A session is only usable if it carries both tokens and a non-negative
+    // lifetime; the refresh token in particular must survive so the session can
+    // be renewed after the access token expires.
+    private fun isUsable(session: Session): Boolean =
+        session.accessToken.isNotBlank() &&
+            session.refreshToken.isNotBlank() &&
+            session.expiresIn >= 0
 
     override suspend fun clear() {
         store.remove(key)
