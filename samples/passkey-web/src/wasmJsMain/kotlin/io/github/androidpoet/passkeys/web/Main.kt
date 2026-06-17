@@ -24,6 +24,7 @@ private fun jsGlobal(key: String): String = js("globalThis[key] || ''")
  */
 fun main() {
     val log = document.getElementById("log") as HTMLElement
+
     fun append(line: String) {
         log.textContent = (log.textContent ?: "") + "\n" + line
     }

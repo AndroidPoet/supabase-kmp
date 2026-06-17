@@ -83,8 +83,18 @@ private class SoftwarePasskeyAuthenticator(
     override suspend fun createCredential(options: JsonObject): SupabaseResult<JsonObject> {
         val opts = options["publicKey"]?.jsonObject ?: options
         val challenge = opts.getValue("challenge").jsonPrimitive.content
-        val rpId = opts.getValue("rp").jsonObject.getValue("id").jsonPrimitive.content
-        userHandle = opts.getValue("user").jsonObject.getValue("id").jsonPrimitive.content
+        val rpId =
+            opts
+                .getValue("rp")
+                .jsonObject
+                .getValue("id")
+                .jsonPrimitive.content
+        userHandle =
+            opts
+                .getValue("user")
+                .jsonObject
+                .getValue("id")
+                .jsonPrimitive.content
 
         val clientDataJson = clientData("webauthn.create", challenge)
         val authData = authenticatorData(rpId, attested = true)
@@ -216,7 +226,10 @@ private object Cbor {
             else ->
                 byteArrayOf(
                     (m or 26).toByte(),
-                    (len shr 24).toByte(), (len shr 16).toByte(), (len shr 8).toByte(), len.toByte(),
+                    (len shr 24).toByte(),
+                    (len shr 16).toByte(),
+                    (len shr 8).toByte(),
+                    len.toByte(),
                 )
         }
     }
