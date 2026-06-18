@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Added
+
+- **`FunctionRegion` now covers every Supabase edge region** — added `ANY`,
+  `US_WEST_2`, `CA_CENTRAL_1`, `SA_EAST_1`, `EU_WEST_2`, `EU_WEST_3`,
+  `EU_CENTRAL_1`, `AP_SOUTH_1`, `AP_SOUTHEAST_2`, and `AP_NORTHEAST_2` to the
+  previous five-region subset.
+
 ## 0.5.0
 
 ### Added

@@ -1,10 +1,20 @@
 public final class io/github/androidpoet/supabase/functions/FunctionRegion : java/lang/Enum {
+	public static final field ANY Lio/github/androidpoet/supabase/functions/FunctionRegion;
 	public static final field AP_NORTHEAST_1 Lio/github/androidpoet/supabase/functions/FunctionRegion;
+	public static final field AP_NORTHEAST_2 Lio/github/androidpoet/supabase/functions/FunctionRegion;
 	public static final field AP_SOUTHEAST_1 Lio/github/androidpoet/supabase/functions/FunctionRegion;
+	public static final field AP_SOUTHEAST_2 Lio/github/androidpoet/supabase/functions/FunctionRegion;
+	public static final field AP_SOUTH_1 Lio/github/androidpoet/supabase/functions/FunctionRegion;
+	public static final field CA_CENTRAL_1 Lio/github/androidpoet/supabase/functions/FunctionRegion;
 	public static final field Companion Lio/github/androidpoet/supabase/functions/FunctionRegion$Companion;
+	public static final field EU_CENTRAL_1 Lio/github/androidpoet/supabase/functions/FunctionRegion;
 	public static final field EU_WEST_1 Lio/github/androidpoet/supabase/functions/FunctionRegion;
+	public static final field EU_WEST_2 Lio/github/androidpoet/supabase/functions/FunctionRegion;
+	public static final field EU_WEST_3 Lio/github/androidpoet/supabase/functions/FunctionRegion;
+	public static final field SA_EAST_1 Lio/github/androidpoet/supabase/functions/FunctionRegion;
 	public static final field US_EAST_1 Lio/github/androidpoet/supabase/functions/FunctionRegion;
 	public static final field US_WEST_1 Lio/github/androidpoet/supabase/functions/FunctionRegion;
+	public static final field US_WEST_2 Lio/github/androidpoet/supabase/functions/FunctionRegion;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public final fun getValue ()Ljava/lang/String;
 	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/functions/FunctionRegion;

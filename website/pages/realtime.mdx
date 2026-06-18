@@ -124,6 +124,33 @@ public fun onPostgresChange(
 `filter` is a PostgREST-style predicate that narrows which rows you hear about,
 e.g. `"id=eq.123"` to watch a single row.
 
+### Two more callback shapes
+
+`onPostgresChange` has two further overloads. Use the **two-argument** form when
+you registered `event = ALL` and need to know which kind of change arrived:
+
+```kotlin
+realtime.channel("todos")
+    .onPostgresChange(table = "todos", event = PostgresChangeEvent.ALL) { event, record ->
+        println("$event → $record")   // event is the PostgresChangeEvent
+    }
+    .subscribe()
+```
+
+Or the **reified typed** form to decode each row straight into your
+`@Serializable` model (it deserializes the JSON for you):
+
+```kotlin
+@Serializable
+data class Todo(val id: String, val title: String, val done: Boolean)
+
+realtime.channel("todos")
+    .onPostgresChange<Todo>(table = "todos", event = PostgresChangeEvent.INSERT) { todo ->
+        println("New todo: ${todo.title}")
+    }
+    .subscribe()
+```
+
 <Callout type="info">
   Prefer streams? After `subscribe()` you can consume typed flows:
   `subscription.postgresInsertsFlow()`, `postgresUpdatesFlow()`,
@@ -186,17 +213,27 @@ one channel. From it you can send broadcasts, track presence, watch the
 subscription `status`, consume events as a `Flow`, and eventually unsubscribe.
 
 ```kotlin
-public interface RealtimeSubscription {            // abridged — key members
+public interface RealtimeSubscription {
     public val channel: String
     public val status: StateFlow<Status> // SUBSCRIBING, SUBSCRIBED, UNSUBSCRIBING, UNSUBSCRIBED, ERROR
+
     public fun asFlow(): Flow<RealtimeEvent>
+    public fun presenceState(): PresenceState   // every member currently tracked, by key
+
     public suspend fun broadcast(event: String, payload: JsonObject)
     public suspend fun track(state: JsonObject)
     public suspend fun untrack()
     public suspend fun unsubscribe()
-    // also: presenceState(): PresenceState and send(type, event, payload)
+
+    // Low-level escape hatch — send a raw frame on the channel:
+    public suspend fun send(type: SendType, event: String, payload: JsonObject? = null)
+    // SendType: BROADCAST, PRESENCE, POSTGRES_CHANGES
 }
 ```
+
+`presenceState()` returns the current cumulative presence (empty before the first
+sync); `send(...)` is the low-level primitive the `broadcast`/`track` helpers are
+built on — reach for it only when you need to send a frame they don't cover.
 
 If you prefer the Flow style over callbacks, `asFlow()` gives you every event on
 the channel as a single stream of `RealtimeEvent` — a sealed type, so a `when`

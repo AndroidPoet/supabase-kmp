@@ -73,10 +73,11 @@ functions.invokeTyped<HelloResponse>(
 )
 ```
 
-The `FunctionRegion` enum currently exposes these five values: `US_EAST_1`,
-`US_WEST_1`, `EU_WEST_1`, `AP_SOUTHEAST_1`, `AP_NORTHEAST_1`. (Supabase serves
-more edge regions than this; if you need one that isn't listed, leave `region`
-unset and let Supabase route the call.)
+`FunctionRegion` covers every Supabase edge region: `ANY` (let Supabase choose),
+`US_EAST_1`, `US_WEST_1`, `US_WEST_2`, `CA_CENTRAL_1`, `SA_EAST_1`, `EU_WEST_1`,
+`EU_WEST_2`, `EU_WEST_3`, `EU_CENTRAL_1`, `AP_SOUTH_1`, `AP_SOUTHEAST_1`,
+`AP_SOUTHEAST_2`, `AP_NORTHEAST_1`, `AP_NORTHEAST_2`. Leaving `region` unset (or
+using `ANY`) lets Supabase route to the nearest healthy region.
 
 <Callout type="info">
   Every invoke accepts a `headers: Map<String, String>` — handy for forwarding a

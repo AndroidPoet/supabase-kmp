@@ -7,11 +7,21 @@
 
 // Library unique name: <supabase-kmp:supabase-functions>
 final enum class io.github.androidpoet.supabase.functions/FunctionRegion : kotlin/Enum<io.github.androidpoet.supabase.functions/FunctionRegion> { // io.github.androidpoet.supabase.functions/FunctionRegion|null[0]
+    enum entry ANY // io.github.androidpoet.supabase.functions/FunctionRegion.ANY|null[0]
     enum entry AP_NORTHEAST_1 // io.github.androidpoet.supabase.functions/FunctionRegion.AP_NORTHEAST_1|null[0]
+    enum entry AP_NORTHEAST_2 // io.github.androidpoet.supabase.functions/FunctionRegion.AP_NORTHEAST_2|null[0]
     enum entry AP_SOUTHEAST_1 // io.github.androidpoet.supabase.functions/FunctionRegion.AP_SOUTHEAST_1|null[0]
+    enum entry AP_SOUTHEAST_2 // io.github.androidpoet.supabase.functions/FunctionRegion.AP_SOUTHEAST_2|null[0]
+    enum entry AP_SOUTH_1 // io.github.androidpoet.supabase.functions/FunctionRegion.AP_SOUTH_1|null[0]
+    enum entry CA_CENTRAL_1 // io.github.androidpoet.supabase.functions/FunctionRegion.CA_CENTRAL_1|null[0]
+    enum entry EU_CENTRAL_1 // io.github.androidpoet.supabase.functions/FunctionRegion.EU_CENTRAL_1|null[0]
     enum entry EU_WEST_1 // io.github.androidpoet.supabase.functions/FunctionRegion.EU_WEST_1|null[0]
+    enum entry EU_WEST_2 // io.github.androidpoet.supabase.functions/FunctionRegion.EU_WEST_2|null[0]
+    enum entry EU_WEST_3 // io.github.androidpoet.supabase.functions/FunctionRegion.EU_WEST_3|null[0]
+    enum entry SA_EAST_1 // io.github.androidpoet.supabase.functions/FunctionRegion.SA_EAST_1|null[0]
     enum entry US_EAST_1 // io.github.androidpoet.supabase.functions/FunctionRegion.US_EAST_1|null[0]
     enum entry US_WEST_1 // io.github.androidpoet.supabase.functions/FunctionRegion.US_WEST_1|null[0]
+    enum entry US_WEST_2 // io.github.androidpoet.supabase.functions/FunctionRegion.US_WEST_2|null[0]
 
     final val entries // io.github.androidpoet.supabase.functions/FunctionRegion.entries|#static{}entries[0]
         final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.androidpoet.supabase.functions/FunctionRegion> // io.github.androidpoet.supabase.functions/FunctionRegion.entries.<get-entries>|<get-entries>#static(){}[0]
