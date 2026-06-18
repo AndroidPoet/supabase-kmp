@@ -40,12 +40,12 @@ jobs:
           output-file: sbom.cyclonedx.json
 
       - name: Attest build provenance
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: '**/build/libs/*.jar'
 
       - name: Attest SBOM
-        uses: actions/attest-sbom@v2
+        uses: actions/attest-sbom@v4
         with:
           subject-path: '**/build/libs/*.jar'
           sbom-path: sbom.cyclonedx.json
