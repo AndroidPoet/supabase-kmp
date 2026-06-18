@@ -191,6 +191,25 @@ sealed interface io.github.androidpoet.supabase.realtime/RealtimeDebugEvent { //
         final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.HeartbeatSent.toString|toString(){}[0]
     }
 
+    final class InboundEventDropped : io.github.androidpoet.supabase.realtime/RealtimeDebugEvent { // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundEventDropped|null[0]
+        constructor <init>(kotlin/String, io.github.androidpoet.supabase.realtime/RealtimeEvent, kotlin/Int) // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundEventDropped.<init>|<init>(kotlin.String;io.github.androidpoet.supabase.realtime.RealtimeEvent;kotlin.Int){}[0]
+
+        final val capacity // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundEventDropped.capacity|{}capacity[0]
+            final fun <get-capacity>(): kotlin/Int // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundEventDropped.capacity.<get-capacity>|<get-capacity>(){}[0]
+        final val event // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundEventDropped.event|{}event[0]
+            final fun <get-event>(): io.github.androidpoet.supabase.realtime/RealtimeEvent // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundEventDropped.event.<get-event>|<get-event>(){}[0]
+        final val topic // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundEventDropped.topic|{}topic[0]
+            final fun <get-topic>(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundEventDropped.topic.<get-topic>|<get-topic>(){}[0]
+
+        final fun component1(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundEventDropped.component1|component1(){}[0]
+        final fun component2(): io.github.androidpoet.supabase.realtime/RealtimeEvent // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundEventDropped.component2|component2(){}[0]
+        final fun component3(): kotlin/Int // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundEventDropped.component3|component3(){}[0]
+        final fun copy(kotlin/String = ..., io.github.androidpoet.supabase.realtime/RealtimeEvent = ..., kotlin/Int = ...): io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundEventDropped // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundEventDropped.copy|copy(kotlin.String;io.github.androidpoet.supabase.realtime.RealtimeEvent;kotlin.Int){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundEventDropped.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundEventDropped.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundEventDropped.toString|toString(){}[0]
+    }
+
     final class InboundMessage : io.github.androidpoet.supabase.realtime/RealtimeDebugEvent { // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundMessage|null[0]
         constructor <init>(io.github.androidpoet.supabase.realtime.models/RealtimeMessage) // io.github.androidpoet.supabase.realtime/RealtimeDebugEvent.InboundMessage.<init>|<init>(io.github.androidpoet.supabase.realtime.models.RealtimeMessage){}[0]
 

@@ -18,12 +18,14 @@ import io.ktor.websocket.readText
 import kotlinx.atomicfu.atomic
 import kotlinx.atomicfu.locks.SynchronizedObject
 import kotlinx.atomicfu.locks.synchronized
+import kotlinx.atomicfu.update
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -31,6 +33,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -53,6 +56,11 @@ import kotlin.math.pow
 import kotlin.random.Random
 
 private const val MAX_OUTBOUND_BUFFER = 100
+
+// Per-subscription inbound event buffer. Kept small (matching the previous
+// extraBufferCapacity) and combined with DROP_OLDEST so publishing decoded
+// events can never suspend the WebSocket read loop — see ChannelSubscriptionImpl.
+private const val INBOUND_EVENT_BUFFER = 64
 
 internal class RealtimeClientImpl(
     private val supabaseClient: SupabaseClient,
@@ -512,6 +520,15 @@ internal class RealtimeClientImpl(
         }
     }
 
+    // Called by a subscription when an inbound event is dropped under backpressure
+    // (its bounded DROP_OLDEST buffer was full). Surfaced on the same best-effort
+    // debug channel as OutboundMessageDropped so observers can detect the loss;
+    // tryEmit keeps this non-suspending so it can never re-introduce blocking on
+    // the read loop.
+    internal fun reportInboundEventDropped(topic: String, event: RealtimeEvent) {
+        _debugEvents.tryEmit(RealtimeDebugEvent.InboundEventDropped(topic, event, INBOUND_EVENT_BUFFER))
+    }
+
     private fun handleUnexpectedDisconnect() {
         if (!config.autoReconnect || intentionalDisconnect) return
         heartbeatJob?.cancel()
@@ -701,7 +718,18 @@ internal class ChannelSubscriptionImpl(
     internal val replaySinceMs: Long?,
     internal val replayLimit: Int?,
 ) : RealtimeSubscription {
-    private val eventFlow = MutableSharedFlow<RealtimeEvent>(extraBufferCapacity = 64)
+    // Inbound delivery is best-effort under backpressure. The WebSocket read loop
+    // publishes decoded events here from a single coroutine; if it used a suspending
+    // emit(), a stalled collector would suspend the read loop and wedge the whole
+    // socket (heartbeats stop, every other subscription stalls). Instead we pair a
+    // bounded buffer with DROP_OLDEST so tryEmit() always succeeds and never
+    // suspends: a slow collector drops the oldest inbound events rather than
+    // stalling the connection. Mirrors the outbound _debugEvents drop semantics.
+    private val eventFlow =
+        MutableSharedFlow<RealtimeEvent>(
+            extraBufferCapacity = INBOUND_EVENT_BUFFER,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST,
+        )
     private val _status = MutableStateFlow(RealtimeSubscription.Status.SUBSCRIBING)
 
     // Cumulative presence state, mutated only on the single inbound dispatch loop.
@@ -722,7 +750,51 @@ internal class ChannelSubscriptionImpl(
     internal val hasPresenceTracking: Boolean = presenceCallback != null
     override val status: StateFlow<RealtimeSubscription.Status> = _status.asStateFlow()
 
-    override fun asFlow(): Flow<RealtimeEvent> = eventFlow
+    // Estimated number of events sitting in eventFlow's extra buffer that the
+    // collector has not yet consumed. Incremented on publish() (the single inbound
+    // loop) and decremented by the onEach below as the collector drains them, so it
+    // races across those two coroutines: use an atomic. Under DROP_OLDEST the buffer
+    // silently evicts the oldest event when full, so tryEmit() never returns false
+    // (see publish); this backlog estimate is how we still detect that an eviction
+    // happened and surface it on the debug channel. It models a single collector
+    // (the common one-flow-per-subscription case); with multiple collectors it is a
+    // conservative upper bound, which is fine for a best-effort debug signal.
+    private val inboundBacklog = atomic(0)
+
+    // Decrement the backlog as the collector consumes each event. Exposed flow is
+    // otherwise unchanged, so this stays an internal delivery-semantics detail and
+    // the public Flow<RealtimeEvent> signature is preserved.
+    override fun asFlow(): Flow<RealtimeEvent> =
+        eventFlow.onEach {
+            inboundBacklog.update { current -> if (current > 0) current - 1 else 0 }
+        }
+
+    // Non-suspending publish for the inbound read loop. With DROP_OLDEST, tryEmit()
+    // always succeeds and never suspends, so a stalled collector can never block the
+    // socket (heartbeats and sibling subscriptions keep flowing). The trade-off is
+    // best-effort delivery: a slow collector drops the oldest buffered events. We
+    // detect that eviction via the backlog estimate (the buffer was already full)
+    // and report it on the debug channel, mirroring OutboundMessageDropped.
+    private fun publish(event: RealtimeEvent) {
+        // With no active collector the SharedFlow retains nothing (replay = 0): the
+        // event is simply not delivered and never buffered, so there is no eviction
+        // to report and we must not grow the backlog estimate (nothing would ever
+        // drain it). Reset it to 0 so a collector that detaches and re-attaches
+        // starts clean.
+        if (eventFlow.subscriptionCount.value == 0) {
+            inboundBacklog.value = 0
+            eventFlow.tryEmit(event)
+            return
+        }
+        val backlog = inboundBacklog.incrementAndGet()
+        eventFlow.tryEmit(event)
+        if (backlog > INBOUND_EVENT_BUFFER) {
+            // The extra buffer was already full, so DROP_OLDEST evicted an event.
+            // Account for the evicted slot and surface the loss.
+            inboundBacklog.update { current -> if (current > 0) current - 1 else 0 }
+            client.reportInboundEventDropped(topic, event)
+        }
+    }
 
     override fun presenceState(): PresenceState = presenceSnapshot
 
@@ -783,7 +855,7 @@ internal class ChannelSubscriptionImpl(
                         status = "error",
                         message = message.payload.toString(),
                     )
-                eventFlow.emit(event)
+                publish(event)
             }
             else -> { }
         }
@@ -795,7 +867,7 @@ internal class ChannelSubscriptionImpl(
         val record = data["record"]?.jsonObject
         val oldRecord = data["old_record"]?.jsonObject
         val event = buildPostgresEvent(type, record, oldRecord) ?: return
-        eventFlow.emit(event)
+        publish(event)
         val callbackPayload = record ?: oldRecord ?: return
         for (config in resolvePostgresConfigs(payload, type)) {
             dispatchPostgresChange(config, type, callbackPayload)
@@ -845,7 +917,7 @@ internal class ChannelSubscriptionImpl(
         val eventName = payload["event"]?.jsonPrimitive?.content ?: return
         val broadcastPayload = payload["payload"]?.jsonObject ?: buildJsonObject {}
         val event = RealtimeEvent.Broadcast(event = eventName, payload = broadcastPayload)
-        eventFlow.emit(event)
+        publish(event)
         broadcastCallbacks[eventName]?.invoke(broadcastPayload)
     }
 
@@ -855,12 +927,12 @@ internal class ChannelSubscriptionImpl(
         joins?.forEach { (key, value) ->
             val presence = unwrapPresence(value.jsonObject)
             presenceMembers[key] = presence
-            eventFlow.emit(RealtimeEvent.PresenceJoin(key = key, newPresence = presence))
+            publish(RealtimeEvent.PresenceJoin(key = key, newPresence = presence))
         }
         leaves?.forEach { (key, value) ->
             val presence = unwrapPresence(value.jsonObject)
             presenceMembers.remove(key)
-            eventFlow.emit(RealtimeEvent.PresenceLeave(key = key, leftPresence = presence))
+            publish(RealtimeEvent.PresenceLeave(key = key, leftPresence = presence))
         }
         // Hand the callback the full, cumulative presence state — not just the
         // members in this diff — so callers always see who is currently present.
@@ -874,7 +946,7 @@ internal class ChannelSubscriptionImpl(
         payload.forEach { (key, value) -> presenceMembers[key] = unwrapPresence(value.jsonObject) }
         val state: PresenceState = presenceMembers.toMap()
         presenceSnapshot = state
-        eventFlow.emit(RealtimeEvent.PresenceSync(state = state))
+        publish(RealtimeEvent.PresenceSync(state = state))
         presenceCallback?.invoke(state)
     }
 
@@ -901,7 +973,7 @@ internal class ChannelSubscriptionImpl(
                 status = status,
                 message = response?.toString(),
             )
-        eventFlow.emit(event)
+        publish(event)
     }
 
     // The join reply echoes `postgres_changes: [{id, event, schema, table, filter}]`

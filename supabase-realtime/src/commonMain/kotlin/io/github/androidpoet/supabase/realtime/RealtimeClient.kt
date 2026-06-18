@@ -102,6 +102,21 @@ public sealed interface RealtimeDebugEvent {
         public val message: RealtimeMessage,
     ) : RealtimeDebugEvent
 
+    /**
+     * Emitted when a decoded inbound [RealtimeEvent] is dropped from a
+     * subscription's event flow because a slow collector left the buffer full
+     * ([capacity] events). The oldest buffered event is discarded to make room
+     * for the newest. Realtime delivery is best-effort under backpressure: a
+     * stalled collector loses oldest events rather than stalling the socket
+     * (heartbeats and other subscriptions keep flowing). The mirror of
+     * [OutboundMessageDropped] for the inbound path.
+     */
+    public data class InboundEventDropped(
+        public val topic: String,
+        public val event: RealtimeEvent,
+        public val capacity: Int,
+    ) : RealtimeDebugEvent
+
     public data class HeartbeatSent(
         public val ref: String,
     ) : RealtimeDebugEvent
