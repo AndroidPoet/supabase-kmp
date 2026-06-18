@@ -4,6 +4,7 @@ import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevel
 import io.github.androidpoet.supabase.auth.models.MfaChallengeResponse
 import io.github.androidpoet.supabase.auth.models.MfaEnrollResponse
 import io.github.androidpoet.supabase.auth.models.MfaFactor
+import io.github.androidpoet.supabase.auth.models.MfaFactorStatus
 import io.github.androidpoet.supabase.auth.models.MfaFactorType
 import io.github.androidpoet.supabase.auth.models.MfaListFactorsResponse
 import io.github.androidpoet.supabase.auth.models.MfaTotpDetails
@@ -53,6 +54,76 @@ class SerializationRoundTripTest {
             JsonPrimitive("Jane"),
             session.user.userMetadata?.get("name"),
         )
+    }
+
+    @Test
+    fun test_session_decodesProviderTokens() {
+        val payload =
+            """
+            {
+              "access_token": "acc",
+              "refresh_token": "ref",
+              "expires_in": 3600,
+              "token_type": "bearer",
+              "provider_token": "ya29.provider-access",
+              "provider_refresh_token": "1//provider-refresh",
+              "user": { "id": "u1" }
+            }
+            """.trimIndent()
+
+        val session = json.decodeFromString<Session>(payload)
+
+        assertEquals("ya29.provider-access", session.providerToken)
+        assertEquals("1//provider-refresh", session.providerRefreshToken)
+    }
+
+    @Test
+    fun test_session_providerTokensDefaultToNullWhenAbsent() {
+        val payload =
+            """{"access_token":"acc","refresh_token":"ref","expires_in":3600,"token_type":"bearer","user":{"id":"u1"}}"""
+
+        val session = json.decodeFromString<Session>(payload)
+
+        assertEquals(null, session.providerToken)
+        assertEquals(null, session.providerRefreshToken)
+    }
+
+    @Test
+    fun test_user_decodesAdditionalServerFields() {
+        val payload =
+            """
+            {
+              "id": "u1",
+              "role": "authenticated",
+              "is_anonymous": false,
+              "email_confirmed_at": "2024-01-02T00:00:00Z",
+              "phone_confirmed_at": "2024-01-03T00:00:00Z",
+              "confirmed_at": "2024-01-02T00:00:00Z",
+              "last_sign_in_at": "2024-03-01T00:00:00Z"
+            }
+            """.trimIndent()
+
+        val user = json.decodeFromString<User>(payload)
+
+        assertEquals("authenticated", user.role)
+        assertEquals(false, user.isAnonymous)
+        assertEquals("2024-01-02T00:00:00Z", user.emailConfirmedAt)
+        assertEquals("2024-01-03T00:00:00Z", user.phoneConfirmedAt)
+        assertEquals("2024-01-02T00:00:00Z", user.confirmedAt)
+        assertEquals("2024-03-01T00:00:00Z", user.lastSignInAt)
+    }
+
+    @Test
+    fun test_mfaFactorStatus_serialNames() {
+        assertEquals(
+            MfaFactorStatus.VERIFIED,
+            json.decodeFromString<MfaFactorStatus>("\"verified\""),
+        )
+        assertEquals(
+            MfaFactorStatus.UNVERIFIED,
+            json.decodeFromString<MfaFactorStatus>("\"unverified\""),
+        )
+        assertEquals("\"verified\"", json.encodeToString(MfaFactorStatus.VERIFIED))
     }
 
     @Test
@@ -209,7 +280,7 @@ class SerializationRoundTripTest {
 
         assertEquals(1, response.all.size)
         assertEquals(MfaFactorType.PHONE, response.all.first().factorType)
-        assertEquals("verified", response.phone.first().status)
+        assertEquals(MfaFactorStatus.VERIFIED, response.phone.first().status)
         assertEquals(emptyList(), response.webauthn)
     }
 
@@ -232,7 +303,7 @@ class SerializationRoundTripTest {
                 id = "factor-id",
                 friendlyName = "My TOTP",
                 factorType = MfaFactorType.TOTP,
-                status = "verified",
+                status = MfaFactorStatus.VERIFIED,
                 createdAt = "2024-01-01T00:00:00Z",
                 updatedAt = "2024-02-01T00:00:00Z",
             )

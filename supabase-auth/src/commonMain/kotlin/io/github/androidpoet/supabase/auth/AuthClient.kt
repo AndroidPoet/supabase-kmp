@@ -1,5 +1,6 @@
 package io.github.androidpoet.supabase.auth
 import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevel
+import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevels
 import io.github.androidpoet.supabase.auth.models.Jwk
 import io.github.androidpoet.supabase.auth.models.LinkIdentityResponse
 import io.github.androidpoet.supabase.auth.models.MfaChallengeResponse
@@ -35,12 +36,14 @@ public interface AuthClient {
         email: String,
         password: String,
         data: JsonObject? = null,
+        emailRedirectTo: String? = null,
     ): SupabaseResult<Session>
 
     public suspend fun signUpWithPhone(
         phone: String,
         password: String,
         data: JsonObject? = null,
+        redirectTo: String? = null,
     ): SupabaseResult<Session>
 
     public suspend fun signInWithEmail(
@@ -260,9 +263,23 @@ public interface AuthClient {
         accessToken: String,
     ): SupabaseResult<MfaListFactorsResponse>
 
+    /**
+     * Returns the *current* authenticator assurance level of the session, read from the `aal` claim
+     * of [accessToken]. This reflects what the session has actually proven, not what it could reach;
+     * use [mfaGetAuthenticatorAssuranceLevels] when you also need the *next* level derived from the
+     * user's enrolled factors.
+     */
     public suspend fun mfaGetAuthenticatorAssuranceLevel(
         accessToken: String,
     ): SupabaseResult<AuthenticatorAssuranceLevel>
+
+    /**
+     * Returns both the *current* assurance level (from the `aal` claim of [accessToken]) and the
+     * *next* level the session could reach (derived from the user's enrolled factors).
+     */
+    public suspend fun mfaGetAuthenticatorAssuranceLevels(
+        accessToken: String,
+    ): SupabaseResult<AuthenticatorAssuranceLevels>
 
     public suspend fun passkeyStartRegistration(
         accessToken: String,

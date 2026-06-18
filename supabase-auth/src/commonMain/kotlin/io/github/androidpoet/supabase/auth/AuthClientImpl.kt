@@ -2,15 +2,18 @@ package io.github.androidpoet.supabase.auth
 import dev.whyoleg.cryptography.random.CryptographyRandom
 import io.github.androidpoet.supabase.auth.models.AnonymousSignInRequest
 import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevel
+import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevels
 import io.github.androidpoet.supabase.auth.models.ExchangeCodeRequest
 import io.github.androidpoet.supabase.auth.models.IdTokenRequest
 import io.github.androidpoet.supabase.auth.models.Jwk
 import io.github.androidpoet.supabase.auth.models.JwkSet
+import io.github.androidpoet.supabase.auth.models.JwtClaims
 import io.github.androidpoet.supabase.auth.models.LinkIdentityResponse
 import io.github.androidpoet.supabase.auth.models.MfaChallengeRequest
 import io.github.androidpoet.supabase.auth.models.MfaChallengeResponse
 import io.github.androidpoet.supabase.auth.models.MfaEnrollRequest
 import io.github.androidpoet.supabase.auth.models.MfaEnrollResponse
+import io.github.androidpoet.supabase.auth.models.MfaFactorStatus
 import io.github.androidpoet.supabase.auth.models.MfaFactorType
 import io.github.androidpoet.supabase.auth.models.MfaListFactorsResponse
 import io.github.androidpoet.supabase.auth.models.MfaUnenrollResponse
@@ -77,21 +80,34 @@ internal class AuthClientImpl(
         email: String,
         password: String,
         data: JsonObject?,
+        emailRedirectTo: String?,
     ): SupabaseResult<Session> {
         if (email.isBlank()) return SupabaseResult.Failure(SupabaseError("email must not be blank"))
         val body = defaultJson.encodeToString(SignUpRequest(email = email, password = password, data = data))
-        return client.post(AuthPaths.SIGNUP, body = body).deserialize()
+        return client.post(signUpEndpoint(emailRedirectTo), body = body).deserialize()
     }
 
     override suspend fun signUpWithPhone(
         phone: String,
         password: String,
         data: JsonObject?,
+        redirectTo: String?,
     ): SupabaseResult<Session> {
         if (phone.isBlank()) return SupabaseResult.Failure(SupabaseError("phone must not be blank"))
         val body = defaultJson.encodeToString(SignUpRequest(phone = phone, password = password, data = data))
-        return client.post(AuthPaths.SIGNUP, body = body).deserialize()
+        return client.post(signUpEndpoint(redirectTo), body = body).deserialize()
     }
+
+    // The signup endpoint takes the post-confirmation redirect as a `redirect_to` query parameter,
+    // mirroring how recover and the OAuth flows pass theirs.
+    private fun signUpEndpoint(redirectTo: String?): String =
+        buildString {
+            append(AuthPaths.SIGNUP)
+            if (redirectTo != null) {
+                append("?redirect_to=")
+                append(urlEncode(redirectTo))
+            }
+        }
 
     override suspend fun signInWithEmail(
         email: String,
@@ -693,7 +709,16 @@ internal class AuthClientImpl(
 
     override suspend fun mfaGetAuthenticatorAssuranceLevel(
         accessToken: String,
-    ): SupabaseResult<AuthenticatorAssuranceLevel> {
+    ): SupabaseResult<AuthenticatorAssuranceLevel> = currentAuthenticatorAssuranceLevel(accessToken)
+
+    override suspend fun mfaGetAuthenticatorAssuranceLevels(
+        accessToken: String,
+    ): SupabaseResult<AuthenticatorAssuranceLevels> {
+        val current =
+            when (val result = currentAuthenticatorAssuranceLevel(accessToken)) {
+                is SupabaseResult.Success -> result.value
+                is SupabaseResult.Failure -> return SupabaseResult.Failure(result.error)
+            }
         val userResult: SupabaseResult<User> =
             client
                 .get(
@@ -702,18 +727,47 @@ internal class AuthClientImpl(
                 ).deserialize()
         return when (userResult) {
             is SupabaseResult.Success -> {
-                val factors = userResult.value.factors.orEmpty()
-                val hasVerifiedFactor = factors.any { it.status == "verified" }
-                val level =
-                    if (hasVerifiedFactor) {
-                        AuthenticatorAssuranceLevel.AAL2
-                    } else {
-                        AuthenticatorAssuranceLevel.AAL1
-                    }
-                SupabaseResult.Success(level)
+                val hasVerifiedFactor =
+                    userResult.value.factors
+                        .orEmpty()
+                        .any { it.status == MfaFactorStatus.VERIFIED }
+                val next =
+                    if (hasVerifiedFactor) AuthenticatorAssuranceLevel.AAL2 else AuthenticatorAssuranceLevel.AAL1
+                SupabaseResult.Success(AuthenticatorAssuranceLevels(current = current, next = next))
             }
             is SupabaseResult.Failure -> SupabaseResult.Failure(userResult.error)
         }
+    }
+
+    // Reads the *current* assurance level from the `aal` claim of the access token rather than
+    // inferring it from enrolled factors — a verified factor only means the session *could* reach
+    // AAL2, not that it currently holds it.
+    private fun currentAuthenticatorAssuranceLevel(
+        accessToken: String,
+    ): SupabaseResult<AuthenticatorAssuranceLevel> {
+        val claims =
+            when (val parsed = parseJwtClaims(accessToken)) {
+                is SupabaseResult.Success ->
+                    try {
+                        defaultJson.decodeFromJsonElement(JwtClaims.serializer(), parsed.value)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Throwable) {
+                        return SupabaseResult.Failure(SupabaseError("Failed to decode JWT claims: ${e.message}"))
+                    }
+                is SupabaseResult.Failure -> return SupabaseResult.Failure(parsed.error)
+            }
+        val level =
+            when (claims.authenticatorAssuranceLevel) {
+                "aal2" -> AuthenticatorAssuranceLevel.AAL2
+                // GoTrue omits the claim for plain password sessions; treat that as AAL1.
+                "aal1", null -> AuthenticatorAssuranceLevel.AAL1
+                else ->
+                    return SupabaseResult.Failure(
+                        SupabaseError("Unknown aal claim: ${claims.authenticatorAssuranceLevel}"),
+                    )
+            }
+        return SupabaseResult.Success(level)
     }
 
     override suspend fun passkeyStartRegistration(

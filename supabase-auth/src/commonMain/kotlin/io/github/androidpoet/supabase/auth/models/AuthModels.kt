@@ -10,6 +10,16 @@ public data class Session(
     @SerialName("expires_in") val expiresIn: Long,
     @SerialName("token_type") val tokenType: String,
     val user: User,
+    /**
+     * Access token issued by the third-party provider after an OAuth or native sign-in. Present only
+     * for provider flows that return it; use it to call the provider's own APIs on the user's behalf.
+     */
+    @SerialName("provider_token") val providerToken: String? = null,
+    /**
+     * Refresh token issued by the third-party provider, when the provider supports refreshing its
+     * access token. Null for flows that do not return one.
+     */
+    @SerialName("provider_refresh_token") val providerRefreshToken: String? = null,
 )
 
 @Serializable
@@ -23,6 +33,18 @@ public data class User(
     @SerialName("user_metadata") val userMetadata: JsonObject? = null,
     val identities: List<UserIdentity>? = null,
     val factors: List<MfaFactor>? = null,
+    /** True when the user was created via anonymous sign-in and has no confirmed email or phone. */
+    @SerialName("is_anonymous") val isAnonymous: Boolean? = null,
+    /** The user's role, e.g. `authenticated`. */
+    val role: String? = null,
+    /** Timestamp at which the user's email was confirmed, or null if never confirmed. */
+    @SerialName("email_confirmed_at") val emailConfirmedAt: String? = null,
+    /** Timestamp at which the user's phone was confirmed, or null if never confirmed. */
+    @SerialName("phone_confirmed_at") val phoneConfirmedAt: String? = null,
+    /** Timestamp at which the user was first confirmed (via email or phone), or null if never confirmed. */
+    @SerialName("confirmed_at") val confirmedAt: String? = null,
+    /** Timestamp of the user's most recent sign-in, or null if they have never signed in. */
+    @SerialName("last_sign_in_at") val lastSignInAt: String? = null,
 )
 
 @Serializable
@@ -400,6 +422,20 @@ public enum class AuthenticatorAssuranceLevel {
     AAL2,
 }
 
+/**
+ * The authenticator assurance level of a session, split into the level the session currently holds
+ * and the level it could reach.
+ *
+ * [current] is read from the `aal` claim of the access token, so it reflects what the session has
+ * actually proven. [next] is derived from the user's enrolled factors: it is [AuthenticatorAssuranceLevel.AAL2]
+ * when at least one verified factor exists (meaning the session can be upgraded by completing an MFA
+ * challenge) and [AuthenticatorAssuranceLevel.AAL1] otherwise.
+ */
+public data class AuthenticatorAssuranceLevels(
+    public val current: AuthenticatorAssuranceLevel,
+    public val next: AuthenticatorAssuranceLevel,
+)
+
 @Serializable
 public data class MfaListFactorsResponse(
     @SerialName("all") public val all: List<MfaFactor> = emptyList(),
@@ -413,10 +449,22 @@ public data class MfaFactor(
     @SerialName("id") public val id: String,
     @SerialName("friendly_name") public val friendlyName: String? = null,
     @SerialName("factor_type") public val factorType: MfaFactorType,
-    @SerialName("status") public val status: String,
+    @SerialName("status") public val status: MfaFactorStatus,
     @SerialName("created_at") public val createdAt: String? = null,
     @SerialName("updated_at") public val updatedAt: String? = null,
 )
+
+/** Verification status of an enrolled MFA factor. */
+@Serializable
+public enum class MfaFactorStatus {
+    /** The factor has completed enrollment and can satisfy an MFA challenge. */
+    @SerialName("verified")
+    VERIFIED,
+
+    /** The factor was enrolled but its verification challenge has not been completed yet. */
+    @SerialName("unverified")
+    UNVERIFIED,
+}
 
 @Serializable
 public data class PasskeyRegistrationOptionsResponse(

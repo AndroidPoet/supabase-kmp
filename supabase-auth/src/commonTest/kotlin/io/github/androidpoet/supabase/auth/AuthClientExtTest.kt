@@ -1,6 +1,7 @@
 package io.github.androidpoet.supabase.auth
 
 import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevel
+import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevels
 import io.github.androidpoet.supabase.auth.models.LinkIdentityResponse
 import io.github.androidpoet.supabase.auth.models.MfaChallengeResponse
 import io.github.androidpoet.supabase.auth.models.MfaEnrollResponse
@@ -1030,12 +1031,22 @@ private class FakeAuthClient : AuthClient {
                 ),
         )
 
-    override suspend fun signUpWithEmail(email: String, password: String, data: JsonObject?): SupabaseResult<Session> {
+    override suspend fun signUpWithEmail(
+        email: String,
+        password: String,
+        data: JsonObject?,
+        emailRedirectTo: String?,
+    ): SupabaseResult<Session> {
         lastEmailSignUp = email
         return SupabaseResult.Success(dummySession.copy(accessToken = "sign-up-acc", refreshToken = "sign-up-ref"))
     }
 
-    override suspend fun signUpWithPhone(phone: String, password: String, data: JsonObject?): SupabaseResult<Session> {
+    override suspend fun signUpWithPhone(
+        phone: String,
+        password: String,
+        data: JsonObject?,
+        redirectTo: String?,
+    ): SupabaseResult<Session> {
         lastPhoneSignUp = phone
         return SupabaseResult.Success(dummySession.copy(accessToken = "phone-sign-up-acc", refreshToken = "phone-sign-up-ref"))
     }
@@ -1280,6 +1291,9 @@ private class FakeAuthClient : AuthClient {
         SupabaseResult.Failure(SupabaseError("not used"))
 
     override suspend fun mfaGetAuthenticatorAssuranceLevel(accessToken: String): SupabaseResult<AuthenticatorAssuranceLevel> =
+        SupabaseResult.Failure(SupabaseError("not used"))
+
+    override suspend fun mfaGetAuthenticatorAssuranceLevels(accessToken: String): SupabaseResult<AuthenticatorAssuranceLevels> =
         SupabaseResult.Failure(SupabaseError("not used"))
 
     override suspend fun passkeyStartRegistration(accessToken: String): SupabaseResult<PasskeyRegistrationOptionsResponse> =

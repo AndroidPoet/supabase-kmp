@@ -1,5 +1,6 @@
 package io.github.androidpoet.supabase.auth
 
+import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevel
 import io.github.androidpoet.supabase.auth.models.OAuthProvider
 import io.github.androidpoet.supabase.auth.models.OtpVerifyResult
 import io.github.androidpoet.supabase.auth.models.SignOutScope
@@ -331,6 +332,116 @@ class AuthClientImplTest {
         }
 
     @Test
+    fun test_signUpWithEmail_appendsRedirectToQueryParam() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            sut.signUpWithEmail(
+                email = "user@example.com",
+                password = "pw",
+                emailRedirectTo = "https://app.example.com/welcome",
+            )
+
+            assertEquals(
+                "/auth/v1/signup?redirect_to=https%3A%2F%2Fapp.example.com%2Fwelcome",
+                client.lastPostEndpoint,
+            )
+        }
+
+    @Test
+    fun test_signUpWithEmail_withoutRedirect_usesPlainSignupEndpoint() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            sut.signUpWithEmail(email = "user@example.com", password = "pw")
+
+            assertEquals("/auth/v1/signup", client.lastPostEndpoint)
+        }
+
+    @Test
+    fun test_signUpWithPhone_appendsRedirectToQueryParam() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            sut.signUpWithPhone(
+                phone = "+15555550100",
+                password = "pw",
+                redirectTo = "https://app.example.com/welcome",
+            )
+
+            assertEquals(
+                "/auth/v1/signup?redirect_to=https%3A%2F%2Fapp.example.com%2Fwelcome",
+                client.lastPostEndpoint,
+            )
+        }
+
+    @Test
+    fun test_mfaGetAuthenticatorAssuranceLevel_readsAalClaimFromToken() =
+        runTest {
+            val client = FakeSupabaseClient()
+            // The /user response lists a verified factor; the *current* level must still come from
+            // the aal2 claim in the token, not be inferred from the factor.
+            client.userResponse =
+                """{"id":"u1","factors":[{"id":"f1","factor_type":"totp","status":"verified"}]}"""
+            val sut = AuthClientImpl(client)
+
+            val token = jwtWithClaims("""{"sub":"u1","aal":"aal2"}""")
+            val result = sut.mfaGetAuthenticatorAssuranceLevel(token)
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals(AuthenticatorAssuranceLevel.AAL2, result.value)
+        }
+
+    @Test
+    fun test_mfaGetAuthenticatorAssuranceLevel_missingAalClaimDefaultsToAal1() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            val token = jwtWithClaims("""{"sub":"u1"}""")
+            val result = sut.mfaGetAuthenticatorAssuranceLevel(token)
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals(AuthenticatorAssuranceLevel.AAL1, result.value)
+        }
+
+    @Test
+    fun test_mfaGetAuthenticatorAssuranceLevels_currentFromTokenNextFromFactors() =
+        runTest {
+            val client = FakeSupabaseClient()
+            // Current session is still aal1, but a verified factor means it can be upgraded to aal2.
+            client.userResponse =
+                """{"id":"u1","factors":[{"id":"f1","factor_type":"totp","status":"verified"}]}"""
+            val sut = AuthClientImpl(client)
+
+            val token = jwtWithClaims("""{"sub":"u1","aal":"aal1"}""")
+            val result = sut.mfaGetAuthenticatorAssuranceLevels(token)
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals(AuthenticatorAssuranceLevel.AAL1, result.value.current)
+            assertEquals(AuthenticatorAssuranceLevel.AAL2, result.value.next)
+        }
+
+    @Test
+    fun test_mfaGetAuthenticatorAssuranceLevels_noVerifiedFactorKeepsNextAtAal1() =
+        runTest {
+            val client = FakeSupabaseClient()
+            client.userResponse =
+                """{"id":"u1","factors":[{"id":"f1","factor_type":"totp","status":"unverified"}]}"""
+            val sut = AuthClientImpl(client)
+
+            val token = jwtWithClaims("""{"sub":"u1","aal":"aal1"}""")
+            val result = sut.mfaGetAuthenticatorAssuranceLevels(token)
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals(AuthenticatorAssuranceLevel.AAL1, result.value.current)
+            assertEquals(AuthenticatorAssuranceLevel.AAL1, result.value.next)
+        }
+
+    @Test
     fun test_reauthenticate_usesAuthorizedEndpoint() =
         runTest {
             val client = FakeSupabaseClient()
@@ -548,6 +659,33 @@ class AuthClientImplTest {
             assertEquals("Bearer token-oauth", client.lastDeleteHeaders["Authorization"])
             assertTrue(revoke is SupabaseResult.Success)
         }
+}
+
+// Builds a syntactically valid JWT (header.payload.signature) whose payload is [claimsJson]. Only
+// the payload is decoded by the client, so the header and signature are fixed placeholders.
+private fun jwtWithClaims(claimsJson: String): String {
+    val header = base64UrlEncode("""{"alg":"HS256","typ":"JWT"}""")
+    val payload = base64UrlEncode(claimsJson)
+    return "$header.$payload.signature"
+}
+
+private fun base64UrlEncode(value: String): String {
+    val table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+    val bytes = value.encodeToByteArray()
+    val out = StringBuilder()
+    var i = 0
+    while (i < bytes.size) {
+        val b0 = bytes[i].toInt() and 0xFF
+        val b1 = if (i + 1 < bytes.size) bytes[i + 1].toInt() and 0xFF else 0
+        val b2 = if (i + 2 < bytes.size) bytes[i + 2].toInt() and 0xFF else 0
+        val n = (b0 shl 16) or (b1 shl 8) or b2
+        out.append(table[(n shr 18) and 0x3F])
+        out.append(table[(n shr 12) and 0x3F])
+        if (i + 1 < bytes.size) out.append(table[(n shr 6) and 0x3F])
+        if (i + 2 < bytes.size) out.append(table[n and 0x3F])
+        i += 3
+    }
+    return out.toString()
 }
 
 private class FakeSupabaseClient : SupabaseClient {
