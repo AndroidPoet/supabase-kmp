@@ -1,9 +1,16 @@
 name: Dependency Submission
 
-# Resolves the full (transitive) Gradle dependency graph and submits it to
-# GitHub's Dependency Graph. This is what powers Dependabot alerts against
-# transitive dependencies and gives dependency-review.yml a baseline to diff
-# pull requests against.
+# Resolves the (transitive) Gradle dependency graph and submits it to GitHub's
+# Dependency Graph. This is what powers Dependabot alerts against transitive
+# dependencies and gives dependency-review.yml a baseline to diff PRs against.
+#
+# We submit ONLY the published modules' runtime classpaths. The full graph also
+# contains the Gradle buildscript `classpath` configuration — the Android Gradle
+# Plugin's own tooling (grpc-netty, protobuf, jackson, bouncycastle/apksig, …),
+# which runs on the build machine and is never packaged into the published
+# artifacts. Reporting it produced ~48 Dependabot alerts for vulnerabilities that
+# consumers are not exposed to. The filters below keep the signal (deps that
+# actually ship) and drop that build-tool noise.
 
 on:
   push:
@@ -36,3 +43,10 @@ jobs:
 
       - name: Submit dependency graph
         uses: gradle/actions/dependency-submission@v4
+        env:
+          # Published modules only (no samples / e2e-tests), and only the
+          # configurations that actually ship: the JVM and Android-release
+          # runtime classpaths. Excludes the buildscript `classpath` (AGP
+          # tooling) and all test configurations.
+          DEPENDENCY_GRAPH_INCLUDE_PROJECTS: '^:supabase-'
+          DEPENDENCY_GRAPH_INCLUDE_CONFIGURATIONS: '^(jvm|release)RuntimeClasspath$'
