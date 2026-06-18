@@ -1,6 +1,7 @@
 package io.github.androidpoet.supabase.client
 import io.github.androidpoet.supabase.client.transport.HttpTransport
 import io.github.androidpoet.supabase.core.result.SupabaseResult
+import kotlinx.coroutines.flow.Flow
 
 internal class SupabaseClientImpl(
     override val projectUrl: String,
@@ -76,6 +77,17 @@ internal class SupabaseClientImpl(
             contentType = contentType,
             requestHeaders = headers,
         )
+    }
+
+    override fun streamLines(
+        endpoint: String,
+        body: String?,
+        contentType: String?,
+        headers: Map<String, String>,
+    ): Flow<String> {
+        val fullUrl =
+            if (endpoint.startsWith("http://") || endpoint.startsWith("https://")) endpoint else "$projectUrl$endpoint"
+        return transport.streamLines(url = fullUrl, body = body, contentType = contentType, headers = headers)
     }
 
     override fun setAccessToken(token: String) {

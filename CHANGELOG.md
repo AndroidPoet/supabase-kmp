@@ -2,6 +2,38 @@
 
 ## Unreleased
 
+### Added (supabase-kt parity audit)
+
+- **Storage binary download** — `downloadBytes`/`downloadPublicBytes` return
+  `SupabaseResult<ByteArray>`; `download` decoded the body as a UTF-8 `String`,
+  corrupting images/PDFs. Also: extension→MIME inference when `contentType` is
+  left at the octet-stream default, and a `withCacheNonce` URL cache-buster.
+- **Postgrest count** — `selectCount` (HTTP `HEAD`), `selectRange`, and typed
+  `selectWithCount<T>` parse the `Content-Range` header into a `PostgrestPage`/
+  `PostgrestRange` (handles `0-9/27`, `*/27`, `*/*`), so the requested count is
+  finally surfaced. Added the geojson+`stripNulls` mutual-exclusion guard.
+- **Realtime** — HTTP `broadcast(...)` without a subscription (`/realtime/v1/api/broadcast`);
+  presence `metas` are unwrapped to user state; `postgres_changes` route by the
+  server-assigned binding `ids`; reconnect backoff gains optional jitter.
+- **Edge Functions SSE** — `invokeSSE(...): Flow<FunctionServerSentEvent>` with
+  per-event `decodeAs<T>()`, over a new `streamLines` transport primitive.
+- **Auth** — single-flight, TTL-cached JWKS (`resolveSigningKey`); `getClaims`
+  validates `exp`/`nbf` (with clock-skew leeway) and, opt-in, `iss`/`aud`;
+  `generateOAuthState`/`verifyOAuthState` for OAuth CSRF protection.
+- **HTTP retry jitter** — `RetryConfig.jitter` (default on) spreads reconnect
+  storms; `Retry-After` precedence preserved.
+
+### Fixed (audit)
+
+- **`cacheControl` is now sent as the `Cache-Control: max-age=N` request header**
+  on uploads (`upload`/`update`/`uploadToSignedUrl`). It was a `?cacheControl=`
+  query param, which the storage server ignores — the requested TTL was silently
+  dropped and objects were stored `no-cache`.
+- **Realtime `connect()` is single-flighted** via a mutex, so concurrent callers
+  can't open two sockets; **`reconnectAttempt` is now an atomic counter** (it was
+  a `@Volatile var` incremented in the reconnect loop while being reset from
+  `connect()`/`disconnect()` — a non-atomic read-modify-write race).
+
 ### Dependencies
 
 - **Toolchain upgrade:** Kotlin `2.1.10` → `2.4.0`, Ktor `3.1.1` → `3.5.0`,

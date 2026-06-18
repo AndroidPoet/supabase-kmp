@@ -57,6 +57,7 @@ abstract interface io.github.androidpoet.supabase.client/SupabaseClient : kotlin
     abstract suspend fun put(kotlin/String, kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/String> // io.github.androidpoet.supabase.client/SupabaseClient.put|put(kotlin.String;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
     abstract suspend fun putRaw(kotlin/String, kotlin/ByteArray, kotlin/String, kotlin.collections/Map<kotlin/String, kotlin/String> = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/String> // io.github.androidpoet.supabase.client/SupabaseClient.putRaw|putRaw(kotlin.String;kotlin.ByteArray;kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
     abstract suspend fun rawRequest(io.github.androidpoet.supabase.client/SupabaseHttpMethod, kotlin/String, kotlin/ByteArray? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.client/SupabaseHttpResponse> // io.github.androidpoet.supabase.client/SupabaseClient.rawRequest|rawRequest(io.github.androidpoet.supabase.client.SupabaseHttpMethod;kotlin.String;kotlin.ByteArray?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+    open fun streamLines(kotlin/String, kotlin/String? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): kotlinx.coroutines.flow/Flow<kotlin/String> // io.github.androidpoet.supabase.client/SupabaseClient.streamLines|streamLines(kotlin.String;kotlin.String?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
 }
 
 abstract interface io.github.androidpoet.supabase.client/SupabaseInterceptor { // io.github.androidpoet.supabase.client/SupabaseInterceptor|null[0]
@@ -104,10 +105,12 @@ sealed interface io.github.androidpoet.supabase.client.auth/AuthState { // io.gi
 }
 
 final class io.github.androidpoet.supabase.client/RetryConfig { // io.github.androidpoet.supabase.client/RetryConfig|null[0]
-    constructor <init>(kotlin/Int = ..., kotlin/Long = ..., kotlin/Long = ..., kotlin.collections/Set<kotlin/Int> = ...) // io.github.androidpoet.supabase.client/RetryConfig.<init>|<init>(kotlin.Int;kotlin.Long;kotlin.Long;kotlin.collections.Set<kotlin.Int>){}[0]
+    constructor <init>(kotlin/Int = ..., kotlin/Long = ..., kotlin/Long = ..., kotlin.collections/Set<kotlin/Int> = ..., kotlin/Boolean = ...) // io.github.androidpoet.supabase.client/RetryConfig.<init>|<init>(kotlin.Int;kotlin.Long;kotlin.Long;kotlin.collections.Set<kotlin.Int>;kotlin.Boolean){}[0]
 
     final val baseDelayMillis // io.github.androidpoet.supabase.client/RetryConfig.baseDelayMillis|{}baseDelayMillis[0]
         final fun <get-baseDelayMillis>(): kotlin/Long // io.github.androidpoet.supabase.client/RetryConfig.baseDelayMillis.<get-baseDelayMillis>|<get-baseDelayMillis>(){}[0]
+    final val jitter // io.github.androidpoet.supabase.client/RetryConfig.jitter|{}jitter[0]
+        final fun <get-jitter>(): kotlin/Boolean // io.github.androidpoet.supabase.client/RetryConfig.jitter.<get-jitter>|<get-jitter>(){}[0]
     final val maxDelayMillis // io.github.androidpoet.supabase.client/RetryConfig.maxDelayMillis|{}maxDelayMillis[0]
         final fun <get-maxDelayMillis>(): kotlin/Long // io.github.androidpoet.supabase.client/RetryConfig.maxDelayMillis.<get-maxDelayMillis>|<get-maxDelayMillis>(){}[0]
     final val maxRetries // io.github.androidpoet.supabase.client/RetryConfig.maxRetries|{}maxRetries[0]
@@ -120,7 +123,8 @@ final class io.github.androidpoet.supabase.client/RetryConfig { // io.github.and
     final fun component2(): kotlin/Long // io.github.androidpoet.supabase.client/RetryConfig.component2|component2(){}[0]
     final fun component3(): kotlin/Long // io.github.androidpoet.supabase.client/RetryConfig.component3|component3(){}[0]
     final fun component4(): kotlin.collections/Set<kotlin/Int> // io.github.androidpoet.supabase.client/RetryConfig.component4|component4(){}[0]
-    final fun copy(kotlin/Int = ..., kotlin/Long = ..., kotlin/Long = ..., kotlin.collections/Set<kotlin/Int> = ...): io.github.androidpoet.supabase.client/RetryConfig // io.github.androidpoet.supabase.client/RetryConfig.copy|copy(kotlin.Int;kotlin.Long;kotlin.Long;kotlin.collections.Set<kotlin.Int>){}[0]
+    final fun component5(): kotlin/Boolean // io.github.androidpoet.supabase.client/RetryConfig.component5|component5(){}[0]
+    final fun copy(kotlin/Int = ..., kotlin/Long = ..., kotlin/Long = ..., kotlin.collections/Set<kotlin/Int> = ..., kotlin/Boolean = ...): io.github.androidpoet.supabase.client/RetryConfig // io.github.androidpoet.supabase.client/RetryConfig.copy|copy(kotlin.Int;kotlin.Long;kotlin.Long;kotlin.collections.Set<kotlin.Int>;kotlin.Boolean){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.client/RetryConfig.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.client/RetryConfig.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // io.github.androidpoet.supabase.client/RetryConfig.toString|toString(){}[0]

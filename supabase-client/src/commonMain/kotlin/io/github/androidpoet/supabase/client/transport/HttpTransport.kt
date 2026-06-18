@@ -19,9 +19,11 @@ import io.ktor.client.request.header
 import io.ktor.client.request.headers
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
+import io.ktor.client.request.preparePost
 import io.ktor.client.request.put
 import io.ktor.client.request.request
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.bodyAsText
 import io.ktor.client.statement.readRawBytes
 import io.ktor.http.ContentType
@@ -29,8 +31,11 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.utils.io.readLine
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.io.IOException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -146,6 +151,49 @@ internal class HttpTransport(
                     bearerTokenOrNull()?.let { header("Authorization", "Bearer $it") }
                 }
             }
+        }
+    }
+
+    /**
+     * Streams the response body of a POST as a cold [Flow] of decoded UTF-8 lines,
+     * read incrementally off the wire — the basis for consuming Server-Sent Events
+     * without buffering the whole (potentially unbounded) response. The connection
+     * is opened when collection starts and closed when it ends or is cancelled.
+     *
+     * A non-2xx status throws inside the flow (so the collector's `catch`/`try`
+     * sees it) rather than silently yielding nothing; this mirrors how the buffered
+     * helpers surface failures as a terminal signal.
+     */
+    fun streamLines(
+        url: String,
+        body: String? = null,
+        contentType: String? = null,
+        headers: Map<String, String> = emptyMap(),
+    ): Flow<String> {
+        val outgoingHeaders = headers - INTERNAL_RETRY_HEADER
+        return flow {
+            httpClient
+                .preparePost(url) {
+                    contentType?.let { contentType(ContentType.parse(it)) }
+                    body?.let { setBody(it) }
+                    // SSE: ask the server to stream and don't let an intermediary buffer.
+                    if (outgoingHeaders.keys.none { it.equals("Accept", ignoreCase = true) }) {
+                        header("Accept", "text/event-stream")
+                    }
+                    outgoingHeaders.forEach { (k, v) -> header(k, v) }
+                    if ("Authorization" !in outgoingHeaders) {
+                        bearerTokenOrNull()?.let { header("Authorization", "Bearer $it") }
+                    }
+                }.execute { response ->
+                    if (!response.status.isSuccess()) {
+                        throw IOException("Stream request to $url failed with HTTP ${response.status.value}")
+                    }
+                    val channel = response.bodyAsChannel()
+                    while (true) {
+                        val line = channel.readLine() ?: break
+                        emit(line)
+                    }
+                }
         }
     }
 

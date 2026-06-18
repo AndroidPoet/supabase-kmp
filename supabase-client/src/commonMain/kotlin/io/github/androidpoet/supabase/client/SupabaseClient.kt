@@ -1,5 +1,6 @@
 package io.github.androidpoet.supabase.client
 import io.github.androidpoet.supabase.core.result.SupabaseResult
+import kotlinx.coroutines.flow.Flow
 
 /** HTTP method for [SupabaseClient.rawRequest]. */
 public enum class SupabaseHttpMethod {
@@ -89,6 +90,24 @@ public interface SupabaseClient : AutoCloseable {
         contentType: String? = null,
         headers: Map<String, String> = emptyMap(),
     ): SupabaseResult<SupabaseHttpResponse>
+
+    /**
+     * Streams the body of a POST to [endpoint] as a cold [Flow] of decoded UTF-8
+     * lines, read incrementally rather than buffered — for Server-Sent Events and
+     * other long-lived responses. The request is issued on collection; a non-2xx
+     * status surfaces as a terminal exception in the flow. [endpoint] may be a
+     * path (prefixed with the project URL) or an absolute URL.
+     *
+     * Has a default that throws so existing non-streaming [SupabaseClient]
+     * implementations (notably test fakes) keep compiling; the real client
+     * overrides it.
+     */
+    public fun streamLines(
+        endpoint: String,
+        body: String? = null,
+        contentType: String? = null,
+        headers: Map<String, String> = emptyMap(),
+    ): Flow<String> = throw UnsupportedOperationException("streamLines is not supported by this SupabaseClient")
 
     public fun setAccessToken(token: String)
 
