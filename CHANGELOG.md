@@ -34,6 +34,12 @@
 
 ### Fixed
 
+- **Google native sign-in with a nonce now validates.** The Android Google
+  provider sent the **raw** nonce to Google's `setNonce` *and* to Supabase, so
+  Google embedded the raw value in the ID token's `nonce` claim while Supabase
+  compared it against the SHA-256 hash of the raw nonce — every nonce sign-in
+  failed. It now sends the hashed nonce to Google and the raw nonce to Supabase,
+  matching the (already correct) Apple provider.
 - **Realtime now bundles a WebSocket engine on every target.** `supabase-realtime`
   previously declared only `ktor-client-core` + `websockets` and built its
   `HttpClient` with no engine, so the realtime connection failed at runtime on

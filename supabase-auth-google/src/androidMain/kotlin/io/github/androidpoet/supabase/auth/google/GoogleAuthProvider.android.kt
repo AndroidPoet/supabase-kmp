@@ -12,6 +12,7 @@ import io.github.androidpoet.supabase.auth.native.NativeAuthProvider
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import kotlinx.coroutines.CancellationException
+import java.security.MessageDigest
 
 /**
  * Creates a Google [NativeAuthProvider] backed by Android's Credential Manager + Google Identity
@@ -32,13 +33,19 @@ private class AndroidGoogleAuthProvider(
 
     override suspend fun signIn(): SupabaseResult<NativeAuthCredential> =
         try {
+            // Google embeds whatever we pass to setNonce() verbatim into the ID token's `nonce`
+            // claim. Supabase validates that claim by SHA-256-hashing the *raw* nonce we hand it
+            // (NativeAuthCredential.nonce) and comparing. So we must send the HASHED nonce to
+            // Google and the RAW nonce to Supabase — passing the raw value to both makes the
+            // claim mismatch and every nonce sign-in fail. Mirrors the Apple provider.
+            val hashedNonce = config.nonce?.let(::sha256Hex)
             val option =
                 GetGoogleIdOption
                     .Builder()
                     .setServerClientId(config.serverClientId)
                     .setFilterByAuthorizedAccounts(config.filterByAuthorizedAccounts)
                     .setAutoSelectEnabled(config.autoSelectEnabled)
-                    .apply { config.nonce?.let(::setNonce) }
+                    .apply { hashedNonce?.let(::setNonce) }
                     .build()
             val request = GetCredentialRequest.Builder().addCredentialOption(option).build()
             val response = CredentialManager.create(context).getCredential(context, request)
@@ -66,3 +73,9 @@ private class AndroidGoogleAuthProvider(
         )
     }
 }
+
+private fun sha256Hex(input: String): String =
+    MessageDigest
+        .getInstance("SHA-256")
+        .digest(input.encodeToByteArray())
+        .joinToString("") { byte -> (byte.toInt() and 0xFF).toString(16).padStart(2, '0') }
