@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalEncodingApi::class)
+
 package io.github.androidpoet.supabase.storage
 
 import io.github.androidpoet.supabase.client.SupabaseClient
@@ -19,6 +21,8 @@ import io.github.androidpoet.supabase.storage.models.VectorObject
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -1016,6 +1020,146 @@ class StorageClientImplTest {
                 sut.putVectors("embeddings", "documents", emptyList())
             }
         }
+
+    @Test
+    fun test_upload_withMetadata_setsBase64MetadataHeader() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = StorageClientImpl(client)
+            val meta = buildJsonObject { put("owner", "alice") }
+
+            sut.upload(
+                bucket = "avatars",
+                path = "a.png",
+                data = byteArrayOf(1),
+                metadata = meta,
+            )
+
+            val encoded = client.lastPostRawHeaders["x-metadata"]
+            assertEquals(Base64.encode(meta.toString().encodeToByteArray()), encoded)
+        }
+
+    @Test
+    fun test_upload_withoutMetadata_omitsMetadataHeader() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = StorageClientImpl(client)
+
+            sut.upload(bucket = "avatars", path = "a.png", data = byteArrayOf(1))
+
+            assertTrue(!client.lastPostRawHeaders.containsKey("x-metadata"))
+        }
+
+    @Test
+    fun test_update_withMetadata_setsBase64MetadataHeader() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = StorageClientImpl(client)
+            val meta = buildJsonObject { put("tag", "v2") }
+
+            sut.update(
+                bucket = "avatars",
+                path = "a.png",
+                data = byteArrayOf(1),
+                metadata = meta,
+            )
+
+            assertEquals(
+                Base64.encode(meta.toString().encodeToByteArray()),
+                client.lastPutRawHeaders["x-metadata"],
+            )
+        }
+
+    @Test
+    fun test_uploadToSignedUrl_withMetadata_setsBase64MetadataHeader() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = StorageClientImpl(client)
+            val meta = buildJsonObject { put("k", "v") }
+
+            sut.uploadToSignedUrl(
+                bucket = "avatars",
+                path = "a.png",
+                token = "abc",
+                data = byteArrayOf(1, 2, 3),
+                metadata = meta,
+            )
+
+            assertEquals(
+                Base64.encode(meta.toString().encodeToByteArray()),
+                client.lastPutRawHeaders["x-metadata"],
+            )
+        }
+
+    @Test
+    fun test_createUploadSignedUrlWithPath_returnsServerPath() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = StorageClientImpl(client)
+
+            val result = sut.createUploadSignedUrlWithPath(bucket = "avatars", path = "a.png")
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals("avatars/a.png", result.value.path)
+        }
+
+    @Test
+    fun test_info_decodesWidenedServerFields() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = StorageClientImpl(client)
+
+            val result = sut.info(bucket = "avatars", path = "meta.png")
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals(2048L, result.value.size)
+            assertEquals("image/png", result.value.contentType)
+            assertEquals("\"abc123\"", result.value.etag)
+            assertEquals("2026-01-02T00:00:00Z", result.value.lastAccessedAt)
+            assertEquals("max-age=3600", result.value.cacheControl)
+        }
+
+    @Test
+    fun test_downloadBytes_withTransform_usesAuthenticatedRenderEndpoint() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = StorageClientImpl(client)
+
+            val result =
+                sut.downloadBytes(
+                    bucket = "avatars",
+                    path = "a.png",
+                    transform = ImageTransformOptions(width = 100, resize = ResizeMode.COVER),
+                )
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals(
+                "/storage/v1/render/image/authenticated/avatars/a.png?width=100&resize=cover",
+                client.lastRawRequestUrl,
+            )
+        }
+
+    @Test
+    fun test_downloadPublicBytes_withTransformAndDownload_usesPublicRenderEndpoint() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = StorageClientImpl(client)
+
+            val result =
+                sut.downloadPublicBytes(
+                    bucket = "avatars",
+                    path = "a.png",
+                    transform = ImageTransformOptions(height = 50),
+                    download = true,
+                    fileName = "out.png",
+                )
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals(
+                "/storage/v1/render/image/public/avatars/a.png?height=50&download=out.png",
+                client.lastRawRequestUrl,
+            )
+        }
 }
 
 private class FakeSupabaseClient : SupabaseClient {
@@ -1033,6 +1177,7 @@ private class FakeSupabaseClient : SupabaseClient {
     var lastDeleteEndpoint: String? = null
     var lastPutRawUrl: String? = null
     var lastPutRawHeaders: Map<String, String> = emptyMap()
+    var lastRawRequestUrl: String? = null
 
     // Resumable (TUS) upload simulation state.
     val resumableUploadUrl: String = "https://example.supabase.co/storage/v1/upload/resumable/upload-1"
@@ -1061,6 +1206,12 @@ private class FakeSupabaseClient : SupabaseClient {
         return when {
             endpoint.contains("/object/info/") && endpoint.contains("missing.png") ->
                 SupabaseResult.Failure(SupabaseError(message = "not found", code = "404"))
+            endpoint.contains("/object/info/") && endpoint.contains("meta.png") ->
+                SupabaseResult.Success(
+                    """{"name":"meta.png","size":2048,"content_type":"image/png",""" +
+                        """"etag":"\"abc123\"","last_accessed_at":"2026-01-02T00:00:00Z",""" +
+                        """"cache_control":"max-age=3600"}""",
+                )
             endpoint.contains("/object/info/") -> SupabaseResult.Success("""{"name":"a.png"}""")
             endpoint == "/storage/v1/bucket" -> SupabaseResult.Success("""[]""")
             endpoint == "/storage/v1/iceberg/v1/config" ->
@@ -1099,7 +1250,7 @@ private class FakeSupabaseClient : SupabaseClient {
                 }
 
             endpoint.contains("/upload/sign/") ->
-                SupabaseResult.Success("""{"url":"/upload/sign/path","token":"upload-token-123"}""")
+                SupabaseResult.Success("""{"url":"/upload/sign/path","token":"upload-token-123","path":"avatars/a.png"}""")
 
             endpoint.contains("/object/list-v2/") ->
                 SupabaseResult.Success(
@@ -1207,6 +1358,10 @@ private class FakeSupabaseClient : SupabaseClient {
         headers: Map<String, String>,
     ): SupabaseResult<SupabaseHttpResponse> =
         when (method) {
+            SupabaseHttpMethod.GET -> {
+                lastRawRequestUrl = url
+                SupabaseResult.Success(SupabaseHttpResponse(200, emptyMap(), byteArrayOf(7, 8, 9)))
+            }
             SupabaseHttpMethod.POST -> {
                 resumableCreateCount++
                 resumableReceived = 0L

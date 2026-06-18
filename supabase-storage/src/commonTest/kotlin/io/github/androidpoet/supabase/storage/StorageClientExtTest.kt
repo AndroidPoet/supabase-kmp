@@ -438,7 +438,15 @@ private class FakeStorageClient : StorageClient {
 
     override suspend fun emptyBucket(id: String): SupabaseResult<Unit> = error("not used")
 
-    override suspend fun upload(bucket: String, path: String, data: ByteArray, contentType: String, upsert: Boolean, cacheControl: Int?): SupabaseResult<String> = error("not used")
+    override suspend fun upload(
+        bucket: String,
+        path: String,
+        data: ByteArray,
+        contentType: String,
+        upsert: Boolean,
+        cacheControl: Int?,
+        metadata: JsonObject?,
+    ): SupabaseResult<String> = error("not used")
 
     override fun createResumableUpload(
         bucket: String,
@@ -451,7 +459,15 @@ private class FakeStorageClient : StorageClient {
         uploadUrl: String?,
     ): ResumableUpload = error("not used")
 
-    override suspend fun update(bucket: String, path: String, data: ByteArray, contentType: String, upsert: Boolean, cacheControl: Int?): SupabaseResult<String> = error("not used")
+    override suspend fun update(
+        bucket: String,
+        path: String,
+        data: ByteArray,
+        contentType: String,
+        upsert: Boolean,
+        cacheControl: Int?,
+        metadata: JsonObject?,
+    ): SupabaseResult<String> = error("not used")
 
     override suspend fun download(bucket: String, path: String): SupabaseResult<String> = error("not used")
 
@@ -471,6 +487,22 @@ private class FakeStorageClient : StorageClient {
     override suspend fun downloadPublicBytes(
         bucket: String,
         path: String,
+        download: Boolean,
+        fileName: String?,
+    ): SupabaseResult<ByteArray> = error("not used")
+
+    override suspend fun downloadBytes(
+        bucket: String,
+        path: String,
+        transform: ImageTransformOptions,
+        download: Boolean,
+        fileName: String?,
+    ): SupabaseResult<ByteArray> = error("not used")
+
+    override suspend fun downloadPublicBytes(
+        bucket: String,
+        path: String,
+        transform: ImageTransformOptions,
         download: Boolean,
         fileName: String?,
     ): SupabaseResult<ByteArray> = error("not used")
@@ -561,7 +593,16 @@ private class FakeStorageClient : StorageClient {
 
     override suspend fun createUploadSignedUrlWithPath(bucket: String, path: String, upsert: Boolean): SupabaseResult<UploadSignedUrl> = error("not used")
 
-    override suspend fun uploadToSignedUrl(bucket: String, path: String, token: String, data: ByteArray, contentType: String, upsert: Boolean, cacheControl: Int?): SupabaseResult<String> = error("not used")
+    override suspend fun uploadToSignedUrl(
+        bucket: String,
+        path: String,
+        token: String,
+        data: ByteArray,
+        contentType: String,
+        upsert: Boolean,
+        cacheControl: Int?,
+        metadata: JsonObject?,
+    ): SupabaseResult<String> = error("not used")
 
     override fun getPublicUrl(bucket: String, path: String, transform: ImageTransformOptions?): String =
         "https://example.supabase.co/storage/v1/object/public/$bucket/$path"

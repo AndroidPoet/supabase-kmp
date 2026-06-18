@@ -72,6 +72,8 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 internal class StorageClientImpl(
     private val client: SupabaseClient,
@@ -149,11 +151,13 @@ internal class StorageClientImpl(
         contentType: String,
         upsert: Boolean,
         cacheControl: Int?,
+        metadata: JsonObject?,
     ): SupabaseResult<String> {
         val headers =
             buildMap {
                 if (upsert) put("x-upsert", "true")
                 cacheControlHeader(cacheControl)?.let { put("Cache-Control", it) }
+                metadataHeader(metadata)?.let { put(METADATA_HEADER, it) }
             }
         return client.postRaw(
             url = "${StoragePaths.OBJECT}/${objectRef(bucket, path)}",
@@ -170,11 +174,13 @@ internal class StorageClientImpl(
         contentType: String,
         upsert: Boolean,
         cacheControl: Int?,
+        metadata: JsonObject?,
     ): SupabaseResult<String> {
         val headers =
             buildMap {
                 if (upsert) put("x-upsert", "true")
                 cacheControlHeader(cacheControl)?.let { put("Cache-Control", it) }
+                metadataHeader(metadata)?.let { put(METADATA_HEADER, it) }
             }
         return client.putRaw(
             url = "${StoragePaths.OBJECT}/${objectRef(bucket, path)}",
@@ -250,6 +256,44 @@ internal class StorageClientImpl(
             .rawRequest(
                 method = SupabaseHttpMethod.GET,
                 url = "${StoragePaths.OBJECT_PUBLIC}/${objectRef(bucket, path)}${buildDownloadQuery(download, fileName)}",
+            ).map { it.body }
+
+    override suspend fun downloadBytes(
+        bucket: String,
+        path: String,
+        transform: ImageTransformOptions,
+        download: Boolean,
+        fileName: String?,
+    ): SupabaseResult<ByteArray> =
+        client
+            .rawRequest(
+                method = SupabaseHttpMethod.GET,
+                url =
+                    buildRenderQuery(
+                        "${StoragePaths.RENDER_IMAGE_AUTHENTICATED}/${objectRef(bucket, path)}",
+                        transform,
+                        download,
+                        fileName,
+                    ),
+            ).map { it.body }
+
+    override suspend fun downloadPublicBytes(
+        bucket: String,
+        path: String,
+        transform: ImageTransformOptions,
+        download: Boolean,
+        fileName: String?,
+    ): SupabaseResult<ByteArray> =
+        client
+            .rawRequest(
+                method = SupabaseHttpMethod.GET,
+                url =
+                    buildRenderQuery(
+                        "${StoragePaths.RENDER_IMAGE_PUBLIC}/${objectRef(bucket, path)}",
+                        transform,
+                        download,
+                        fileName,
+                    ),
             ).map { it.body }
 
     override suspend fun info(bucket: String, path: String): SupabaseResult<FileObject> =
@@ -441,7 +485,7 @@ internal class StorageClientImpl(
                 endpoint = "${StoragePaths.OBJECT_UPLOAD_SIGN}/${objectRef(bucket, path)}",
                 headers = if (upsert) mapOf("x-upsert" to "true") else emptyMap(),
             ).deserialize<UploadSignedUrlResponse>()
-            .map { UploadSignedUrl(url = resolveStorageUrl(it.url), token = it.token) }
+            .map { UploadSignedUrl(url = resolveStorageUrl(it.url), token = it.token, path = it.path) }
 
     override suspend fun uploadToSignedUrl(
         bucket: String,
@@ -451,11 +495,13 @@ internal class StorageClientImpl(
         contentType: String,
         upsert: Boolean,
         cacheControl: Int?,
+        metadata: JsonObject?,
     ): SupabaseResult<String> {
         val headers =
             buildMap {
                 if (upsert) put("x-upsert", "true")
                 cacheControlHeader(cacheControl)?.let { put("Cache-Control", it) }
+                metadataHeader(metadata)?.let { put(METADATA_HEADER, it) }
             }
         return client.putRaw(
             url = "${StoragePaths.OBJECT_UPLOAD_SIGN}/${objectRef(bucket, path)}?token=${encodeQueryComponent(token)}",
@@ -873,6 +919,34 @@ internal class StorageClientImpl(
     // query param is silently ignored. Mirror storage-js and send `max-age=<seconds>`.
     private fun cacheControlHeader(cacheControl: Int?): String? = cacheControl?.let { "max-age=$it" }
 
+    // The storage server reads user-supplied object metadata from the `x-metadata`
+    // request header on raw upload/update/upload-to-signed-url calls. The value is
+    // the Base64 of the metadata JSON object's textual form. Returns null when no
+    // metadata was supplied so the header is omitted entirely.
+    @OptIn(ExperimentalEncodingApi::class)
+    private fun metadataHeader(metadata: JsonObject?): String? =
+        metadata?.let { Base64.encode(it.toString().encodeToByteArray()) }
+
+    // Combines a transform query (resize/format/quality) with the optional
+    // download query for the render-image endpoints, mirroring the URL builders.
+    private fun buildRenderQuery(
+        base: String,
+        transform: ImageTransformOptions,
+        download: Boolean,
+        fileName: String?,
+    ): String {
+        val queryParts = mutableListOf<String>()
+        val transformQuery = transform.toQueryString()
+        if (transformQuery.isNotBlank()) {
+            queryParts += transformQuery
+        }
+        val downloadQuery = buildDownloadQuery(download, fileName).removePrefix("?")
+        if (downloadQuery.isNotBlank()) {
+            queryParts += downloadQuery
+        }
+        return if (queryParts.isEmpty()) base else "$base?${queryParts.joinToString("&")}"
+    }
+
     /**
      * When the caller left [contentType] at the default octet-stream sentinel,
      * infer a MIME type from the upload [path]'s file extension; otherwise keep
@@ -1271,6 +1345,10 @@ private fun encodePathSegment(value: String): String {
 }
 
 private const val DEFAULT_CONTENT_TYPE = "application/octet-stream"
+
+// Request header the storage server reads for user-supplied object metadata
+// (Base64-encoded JSON) on raw upload/update/upload-to-signed-url calls.
+private const val METADATA_HEADER = "x-metadata"
 
 // Minimal, dependency-free extension -> MIME map covering the common upload
 // types. Returns null for unknown/missing extensions so the caller can fall

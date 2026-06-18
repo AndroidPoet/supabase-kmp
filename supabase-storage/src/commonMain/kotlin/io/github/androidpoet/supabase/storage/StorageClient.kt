@@ -180,6 +180,13 @@ public interface StorageClient {
 
     public suspend fun emptyBucket(id: String): SupabaseResult<Unit>
 
+    /**
+     * Uploads [data] to [path] in [bucket].
+     *
+     * When [metadata] is provided, it is Base64-encoded and sent in the
+     * `x-metadata` request header so the server stores it as the object's user
+     * metadata.
+     */
     public suspend fun upload(
         bucket: String,
         path: String,
@@ -187,6 +194,7 @@ public interface StorageClient {
         contentType: String = "application/octet-stream",
         upsert: Boolean = false,
         cacheControl: Int? = null,
+        metadata: JsonObject? = null,
     ): SupabaseResult<String>
 
     /**
@@ -206,6 +214,13 @@ public interface StorageClient {
         uploadUrl: String? = null,
     ): ResumableUpload
 
+    /**
+     * Replaces the object at [path] in [bucket] with [data].
+     *
+     * When [metadata] is provided, it is Base64-encoded and sent in the
+     * `x-metadata` request header so the server stores it as the object's user
+     * metadata.
+     */
     public suspend fun update(
         bucket: String,
         path: String,
@@ -213,6 +228,7 @@ public interface StorageClient {
         contentType: String = "application/octet-stream",
         upsert: Boolean = false,
         cacheControl: Int? = null,
+        metadata: JsonObject? = null,
     ): SupabaseResult<String>
 
     public suspend fun download(bucket: String, path: String): SupabaseResult<String>
@@ -237,6 +253,33 @@ public interface StorageClient {
     public suspend fun downloadPublicBytes(
         bucket: String,
         path: String,
+        download: Boolean = false,
+        fileName: String? = null,
+    ): SupabaseResult<ByteArray>
+
+    /**
+     * Downloads a transformed image's raw bytes from the authenticated render
+     * endpoint (`/render/image/authenticated`). [transform] controls the
+     * server-side resize/format/quality; the same options accepted by
+     * [getAuthenticatedRenderUrl]. See [downloadBytes] for the binary-vs-text
+     * rationale.
+     */
+    public suspend fun downloadBytes(
+        bucket: String,
+        path: String,
+        transform: ImageTransformOptions,
+        download: Boolean = false,
+        fileName: String? = null,
+    ): SupabaseResult<ByteArray>
+
+    /**
+     * Downloads a transformed image's raw bytes from the public render endpoint
+     * (`/render/image/public`). See [downloadBytes] with [transform].
+     */
+    public suspend fun downloadPublicBytes(
+        bucket: String,
+        path: String,
+        transform: ImageTransformOptions,
         download: Boolean = false,
         fileName: String? = null,
     ): SupabaseResult<ByteArray>
@@ -344,6 +387,13 @@ public interface StorageClient {
         fileName: String? = null,
     ): String
 
+    /**
+     * Uploads [data] to a pre-signed upload URL identified by [token].
+     *
+     * When [metadata] is provided, it is Base64-encoded and sent in the
+     * `x-metadata` request header so the server stores it as the object's user
+     * metadata.
+     */
     public suspend fun uploadToSignedUrl(
         bucket: String,
         path: String,
@@ -352,6 +402,7 @@ public interface StorageClient {
         contentType: String = "application/octet-stream",
         upsert: Boolean = false,
         cacheControl: Int? = null,
+        metadata: JsonObject? = null,
     ): SupabaseResult<String>
 
     public fun getPublicUrl(
@@ -491,6 +542,8 @@ public interface StorageClient {
 public data class UploadSignedUrl(
     public val url: String,
     public val token: String,
+    /** The object path the server bound to this signed-upload token, when returned. */
+    public val path: String? = null,
 )
 
 public data class ImageTransformOptions(

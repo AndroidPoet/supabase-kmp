@@ -15,6 +15,26 @@ public data class Bucket(
     @SerialName("allowed_mime_types") val allowedMimeTypes: List<String>? = null,
 )
 
+/**
+ * Represents a file or folder entry returned by the storage server.
+ *
+ * For folders, every field except [name] is typically `null`. The trailing
+ * fields ([size], [contentType], [etag], [lastAccessedAt], [cacheControl]) are
+ * populated by object-info and v2 listing endpoints; older list responses omit
+ * them, so they default to `null`.
+ *
+ * @property name The object name (or folder name).
+ * @property id The object id, when present.
+ * @property bucketId The id of the owning bucket, when present.
+ * @property createdAt The creation timestamp, when present.
+ * @property updatedAt The last-update timestamp, when present.
+ * @property metadata Free-form server metadata, when present.
+ * @property size The object size in bytes, when reported by the server.
+ * @property contentType The MIME type the server stored for the object, when reported.
+ * @property etag The entity tag the server assigned to the object, when reported.
+ * @property lastAccessedAt The last-access timestamp, when reported.
+ * @property cacheControl The cache-control directive the server stored, when reported.
+ */
 @Serializable
 public data class FileObject(
     val name: String,
@@ -23,6 +43,11 @@ public data class FileObject(
     @SerialName("created_at") val createdAt: String? = null,
     @SerialName("updated_at") val updatedAt: String? = null,
     val metadata: JsonObject? = null,
+    val size: Long? = null,
+    @SerialName("content_type") val contentType: String? = null,
+    val etag: String? = null,
+    @SerialName("last_accessed_at") val lastAccessedAt: String? = null,
+    @SerialName("cache_control") val cacheControl: String? = null,
 )
 
 @Serializable
@@ -74,6 +99,7 @@ public data class SignedUrlItemResponse(
 public data class UploadSignedUrlResponse(
     @SerialName("url") val url: String,
     @SerialName("token") val token: String,
+    @SerialName("path") val path: String? = null,
 )
 
 @Serializable
