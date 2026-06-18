@@ -53,7 +53,14 @@ internal class RealtimeClientImpl(
     private val supabaseClient: SupabaseClient,
     private val config: RealtimeConfig = RealtimeConfig(),
 ) : RealtimeClient {
-    private val json = Json { ignoreUnknownKeys = true }
+    private val json =
+        Json {
+            // Match the rest of the SDK: tolerate fields newer servers add, be lenient on
+            // wire quirks, and never serialize explicit nulls into outbound Phoenix frames.
+            ignoreUnknownKeys = true
+            isLenient = true
+            explicitNulls = false
+        }
     private val httpClient =
         HttpClient {
             install(WebSockets)

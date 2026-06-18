@@ -97,7 +97,11 @@ internal class HttpTransport(
                     // service-role key, which flows through this same client).
                     sanitizeHeader { name ->
                         name.equals("Authorization", ignoreCase = true) ||
-                            name.equals("apikey", ignoreCase = true)
+                            name.equals("apikey", ignoreCase = true) ||
+                            // Cookies carry the GoTrue session (sb-access-token / sb-refresh-token)
+                            // on both the request and the response, so redact both directions.
+                            name.equals("Cookie", ignoreCase = true) ||
+                            name.equals("Set-Cookie", ignoreCase = true)
                     }
                 }
             }
