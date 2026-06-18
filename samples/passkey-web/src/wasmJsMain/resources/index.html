@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Passkeys — Kotlin/Wasm</title>
+    <style>
+        body { font-family: system-ui, sans-serif; margin: 2rem; max-width: 640px; }
+        button { font-size: 1rem; padding: 0.6rem 1rem; margin: 0.25rem 0.5rem 0.25rem 0; }
+        pre { background: #f4f4f7; padding: 1rem; border-radius: 8px; white-space: pre-wrap; }
+    </style>
+    <!-- Local-only config (gitignored). Sets window.SUPABASE_URL / SUPABASE_ANON_KEY. -->
+    <script src="config.js"></script>
+</head>
+<body>
+    <h3>Supabase Passkeys — Kotlin/Wasm</h3>
+    <p>Native browser passkeys via <code>passkeys-kmp</code> + <code>supabase-kmp</code>.</p>
+    <button id="register">Sign up + register passkey</button>
+    <button id="signin">Sign in with passkey</button>
+    <pre id="log">Loading…</pre>
+    <script src="passkeyweb.js"></script>
+</body>
+</html>

@@ -2,8 +2,26 @@
 
 ## Unreleased
 
+## 0.5.0
+
 ### Added
 
+- **Passkeys (`supabase-auth-passkey`):** new module for Supabase's WebAuthn
+  passkey authentication.
+  - HTTP layer over the auth passkey endpoints — start/verify for both
+    registration and discoverable-credential sign-in, plus list/rename/delete
+    management.
+  - High-level `AuthClient.registerPasskey(...)` / `signInWithPasskey(...)`
+    helpers that run the full ceremony behind a single call.
+  - `PasskeyAuthenticator` seam so the device ceremony is pluggable. Ships
+    `PasskeysKmpAuthenticator`, backed by the cross-platform
+    [`passkeys-kmp`](https://github.com/AndroidPoet/passkeys-kmp) `PasskeyClient`,
+    which drives the **native** authenticator on Android, iOS, macOS, JVM, and
+    the browser (Wasm) from one common API. Typed ceremony failures
+    (cancelled / no-credential / unsupported) map to stable error codes.
+- **Sample:** `samples/passkey-web` — a Kotlin/Wasm browser demo of the full
+  register → sign-in round trip, secrets kept out of the build via a gitignored
+  `config.js`.
 - **Configurable retry:** `SupabaseConfigBuilder.retry` takes a `RetryConfig`
   (max attempts, exponential base/cap delays, retryable status set). Replaces the
   previously hardcoded transport retry constants; a `Retry-After` header still

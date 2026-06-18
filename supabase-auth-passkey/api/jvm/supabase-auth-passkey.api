@@ -1,0 +1,24 @@
+public abstract interface class io/github/androidpoet/supabase/auth/passkey/PasskeyAuthenticator {
+	public abstract fun createCredential (Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getCredential (Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/github/androidpoet/supabase/auth/passkey/PasskeyExtKt {
+	public static final fun registerPasskey (Lio/github/androidpoet/supabase/auth/AuthClient;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/passkey/PasskeyAuthenticator;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun registerPasskey (Lio/github/androidpoet/supabase/client/SupabaseClient;Lio/github/androidpoet/supabase/auth/passkey/PasskeyAuthenticator;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun signInWithPasskey (Lio/github/androidpoet/supabase/auth/AuthClient;Lio/github/androidpoet/supabase/auth/passkey/PasskeyAuthenticator;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun signInWithPasskey (Lio/github/androidpoet/supabase/client/SupabaseClient;Lio/github/androidpoet/supabase/auth/passkey/PasskeyAuthenticator;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun signInWithPasskey$default (Lio/github/androidpoet/supabase/auth/AuthClient;Lio/github/androidpoet/supabase/auth/passkey/PasskeyAuthenticator;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun signInWithPasskey$default (Lio/github/androidpoet/supabase/client/SupabaseClient;Lio/github/androidpoet/supabase/auth/passkey/PasskeyAuthenticator;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class io/github/androidpoet/supabase/auth/passkey/PasskeysKmpAuthenticator : io/github/androidpoet/supabase/auth/passkey/PasskeyAuthenticator {
+	public static final field PASSKEY_CANCELLED Ljava/lang/String;
+	public static final field PASSKEY_CEREMONY_FAILED Ljava/lang/String;
+	public static final field PASSKEY_NO_CREDENTIALS Ljava/lang/String;
+	public static final field PASSKEY_UNSUPPORTED Ljava/lang/String;
+	public fun <init> (Lio/github/androidpoet/passkeys/PasskeyClient;)V
+	public fun createCredential (Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getCredential (Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+

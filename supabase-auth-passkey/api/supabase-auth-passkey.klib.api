@@ -1,0 +1,24 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, macosArm64, macosX64, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <supabase-kmp:supabase-auth-passkey>
+abstract interface io.github.androidpoet.supabase.auth.passkey/PasskeyAuthenticator { // io.github.androidpoet.supabase.auth.passkey/PasskeyAuthenticator|null[0]
+    abstract suspend fun createCredential(kotlinx.serialization.json/JsonObject): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.auth.passkey/PasskeyAuthenticator.createCredential|createCredential(kotlinx.serialization.json.JsonObject){}[0]
+    abstract suspend fun getCredential(kotlinx.serialization.json/JsonObject): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.auth.passkey/PasskeyAuthenticator.getCredential|getCredential(kotlinx.serialization.json.JsonObject){}[0]
+}
+
+final class io.github.androidpoet.supabase.auth.passkey/PasskeysKmpAuthenticator : io.github.androidpoet.supabase.auth.passkey/PasskeyAuthenticator { // io.github.androidpoet.supabase.auth.passkey/PasskeysKmpAuthenticator|null[0]
+    constructor <init>(io.github.androidpoet.passkeys/PasskeyClient) // io.github.androidpoet.supabase.auth.passkey/PasskeysKmpAuthenticator.<init>|<init>(io.github.androidpoet.passkeys.PasskeyClient){}[0]
+
+    final suspend fun createCredential(kotlinx.serialization.json/JsonObject): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.auth.passkey/PasskeysKmpAuthenticator.createCredential|createCredential(kotlinx.serialization.json.JsonObject){}[0]
+    final suspend fun getCredential(kotlinx.serialization.json/JsonObject): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.auth.passkey/PasskeysKmpAuthenticator.getCredential|getCredential(kotlinx.serialization.json.JsonObject){}[0]
+}
+
+final suspend fun (io.github.androidpoet.supabase.auth/AuthClient).io.github.androidpoet.supabase.auth.passkey/registerPasskey(kotlin/String, io.github.androidpoet.supabase.auth.passkey/PasskeyAuthenticator): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth.models/PasskeyMetadata> // io.github.androidpoet.supabase.auth.passkey/registerPasskey|registerPasskey@io.github.androidpoet.supabase.auth.AuthClient(kotlin.String;io.github.androidpoet.supabase.auth.passkey.PasskeyAuthenticator){}[0]
+final suspend fun (io.github.androidpoet.supabase.auth/AuthClient).io.github.androidpoet.supabase.auth.passkey/signInWithPasskey(io.github.androidpoet.supabase.auth.passkey/PasskeyAuthenticator, kotlin/String? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth.models/Session> // io.github.androidpoet.supabase.auth.passkey/signInWithPasskey|signInWithPasskey@io.github.androidpoet.supabase.auth.AuthClient(io.github.androidpoet.supabase.auth.passkey.PasskeyAuthenticator;kotlin.String?){}[0]
+final suspend fun (io.github.androidpoet.supabase.client/SupabaseClient).io.github.androidpoet.supabase.auth.passkey/registerPasskey(io.github.androidpoet.supabase.auth.passkey/PasskeyAuthenticator): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth.models/PasskeyMetadata> // io.github.androidpoet.supabase.auth.passkey/registerPasskey|registerPasskey@io.github.androidpoet.supabase.client.SupabaseClient(io.github.androidpoet.supabase.auth.passkey.PasskeyAuthenticator){}[0]
+final suspend fun (io.github.androidpoet.supabase.client/SupabaseClient).io.github.androidpoet.supabase.auth.passkey/signInWithPasskey(io.github.androidpoet.supabase.auth.passkey/PasskeyAuthenticator, kotlin/String? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth.models/Session> // io.github.androidpoet.supabase.auth.passkey/signInWithPasskey|signInWithPasskey@io.github.androidpoet.supabase.client.SupabaseClient(io.github.androidpoet.supabase.auth.passkey.PasskeyAuthenticator;kotlin.String?){}[0]

@@ -12,3 +12,6 @@ local.properties
 .kotlin/
 kotlin-js-store/
 docs/
+
+# Local-only Supabase config for the web sample
+samples/passkey-web/src/wasmJsMain/resources/config.js
