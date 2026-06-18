@@ -34,6 +34,19 @@
 
 ### Fixed
 
+- **`createSignedUrl` now decodes the server response.** The single-object signed
+  URL endpoint returns camelCase `signedURL` (same key the batch endpoint uses),
+  but `SignedUrlResponse` was annotated `@SerialName("signed_url")` — so every
+  `createSignedUrl` call failed to deserialize. (`createSignedUrls` was correct.)
+- **Result-returning auth APIs no longer throw on bad input.** `signUpWithEmail`,
+  `signUpWithPhone`, and `retrieveSsoUrl` used `require(...)`, throwing
+  `IllegalArgumentException` instead of returning `SupabaseResult.Failure` like
+  every other method — a caller doing `when (result)` crashed. They now return
+  `Failure`.
+- **`MfaListFactorsResponse` and `IcebergNamespaceMetadata` decode when fields are
+  omitted.** Their `List` fields were required (no default), so a `/factors` or
+  Iceberg metadata response that omitted an empty list threw `MissingFieldException`
+  out of a `SupabaseResult`-returning call. The lists now default to empty.
 - **Google native sign-in with a nonce now validates.** The Android Google
   provider sent the **raw** nonce to Google's `setNonce` *and* to Supabase, so
   Google embedded the raw value in the ID token's `nonce` claim while Supabase

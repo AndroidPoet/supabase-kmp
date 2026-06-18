@@ -63,7 +63,7 @@ internal class AuthClientImpl(
         password: String,
         data: JsonObject?,
     ): SupabaseResult<Session> {
-        require(email.isNotBlank()) { "email must not be blank" }
+        if (email.isBlank()) return SupabaseResult.Failure(SupabaseError("email must not be blank"))
         val body = defaultJson.encodeToString(SignUpRequest(email = email, password = password, data = data))
         return client.post(AuthPaths.SIGNUP, body = body).deserialize()
     }
@@ -73,7 +73,7 @@ internal class AuthClientImpl(
         password: String,
         data: JsonObject?,
     ): SupabaseResult<Session> {
-        require(phone.isNotBlank()) { "phone must not be blank" }
+        if (phone.isBlank()) return SupabaseResult.Failure(SupabaseError("phone must not be blank"))
         val body = defaultJson.encodeToString(SignUpRequest(phone = phone, password = password, data = data))
         return client.post(AuthPaths.SIGNUP, body = body).deserialize()
     }
@@ -421,8 +421,12 @@ internal class AuthClientImpl(
     ): SupabaseResult<SsoResponse> {
         val hasDomain = !domain.isNullOrBlank()
         val hasProviderId = !providerId.isNullOrBlank()
-        require(hasDomain || hasProviderId) { "domain or providerId must be provided" }
-        require(!(hasDomain && hasProviderId)) { "either domain or providerId must be set, not both" }
+        if (!hasDomain && !hasProviderId) {
+            return SupabaseResult.Failure(SupabaseError("domain or providerId must be provided"))
+        }
+        if (hasDomain && hasProviderId) {
+            return SupabaseResult.Failure(SupabaseError("either domain or providerId must be set, not both"))
+        }
         val body =
             defaultJson.encodeToString(
                 SsoRequest(

@@ -51,7 +51,9 @@ public data class SignedUrlTransformRequest(
 
 @Serializable
 public data class SignedUrlResponse(
-    @SerialName("signed_url") val signedUrl: String,
+    // The storage server returns camelCase `signedURL` from POST /object/sign/:bucket/*
+    // (same key the batch endpoint uses); decoding `signed_url` here failed every call.
+    @SerialName("signedURL") val signedUrl: String,
 )
 
 @Serializable
@@ -182,7 +184,7 @@ public data class IcebergCreateNamespaceRequest(
 
 @Serializable
 public data class IcebergNamespaceMetadata(
-    val namespace: List<String>,
+    val namespace: List<String> = emptyList(),
     val properties: Map<String, String> = emptyMap(),
 )
 

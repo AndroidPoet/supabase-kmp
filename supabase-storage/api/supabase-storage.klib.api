@@ -474,7 +474,7 @@ final class io.github.androidpoet.supabase.storage.models/IcebergNamespaceListRe
 }
 
 final class io.github.androidpoet.supabase.storage.models/IcebergNamespaceMetadata { // io.github.androidpoet.supabase.storage.models/IcebergNamespaceMetadata|null[0]
-    constructor <init>(kotlin.collections/List<kotlin/String>, kotlin.collections/Map<kotlin/String, kotlin/String> = ...) // io.github.androidpoet.supabase.storage.models/IcebergNamespaceMetadata.<init>|<init>(kotlin.collections.List<kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+    constructor <init>(kotlin.collections/List<kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...) // io.github.androidpoet.supabase.storage.models/IcebergNamespaceMetadata.<init>|<init>(kotlin.collections.List<kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
 
     final val namespace // io.github.androidpoet.supabase.storage.models/IcebergNamespaceMetadata.namespace|{}namespace[0]
         final fun <get-namespace>(): kotlin.collections/List<kotlin/String> // io.github.androidpoet.supabase.storage.models/IcebergNamespaceMetadata.namespace.<get-namespace>|<get-namespace>(){}[0]

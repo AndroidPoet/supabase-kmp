@@ -330,9 +330,9 @@ public enum class AuthenticatorAssuranceLevel {
 
 @Serializable
 public data class MfaListFactorsResponse(
-    @SerialName("all") public val all: List<MfaFactor>,
-    @SerialName("totp") public val totp: List<MfaFactor>,
-    @SerialName("phone") public val phone: List<MfaFactor>,
+    @SerialName("all") public val all: List<MfaFactor> = emptyList(),
+    @SerialName("totp") public val totp: List<MfaFactor> = emptyList(),
+    @SerialName("phone") public val phone: List<MfaFactor> = emptyList(),
     @SerialName("webauthn") public val webauthn: List<MfaFactor> = emptyList(),
 )
 

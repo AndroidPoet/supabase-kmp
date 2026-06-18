@@ -214,6 +214,18 @@ class SerializationRoundTripTest {
     }
 
     @Test
+    fun test_mfaListFactorsResponse_decodesWhenListsOmitted() {
+        // The /factors response may omit empty factor lists; non-defaulted List
+        // fields would throw MissingFieldException out of a SupabaseResult call.
+        val response = json.decodeFromString<MfaListFactorsResponse>("{}")
+
+        assertEquals(emptyList(), response.all)
+        assertEquals(emptyList(), response.totp)
+        assertEquals(emptyList(), response.phone)
+        assertEquals(emptyList(), response.webauthn)
+    }
+
+    @Test
     fun test_mfaFactor_roundTrip() {
         val original =
             MfaFactor(

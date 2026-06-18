@@ -13,7 +13,6 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class AuthClientImplTest {
@@ -253,32 +252,54 @@ class AuthClientImplTest {
         }
 
     @Test
-    fun test_retrieveSsoUrl_requiresDomainOrProviderId() {
+    fun test_retrieveSsoUrl_requiresDomainOrProviderId() =
         runTest {
             val client = FakeSupabaseClient()
             val sut = AuthClientImpl(client)
 
-            assertFailsWith<IllegalArgumentException> {
-                sut.retrieveSsoUrl(accessToken = "token-1")
-            }
+            // A Result-returning API must not throw on bad input — it returns Failure.
+            val result = sut.retrieveSsoUrl(accessToken = "token-1")
+            assertTrue(result is SupabaseResult.Failure)
+            assertEquals(null, client.lastPostEndpoint)
         }
-    }
 
     @Test
-    fun test_retrieveSsoUrl_rejectsBothDomainAndProviderId() {
+    fun test_retrieveSsoUrl_rejectsBothDomainAndProviderId() =
         runTest {
             val client = FakeSupabaseClient()
             val sut = AuthClientImpl(client)
 
-            assertFailsWith<IllegalArgumentException> {
+            val result =
                 sut.retrieveSsoUrl(
                     accessToken = "token-1",
                     domain = "example.com",
                     providerId = "provider-1",
                 )
-            }
+            assertTrue(result is SupabaseResult.Failure)
+            assertEquals(null, client.lastPostEndpoint)
         }
-    }
+
+    @Test
+    fun test_signUpWithEmail_blankEmail_returnsFailureNotThrow() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            val result = sut.signUpWithEmail(email = "  ", password = "pw")
+            assertTrue(result is SupabaseResult.Failure)
+            assertEquals(null, client.lastPostEndpoint)
+        }
+
+    @Test
+    fun test_signUpWithPhone_blankPhone_returnsFailureNotThrow() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            val result = sut.signUpWithPhone(phone = "", password = "pw")
+            assertTrue(result is SupabaseResult.Failure)
+            assertEquals(null, client.lastPostEndpoint)
+        }
 
     @Test
     fun test_reauthenticate_usesAuthorizedEndpoint() =

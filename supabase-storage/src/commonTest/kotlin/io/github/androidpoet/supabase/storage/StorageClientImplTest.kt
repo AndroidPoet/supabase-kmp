@@ -1088,7 +1088,8 @@ private class FakeSupabaseClient : SupabaseClient {
         return when {
             endpoint.contains("/object/sign/") && !endpoint.contains("/upload/sign/") ->
                 if (endpoint.matches(Regex("/storage/v1/object/sign/[^/]+/.*"))) {
-                    SupabaseResult.Success("""{"signed_url":"/sign/single"}""")
+                    // Server returns camelCase `signedURL` (same as the batch endpoint).
+                    SupabaseResult.Success("""{"signedURL":"/sign/single"}""")
                 } else {
                     SupabaseResult.Success("""[{"path":"a.png","signedURL":"/sign/a"},{"path":"b.png","signedURL":"/sign/b"}]""")
                 }

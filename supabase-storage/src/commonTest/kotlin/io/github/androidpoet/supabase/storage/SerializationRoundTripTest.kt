@@ -2,6 +2,7 @@ package io.github.androidpoet.supabase.storage
 
 import io.github.androidpoet.supabase.storage.models.Bucket
 import io.github.androidpoet.supabase.storage.models.FileObject
+import io.github.androidpoet.supabase.storage.models.IcebergNamespaceMetadata
 import io.github.androidpoet.supabase.storage.models.SignedUrlItemResponse
 import io.github.androidpoet.supabase.storage.models.SignedUrlResponse
 import kotlinx.serialization.json.Json
@@ -96,7 +97,10 @@ class SerializationRoundTripTest {
 
     @Test
     fun test_signedUrlResponse_decodesFromApiJson() {
-        val payload = """{ "signed_url": "/object/sign/avatars/photo.png?token=abc" }"""
+        // The storage server returns camelCase `signedURL` (verified against
+        // src/http/routes/object/getSignedURL.ts), the same key the batch endpoint
+        // uses — NOT snake_case `signed_url`. Decoding the latter failed every call.
+        val payload = """{ "signedURL": "/object/sign/avatars/photo.png?token=abc" }"""
 
         val response = json.decodeFromString<SignedUrlResponse>(payload)
 
@@ -117,5 +121,17 @@ class SerializationRoundTripTest {
 
         assertEquals("avatars/photo.png", response.path)
         assertEquals("/object/sign/avatars/photo.png?token=abc", response.signedUrl)
+    }
+
+    @Test
+    fun test_icebergNamespaceMetadata_decodesWhenNamespaceOmitted() {
+        // The metadata response can return only `properties`; a required `namespace`
+        // would throw MissingFieldException out of a SupabaseResult-returning call.
+        val payload = """{ "properties": { "owner": "team-a" } }"""
+
+        val metadata = json.decodeFromString<IcebergNamespaceMetadata>(payload)
+
+        assertEquals(emptyList(), metadata.namespace)
+        assertEquals("team-a", metadata.properties["owner"])
     }
 }
