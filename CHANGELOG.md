@@ -49,6 +49,18 @@
 - **Realtime** — postgres-change events now carry `commitTimestamp`, `schema`, and
   `table`; broadcast events expose `replayed` (set when the server replays a
   message); and `RealtimeConfig.logLevel` forwards a `log_level` to the server.
+- **Realtime** — `RealtimeSubscription.broadcastWithAck(event, payload, timeoutMillis)`
+  sends a broadcast and suspends until the server acknowledges it. Result-first:
+  returns `SupabaseResult.Failure` if the channel is not subscribed, the server
+  rejects the push, the connection drops before the ack, or the ack does not arrive
+  within `timeoutMillis`. The fire-and-forget `broadcast`/`send` path is unchanged.
+- **Postgrest** — `insert`/`rpc` accept a `contentType` so callers can send non-JSON
+  bodies (e.g. `text/csv` bulk inserts, scalar-typed RPC args); the default stays
+  JSON. The raw `rpc` also accepts a `filters` block to filter/order/paginate the
+  rows a set-returning function returns.
+- **Core** — `SupabaseException` now carries an optional `cause`, so an underlying
+  throwable that produced an error stays in the stack trace; `toException(cause)`
+  threads it through.
 
 ### Fixed
 

@@ -708,6 +708,7 @@ private class FakeDatabaseClient(
         count: CountOption?,
         stripNulls: Boolean,
         rollback: Boolean,
+        contentType: String,
         headers: Map<String, String>,
     ): SupabaseResult<String> {
         lastInsertUpsert = upsert
@@ -761,7 +762,9 @@ private class FakeDatabaseClient(
         rollback: Boolean,
         maxAffected: Int?,
         explain: ExplainOptions?,
+        contentType: String,
         headers: Map<String, String>,
+        filters: FilterBuilder.() -> Unit,
     ): SupabaseResult<String> {
         lastRpcParams = params
         return rpcResult

@@ -1,4 +1,5 @@
 package io.github.androidpoet.supabase.realtime
+import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.realtime.models.PresenceState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -74,6 +75,25 @@ public interface RealtimeSubscription {
      * by [RealtimeChannelBuilder.onBroadcast] handlers / `broadcastFlow`.
      */
     public suspend fun broadcast(event: String, payload: JsonObject)
+
+    /**
+     * Broadcasts [payload] under the [event] name like [broadcast], but awaits the
+     * server's acknowledgement instead of returning fire-and-forget. Requires the
+     * channel to have been configured with `acknowledgeBroadcasts` (see
+     * [RealtimeChannelBuilder.configureBroadcast]) so the server replies with a
+     * `phx_reply` for the push.
+     *
+     * Returns [SupabaseResult.Success] once the server acknowledges the broadcast,
+     * or [SupabaseResult.Failure] if the channel is not subscribed, the server
+     * rejects the push, the connection drops before the ack arrives, or no ack is
+     * received within [timeoutMillis]. Never throws for these expected failures;
+     * genuine caller cancellation still propagates.
+     */
+    public suspend fun broadcastWithAck(
+        event: String,
+        payload: JsonObject,
+        timeoutMillis: Long = 5_000,
+    ): SupabaseResult<Unit>
 
     /**
      * Publishes this client's presence [state] on the channel, making it visible

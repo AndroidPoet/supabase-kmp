@@ -153,6 +153,7 @@ internal class DatabaseClientImpl(
         count: CountOption?,
         stripNulls: Boolean,
         rollback: Boolean,
+        contentType: String,
         headers: Map<String, String>,
     ): SupabaseResult<String> {
         val safeTable = validatePathSegment(table, "table")
@@ -177,7 +178,7 @@ internal class DatabaseClientImpl(
             body = body,
             headers =
                 addSchemaHeaders(requestHeaders, safeSchema, isReadRequest = false) +
-                    jsonContentHeaders() +
+                    contentTypeHeaders(contentType) +
                     ("Accept" to acceptHeader(stripNulls = stripNulls)),
         )
     }
@@ -229,7 +230,7 @@ internal class DatabaseClientImpl(
             body = body,
             headers =
                 addSchemaHeaders(requestHeaders, safeSchema, isReadRequest = false) +
-                    jsonContentHeaders() +
+                    contentTypeHeaders() +
                     ("Accept" to acceptHeader(stripNulls = stripNulls, explain = explain)),
         )
     }
@@ -256,7 +257,7 @@ internal class DatabaseClientImpl(
             body = body,
             headers =
                 requestHeaders +
-                    jsonContentHeaders() +
+                    contentTypeHeaders() +
                     ("Accept" to acceptHeader()),
         )
     }
@@ -309,13 +310,17 @@ internal class DatabaseClientImpl(
         rollback: Boolean,
         maxAffected: Int?,
         explain: ExplainOptions?,
+        contentType: String,
         headers: Map<String, String>,
+        filters: FilterBuilder.() -> Unit,
     ): SupabaseResult<String> {
         require(!(single && csv)) { "single and csv cannot both be true" }
         require(!(csv && stripNulls)) { "stripNulls cannot be used with csv" }
         maxAffected?.let { require(it > 0) { "maxAffected must be greater than 0" } }
         val safeFunction = validatePathSegment(function, "function")
         val safeSchema = schema?.let { validatePathSegment(it, "schema") }
+        val filterParams = FilterBuilder().apply(filters).build()
+        val endpoint = buildEndpoint("${DatabasePaths.RPC}/$safeFunction", filterParams)
         val requestHeaders =
             headers +
                 buildPreferHeader {
@@ -329,7 +334,7 @@ internal class DatabaseClientImpl(
         if (head) {
             val result =
                 client.post(
-                    endpoint = "${DatabasePaths.RPC}/$safeFunction",
+                    endpoint = endpoint,
                     body = params,
                     headers =
                         addSchemaHeaders(requestHeaders, safeSchema, isReadRequest = true) +
@@ -341,11 +346,11 @@ internal class DatabaseClientImpl(
             }
         }
         return client.post(
-            endpoint = "${DatabasePaths.RPC}/$safeFunction",
+            endpoint = endpoint,
             body = params,
             headers =
                 addSchemaHeaders(requestHeaders, safeSchema, isReadRequest = false) +
-                    jsonContentHeaders() +
+                    contentTypeHeaders(contentType) +
                     ("Accept" to acceptHeader(single, csv, stripNulls, explain)),
         )
     }
@@ -446,8 +451,8 @@ internal class DatabaseClientImpl(
         return "$base?$qs"
     }
 
-    private fun jsonContentHeaders(): Map<String, String> =
-        mapOf("Content-Type" to "application/json")
+    private fun contentTypeHeaders(contentType: String = "application/json"): Map<String, String> =
+        mapOf("Content-Type" to contentType)
 
     private fun retryHeader(enabled: Boolean): Map<String, String> =
         mapOf(INTERNAL_RETRY_HEADER to enabled.toString())

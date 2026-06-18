@@ -426,6 +426,8 @@ public final class io/github/androidpoet/supabase/realtime/RealtimeFilterKt {
 public abstract interface class io/github/androidpoet/supabase/realtime/RealtimeSubscription {
 	public abstract fun asFlow ()Lkotlinx/coroutines/flow/Flow;
 	public abstract fun broadcast (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun broadcastWithAck (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun broadcastWithAck$default (Lio/github/androidpoet/supabase/realtime/RealtimeSubscription;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun getChannel ()Ljava/lang/String;
 	public abstract fun getStatus ()Lkotlinx/coroutines/flow/StateFlow;
 	public abstract fun presenceState ()Ljava/util/Map;
@@ -437,6 +439,7 @@ public abstract interface class io/github/androidpoet/supabase/realtime/Realtime
 }
 
 public final class io/github/androidpoet/supabase/realtime/RealtimeSubscription$DefaultImpls {
+	public static synthetic fun broadcastWithAck$default (Lio/github/androidpoet/supabase/realtime/RealtimeSubscription;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun send$default (Lio/github/androidpoet/supabase/realtime/RealtimeSubscription;Lio/github/androidpoet/supabase/realtime/RealtimeSubscription$SendType;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 }
 

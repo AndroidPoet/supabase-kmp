@@ -378,11 +378,13 @@ public final class io/github/androidpoet/supabase/core/result/SupabaseErrorKt {
 	public static final fun isRetryable (Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;)Z
 	public static final fun isUniquenessViolation (Lio/github/androidpoet/supabase/core/result/SupabaseError;)Z
 	public static final fun isUserAlreadyExists (Lio/github/androidpoet/supabase/core/result/SupabaseError;)Z
-	public static final fun toException (Lio/github/androidpoet/supabase/core/result/SupabaseError;)Lio/github/androidpoet/supabase/core/result/SupabaseException;
+	public static final fun toException (Lio/github/androidpoet/supabase/core/result/SupabaseError;Ljava/lang/Throwable;)Lio/github/androidpoet/supabase/core/result/SupabaseException;
+	public static synthetic fun toException$default (Lio/github/androidpoet/supabase/core/result/SupabaseError;Ljava/lang/Throwable;ILjava/lang/Object;)Lio/github/androidpoet/supabase/core/result/SupabaseException;
 }
 
 public final class io/github/androidpoet/supabase/core/result/SupabaseException : java/lang/Exception {
-	public fun <init> (Lio/github/androidpoet/supabase/core/result/SupabaseError;)V
+	public fun <init> (Lio/github/androidpoet/supabase/core/result/SupabaseError;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Lio/github/androidpoet/supabase/core/result/SupabaseError;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getError ()Lio/github/androidpoet/supabase/core/result/SupabaseError;
 }
 

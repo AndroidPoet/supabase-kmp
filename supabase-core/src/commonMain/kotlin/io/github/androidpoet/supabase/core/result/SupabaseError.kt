@@ -39,14 +39,21 @@ public data class SupabaseError(
 /**
  * The throwable form of a [SupabaseError], thrown by [SupabaseResult.getOrThrow]
  * and caught by [SupabaseResult.catching]. Carries the original [error] so callers
- * can still inspect its [SupabaseError.code]/[SupabaseError.category].
+ * can still inspect its [SupabaseError.code]/[SupabaseError.category], and an
+ * optional [cause] so an underlying throwable (e.g. a serialization or I/O fault
+ * that produced this error) stays in the stack trace.
  */
 public class SupabaseException(
     public val error: SupabaseError,
-) : Exception(error.message)
+    cause: Throwable? = null,
+) : Exception(error.message, cause)
 
-/** Wraps this [SupabaseError] in a [SupabaseException] for throw-based call sites. */
-public fun SupabaseError.toException(): SupabaseException = SupabaseException(this)
+/**
+ * Wraps this [SupabaseError] in a [SupabaseException] for throw-based call sites,
+ * optionally chaining the [cause] throwable that produced it.
+ */
+public fun SupabaseError.toException(cause: Throwable? = null): SupabaseException =
+    SupabaseException(this, cause)
 
 /**
  * Coarse classification of a [SupabaseError], derived via [SupabaseError.category],
