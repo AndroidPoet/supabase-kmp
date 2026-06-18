@@ -44,6 +44,59 @@ class StorageClientImplTest {
         }
 
     @Test
+    fun test_resumableUpload_serverOffsetPastEnd_failsInsteadOfSilentSuccess() =
+        runTest {
+            val client = FakeSupabaseClient()
+            client.resumableForcedOffset = 99L // server reports more bytes than the file holds
+            val sut = StorageClientImpl(client)
+            val data = ByteArray(10) { it.toByte() }
+
+            val upload = sut.createResumableUpload(bucket = "videos", path = "a/b.bin", data = data, chunkSize = 4)
+            val result = upload.await()
+
+            // Must surface a failure rather than "succeed" on a corrupt offset.
+            assertTrue(result is SupabaseResult.Failure)
+        }
+
+    @Test
+    fun test_resumableUpload_nonAdvancingOffset_failsInsteadOfLoopingForever() =
+        runTest {
+            val client = FakeSupabaseClient()
+            client.resumableForcedOffset = 0L // server never advances the offset
+            val sut = StorageClientImpl(client)
+            val data = ByteArray(10) { it.toByte() }
+
+            val upload = sut.createResumableUpload(bucket = "videos", path = "a/b.bin", data = data, chunkSize = 4)
+            val result = upload.await()
+
+            // A non-advancing offset would otherwise re-send the same chunk forever.
+            assertTrue(result is SupabaseResult.Failure)
+            assertEquals(1, client.resumableChunkSizes.size) // bailed after the first PATCH
+        }
+
+    @Test
+    fun test_resumableUpload_resumeOffsetPastEnd_failsBeforeSending() =
+        runTest {
+            val client = FakeSupabaseClient()
+            client.presetResumableReceived(99L) // HEAD reports offset beyond the file
+            val sut = StorageClientImpl(client)
+            val data = ByteArray(10) { it.toByte() }
+
+            val upload =
+                sut.createResumableUpload(
+                    bucket = "videos",
+                    path = "a/b.bin",
+                    data = data,
+                    chunkSize = 4,
+                    uploadUrl = client.resumableUploadUrl,
+                )
+            val result = upload.await()
+
+            assertTrue(result is SupabaseResult.Failure)
+            assertEquals(0, client.resumableChunkSizes.size) // no bytes sent
+        }
+
+    @Test
     fun test_resumableUpload_resumesFromExistingOffset() =
         runTest {
             val client = FakeSupabaseClient()
@@ -985,6 +1038,11 @@ private class FakeSupabaseClient : SupabaseClient {
     var resumableUpsertHeader: String? = null
     private var resumableReceived: Long = 0L
 
+    // When set, PATCH/HEAD report this Upload-Offset instead of the real running
+    // total — used to simulate a misbehaving server (offset past end, or one that
+    // never advances).
+    var resumableForcedOffset: Long? = null
+
     fun presetResumableReceived(bytes: Long) {
         resumableReceived = bytes
     }
@@ -1154,13 +1212,21 @@ private class FakeSupabaseClient : SupabaseClient {
             }
             SupabaseHttpMethod.HEAD ->
                 SupabaseResult.Success(
-                    SupabaseHttpResponse(200, mapOf("Upload-Offset" to resumableReceived.toString()), ByteArray(0)),
+                    SupabaseHttpResponse(
+                        200,
+                        mapOf("Upload-Offset" to (resumableForcedOffset ?: resumableReceived).toString()),
+                        ByteArray(0),
+                    ),
                 )
             SupabaseHttpMethod.PATCH -> {
                 resumableChunkSizes.add(body?.size ?: 0)
                 resumableReceived += (body?.size ?: 0).toLong()
                 SupabaseResult.Success(
-                    SupabaseHttpResponse(204, mapOf("Upload-Offset" to resumableReceived.toString()), ByteArray(0)),
+                    SupabaseHttpResponse(
+                        204,
+                        mapOf("Upload-Offset" to (resumableForcedOffset ?: resumableReceived).toString()),
+                        ByteArray(0),
+                    ),
                 )
             }
             else -> SupabaseResult.Failure(SupabaseError("unexpected method $method"))

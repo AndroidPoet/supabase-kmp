@@ -36,17 +36,43 @@ internal class ResumableUploadImpl(
                 is SupabaseResult.Success -> start.value
                 is SupabaseResult.Failure -> return start
             }
+        // A resumed offset outside the file means the stored upload URL belongs to a
+        // different file (or a corrupt/misreported server state). Fail fast rather
+        // than copyOfRange-crash or "succeed" on an upload that never sent its bytes.
+        if (offset < 0 || offset > total) {
+            return SupabaseResult.Failure(
+                SupabaseError("Resumable upload server reported offset $offset outside the file (length $total)"),
+            )
+        }
         publish(offset)
 
         val url = resumableUrl ?: return SupabaseResult.Failure(SupabaseError("Resumable upload was not created"))
+        return uploadChunks(url, offset)
+    }
+
+    private suspend fun uploadChunks(url: String, startOffset: Long): SupabaseResult<Unit> {
+        var offset = startOffset
         while (offset < total) {
             val end = minOf(offset + chunkSize, total)
             val chunk = data.copyOfRange(offset.toInt(), end.toInt())
+            val previous = offset
             offset =
                 when (val patched = patchChunk(url, offset, chunk)) {
                     is SupabaseResult.Success -> patched.value
                     is SupabaseResult.Failure -> return patched
                 }
+            // The server's new Upload-Offset must advance and stay within the file.
+            // If it doesn't advance we'd spin forever re-sending the same chunk; if
+            // it runs past the end we'd "succeed" on a partial/corrupt upload. Treat
+            // both as failures instead of looping or silently losing data.
+            if (offset <= previous || offset > total) {
+                return SupabaseResult.Failure(
+                    SupabaseError(
+                        "Resumable upload server returned an invalid Upload-Offset ($offset) " +
+                            "after sending bytes $previous..$end of $total",
+                    ),
+                )
+            }
             publish(offset)
         }
         return SupabaseResult.Success(Unit)

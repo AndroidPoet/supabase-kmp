@@ -36,6 +36,36 @@ the baseline with `./gradlew detektBaseline` — but prefer fixing the finding.
 ./gradlew compileKotlinIosArm64 compileKotlinLinuxX64 compileKotlinWasmJs
 ```
 
+## Concurrency & thread-safety rules (KMP)
+
+This is multiplatform code that runs on multithreaded targets (JVM, Android,
+Kotlin/Native). Follow these rules so shared mutable state is correct on every
+platform, not just the JVM.
+
+- **Use `kotlin.concurrent.Volatile`, never `kotlin.jvm.Volatile`.** The
+  `kotlin.concurrent` annotation (Kotlin 1.9+) is the multiplatform one: it gives
+  real volatile semantics on JVM and on Kotlin/Native (the default memory model
+  since 1.7.20), and is a harmless no-op on the single-threaded JS/Wasm targets.
+  The JVM-only annotation silently does nothing in `commonMain`.
+- **`@Volatile` only guarantees _visibility_ and atomic _single_ read/write.** It
+  does **not** make compound operations atomic. A `check-then-act`
+  (`if (x == null) { x = ... }`) or `read-modify-write` (`count = count + 1`) on a
+  `@Volatile` field is still a race. Use `@Volatile` only for a flag/reference
+  that is independently set and read (e.g. a pinned auth token, an
+  `intentionalDisconnect` flag).
+- **For compound atomicity, use the right tool:**
+  - `kotlinx.coroutines.sync.Mutex` (`withLock`) for suspend-friendly critical
+    sections — e.g. single-flight connect, refresh dedup.
+  - `kotlinx-atomicfu` (`atomic(...)`, `incrementAndGet`, `getAndSet`) for lock-free
+    counters/refs — e.g. the realtime ref counter and pending-heartbeat ref.
+  - `MutableStateFlow.update { }` (a CAS loop) instead of `value = value.copy(...)`
+    when several coroutines mutate the same flow.
+  - `kotlinx.atomicfu.locks.synchronized(lock)` for a plain non-suspending monitor,
+    but **never call a `suspend` function while holding it** — snapshot under the
+    lock, release, then suspend.
+- **Don't reach for `java.util.concurrent`** (or any `java.*`) in `commonMain` — it
+  doesn't exist on Native/Wasm. Use the coroutines/atomicfu primitives above.
+
 ## Pull requests
 
 - Keep changes focused; one logical change per PR.
