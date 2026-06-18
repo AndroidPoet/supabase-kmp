@@ -775,7 +775,7 @@ internal class ChannelSubscriptionImpl(
             "broadcast" -> handleBroadcast(message.payload)
             "presence_diff" -> handlePresenceDiff(message.payload)
             "presence_state" -> handlePresenceState(message.payload)
-            "phx_reply" -> handleSystemReply(message.payload)
+            "phx_reply" -> handleSystemReply(message.payload, message.ref)
             "phx_error" -> {
                 _status.value = RealtimeSubscription.Status.ERROR
                 val event =
@@ -878,17 +878,23 @@ internal class ChannelSubscriptionImpl(
         presenceCallback?.invoke(state)
     }
 
-    private suspend fun handleSystemReply(payload: JsonObject) {
+    private suspend fun handleSystemReply(payload: JsonObject, ref: String?) {
         val status = payload["status"]?.jsonPrimitive?.content ?: "ok"
-        _status.value =
-            if (status == "ok") {
-                RealtimeSubscription.Status.SUBSCRIBED
-            } else {
-                RealtimeSubscription.Status.ERROR
-            }
         val response = payload["response"]
-        if (status == "ok" && response is JsonObject) {
-            captureServerBindings(response)
+        // Only the reply to our own phx_join (ref == joinRef) drives subscription
+        // status and binding capture. A later `ok` reply to phx_leave (which uses a
+        // different ref) must not resurrect a channel we've already left, and a stray
+        // ack for a broadcast/presence push must not flip status either.
+        if (ref != null && ref == joinRef) {
+            _status.value =
+                if (status == "ok") {
+                    RealtimeSubscription.Status.SUBSCRIBED
+                } else {
+                    RealtimeSubscription.Status.ERROR
+                }
+            if (status == "ok" && response is JsonObject) {
+                captureServerBindings(response)
+            }
         }
         val event =
             RealtimeEvent.SystemEvent(
