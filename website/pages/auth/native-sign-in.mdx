@@ -26,6 +26,11 @@ The optional `supabase-auth-google` and `supabase-auth-apple` modules wrap the
 platform UIs and hand you a `NativeAuthProvider`. The core never depends on a
 provider SDK you didn't add.
 
+```toml filename="libs.versions.toml"
+supabase-auth-google = { module = "io.github.androidpoet:supabase-auth-google", version.ref = "supabase-kmp" }
+supabase-auth-apple = { module = "io.github.androidpoet:supabase-auth-apple", version.ref = "supabase-kmp" }
+```
+
 ## Google (Android)
 
 Backed by Android's Credential Manager + Google Identity Services. Construct the
@@ -72,4 +77,8 @@ class MyProvider : NativeAuthProvider {
 <Callout type="info">
   On platforms without a bundled provider, use the redirect flow
   (`signInWithOAuth`) or supply your own `NativeAuthProvider`.
+</Callout>
+
+<Callout type="info">
+  Want passwordless biometric sign-in instead? See [Passkeys](/auth/passkey).
 </Callout>

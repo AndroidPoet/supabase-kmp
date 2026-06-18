@@ -1,0 +1,159 @@
+---
+title: Passkeys
+description: Passwordless sign-in with WebAuthn passkeys — the supabase-auth HTTP flow plus a pluggable PasskeyAuthenticator that drives the device ceremony, with a bundled cross-platform authenticator or bring your own.
+---
+
+import { Callout } from 'nextra/components'
+
+# Passkeys
+
+A **passkey** is a passwordless credential bound to the device and unlocked with
+the user's biometrics — Face ID, a fingerprint, or the device PIN. There's no
+password to phish, reuse, or leak, and signing in is a single tap.
+
+A passkey flow is always three steps:
+
+```
+[server: options]  →  [device: WebAuthn ceremony]  →  [server: verify]  →  Session / Passkey
+   ↑ supabase-auth (HTTP)        ↑ PasskeyAuthenticator         ↑ supabase-auth (HTTP)
+```
+
+The first and last steps are plain HTTP and live in the core `supabase-auth`
+module. The middle step — prompting the OS authenticator to create or assert a
+credential — is platform work, so it sits behind the `PasskeyAuthenticator`
+interface in the optional **`supabase-auth-passkey`** module. The core never
+depends on any platform credential SDK you didn't ask for.
+
+```toml filename="libs.versions.toml"
+supabase-auth-passkey = { module = "io.github.androidpoet:supabase-auth-passkey", version.ref = "supabase-kmp" }
+```
+
+## The high-level flow
+
+The `supabase-auth-passkey` module adds two extension functions that run the
+whole three-step ceremony for you — fetch options, drive the device, verify —
+and short-circuit to a `SupabaseResult.Failure` at the first failing step. You
+pass in a `PasskeyAuthenticator` (see below).
+
+```kotlin
+// Register a passkey for the signed-in user.
+supabase.registerPasskey(authenticator)        // → SupabaseResult<PasskeyMetadata>
+
+// Sign in with a passkey (no session required).
+supabase.signInWithPasskey(authenticator)       // → SupabaseResult<Session>
+    .onSuccess { session -> sessionManager.saveSession(session) }
+```
+
+`SupabaseClient.signInWithPasskey` applies the returned token to the client on
+success, mirroring `signInWithEmail`. For persisted or multi-session apps, hand
+the session to a `SessionManager` instead — its `saveSession` also schedules the
+refresh (see [Sessions](/auth/sessions)).
+
+The same pair also exists on `AuthClient` for when you already hold an access
+token: `auth.registerPasskey(accessToken, authenticator)` and
+`auth.signInWithPasskey(authenticator, captchaToken)`.
+
+## The PasskeyAuthenticator contract
+
+`PasskeyAuthenticator` is the pluggable seam for the device ceremony. It's two
+JSON-in / JSON-out suspend functions — it receives the WebAuthn options object
+Supabase returned and returns the WebAuthn credential to send to the verify
+endpoint:
+
+```kotlin
+public interface PasskeyAuthenticator {
+    public suspend fun createCredential(options: JsonObject): SupabaseResult<JsonObject>
+    public suspend fun getCredential(options: JsonObject): SupabaseResult<JsonObject>
+}
+```
+
+`createCredential` runs the registration ceremony
+(`navigator.credentials.create`); `getCredential` runs the authentication
+ceremony (`navigator.credentials.get`). Cancellation or authenticator failure is
+reported as a `SupabaseResult.Failure` — never thrown.
+
+<Callout type="info">
+  Options are normalized to the canonical W3C JSON form before the ceremony — a
+  `publicKey` envelope is unwrapped, base64url padding is stripped from the
+  challenge and credential ids, and a `transports` array is defaulted in — so
+  every authenticator receives already-clean options.
+</Callout>
+
+### Bundled authenticators
+
+Two implementations ship in the module so you usually don't have to write one:
+
+- **`CredentialManagerPasskeyAuthenticator`** (Android only) — backed by AndroidX
+  Credential Manager. Construct it with an **Activity** context:
+
+  ```kotlin
+  val authenticator = CredentialManagerPasskeyAuthenticator(activity)
+  ```
+
+- **`PasskeysKmpAuthenticator`** (all targets — Android, iOS, macOS, JVM/Compose
+  Desktop, and the browser via Wasm) — wraps the cross-platform passkey client
+  from `io.github.androidpoet:passkeys`, which has a real native authenticator
+  behind each platform. Construct the platform client (resolving its
+  presentation anchor) and wrap it:
+
+  ```kotlin
+  val authenticator = PasskeysKmpAuthenticator(passkeyClient)
+  supabase.signInWithPasskey(authenticator)
+  ```
+
+Both map authenticator outcomes onto the same branchable error codes —
+`passkey_cancelled`, `passkey_no_credentials`, `passkey_unsupported`,
+`passkey_ceremony_failed` — so callers see one error vocabulary regardless of
+which authenticator is in play.
+
+### Bring your own
+
+`PasskeyAuthenticator` is just an interface — implement the two calls against any
+WebAuthn surface (a platform API you prefer, a custom UI, a test double) and pass
+it to the same `registerPasskey` / `signInWithPasskey`:
+
+```kotlin
+class MyAuthenticator : PasskeyAuthenticator {
+    override suspend fun createCredential(options: JsonObject): SupabaseResult<JsonObject> =
+        SupabaseResult.Success(/* WebAuthn credential JSON from your ceremony */)
+
+    override suspend fun getCredential(options: JsonObject): SupabaseResult<JsonObject> =
+        SupabaseResult.Success(/* WebAuthn assertion JSON from your ceremony */)
+}
+```
+
+## The raw HTTP steps
+
+If you'd rather drive the ceremony yourself, the four endpoints are on
+`AuthClient` directly — the high-level extensions above are thin wrappers over
+them:
+
+```kotlin
+// Registration
+val opts = auth.passkeyStartRegistration(accessToken)          // → PasskeyRegistrationOptionsResponse
+auth.passkeyVerifyRegistration(accessToken, opts.value.challengeId, credential)  // → PasskeyMetadata
+
+// Authentication
+val opts = auth.passkeyStartAuthentication(captchaToken = null)  // → PasskeyAuthenticationOptionsResponse
+auth.passkeyVerifyAuthentication(opts.value.challengeId, credential)  // → Session
+```
+
+Each `*OptionsResponse` carries a `challengeId`, the WebAuthn `options` JSON, and
+an `expiresAt`. The `credential` you pass to verify is the `JsonObject` your
+`PasskeyAuthenticator` produced.
+
+## Managing a user's passkeys
+
+For a signed-in user you can list, rename, and delete enrolled passkeys:
+
+```kotlin
+auth.passkeyList(accessToken)                                   // → List<Passkey>
+auth.passkeyUpdate(accessToken, passkeyId, friendlyName = "My phone")  // → Passkey
+auth.passkeyDelete(accessToken, passkeyId)                      // → Unit
+```
+
+<Callout type="info">
+  Prefer a provider account picker instead? See
+  [Native Sign-In](/auth/native-sign-in) for Google &amp; Apple, or
+  [Authentication](/auth) for email, OTP, and OAuth.
+</Callout>
