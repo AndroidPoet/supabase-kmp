@@ -77,6 +77,8 @@ public final class io/github/androidpoet/supabase/realtime/RealtimeChannelBuilde
 public abstract interface class io/github/androidpoet/supabase/realtime/RealtimeClient {
 	public abstract fun activeChannelDetails ()Ljava/util/Set;
 	public abstract fun activeChannels ()Ljava/util/Set;
+	public abstract fun broadcast (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun broadcast$default (Lio/github/androidpoet/supabase/realtime/RealtimeClient;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun channel (Ljava/lang/String;)Lio/github/androidpoet/supabase/realtime/RealtimeChannelBuilder;
 	public abstract fun close (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun connect (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -103,6 +105,7 @@ public abstract interface class io/github/androidpoet/supabase/realtime/Realtime
 }
 
 public final class io/github/androidpoet/supabase/realtime/RealtimeClient$DefaultImpls {
+	public static synthetic fun broadcast$default (Lio/github/androidpoet/supabase/realtime/RealtimeClient;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun setAuth$default (Lio/github/androidpoet/supabase/realtime/RealtimeClient;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 }
 
@@ -121,17 +124,18 @@ public final class io/github/androidpoet/supabase/realtime/RealtimeClientExtKt {
 
 public final class io/github/androidpoet/supabase/realtime/RealtimeConfig {
 	public fun <init> ()V
-	public fun <init> (ZJJDIJJ)V
-	public synthetic fun <init> (ZJJDIJJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (ZJJDZIJJ)V
+	public synthetic fun <init> (ZJJDZIJJILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Z
 	public final fun component2 ()J
 	public final fun component3 ()J
 	public final fun component4 ()D
-	public final fun component5 ()I
-	public final fun component6 ()J
+	public final fun component5 ()Z
+	public final fun component6 ()I
 	public final fun component7 ()J
-	public final fun copy (ZJJDIJJ)Lio/github/androidpoet/supabase/realtime/RealtimeConfig;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/realtime/RealtimeConfig;ZJJDIJJILjava/lang/Object;)Lio/github/androidpoet/supabase/realtime/RealtimeConfig;
+	public final fun component8 ()J
+	public final fun copy (ZJJDZIJJ)Lio/github/androidpoet/supabase/realtime/RealtimeConfig;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/realtime/RealtimeConfig;ZJJDZIJJILjava/lang/Object;)Lio/github/androidpoet/supabase/realtime/RealtimeConfig;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAutoReconnect ()Z
 	public final fun getBackoffMultiplier ()D
@@ -140,6 +144,7 @@ public final class io/github/androidpoet/supabase/realtime/RealtimeConfig {
 	public final fun getInitialReconnectDelayMs ()J
 	public final fun getMaxReconnectAttempts ()I
 	public final fun getMaxReconnectDelayMs ()J
+	public final fun getReconnectJitter ()Z
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }

@@ -48,6 +48,7 @@ abstract interface io.github.androidpoet.supabase.realtime/RealtimeClient { // i
     abstract fun getSubscription(kotlin/String): io.github.androidpoet.supabase.realtime/RealtimeSubscription? // io.github.androidpoet.supabase.realtime/RealtimeClient.getSubscription|getSubscription(kotlin.String){}[0]
     abstract fun getSubscriptionByTopic(kotlin/String): io.github.androidpoet.supabase.realtime/RealtimeSubscription? // io.github.androidpoet.supabase.realtime/RealtimeClient.getSubscriptionByTopic|getSubscriptionByTopic(kotlin.String){}[0]
     abstract fun getSubscriptions(): kotlin.collections/Set<io.github.androidpoet.supabase.realtime/RealtimeSubscription> // io.github.androidpoet.supabase.realtime/RealtimeClient.getSubscriptions|getSubscriptions(){}[0]
+    abstract suspend fun broadcast(kotlin/String, kotlin/String, kotlinx.serialization.json/JsonObject, kotlin/Boolean = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.realtime/RealtimeClient.broadcast|broadcast(kotlin.String;kotlin.String;kotlinx.serialization.json.JsonObject;kotlin.Boolean){}[0]
     abstract suspend fun close() // io.github.androidpoet.supabase.realtime/RealtimeClient.close|close(){}[0]
     abstract suspend fun connect() // io.github.androidpoet.supabase.realtime/RealtimeClient.connect|connect(){}[0]
     abstract suspend fun disconnect() // io.github.androidpoet.supabase.realtime/RealtimeClient.disconnect|disconnect(){}[0]
@@ -491,7 +492,7 @@ final class io.github.androidpoet.supabase.realtime/RealtimeChannelBuilder { // 
 }
 
 final class io.github.androidpoet.supabase.realtime/RealtimeConfig { // io.github.androidpoet.supabase.realtime/RealtimeConfig|null[0]
-    constructor <init>(kotlin/Boolean = ..., kotlin/Long = ..., kotlin/Long = ..., kotlin/Double = ..., kotlin/Int = ..., kotlin/Long = ..., kotlin/Long = ...) // io.github.androidpoet.supabase.realtime/RealtimeConfig.<init>|<init>(kotlin.Boolean;kotlin.Long;kotlin.Long;kotlin.Double;kotlin.Int;kotlin.Long;kotlin.Long){}[0]
+    constructor <init>(kotlin/Boolean = ..., kotlin/Long = ..., kotlin/Long = ..., kotlin/Double = ..., kotlin/Boolean = ..., kotlin/Int = ..., kotlin/Long = ..., kotlin/Long = ...) // io.github.androidpoet.supabase.realtime/RealtimeConfig.<init>|<init>(kotlin.Boolean;kotlin.Long;kotlin.Long;kotlin.Double;kotlin.Boolean;kotlin.Int;kotlin.Long;kotlin.Long){}[0]
 
     final val autoReconnect // io.github.androidpoet.supabase.realtime/RealtimeConfig.autoReconnect|{}autoReconnect[0]
         final fun <get-autoReconnect>(): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeConfig.autoReconnect.<get-autoReconnect>|<get-autoReconnect>(){}[0]
@@ -507,15 +508,18 @@ final class io.github.androidpoet.supabase.realtime/RealtimeConfig { // io.githu
         final fun <get-maxReconnectAttempts>(): kotlin/Int // io.github.androidpoet.supabase.realtime/RealtimeConfig.maxReconnectAttempts.<get-maxReconnectAttempts>|<get-maxReconnectAttempts>(){}[0]
     final val maxReconnectDelayMs // io.github.androidpoet.supabase.realtime/RealtimeConfig.maxReconnectDelayMs|{}maxReconnectDelayMs[0]
         final fun <get-maxReconnectDelayMs>(): kotlin/Long // io.github.androidpoet.supabase.realtime/RealtimeConfig.maxReconnectDelayMs.<get-maxReconnectDelayMs>|<get-maxReconnectDelayMs>(){}[0]
+    final val reconnectJitter // io.github.androidpoet.supabase.realtime/RealtimeConfig.reconnectJitter|{}reconnectJitter[0]
+        final fun <get-reconnectJitter>(): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeConfig.reconnectJitter.<get-reconnectJitter>|<get-reconnectJitter>(){}[0]
 
     final fun component1(): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeConfig.component1|component1(){}[0]
     final fun component2(): kotlin/Long // io.github.androidpoet.supabase.realtime/RealtimeConfig.component2|component2(){}[0]
     final fun component3(): kotlin/Long // io.github.androidpoet.supabase.realtime/RealtimeConfig.component3|component3(){}[0]
     final fun component4(): kotlin/Double // io.github.androidpoet.supabase.realtime/RealtimeConfig.component4|component4(){}[0]
-    final fun component5(): kotlin/Int // io.github.androidpoet.supabase.realtime/RealtimeConfig.component5|component5(){}[0]
-    final fun component6(): kotlin/Long // io.github.androidpoet.supabase.realtime/RealtimeConfig.component6|component6(){}[0]
+    final fun component5(): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeConfig.component5|component5(){}[0]
+    final fun component6(): kotlin/Int // io.github.androidpoet.supabase.realtime/RealtimeConfig.component6|component6(){}[0]
     final fun component7(): kotlin/Long // io.github.androidpoet.supabase.realtime/RealtimeConfig.component7|component7(){}[0]
-    final fun copy(kotlin/Boolean = ..., kotlin/Long = ..., kotlin/Long = ..., kotlin/Double = ..., kotlin/Int = ..., kotlin/Long = ..., kotlin/Long = ...): io.github.androidpoet.supabase.realtime/RealtimeConfig // io.github.androidpoet.supabase.realtime/RealtimeConfig.copy|copy(kotlin.Boolean;kotlin.Long;kotlin.Long;kotlin.Double;kotlin.Int;kotlin.Long;kotlin.Long){}[0]
+    final fun component8(): kotlin/Long // io.github.androidpoet.supabase.realtime/RealtimeConfig.component8|component8(){}[0]
+    final fun copy(kotlin/Boolean = ..., kotlin/Long = ..., kotlin/Long = ..., kotlin/Double = ..., kotlin/Boolean = ..., kotlin/Int = ..., kotlin/Long = ..., kotlin/Long = ...): io.github.androidpoet.supabase.realtime/RealtimeConfig // io.github.androidpoet.supabase.realtime/RealtimeConfig.copy|copy(kotlin.Boolean;kotlin.Long;kotlin.Long;kotlin.Double;kotlin.Boolean;kotlin.Int;kotlin.Long;kotlin.Long){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeConfig.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime/RealtimeConfig.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeConfig.toString|toString(){}[0]

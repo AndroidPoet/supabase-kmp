@@ -1,8 +1,10 @@
 package io.github.androidpoet.supabase.realtime
+import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.realtime.models.RealtimeChannel
 import io.github.androidpoet.supabase.realtime.models.RealtimeMessage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.serialization.json.JsonObject
 
 public interface RealtimeClient {
     public val connectionState: StateFlow<ConnectionState>
@@ -44,6 +46,21 @@ public interface RealtimeClient {
     public suspend fun sendHeartbeat()
 
     public suspend fun connect()
+
+    /**
+     * Sends a broadcast message over HTTP to the realtime broadcast endpoint
+     * (`/realtime/v1/api/broadcast`) without joining a channel or opening a
+     * WebSocket. Useful for fire-and-forget server-to-client fan-out where the
+     * sender doesn't need to subscribe. [channel] is the channel name (without
+     * the `realtime:` prefix). For a private channel, the caller's session JWT
+     * (or apikey) is attached automatically.
+     */
+    public suspend fun broadcast(
+        channel: String,
+        event: String,
+        payload: JsonObject,
+        private: Boolean = false,
+    ): SupabaseResult<Unit>
 
     public suspend fun disconnect()
 

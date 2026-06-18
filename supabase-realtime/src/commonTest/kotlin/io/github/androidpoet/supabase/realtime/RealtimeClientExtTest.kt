@@ -397,6 +397,15 @@ private class AwaitFakeRealtimeClient(
 
     override suspend fun connect() = Unit
 
+    override suspend fun broadcast(
+        channel: String,
+        event: String,
+        payload: kotlinx.serialization.json.JsonObject,
+        private: Boolean,
+    ): io.github.androidpoet.supabase.core.result.SupabaseResult<Unit> =
+        io.github.androidpoet.supabase.core.result.SupabaseResult
+            .Success(Unit)
+
     override suspend fun disconnect() = Unit
 
     override suspend fun close() = Unit
