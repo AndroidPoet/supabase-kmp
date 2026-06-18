@@ -219,6 +219,28 @@ public interface StorageClient {
 
     public suspend fun downloadPublic(bucket: String, path: String): SupabaseResult<String>
 
+    /**
+     * Downloads an object's raw bytes from the authenticated endpoint. Prefer
+     * this over [download] for any non-text content (images, PDFs, archives):
+     * [download] decodes the body as UTF-8 text, which corrupts binary data.
+     * An empty (zero-byte) object is returned as an empty [ByteArray], not a
+     * failure.
+     */
+    public suspend fun downloadBytes(
+        bucket: String,
+        path: String,
+        download: Boolean = false,
+        fileName: String? = null,
+    ): SupabaseResult<ByteArray>
+
+    /** Binary download from the public endpoint. See [downloadBytes]. */
+    public suspend fun downloadPublicBytes(
+        bucket: String,
+        path: String,
+        download: Boolean = false,
+        fileName: String? = null,
+    ): SupabaseResult<ByteArray>
+
     public suspend fun download(
         bucket: String,
         path: String,

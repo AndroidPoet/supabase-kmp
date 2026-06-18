@@ -461,6 +461,20 @@ private class FakeStorageClient : StorageClient {
 
     override suspend fun downloadPublic(bucket: String, path: String, download: Boolean, fileName: String?): SupabaseResult<String> = error("not used")
 
+    override suspend fun downloadBytes(
+        bucket: String,
+        path: String,
+        download: Boolean,
+        fileName: String?,
+    ): SupabaseResult<ByteArray> = error("not used")
+
+    override suspend fun downloadPublicBytes(
+        bucket: String,
+        path: String,
+        download: Boolean,
+        fileName: String?,
+    ): SupabaseResult<ByteArray> = error("not used")
+
     override suspend fun info(bucket: String, path: String): SupabaseResult<FileObject> = error("not used")
 
     override suspend fun infoPublic(bucket: String, path: String): SupabaseResult<FileObject> = error("not used")

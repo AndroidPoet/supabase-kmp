@@ -327,7 +327,7 @@ class StorageClientImplTest {
         }
 
     @Test
-    fun test_uploadToSignedUrl_withCacheControl_includesCacheControlQuery() =
+    fun test_uploadToSignedUrl_withCacheControl_sendsCacheControlHeader() =
         runTest {
             val client = FakeSupabaseClient()
             val sut = StorageClientImpl(client)
@@ -340,7 +340,9 @@ class StorageClientImplTest {
                 cacheControl = 3600,
             )
 
-            assertEquals("/storage/v1/object/upload/sign/avatars/a.png?token=abc&cacheControl=3600", client.lastPostRawUrl)
+            // cacheControl is a request header, not a query param — the server ignores the query form.
+            assertEquals("/storage/v1/object/upload/sign/avatars/a.png?token=abc", client.lastPostRawUrl)
+            assertEquals("max-age=3600", client.lastPostRawHeaders["Cache-Control"])
         }
 
     @Test
@@ -361,7 +363,7 @@ class StorageClientImplTest {
         }
 
     @Test
-    fun test_upload_withCacheControl_includesCacheControlQuery() =
+    fun test_upload_withCacheControl_sendsCacheControlHeader() =
         runTest {
             val client = FakeSupabaseClient()
             val sut = StorageClientImpl(client)
@@ -373,11 +375,12 @@ class StorageClientImplTest {
                 cacheControl = 1200,
             )
 
-            assertEquals("/storage/v1/object/avatars/a.png?cacheControl=1200", client.lastPostRawUrl)
+            assertEquals("/storage/v1/object/avatars/a.png", client.lastPostRawUrl)
+            assertEquals("max-age=1200", client.lastPostRawHeaders["Cache-Control"])
         }
 
     @Test
-    fun test_update_withCacheControl_includesCacheControlQuery() =
+    fun test_update_withCacheControl_sendsCacheControlHeader() =
         runTest {
             val client = FakeSupabaseClient()
             val sut = StorageClientImpl(client)
@@ -389,7 +392,8 @@ class StorageClientImplTest {
                 cacheControl = 900,
             )
 
-            assertEquals("/storage/v1/object/avatars/a.png?cacheControl=900", client.lastPutRawUrl)
+            assertEquals("/storage/v1/object/avatars/a.png", client.lastPutRawUrl)
+            assertEquals("max-age=900", client.lastPutRawHeaders["Cache-Control"])
         }
 
     @Test

@@ -1,5 +1,6 @@
 package io.github.androidpoet.supabase.storage
 import io.github.androidpoet.supabase.client.SupabaseClient
+import io.github.androidpoet.supabase.client.SupabaseHttpMethod
 import io.github.androidpoet.supabase.client.defaultJson
 import io.github.androidpoet.supabase.client.deserialize
 import io.github.androidpoet.supabase.core.result.SupabaseErrorCategory
@@ -152,12 +153,12 @@ internal class StorageClientImpl(
         val headers =
             buildMap {
                 if (upsert) put("x-upsert", "true")
+                cacheControlHeader(cacheControl)?.let { put("Cache-Control", it) }
             }
-        val endpoint = withCacheControl("${StoragePaths.OBJECT}/${objectRef(bucket, path)}", cacheControl)
         return client.postRaw(
-            url = endpoint,
+            url = "${StoragePaths.OBJECT}/${objectRef(bucket, path)}",
             body = data,
-            contentType = contentType,
+            contentType = resolveContentType(path, contentType),
             headers = headers,
         )
     }
@@ -173,12 +174,12 @@ internal class StorageClientImpl(
         val headers =
             buildMap {
                 if (upsert) put("x-upsert", "true")
+                cacheControlHeader(cacheControl)?.let { put("Cache-Control", it) }
             }
-        val endpoint = withCacheControl("${StoragePaths.OBJECT}/${objectRef(bucket, path)}", cacheControl)
         return client.putRaw(
-            url = endpoint,
+            url = "${StoragePaths.OBJECT}/${objectRef(bucket, path)}",
             body = data,
-            contentType = contentType,
+            contentType = resolveContentType(path, contentType),
             headers = headers,
         )
     }
@@ -226,6 +227,30 @@ internal class StorageClientImpl(
         fileName: String?,
     ): SupabaseResult<String> =
         client.get("${StoragePaths.OBJECT_PUBLIC}/${objectRef(bucket, path)}${buildDownloadQuery(download, fileName)}")
+
+    override suspend fun downloadBytes(
+        bucket: String,
+        path: String,
+        download: Boolean,
+        fileName: String?,
+    ): SupabaseResult<ByteArray> =
+        client
+            .rawRequest(
+                method = SupabaseHttpMethod.GET,
+                url = "${StoragePaths.OBJECT_AUTHENTICATED}/${objectRef(bucket, path)}${buildDownloadQuery(download, fileName)}",
+            ).map { it.body }
+
+    override suspend fun downloadPublicBytes(
+        bucket: String,
+        path: String,
+        download: Boolean,
+        fileName: String?,
+    ): SupabaseResult<ByteArray> =
+        client
+            .rawRequest(
+                method = SupabaseHttpMethod.GET,
+                url = "${StoragePaths.OBJECT_PUBLIC}/${objectRef(bucket, path)}${buildDownloadQuery(download, fileName)}",
+            ).map { it.body }
 
     override suspend fun info(bucket: String, path: String): SupabaseResult<FileObject> =
         client.get("${StoragePaths.OBJECT_INFO}/${objectRef(bucket, path)}").deserialize()
@@ -430,14 +455,10 @@ internal class StorageClientImpl(
         val headers =
             buildMap {
                 if (upsert) put("x-upsert", "true")
+                cacheControlHeader(cacheControl)?.let { put("Cache-Control", it) }
             }
-        val qs =
-            buildList {
-                add("token=${encodeQueryComponent(token)}")
-                cacheControl?.let { add("cacheControl=$it") }
-            }.joinToString("&")
         return client.postRaw(
-            url = "${StoragePaths.OBJECT_UPLOAD_SIGN}/${objectRef(bucket, path)}?$qs",
+            url = "${StoragePaths.OBJECT_UPLOAD_SIGN}/${objectRef(bucket, path)}?token=${encodeQueryComponent(token)}",
             body = data,
             contentType = contentType,
             headers = headers,
@@ -847,9 +868,20 @@ internal class StorageClientImpl(
         return "?download=${encodeQueryComponent(fileName)}"
     }
 
-    private fun withCacheControl(endpoint: String, cacheControl: Int?): String {
-        if (cacheControl == null) return endpoint
-        return "$endpoint?cacheControl=$cacheControl"
+    // The storage server reads the cache TTL from the `Cache-Control` request header on raw
+    // (binary) uploads (`cacheControl = headers['cache-control'] ?? 'no-cache'`); a `?cacheControl=`
+    // query param is silently ignored. Mirror storage-js and send `max-age=<seconds>`.
+    private fun cacheControlHeader(cacheControl: Int?): String? = cacheControl?.let { "max-age=$it" }
+
+    /**
+     * When the caller left [contentType] at the default octet-stream sentinel,
+     * infer a MIME type from the upload [path]'s file extension; otherwise keep
+     * the caller-supplied value (an explicit override always wins). Falls back
+     * to `application/octet-stream` for unknown/missing extensions.
+     */
+    private fun resolveContentType(path: String, contentType: String): String {
+        if (contentType != DEFAULT_CONTENT_TYPE) return contentType
+        return guessContentTypeFromPath(path) ?: DEFAULT_CONTENT_TYPE
     }
 
     private fun appendDownloadQuery(url: String, download: Boolean, fileName: String?): String {
@@ -1236,4 +1268,64 @@ private fun encodePathSegment(value: String): String {
         }
     }
     return out.toString()
+}
+
+private const val DEFAULT_CONTENT_TYPE = "application/octet-stream"
+
+// Minimal, dependency-free extension -> MIME map covering the common upload
+// types. Returns null for unknown/missing extensions so the caller can fall
+// back to application/octet-stream. The extension is matched case-insensitively
+// against the final segment after the last '.'; a leading directory is ignored.
+// Data table, not control flow — a `when` over this many extensions trips
+// detekt's cyclomatic-complexity rule, while a map lookup keeps the function
+// trivial. Each extension is matched case-insensitively.
+private val CONTENT_TYPE_BY_EXTENSION: Map<String, String> =
+    mapOf(
+        // images
+        "png" to "image/png",
+        "jpg" to "image/jpeg",
+        "jpeg" to "image/jpeg",
+        "gif" to "image/gif",
+        "webp" to "image/webp",
+        "svg" to "image/svg+xml",
+        "bmp" to "image/bmp",
+        "ico" to "image/x-icon",
+        "heic" to "image/heic",
+        "avif" to "image/avif",
+        "tif" to "image/tiff",
+        "tiff" to "image/tiff",
+        // documents / text
+        "pdf" to "application/pdf",
+        "json" to "application/json",
+        "txt" to "text/plain",
+        "csv" to "text/csv",
+        "html" to "text/html",
+        "htm" to "text/html",
+        "css" to "text/css",
+        "js" to "text/javascript",
+        "mjs" to "text/javascript",
+        "xml" to "application/xml",
+        "md" to "text/markdown",
+        // archives
+        "zip" to "application/zip",
+        "gz" to "application/gzip",
+        "tar" to "application/x-tar",
+        // audio / video
+        "mp3" to "audio/mpeg",
+        "wav" to "audio/wav",
+        "ogg" to "audio/ogg",
+        "mp4" to "video/mp4",
+        "webm" to "video/webm",
+        "mov" to "video/quicktime",
+        // fonts
+        "woff" to "font/woff",
+        "woff2" to "font/woff2",
+        "ttf" to "font/ttf",
+    )
+
+private fun guessContentTypeFromPath(path: String): String? {
+    val name = path.substringAfterLast('/')
+    val dot = name.lastIndexOf('.')
+    if (dot <= 0 || dot == name.lastIndex) return null
+    return CONTENT_TYPE_BY_EXTENSION[name.substring(dot + 1).lowercase()]
 }

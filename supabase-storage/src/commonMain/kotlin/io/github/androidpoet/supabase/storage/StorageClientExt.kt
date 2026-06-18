@@ -3,6 +3,19 @@ package io.github.androidpoet.supabase.storage
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 
 /**
+ * Appends a cache-busting query param ([name]=[nonce]) to a previously built
+ * storage URL (public, authenticated, signed, or render). Useful to force a
+ * CDN/browser to re-fetch an object that was overwritten at the same path.
+ * Returns the URL unchanged when [nonce] is null/blank. The nonce is appended
+ * verbatim, so pass a URL-safe value (e.g. a timestamp or version string).
+ */
+public fun withCacheNonce(url: String, nonce: String?, name: String = "cacheNonce"): String {
+    if (nonce.isNullOrBlank()) return url
+    val sep = if ('?' in url) '&' else '?'
+    return "$url$sep$name=$nonce"
+}
+
+/**
  * Uploads [data] in resumable (TUS) chunks and suspends until it completes.
  * One-shot convenience over [StorageClient.createResumableUpload]; for progress
  * or pause/resume, use that directly and observe [ResumableUpload.progress].
