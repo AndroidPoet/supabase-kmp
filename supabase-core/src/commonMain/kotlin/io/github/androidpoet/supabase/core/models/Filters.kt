@@ -1,5 +1,7 @@
 package io.github.androidpoet.supabase.core.models
 
+import kotlin.jvm.JvmName
+
 @DslMarker
 public annotation class FilterDsl
 
@@ -9,6 +11,38 @@ public enum class TextSearchType(
     Plain("pl"),
     Phrase("ph"),
     Websearch("w"),
+}
+
+/**
+ * Sort direction for [FilterBuilder.order].
+ *
+ * Maps to the PostgREST `asc`/`desc` tokens in the `order` query parameter
+ * (e.g. `order=created_at.desc`).
+ */
+public enum class OrderDirection(
+    internal val postgrestName: String,
+) {
+    /** Ascending order (`asc`). */
+    ASCENDING("asc"),
+
+    /** Descending order (`desc`). */
+    DESCENDING("desc"),
+}
+
+/**
+ * Placement of `NULL` values relative to non-null values for [FilterBuilder.order].
+ *
+ * Maps to the PostgREST `nullsfirst`/`nullslast` tokens in the `order` query
+ * parameter (e.g. `order=name.asc.nullslast`).
+ */
+public enum class NullsPlacement(
+    internal val postgrestName: String,
+) {
+    /** Sort `NULL` values before non-null values (`nullsfirst`). */
+    FIRST("nullsfirst"),
+
+    /** Sort `NULL` values after non-null values (`nullslast`). */
+    LAST("nullslast"),
 }
 
 @FilterDsl
@@ -96,6 +130,24 @@ public class FilterBuilder {
         params += column to "ilike(any).{${patterns.joinToString(",") { encodeValue(it) }}}"
     }
 
+    /**
+     * Finds all rows where the value of [column] matches the POSIX regular
+     * expression [pattern] (case-sensitive), i.e. the SQL `~` operator. Emits
+     * `column=match.<pattern>`.
+     */
+    public fun match(column: String, pattern: String) {
+        params += column to "match.${encodeValue(pattern)}"
+    }
+
+    /**
+     * Finds all rows where the value of [column] matches the POSIX regular
+     * expression [pattern] case-insensitively, i.e. the SQL `~*` operator. Emits
+     * `column=imatch.<pattern>`.
+     */
+    public fun imatch(column: String, pattern: String) {
+        params += column to "imatch.${encodeValue(pattern)}"
+    }
+
     public fun `is`(column: String, value: String) {
         params += column to "is.${encodeValue(value)}"
     }
@@ -113,6 +165,26 @@ public class FilterBuilder {
         params += column to "in.(${values.joinToString(",") { encodeValue(it) }})"
     }
 
+    /**
+     * Finds all rows where the value of [column] is one of [values]. Numeric
+     * members never need quoting, so each is emitted verbatim. Emits
+     * `column=in.(1,2,3)`.
+     */
+    @JvmName("inNumbers")
+    public fun `in`(column: String, values: List<Number>) {
+        params += column to "in.(${values.joinToString(",")})"
+    }
+
+    /**
+     * Finds all rows where the value of [column] is one of [values]. Each
+     * member is rendered via its `toString()` and then quoted/escaped if it
+     * contains a PostgREST-structural character. Emits `column=in.(a,b,c)`.
+     */
+    @JvmName("inAny")
+    public fun `in`(column: String, values: List<Any>) {
+        params += column to "in.(${values.joinToString(",") { encodeValue(it.toString()) }})"
+    }
+
     public fun match(values: Map<String, String>) {
         values.forEach { (column, value) -> eq(column, value) }
     }
@@ -125,12 +197,41 @@ public class FilterBuilder {
         params += column to "cs.$value"
     }
 
+    /**
+     * Finds all rows where the array/range column [column] contains every
+     * element of [values]. The list is rendered as a PostgREST array literal
+     * `{a,b,c}`, with each element quoted/escaped if needed. Emits
+     * `column=cs.{a,b,c}`.
+     */
+    public fun contains(column: String, values: List<Any>) {
+        params += column to "cs.${arrayLiteral(values)}"
+    }
+
     public fun containedBy(column: String, value: String) {
         params += column to "cd.$value"
     }
 
+    /**
+     * Finds all rows where every element of the array column [column] is
+     * contained in [values]. The list is rendered as a PostgREST array literal
+     * `{a,b,c}`, with each element quoted/escaped if needed. Emits
+     * `column=cd.{a,b,c}`.
+     */
+    public fun containedBy(column: String, values: List<Any>) {
+        params += column to "cd.${arrayLiteral(values)}"
+    }
+
     public fun overlaps(column: String, value: String) {
         params += column to "ov.$value"
+    }
+
+    /**
+     * Finds all rows where the array column [column] shares any element with
+     * [values]. The list is rendered as a PostgREST array literal `{a,b,c}`,
+     * with each element quoted/escaped if needed. Emits `column=ov.{a,b,c}`.
+     */
+    public fun overlaps(column: String, values: List<Any>) {
+        params += column to "ov.${arrayLiteral(values)}"
     }
 
     public fun rangeGt(column: String, value: String) {
@@ -207,6 +308,27 @@ public class FilterBuilder {
         params += key to "$column.$dir$nulls"
     }
 
+    /**
+     * Orders the result by [column] using the type-safe [OrderDirection] and
+     * optional [NullsPlacement] instead of the boolean/magic-string overload.
+     * Emits `order=column.<asc|desc>[.<nullsfirst|nullslast>]` (or
+     * `<referencedTable>.order=...` when [referencedTable] is given).
+     *
+     * @param direction ascending or descending.
+     * @param nulls where to place `NULL`s; omit (`null`) to use PostgreSQL's default.
+     * @param referencedTable order on an embedded/joined resource when set.
+     */
+    public fun order(
+        column: String,
+        direction: OrderDirection,
+        nulls: NullsPlacement? = null,
+        referencedTable: String? = null,
+    ) {
+        val nullsPart = if (nulls != null) ".${nulls.postgrestName}" else ""
+        val key = if (referencedTable == null) "order" else "$referencedTable.order"
+        params += key to "$column.${direction.postgrestName}$nullsPart"
+    }
+
     public fun limit(count: Int, referencedTable: String? = null) {
         val key = if (referencedTable == null) "limit" else "$referencedTable.limit"
         params += key to count.toString()
@@ -254,6 +376,13 @@ public class FilterBuilder {
             val escaped = value.replace("\\", "\\\\").replace("\"", "\\\"")
             return "\"$escaped\""
         }
+
+        // Renders a PostgREST array literal `{a,b,c}` from a typed list. Inside
+        // the braces a comma separates elements, so an element containing one is
+        // double-quoted/escaped exactly like a scalar value; braces are added by
+        // this method and are structural.
+        private fun arrayLiteral(values: List<Any>): String =
+            "{${values.joinToString(",") { encodeValue(it.toString()) }}}"
     }
 }
 

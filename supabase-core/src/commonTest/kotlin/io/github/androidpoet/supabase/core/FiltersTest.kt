@@ -1,5 +1,7 @@
 package io.github.androidpoet.supabase.core
 import io.github.androidpoet.supabase.core.models.FilterBuilder
+import io.github.androidpoet.supabase.core.models.NullsPlacement
+import io.github.androidpoet.supabase.core.models.OrderDirection
 import io.github.androidpoet.supabase.core.models.TextSearchType
 import io.github.androidpoet.supabase.core.models.filters
 import kotlin.test.Test
@@ -407,6 +409,135 @@ class FiltersTest {
         // neutralized by quoting rather than altering the query structure.
         val result = filters { or { eq("status", "active)") } }
         assertEquals(listOf("or" to """(status.eq."active)")"""), result)
+    }
+
+    // --- POSIX regex match / imatch -------------------------------------------
+    // PostgREST maps SQL `~` to the `match` query operator and `~*` to `imatch`.
+    // https://postgrest.org/en/stable/references/api/tables_views.html#operators
+
+    @Test
+    fun test_match_producesMatchOperator() {
+        assertEquals(listOf("name" to "match.^A"), filters { match("name", "^A") })
+    }
+
+    @Test
+    fun test_imatch_producesImatchOperator() {
+        assertEquals(listOf("name" to "imatch.^a"), filters { imatch("name", "^a") })
+    }
+
+    @Test
+    fun test_match_patternWithStructuralChar_isQuoted() {
+        assertEquals(listOf("name" to """match."a,b""""), filters { match("name", "a,b") })
+    }
+
+    @Test
+    fun test_imatch_patternWithParen_isQuoted() {
+        assertEquals(listOf("name" to """imatch."(a|b)""""), filters { imatch("name", "(a|b)") })
+    }
+
+    // --- in() typed list overloads --------------------------------------------
+
+    @Test
+    fun test_in_numberList_producesUnquotedNumbers() {
+        assertEquals(listOf("id" to "in.(1,2,3)"), filters { `in`("id", listOf(1, 2, 3)) })
+    }
+
+    @Test
+    fun test_in_numberList_supportsMixedNumericTypes() {
+        assertEquals(listOf("price" to "in.(1.5,2,3.25)"), filters { `in`("price", listOf(1.5, 2L, 3.25)) })
+    }
+
+    @Test
+    fun test_in_anyList_quotesElementsWithSeparators() {
+        assertEquals(
+            listOf("tag" to """in.("a,b",plain)"""),
+            filters { `in`("tag", listOf<Any>("a,b", "plain")) },
+        )
+    }
+
+    // --- contains/containedBy/overlaps typed array literal overloads ----------
+
+    @Test
+    fun test_contains_listOverload_buildsArrayLiteral() {
+        assertEquals(listOf("tags" to "cs.{a,b,c}"), filters { contains("tags", listOf("a", "b", "c")) })
+    }
+
+    @Test
+    fun test_containedBy_listOverload_buildsArrayLiteral() {
+        assertEquals(listOf("tags" to "cd.{a,b,c}"), filters { containedBy("tags", listOf("a", "b", "c")) })
+    }
+
+    @Test
+    fun test_overlaps_listOverload_buildsArrayLiteral() {
+        assertEquals(listOf("tags" to "ov.{b,c}"), filters { overlaps("tags", listOf("b", "c")) })
+    }
+
+    @Test
+    fun test_contains_numberListOverload_buildsArrayLiteral() {
+        assertEquals(listOf("ids" to "cs.{1,2,3}"), filters { contains("ids", listOf(1, 2, 3)) })
+    }
+
+    @Test
+    fun test_contains_listOverload_quotesElementsWithSeparators() {
+        assertEquals(
+            listOf("tags" to """cs.{"a,b",c}"""),
+            filters { contains("tags", listOf("a,b", "c")) },
+        )
+    }
+
+    @Test
+    fun test_contains_rawStringForm_isPreserved() {
+        assertEquals(listOf("tags" to "cs.{a,b}"), filters { contains("tags", "{a,b}") })
+    }
+
+    // --- order() enum overload ------------------------------------------------
+
+    @Test
+    fun test_order_enum_ascending() {
+        assertEquals(
+            listOf("order" to "created_at.asc"),
+            filters { order("created_at", OrderDirection.ASCENDING) },
+        )
+    }
+
+    @Test
+    fun test_order_enum_descending() {
+        assertEquals(
+            listOf("order" to "created_at.desc"),
+            filters { order("created_at", OrderDirection.DESCENDING) },
+        )
+    }
+
+    @Test
+    fun test_order_enum_nullsFirst() {
+        assertEquals(
+            listOf("order" to "name.asc.nullsfirst"),
+            filters { order("name", OrderDirection.ASCENDING, NullsPlacement.FIRST) },
+        )
+    }
+
+    @Test
+    fun test_order_enum_nullsLast() {
+        assertEquals(
+            listOf("order" to "name.desc.nullslast"),
+            filters { order("name", OrderDirection.DESCENDING, NullsPlacement.LAST) },
+        )
+    }
+
+    @Test
+    fun test_order_enum_withReferencedTable() {
+        assertEquals(
+            listOf("profiles.order" to "created_at.desc"),
+            filters {
+                order("created_at", OrderDirection.DESCENDING, referencedTable = "profiles")
+            },
+        )
+    }
+
+    @Test
+    fun test_order_booleanOverload_stillResolvesForSingleArg() {
+        // Source-compat: the existing boolean overload must still own `order(col)`.
+        assertEquals(listOf("order" to "created_at.asc"), filters { order("created_at") })
     }
 
     @Test

@@ -3,6 +3,8 @@ package io.github.androidpoet.supabase.database
 import io.github.androidpoet.supabase.client.SupabaseClient
 import io.github.androidpoet.supabase.client.SupabaseHttpMethod
 import io.github.androidpoet.supabase.client.SupabaseHttpResponse
+import io.github.androidpoet.supabase.core.models.NullsPlacement
+import io.github.androidpoet.supabase.core.models.OrderDirection
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import kotlinx.coroutines.test.runTest
@@ -208,6 +210,58 @@ class PostgrestConformanceTest {
                 eq("tag", "a,b")
             }
             assertEquals("""/rest/v1/todos?select=*&tag=eq."a,b"""", client.getEndpoint)
+        }
+
+    @Test
+    fun test_select_matchOperator_emitsTildeFilter() =
+        runTest {
+            // PostgREST maps SQL `~` to the `match` query operator.
+            // https://postgrest.org/en/stable/references/api/tables_views.html#operators
+            val client = RecordingClient()
+            DatabaseClientImpl(client).select(table = "todos") {
+                match("title", "^Buy")
+            }
+            assertEquals("/rest/v1/todos?select=*&title=match.^Buy", client.getEndpoint)
+        }
+
+    @Test
+    fun test_select_imatchOperator_emitsCaseInsensitiveTildeFilter() =
+        runTest {
+            val client = RecordingClient()
+            DatabaseClientImpl(client).select(table = "todos") {
+                imatch("title", "^buy")
+            }
+            assertEquals("/rest/v1/todos?select=*&title=imatch.^buy", client.getEndpoint)
+        }
+
+    @Test
+    fun test_select_inNumberList_emitsUnquotedInFilter() =
+        runTest {
+            val client = RecordingClient()
+            DatabaseClientImpl(client).select(table = "todos") {
+                `in`("priority", listOf(1, 2, 3))
+            }
+            assertEquals("/rest/v1/todos?select=*&priority=in.(1,2,3)", client.getEndpoint)
+        }
+
+    @Test
+    fun test_select_containsList_emitsArrayLiteralFilter() =
+        runTest {
+            val client = RecordingClient()
+            DatabaseClientImpl(client).select(table = "todos") {
+                contains("tags", listOf("urgent", "home"))
+            }
+            assertEquals("/rest/v1/todos?select=*&tags=cs.{urgent,home}", client.getEndpoint)
+        }
+
+    @Test
+    fun test_select_orderEnumWithNulls_emitsDescNullsLast() =
+        runTest {
+            val client = RecordingClient()
+            DatabaseClientImpl(client).select(table = "todos") {
+                order("created_at", OrderDirection.DESCENDING, NullsPlacement.LAST)
+            }
+            assertEquals("/rest/v1/todos?select=*&order=created_at.desc.nullslast", client.getEndpoint)
         }
 
     @Test

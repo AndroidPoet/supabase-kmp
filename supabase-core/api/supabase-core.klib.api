@@ -10,6 +10,28 @@ open annotation class io.github.androidpoet.supabase.core.models/FilterDsl : kot
     constructor <init>() // io.github.androidpoet.supabase.core.models/FilterDsl.<init>|<init>(){}[0]
 }
 
+final enum class io.github.androidpoet.supabase.core.models/NullsPlacement : kotlin/Enum<io.github.androidpoet.supabase.core.models/NullsPlacement> { // io.github.androidpoet.supabase.core.models/NullsPlacement|null[0]
+    enum entry FIRST // io.github.androidpoet.supabase.core.models/NullsPlacement.FIRST|null[0]
+    enum entry LAST // io.github.androidpoet.supabase.core.models/NullsPlacement.LAST|null[0]
+
+    final val entries // io.github.androidpoet.supabase.core.models/NullsPlacement.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.androidpoet.supabase.core.models/NullsPlacement> // io.github.androidpoet.supabase.core.models/NullsPlacement.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.androidpoet.supabase.core.models/NullsPlacement // io.github.androidpoet.supabase.core.models/NullsPlacement.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.androidpoet.supabase.core.models/NullsPlacement> // io.github.androidpoet.supabase.core.models/NullsPlacement.values|values#static(){}[0]
+}
+
+final enum class io.github.androidpoet.supabase.core.models/OrderDirection : kotlin/Enum<io.github.androidpoet.supabase.core.models/OrderDirection> { // io.github.androidpoet.supabase.core.models/OrderDirection|null[0]
+    enum entry ASCENDING // io.github.androidpoet.supabase.core.models/OrderDirection.ASCENDING|null[0]
+    enum entry DESCENDING // io.github.androidpoet.supabase.core.models/OrderDirection.DESCENDING|null[0]
+
+    final val entries // io.github.androidpoet.supabase.core.models/OrderDirection.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.androidpoet.supabase.core.models/OrderDirection> // io.github.androidpoet.supabase.core.models/OrderDirection.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.androidpoet.supabase.core.models/OrderDirection // io.github.androidpoet.supabase.core.models/OrderDirection.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.androidpoet.supabase.core.models/OrderDirection> // io.github.androidpoet.supabase.core.models/OrderDirection.values|values#static(){}[0]
+}
+
 final enum class io.github.androidpoet.supabase.core.models/TextSearchType : kotlin/Enum<io.github.androidpoet.supabase.core.models/TextSearchType> { // io.github.androidpoet.supabase.core.models/TextSearchType|null[0]
     enum entry Phrase // io.github.androidpoet.supabase.core.models/TextSearchType.Phrase|null[0]
     enum entry Plain // io.github.androidpoet.supabase.core.models/TextSearchType.Plain|null[0]
@@ -158,7 +180,9 @@ final class io.github.androidpoet.supabase.core.models/FilterBuilder { // io.git
 
     final fun and(kotlin/Function1<io.github.androidpoet.supabase.core.models/FilterBuilder, kotlin/Unit>) // io.github.androidpoet.supabase.core.models/FilterBuilder.and|and(kotlin.Function1<io.github.androidpoet.supabase.core.models.FilterBuilder,kotlin.Unit>){}[0]
     final fun build(): kotlin.collections/List<kotlin/Pair<kotlin/String, kotlin/String>> // io.github.androidpoet.supabase.core.models/FilterBuilder.build|build(){}[0]
+    final fun containedBy(kotlin/String, kotlin.collections/List<kotlin/Any>) // io.github.androidpoet.supabase.core.models/FilterBuilder.containedBy|containedBy(kotlin.String;kotlin.collections.List<kotlin.Any>){}[0]
     final fun containedBy(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.core.models/FilterBuilder.containedBy|containedBy(kotlin.String;kotlin.String){}[0]
+    final fun contains(kotlin/String, kotlin.collections/List<kotlin/Any>) // io.github.androidpoet.supabase.core.models/FilterBuilder.contains|contains(kotlin.String;kotlin.collections.List<kotlin.Any>){}[0]
     final fun contains(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.core.models/FilterBuilder.contains|contains(kotlin.String;kotlin.String){}[0]
     final fun eq(kotlin/String, kotlin/Boolean) // io.github.androidpoet.supabase.core.models/FilterBuilder.eq|eq(kotlin.String;kotlin.Boolean){}[0]
     final fun eq(kotlin/String, kotlin/Number) // io.github.androidpoet.supabase.core.models/FilterBuilder.eq|eq(kotlin.String;kotlin.Number){}[0]
@@ -171,6 +195,9 @@ final class io.github.androidpoet.supabase.core.models/FilterBuilder { // io.git
     final fun ilike(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.core.models/FilterBuilder.ilike|ilike(kotlin.String;kotlin.String){}[0]
     final fun ilikeAllOf(kotlin/String, kotlin.collections/List<kotlin/String>) // io.github.androidpoet.supabase.core.models/FilterBuilder.ilikeAllOf|ilikeAllOf(kotlin.String;kotlin.collections.List<kotlin.String>){}[0]
     final fun ilikeAnyOf(kotlin/String, kotlin.collections/List<kotlin/String>) // io.github.androidpoet.supabase.core.models/FilterBuilder.ilikeAnyOf|ilikeAnyOf(kotlin.String;kotlin.collections.List<kotlin.String>){}[0]
+    final fun imatch(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.core.models/FilterBuilder.imatch|imatch(kotlin.String;kotlin.String){}[0]
+    final fun in(kotlin/String, kotlin.collections/List<kotlin/Any>) // io.github.androidpoet.supabase.core.models/FilterBuilder.in|in(kotlin.String;kotlin.collections.List<kotlin.Any>){}[0]
+    final fun in(kotlin/String, kotlin.collections/List<kotlin/Number>) // io.github.androidpoet.supabase.core.models/FilterBuilder.in|in(kotlin.String;kotlin.collections.List<kotlin.Number>){}[0]
     final fun in(kotlin/String, kotlin.collections/List<kotlin/String>) // io.github.androidpoet.supabase.core.models/FilterBuilder.in|in(kotlin.String;kotlin.collections.List<kotlin.String>){}[0]
     final fun is(kotlin/String, kotlin/Boolean?) // io.github.androidpoet.supabase.core.models/FilterBuilder.is|is(kotlin.String;kotlin.Boolean?){}[0]
     final fun is(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.core.models/FilterBuilder.is|is(kotlin.String;kotlin.String){}[0]
@@ -183,6 +210,7 @@ final class io.github.androidpoet.supabase.core.models/FilterBuilder { // io.git
     final fun lte(kotlin/String, kotlin/Number) // io.github.androidpoet.supabase.core.models/FilterBuilder.lte|lte(kotlin.String;kotlin.Number){}[0]
     final fun lte(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.core.models/FilterBuilder.lte|lte(kotlin.String;kotlin.String){}[0]
     final fun match(kotlin.collections/Map<kotlin/String, kotlin/String>) // io.github.androidpoet.supabase.core.models/FilterBuilder.match|match(kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+    final fun match(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.core.models/FilterBuilder.match|match(kotlin.String;kotlin.String){}[0]
     final fun neq(kotlin/String, kotlin/Boolean) // io.github.androidpoet.supabase.core.models/FilterBuilder.neq|neq(kotlin.String;kotlin.Boolean){}[0]
     final fun neq(kotlin/String, kotlin/Number) // io.github.androidpoet.supabase.core.models/FilterBuilder.neq|neq(kotlin.String;kotlin.Number){}[0]
     final fun neq(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.core.models/FilterBuilder.neq|neq(kotlin.String;kotlin.String){}[0]
@@ -191,7 +219,9 @@ final class io.github.androidpoet.supabase.core.models/FilterBuilder { // io.git
     final fun notExtendLeft(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.core.models/FilterBuilder.notExtendLeft|notExtendLeft(kotlin.String;kotlin.String){}[0]
     final fun notExtendRight(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.core.models/FilterBuilder.notExtendRight|notExtendRight(kotlin.String;kotlin.String){}[0]
     final fun or(kotlin/Function1<io.github.androidpoet.supabase.core.models/FilterBuilder, kotlin/Unit>) // io.github.androidpoet.supabase.core.models/FilterBuilder.or|or(kotlin.Function1<io.github.androidpoet.supabase.core.models.FilterBuilder,kotlin.Unit>){}[0]
+    final fun order(kotlin/String, io.github.androidpoet.supabase.core.models/OrderDirection, io.github.androidpoet.supabase.core.models/NullsPlacement? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.core.models/FilterBuilder.order|order(kotlin.String;io.github.androidpoet.supabase.core.models.OrderDirection;io.github.androidpoet.supabase.core.models.NullsPlacement?;kotlin.String?){}[0]
     final fun order(kotlin/String, kotlin/Boolean = ..., kotlin/Boolean? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.core.models/FilterBuilder.order|order(kotlin.String;kotlin.Boolean;kotlin.Boolean?;kotlin.String?){}[0]
+    final fun overlaps(kotlin/String, kotlin.collections/List<kotlin/Any>) // io.github.androidpoet.supabase.core.models/FilterBuilder.overlaps|overlaps(kotlin.String;kotlin.collections.List<kotlin.Any>){}[0]
     final fun overlaps(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.core.models/FilterBuilder.overlaps|overlaps(kotlin.String;kotlin.String){}[0]
     final fun range(kotlin/Int, kotlin/Int, kotlin/String? = ...) // io.github.androidpoet.supabase.core.models/FilterBuilder.range|range(kotlin.Int;kotlin.Int;kotlin.String?){}[0]
     final fun rangeAdj(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.core.models/FilterBuilder.rangeAdj|rangeAdj(kotlin.String;kotlin.String){}[0]
