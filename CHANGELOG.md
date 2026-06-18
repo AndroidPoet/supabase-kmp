@@ -23,6 +23,22 @@
   leaked engine on JVM. Each target now supplies a concrete WebSocket-capable
   engine (OkHttp on Android/JVM, Darwin on Apple, CIO on Linux/Windows, Js on
   Wasm), mirroring `supabase-client`.
+- **Realtime no longer drops buffered messages on a failed flush.**
+  `flushOutboundBuffer` cleared the buffer before confirming a live socket and
+  before each send; a socket that was down (or died mid-flush) silently lost the
+  buffered application messages. It now drains only with a live session and
+  re-buffers any unsent remainder, in order, for the next reconnect.
+- **Realtime won't reconnect after an intentional `disconnect()`.**
+  `scheduleReconnect` now bails when `intentionalDisconnect` is set (the
+  `attemptReconnect` failure path previously called it unguarded), and the
+  backoff timer re-checks after its delay — closing a race where a `disconnect()`
+  could be followed by a resurrected socket.
+- **Realtime reconnect no longer leaks a `CoroutineScope` per attempt.** A single
+  long-lived reconnect scope replaces the per-attempt `SupervisorJob` scope that
+  was never cancelled; it's torn down in `close()`.
+- **Realtime debug counters update atomically.** `recordOutbound/InboundMessage`
+  used a read-modify-write on the debug `StateFlow` that could lose updates under
+  concurrent sends; now uses an atomic `update {}`.
 
 ### Changed
 

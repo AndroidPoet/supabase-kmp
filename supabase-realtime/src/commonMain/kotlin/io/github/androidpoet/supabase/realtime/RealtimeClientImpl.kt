@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -79,6 +80,12 @@ internal class RealtimeClientImpl(
 
     @Volatile
     private var reconnectJob: Job? = null
+
+    // One long-lived scope for the reconnect timer, created once instead of per
+    // attempt — a fresh SupervisorJob scope on every scheduleReconnect() was never
+    // cancelled and leaked. Its only child is reconnectJob (cancelled on disconnect);
+    // the scope itself is cancelled in close().
+    private val reconnectScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     // Phoenix refs must be unique; nextRef() can run from concurrent suspend
     // calls, so use an atomic counter (kotlinx-atomicfu — the stdlib
@@ -251,8 +258,9 @@ internal class RealtimeClientImpl(
 
     override suspend fun close() {
         disconnect()
-        // Release the Ktor engine (connection pool / background threads). The
-        // client is single-use after this; constructing a new one is cheap.
+        // The client is single-use after close(): tear down the reconnect scope and
+        // release the Ktor engine (connection pool / background threads).
+        reconnectScope.cancel()
         httpClient.close()
     }
 
@@ -338,15 +346,29 @@ internal class RealtimeClientImpl(
     }
 
     private suspend fun flushOutboundBuffer() {
+        // Don't drain the buffer until we actually have a socket to send on —
+        // clearing first and then bailing on a null session would silently lose
+        // every buffered message.
+        val current = session ?: return
         val pending =
             outboundBufferLock.withLock {
                 val copy = outboundBuffer.toList()
                 outboundBuffer.clear()
                 copy
             }
-        val current = session ?: return
-        for (message in pending) {
-            current.send(Frame.Text(json.encodeToString(message)))
+        for ((index, message) in pending.withIndex()) {
+            try {
+                current.send(Frame.Text(json.encodeToString(message)))
+            } catch (e: Throwable) {
+                if (e is CancellationException) throw e
+                // The socket died mid-flush. Re-buffer everything we haven't sent yet
+                // (this message included) at the front so it replays in order on the
+                // next reconnect instead of being dropped.
+                outboundBufferLock.withLock {
+                    outboundBuffer.addAll(0, pending.subList(index, pending.size))
+                }
+                return
+            }
         }
     }
 
@@ -416,12 +438,15 @@ internal class RealtimeClientImpl(
     }
 
     private fun recordOutboundMessage(message: RealtimeMessage) {
-        _debugState.value =
-            _debugState.value.copy(
-                outboundMessageCount = _debugState.value.outboundMessageCount + 1,
-                heartbeatSentCount = _debugState.value.heartbeatSentCount + if (message.isHeartbeatRequest()) 1 else 0,
+        // Senders run from arbitrary coroutines, so read-modify-write the counter
+        // atomically to avoid lost updates.
+        _debugState.update {
+            it.copy(
+                outboundMessageCount = it.outboundMessageCount + 1,
+                heartbeatSentCount = it.heartbeatSentCount + if (message.isHeartbeatRequest()) 1 else 0,
                 lastOutboundRef = message.ref,
             )
+        }
         _debugEvents.tryEmit(RealtimeDebugEvent.OutboundMessage(message))
         if (message.isHeartbeatRequest()) {
             _debugEvents.tryEmit(RealtimeDebugEvent.HeartbeatSent(message.ref ?: ""))
@@ -429,12 +454,13 @@ internal class RealtimeClientImpl(
     }
 
     private fun recordInboundMessage(message: RealtimeMessage) {
-        _debugState.value =
-            _debugState.value.copy(
-                inboundMessageCount = _debugState.value.inboundMessageCount + 1,
-                heartbeatReceivedCount = _debugState.value.heartbeatReceivedCount + if (message.isHeartbeatReply()) 1 else 0,
+        _debugState.update {
+            it.copy(
+                inboundMessageCount = it.inboundMessageCount + 1,
+                heartbeatReceivedCount = it.heartbeatReceivedCount + if (message.isHeartbeatReply()) 1 else 0,
                 lastInboundRef = message.ref,
             )
+        }
         _debugEvents.tryEmit(RealtimeDebugEvent.InboundMessage(message))
         if (message.isHeartbeatReply()) {
             pendingHeartbeatRef.value = null
@@ -452,6 +478,10 @@ internal class RealtimeClientImpl(
     }
 
     private fun scheduleReconnect() {
+        // A disconnect() may have raced in (e.g. via the attemptReconnect catch path,
+        // which isn't otherwise guarded). Never resurrect the socket the user asked to
+        // tear down.
+        if (intentionalDisconnect) return
         // Cancel any in-flight reconnect so overlapping triggers (e.g. a connect
         // failure racing an unexpected disconnect) don't spawn parallel loops.
         reconnectJob?.cancel()
@@ -471,10 +501,12 @@ internal class RealtimeClientImpl(
                 attempt = reconnectAttempt + 1,
                 nextRetryMs = delayMs,
             )
-        val reconnectScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         reconnectJob =
             reconnectScope.launch {
                 delay(delayMs)
+                // disconnect() during the backoff delay cancels this job, but if it
+                // landed just after this job was scheduled, re-check before reconnecting.
+                if (intentionalDisconnect) return@launch
                 reconnectAttempt++
                 attemptReconnect()
             }
