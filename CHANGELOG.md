@@ -1,6 +1,62 @@
 # Changelog
 
-## Unreleased
+## 0.6.0 — 2026-06-18
+
+### Changed (breaking)
+
+- **`MfaFactor.status` is now a typed `MfaFactorStatus` enum** (`VERIFIED`/
+  `UNVERIFIED`) instead of a raw `String`. Code that read `status` as a `String`
+  must switch to the enum. This is the only source-breaking change in the
+  release; everything else is additive.
+
+### Added
+
+- **Auth** — `Session.providerToken`/`providerRefreshToken` (call third-party
+  provider APIs after OAuth/native sign-in); `User` gains `isAnonymous`, `role`,
+  `emailConfirmedAt`, `phoneConfirmedAt`, `confirmedAt`, `lastSignInAt`;
+  `mfaGetAuthenticatorAssuranceLevels` returns current+next AAL; `emailRedirectTo`
+  on `signUpWithEmail`; phone MFA delivery `channel` on `mfaChallenge`.
+- **Storage** — optional object metadata (`x-metadata`, Base64 JSON) on
+  `upload`/`update`/`uploadToSignedUrl`; `FileObject` widened with `size`,
+  `contentType`, `etag`, `lastAccessedAt`, `cacheControl`; `path` on the
+  signed-upload-url response; transformed-image `downloadBytes`/`downloadPublicBytes`
+  overloads via the render endpoints.
+- **Postgrest** — `match`/`imatch` POSIX-regex operators; typed
+  `in(List<Number>)`/`in(List<Any>)` and `contains`/`containedBy`/`overlaps`
+  list overloads (build the `{a,b,c}` literal); `OrderDirection`/`NullsPlacement`
+  enums for `order()`.
+- **Client** — opt-in `connectTimeoutMillis`/`socketTimeoutMillis`/
+  `requestTimeoutMillis` (Ktor `HttpTimeout`, installed only when set so streams
+  aren't capped); an explicit `httpClientConfig` raw-Ktor escape hatch; a suspend
+  `accessTokenProvider` for third-party-auth JWTs.
+- **Realtime** — `InboundEventDropped` debug event (see backpressure fix below).
+- **Passkeys** — the opt-in `supabase-auth-passkey` module now drives the native
+  WebAuthn ceremony on all platforms; a dedicated docs page documents it.
+
+### Fixed
+
+- **Storage signed-URL TTL** — the request body now sends camelCase `expiresIn`;
+  it was `expires_in`, which the server ignored, so signed URLs silently used the
+  server-default expiry.
+- **Storage `remove`** — now `DELETE /object/{bucket}` with `{prefixes}`; it was
+  `POST /object/remove/{bucket}`, a route that does not exist server-side (404 in
+  production). **`uploadToSignedUrl`** now uses `PUT` (the upload/sign route is
+  registered as `PUT`, not `POST`).
+- **Postgrest bulk insert** — a multi-row insert whose rows carry different key
+  sets now sends the column union as `columns=`; previously PostgREST inferred
+  columns from the first row only and silently dropped the rest (data loss).
+- **Auth** — current AAL is read from the JWT `aal` claim instead of being
+  inferred as AAL2 from "any verified factor"; phone MFA challenge now sends a
+  body so the delivery channel reaches the server.
+- **Realtime** — only the join reply (`ref == joinRef`) drives subscription
+  status, so a `phx_leave` ack no longer resurrects an unsubscribed channel; and
+  inbound delivery is now non-blocking (`DROP_OLDEST`) so a stalled collector
+  can't wedge the socket (heartbeats keep flowing), surfacing evictions as
+  `InboundEventDropped`.
+- **Native auth providers** — the Android passkey authenticator returns a
+  `Failure` instead of throwing `ClassCastException`; the Apple provider can no
+  longer double-resume its continuation; the Google provider propagates coroutine
+  cancellation to the in-flight Credential Manager request.
 
 ### Added (supabase-kt parity audit)
 

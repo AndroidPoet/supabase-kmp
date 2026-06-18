@@ -46,7 +46,7 @@ import kotlin.concurrent.Volatile
 import kotlin.time.TimeSource
 import io.ktor.client.plugins.logging.Logger as KtorLogger
 
-private const val CLIENT_VERSION = "supabase-kmp/0.1.0"
+private const val CLIENT_VERSION = "supabase-kmp/0.6.0"
 private const val INTERNAL_RETRY_HEADER = "X-Supabase-Kmp-Retry"
 private const val RETRY_COUNT_HEADER = "X-Retry-Count"
 
