@@ -34,6 +34,16 @@
 
 ### Fixed
 
+- **Auto-refresh no longer leaks refresh coroutines under concurrency.** The
+  scheduled `refreshJob` was a `@Volatile var` swapped with a non-atomic
+  cancel-then-reassign; `scheduleRefresh` is reachable concurrently from
+  `saveSession` and `startAutoRefresh`, so two interleaved swaps could orphan an
+  uncancellable refresh coroutine that fires forever. It is now an atomic
+  reference swapped with `getAndSet(...)?.cancel()`.
+- **A malformed JWT `exp` can no longer trigger a refresh storm.** Computing the
+  refresh delay multiplied the remaining seconds by 1000; an `exp` claim near
+  `Long.MAX` overflowed to a negative value, collapsed to the 1 s floor, and
+  busy-refreshed. The seconds are now clamped so the multiply can't overflow.
 - **`createSignedUrl` now decodes the server response.** The single-object signed
   URL endpoint returns camelCase `signedURL` (same key the batch endpoint uses),
   but `SignedUrlResponse` was annotated `@SerialName("signed_url")` — so every

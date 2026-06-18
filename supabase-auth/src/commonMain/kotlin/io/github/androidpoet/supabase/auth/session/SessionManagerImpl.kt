@@ -5,6 +5,7 @@ import io.github.androidpoet.supabase.auth.models.Session
 import io.github.androidpoet.supabase.client.SupabaseClient
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
+import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -37,8 +38,13 @@ internal class SessionManagerImpl(
         get() = currentSession?.accessToken
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    @Volatile
-    private var refreshJob: Job? = null
+    // The scheduled auto-refresh job. Swapped atomically: `scheduleRefresh` is
+    // reachable concurrently from `saveSession` (suspend, any dispatcher) and
+    // `startAutoRefresh` (any thread), and a plain cancel-then-reassign on a
+    // @Volatile ref is a compound op — two interleaved swaps would leak an
+    // unreferenced, uncancellable refresh coroutine. getAndSet cancels exactly
+    // the job it replaces.
+    private val refreshJob = atomic<Job?>(null)
 
     @Volatile
     private var autoRefreshEnabled: Boolean = autoRefresh
@@ -133,13 +139,13 @@ internal class SessionManagerImpl(
 
     private fun scheduleRefresh(session: Session) {
         if (!autoRefreshEnabled) return
-        cancelRefresh()
         val delayMs = computeRefreshDelayMs(session)
-        refreshJob =
+        val job =
             scope.launch {
                 delay(delayMs)
                 refreshSession()
             }
+        refreshJob.getAndSet(job)?.cancel()
     }
 
     private fun computeRefreshDelayMs(session: Session): Long {
@@ -154,7 +160,12 @@ internal class SessionManagerImpl(
         // long-lived tokens this is exactly refreshBufferSeconds.
         val effectiveBuffer = minOf(refreshBufferSeconds, remainingSeconds / 2)
         val secondsUntilRefresh = remainingSeconds - effectiveBuffer
-        return maxOf(secondsUntilRefresh * 1000L, MIN_REFRESH_DELAY_MS)
+        // A garbage `exp` near Long.MAX would overflow `* 1000` to a negative value,
+        // collapse to MIN_REFRESH_DELAY_MS, and busy-refresh forever. Clamp the
+        // seconds so the multiply can't overflow; a far-future expiry just yields a
+        // far-future (effectively "never within this process") delay, not a storm.
+        val cappedSeconds = secondsUntilRefresh.coerceAtMost(MAX_REFRESH_DELAY_SECONDS)
+        return maxOf(cappedSeconds * 1000L, MIN_REFRESH_DELAY_MS)
     }
 
     // Prefer the access token's absolute `exp` claim: a persisted session
@@ -171,8 +182,7 @@ internal class SessionManagerImpl(
     }
 
     private fun cancelRefresh() {
-        refreshJob?.cancel()
-        refreshJob = null
+        refreshJob.getAndSet(null)?.cancel()
     }
 
     private companion object {
@@ -180,5 +190,9 @@ internal class SessionManagerImpl(
         // looping the refresh coroutine when a token is already past its refresh
         // window, while still refreshing quickly.
         private const val MIN_REFRESH_DELAY_MS = 1_000L
+
+        // Upper bound (seconds) on the scheduled delay, chosen so `* 1000L` stays
+        // well inside Long range regardless of a malformed `exp` claim.
+        private const val MAX_REFRESH_DELAY_SECONDS = Long.MAX_VALUE / 1000L
     }
 }
