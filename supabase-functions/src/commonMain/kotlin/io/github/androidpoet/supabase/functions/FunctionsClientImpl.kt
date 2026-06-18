@@ -1,10 +1,14 @@
 package io.github.androidpoet.supabase.functions
 import io.github.androidpoet.supabase.client.SupabaseClient
 import io.github.androidpoet.supabase.core.result.SupabaseResult
+import kotlin.concurrent.Volatile
 
 internal class FunctionsClientImpl(
     private val client: SupabaseClient,
 ) : FunctionsClient {
+    // setAuth() and invoke() can run on different threads; @Volatile guarantees a
+    // pinned token written on one thread is visible to a request on another.
+    @Volatile
     private var authToken: String? = null
 
     override fun setAuth(token: String) {
@@ -18,10 +22,18 @@ internal class FunctionsClientImpl(
         region: FunctionRegion?,
     ): SupabaseResult<String> {
         val merged = buildHeaders(headers, region)
+        // Edge Functions commonly branch on Content-Type (req.json() vs req.text()).
+        // Default a JSON body's content type unless the caller set one explicitly.
+        val withContentType =
+            if (body != null && merged.keys.none { it.equals("Content-Type", ignoreCase = true) }) {
+                merged + ("Content-Type" to "application/json")
+            } else {
+                merged
+            }
         return client.post(
             endpoint = "${FunctionsPaths.BASE}/$functionName",
             body = body,
-            headers = merged,
+            headers = withContentType,
         )
     }
 

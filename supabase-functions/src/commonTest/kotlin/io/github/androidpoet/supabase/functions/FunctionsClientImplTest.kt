@@ -59,6 +59,47 @@ class FunctionsClientImplTest {
         }
 
     @Test
+    fun test_invoke_withBody_defaultsJsonContentType() =
+        runTest {
+            val fake = FakeSupabaseClient()
+            val sut = FunctionsClientImpl(fake)
+
+            val result = sut.invoke(functionName = "hello", body = """{"a":1}""")
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals("application/json", fake.lastPostHeaders["Content-Type"])
+        }
+
+    @Test
+    fun test_invoke_callerContentTypeIsNotOverridden() =
+        runTest {
+            val fake = FakeSupabaseClient()
+            val sut = FunctionsClientImpl(fake)
+
+            val result =
+                sut.invoke(
+                    functionName = "hello",
+                    body = "plain",
+                    headers = mapOf("Content-Type" to "text/plain"),
+                )
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals("text/plain", fake.lastPostHeaders["Content-Type"])
+        }
+
+    @Test
+    fun test_invoke_nullBody_doesNotSetContentType() =
+        runTest {
+            val fake = FakeSupabaseClient()
+            val sut = FunctionsClientImpl(fake)
+
+            val result = sut.invoke(functionName = "hello")
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals(null, fake.lastPostHeaders["Content-Type"])
+        }
+
+    @Test
     fun test_invokeHeaderOverridesSetAuthAuthorization() =
         runTest {
             val fake = FakeSupabaseClient()
