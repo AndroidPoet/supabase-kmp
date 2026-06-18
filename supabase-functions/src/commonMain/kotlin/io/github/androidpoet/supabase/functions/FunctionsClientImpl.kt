@@ -1,6 +1,8 @@
 package io.github.androidpoet.supabase.functions
 import io.github.androidpoet.supabase.client.SupabaseClient
 import io.github.androidpoet.supabase.core.result.SupabaseResult
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlin.concurrent.Volatile
 
 internal class FunctionsClientImpl(
@@ -55,6 +57,24 @@ internal class FunctionsClientImpl(
         )
     }
 
+    override fun invokeSSE(
+        functionName: String,
+        body: String?,
+        contentType: String,
+        headers: Map<String, String>,
+        region: FunctionRegion?,
+    ): Flow<FunctionServerSentEvent> {
+        val merged = buildHeaders(headers, region)
+        val lines =
+            client.streamLines(
+                endpoint = "${FunctionsPaths.BASE}/$functionName",
+                body = body,
+                contentType = contentType,
+                headers = merged,
+            )
+        return parseServerSentEvents(lines)
+    }
+
     private fun buildHeaders(
         extra: Map<String, String>,
         region: FunctionRegion?,
@@ -69,3 +89,62 @@ internal class FunctionsClientImpl(
             putAll(extra)
         }
 }
+
+/**
+ * Parses a [Flow] of raw SSE text lines into [FunctionServerSentEvent]s per the
+ * WHATWG event-stream rules: a blank line dispatches the accumulated event; `:`
+ * lines are comments (keep-alives) and ignored; recognised fields are `data`,
+ * `event` and `id`; a single leading space after the colon is stripped; multiple
+ * `data` lines are joined with `\n`. Events with no field data at dispatch are
+ * skipped. A trailing event with no terminating blank line is flushed on close.
+ */
+private fun parseServerSentEvents(lines: Flow<String>): Flow<FunctionServerSentEvent> =
+    flow {
+        val data = StringBuilder()
+        var event: String? = null
+        var id: String? = null
+        var hasData = false
+
+        suspend fun dispatch() {
+            if (hasData || event != null || id != null) {
+                emit(
+                    FunctionServerSentEvent(
+                        id = id,
+                        event = event,
+                        data = if (hasData) data.toString() else null,
+                    ),
+                )
+            }
+            data.clear()
+            event = null
+            id = null
+            hasData = false
+        }
+
+        lines.collect { raw ->
+            // Tolerate CRLF streams: readUTF8Line strips \n but a lone \r can remain.
+            val line = raw.removeSuffix("\r")
+            when {
+                line.isEmpty() -> dispatch()
+                line.startsWith(":") -> Unit // comment / keep-alive
+                else -> {
+                    val colon = line.indexOf(':')
+                    val field = if (colon == -1) line else line.substring(0, colon)
+                    var value = if (colon == -1) "" else line.substring(colon + 1)
+                    if (value.startsWith(" ")) value = value.substring(1)
+                    when (field) {
+                        "data" -> {
+                            if (hasData) data.append('\n')
+                            data.append(value)
+                            hasData = true
+                        }
+                        "event" -> event = value
+                        "id" -> id = value
+                        // "retry" and unknown fields are ignored.
+                    }
+                }
+            }
+        }
+        // Flush a final event that wasn't terminated by a blank line.
+        dispatch()
+    }

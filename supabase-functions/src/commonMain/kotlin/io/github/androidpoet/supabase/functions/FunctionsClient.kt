@@ -1,5 +1,6 @@
 package io.github.androidpoet.supabase.functions
 import io.github.androidpoet.supabase.core.result.SupabaseResult
+import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -71,4 +72,24 @@ public interface FunctionsClient {
         headers: Map<String, String> = emptyMap(),
         region: FunctionRegion? = null,
     ): SupabaseResult<String>
+
+    /**
+     * Invokes a streaming Edge Function and returns its response as a cold [Flow]
+     * of [FunctionServerSentEvent]s, parsed from the `text/event-stream` body as
+     * they arrive (nothing is buffered to completion).
+     *
+     * The request is a POST issued when the flow is collected; collecting twice
+     * invokes twice. A non-2xx response surfaces as a terminal exception in the
+     * flow rather than an empty stream — collect within `try`/`catch` (or Flow
+     * `.catch`) since, unlike the buffered [invoke], a streamed call cannot return
+     * a [SupabaseResult] up front.
+     */
+    public fun invokeSSE(
+        functionName: String,
+        body: String? = null,
+        contentType: String = "application/json",
+        headers: Map<String, String> = emptyMap(),
+        region: FunctionRegion? = null,
+    ): Flow<FunctionServerSentEvent> =
+        throw UnsupportedOperationException("invokeSSE is not supported by this FunctionsClient")
 }

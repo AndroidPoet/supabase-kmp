@@ -41,6 +41,27 @@ abstract interface io.github.androidpoet.supabase.functions/FunctionsClient { //
     abstract fun setAuth(kotlin/String) // io.github.androidpoet.supabase.functions/FunctionsClient.setAuth|setAuth(kotlin.String){}[0]
     abstract suspend fun invoke(kotlin/String, kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., io.github.androidpoet.supabase.functions/FunctionRegion? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/String> // io.github.androidpoet.supabase.functions/FunctionsClient.invoke|invoke(kotlin.String;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>;io.github.androidpoet.supabase.functions.FunctionRegion?){}[0]
     abstract suspend fun invokeWithBody(kotlin/String, kotlin/ByteArray, kotlin/String = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., io.github.androidpoet.supabase.functions/FunctionRegion? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/String> // io.github.androidpoet.supabase.functions/FunctionsClient.invokeWithBody|invokeWithBody(kotlin.String;kotlin.ByteArray;kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>;io.github.androidpoet.supabase.functions.FunctionRegion?){}[0]
+    open fun invokeSSE(kotlin/String, kotlin/String? = ..., kotlin/String = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., io.github.androidpoet.supabase.functions/FunctionRegion? = ...): kotlinx.coroutines.flow/Flow<io.github.androidpoet.supabase.functions/FunctionServerSentEvent> // io.github.androidpoet.supabase.functions/FunctionsClient.invokeSSE|invokeSSE(kotlin.String;kotlin.String?;kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>;io.github.androidpoet.supabase.functions.FunctionRegion?){}[0]
+}
+
+final class io.github.androidpoet.supabase.functions/FunctionServerSentEvent { // io.github.androidpoet.supabase.functions/FunctionServerSentEvent|null[0]
+    constructor <init>(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.functions/FunctionServerSentEvent.<init>|<init>(kotlin.String?;kotlin.String?;kotlin.String?){}[0]
+
+    final val data // io.github.androidpoet.supabase.functions/FunctionServerSentEvent.data|{}data[0]
+        final fun <get-data>(): kotlin/String? // io.github.androidpoet.supabase.functions/FunctionServerSentEvent.data.<get-data>|<get-data>(){}[0]
+    final val event // io.github.androidpoet.supabase.functions/FunctionServerSentEvent.event|{}event[0]
+        final fun <get-event>(): kotlin/String? // io.github.androidpoet.supabase.functions/FunctionServerSentEvent.event.<get-event>|<get-event>(){}[0]
+    final val id // io.github.androidpoet.supabase.functions/FunctionServerSentEvent.id|{}id[0]
+        final fun <get-id>(): kotlin/String? // io.github.androidpoet.supabase.functions/FunctionServerSentEvent.id.<get-id>|<get-id>(){}[0]
+
+    final fun component1(): kotlin/String? // io.github.androidpoet.supabase.functions/FunctionServerSentEvent.component1|component1(){}[0]
+    final fun component2(): kotlin/String? // io.github.androidpoet.supabase.functions/FunctionServerSentEvent.component2|component2(){}[0]
+    final fun component3(): kotlin/String? // io.github.androidpoet.supabase.functions/FunctionServerSentEvent.component3|component3(){}[0]
+    final fun copy(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ...): io.github.androidpoet.supabase.functions/FunctionServerSentEvent // io.github.androidpoet.supabase.functions/FunctionServerSentEvent.copy|copy(kotlin.String?;kotlin.String?;kotlin.String?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.functions/FunctionServerSentEvent.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.functions/FunctionServerSentEvent.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.functions/FunctionServerSentEvent.toString|toString(){}[0]
+    final inline fun <#A1: reified kotlin/Any?> decodeAs(): #A1? // io.github.androidpoet.supabase.functions/FunctionServerSentEvent.decodeAs|decodeAs(){0§<kotlin.Any?>}[0]
 }
 
 final fun io.github.androidpoet.supabase.functions/createFunctionsClient(io.github.androidpoet.supabase.client/SupabaseClient): io.github.androidpoet.supabase.functions/FunctionsClient // io.github.androidpoet.supabase.functions/createFunctionsClient|createFunctionsClient(io.github.androidpoet.supabase.client.SupabaseClient){}[0]
