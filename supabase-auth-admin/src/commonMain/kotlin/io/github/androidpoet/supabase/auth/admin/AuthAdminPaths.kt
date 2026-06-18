@@ -23,4 +23,7 @@ internal object AuthAdminPaths {
     const val ADMIN_CUSTOM_PROVIDERS: String = ADMIN + "/custom-providers"
     const val ADMIN_GENERATE_LINK: String = ADMIN + "/generate_link"
     const val ADMIN_OAUTH_CLIENTS: String = ADMIN + "/oauth/clients"
+    const val ADMIN_SSO_PROVIDERS: String = ADMIN + "/sso/providers"
+
+    fun adminSsoProvider(id: String): String = "$ADMIN_SSO_PROVIDERS/$id"
 }

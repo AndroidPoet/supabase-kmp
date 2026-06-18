@@ -100,6 +100,44 @@ class FunctionsClientImplTest {
         }
 
     @Test
+    fun test_invoke_getMethod_issuesGetWithNoBody() =
+        runTest {
+            val fake = FakeSupabaseClient()
+            val sut = FunctionsClientImpl(fake)
+
+            // A body supplied alongside GET is ignored: GET requests carry no body.
+            val result =
+                sut.invoke(
+                    functionName = "hello",
+                    body = """{"a":1}""",
+                    method = FunctionMethod.GET,
+                )
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals(1, fake.getCalls)
+            assertEquals(0, fake.postCalls)
+            assertEquals("/functions/v1/hello", fake.lastGetEndpoint)
+            // GET goes through client.get, which has no body parameter, so the
+            // JSON Content-Type default is never applied either.
+            assertEquals(null, fake.lastGetHeaders["Content-Type"])
+        }
+
+    @Test
+    fun test_invoke_defaultMethod_issuesPostWithBody() =
+        runTest {
+            val fake = FakeSupabaseClient()
+            val sut = FunctionsClientImpl(fake)
+
+            val result = sut.invoke(functionName = "hello", body = """{"a":1}""")
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals(1, fake.postCalls)
+            assertEquals(0, fake.getCalls)
+            assertEquals("/functions/v1/hello", fake.lastPostEndpoint)
+            assertEquals("""{"a":1}""", fake.lastPostBody)
+        }
+
+    @Test
     fun test_invokeHeaderOverridesSetAuthAuthorization() =
         runTest {
             val fake = FakeSupabaseClient()
@@ -124,14 +162,26 @@ private class FakeSupabaseClient : SupabaseClient {
 
     var lastPostEndpoint: String? = null
     var lastPostHeaders: Map<String, String> = emptyMap()
+    var lastPostBody: String? = null
     var lastPostRawUrl: String? = null
 
-    override suspend fun get(endpoint: String, queryParams: List<Pair<String, String>>, headers: Map<String, String>): SupabaseResult<String> =
-        SupabaseResult.Success("{}")
+    var lastGetEndpoint: String? = null
+    var lastGetHeaders: Map<String, String> = emptyMap()
+    var getCalls: Int = 0
+    var postCalls: Int = 0
+
+    override suspend fun get(endpoint: String, queryParams: List<Pair<String, String>>, headers: Map<String, String>): SupabaseResult<String> {
+        getCalls++
+        lastGetEndpoint = endpoint
+        lastGetHeaders = headers
+        return SupabaseResult.Success("{}")
+    }
 
     override suspend fun post(endpoint: String, body: String?, headers: Map<String, String>): SupabaseResult<String> {
+        postCalls++
         lastPostEndpoint = endpoint
         lastPostHeaders = headers
+        lastPostBody = body
         return SupabaseResult.Success("""{"ok":true}""")
     }
 

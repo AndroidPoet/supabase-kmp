@@ -16,6 +16,9 @@ import io.github.androidpoet.supabase.auth.admin.models.OAuthClientCreateRequest
 import io.github.androidpoet.supabase.auth.admin.models.OAuthClientListResponse
 import io.github.androidpoet.supabase.auth.admin.models.OAuthClientUpdateRequest
 import io.github.androidpoet.supabase.auth.admin.models.Passkey
+import io.github.androidpoet.supabase.auth.admin.models.SsoProvider
+import io.github.androidpoet.supabase.auth.admin.models.SsoProviderCreateRequest
+import io.github.androidpoet.supabase.auth.admin.models.SsoProviderUpdateRequest
 import io.github.androidpoet.supabase.auth.models.SignOutScope
 import io.github.androidpoet.supabase.auth.models.User
 import io.github.androidpoet.supabase.core.result.SupabaseResult
@@ -91,6 +94,44 @@ public interface AuthAdminClient {
     ): SupabaseResult<CustomProvider>
 
     public suspend fun deleteCustomProvider(identifier: String): SupabaseResult<Unit>
+
+    /**
+     * Registers a new SAML SSO identity provider.
+     *
+     * Requires the service-role key. Provide either `metadata_url` or `metadata_xml` on [request].
+     */
+    public suspend fun createSsoProvider(request: SsoProviderCreateRequest): SupabaseResult<SsoProvider>
+
+    /**
+     * Lists all registered SAML SSO identity providers.
+     *
+     * Requires the service-role key. The API's `{ "items": [...] }` wrapper is unwrapped to a plain list.
+     */
+    public suspend fun listSsoProviders(): SupabaseResult<List<SsoProvider>>
+
+    /**
+     * Fetches a single SAML SSO identity provider by its id.
+     *
+     * Requires the service-role key.
+     */
+    public suspend fun getSsoProvider(id: String): SupabaseResult<SsoProvider>
+
+    /**
+     * Updates an existing SAML SSO identity provider.
+     *
+     * Requires the service-role key. Omitted `domains` / `attribute_mapping` keep their existing values.
+     */
+    public suspend fun updateSsoProvider(
+        id: String,
+        request: SsoProviderUpdateRequest,
+    ): SupabaseResult<SsoProvider>
+
+    /**
+     * Removes a SAML SSO identity provider and returns the provider that was deleted.
+     *
+     * Requires the service-role key.
+     */
+    public suspend fun deleteSsoProvider(id: String): SupabaseResult<SsoProvider>
 
     public suspend fun listPasskeys(userId: String): SupabaseResult<List<Passkey>>
 

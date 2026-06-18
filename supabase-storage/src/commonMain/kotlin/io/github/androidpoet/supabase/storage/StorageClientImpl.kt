@@ -199,6 +199,7 @@ internal class StorageClientImpl(
         cacheControl: Int?,
         chunkSize: Int,
         uploadUrl: String?,
+        metadata: JsonObject?,
     ): ResumableUpload {
         // chunkSize must advance the upload; a non-positive value would never make
         // progress. The TUS server additionally requires every chunk except the last
@@ -216,6 +217,7 @@ internal class StorageClientImpl(
             cacheControl = cacheControl,
             chunkSize = chunkSize,
             initialUploadUrl = uploadUrl,
+            metadata = metadata,
         )
     }
 
@@ -936,9 +938,8 @@ internal class StorageClientImpl(
     // request header on raw upload/update/upload-to-signed-url calls. The value is
     // the Base64 of the metadata JSON object's textual form. Returns null when no
     // metadata was supplied so the header is omitted entirely.
-    @OptIn(ExperimentalEncodingApi::class)
     private fun metadataHeader(metadata: JsonObject?): String? =
-        metadata?.let { Base64.encode(it.toString().encodeToByteArray()) }
+        metadata?.let { encodeMetadataValue(it) }
 
     // Combines a transform query (resize/format/quality) with the optional
     // download query for the render-image endpoints, mirroring the URL builders.
@@ -1362,6 +1363,14 @@ private const val DEFAULT_CONTENT_TYPE = "application/octet-stream"
 // Request header the storage server reads for user-supplied object metadata
 // (Base64-encoded JSON) on raw upload/update/upload-to-signed-url calls.
 private const val METADATA_HEADER = "x-metadata"
+
+// Encodes user-supplied object metadata into the wire form the storage server
+// expects: the Base64 of the metadata JSON object's textual form. Shared by the
+// raw `x-metadata` header (upload/update/upload-to-signed-url) and the resumable
+// `metadata` entry of the TUS `Upload-Metadata` header so both paths are identical.
+@OptIn(ExperimentalEncodingApi::class)
+internal fun encodeMetadataValue(metadata: JsonObject): String =
+    Base64.encode(metadata.toString().encodeToByteArray())
 
 // Minimal, dependency-free extension -> MIME map covering the common upload
 // types. Returns null for unknown/missing extensions so the caller can fall

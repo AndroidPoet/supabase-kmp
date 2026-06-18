@@ -17,6 +17,10 @@ import io.github.androidpoet.supabase.auth.admin.models.OAuthClientCreateRequest
 import io.github.androidpoet.supabase.auth.admin.models.OAuthClientListResponse
 import io.github.androidpoet.supabase.auth.admin.models.OAuthClientUpdateRequest
 import io.github.androidpoet.supabase.auth.admin.models.Passkey
+import io.github.androidpoet.supabase.auth.admin.models.SsoProvider
+import io.github.androidpoet.supabase.auth.admin.models.SsoProviderCreateRequest
+import io.github.androidpoet.supabase.auth.admin.models.SsoProviderListResponse
+import io.github.androidpoet.supabase.auth.admin.models.SsoProviderUpdateRequest
 import io.github.androidpoet.supabase.auth.admin.models.UserDeleteRequest
 import io.github.androidpoet.supabase.auth.models.SignOutScope
 import io.github.androidpoet.supabase.auth.models.User
@@ -259,6 +263,51 @@ internal class AuthAdminClientImpl(
                 endpoint = "${AuthAdminPaths.ADMIN_CUSTOM_PROVIDERS}/$identifier",
                 headers = adminHeaders,
             ).map { }
+
+    override suspend fun createSsoProvider(request: SsoProviderCreateRequest): SupabaseResult<SsoProvider> {
+        val body = defaultJson.encodeToString(request)
+        return client
+            .post(
+                endpoint = AuthAdminPaths.ADMIN_SSO_PROVIDERS,
+                body = body,
+                headers = adminHeaders,
+            ).deserialize()
+    }
+
+    override suspend fun listSsoProviders(): SupabaseResult<List<SsoProvider>> =
+        client
+            .get(
+                endpoint = AuthAdminPaths.ADMIN_SSO_PROVIDERS,
+                headers = adminHeaders,
+            ).deserialize<SsoProviderListResponse>()
+            .map { it.items }
+
+    override suspend fun getSsoProvider(id: String): SupabaseResult<SsoProvider> =
+        client
+            .get(
+                endpoint = AuthAdminPaths.adminSsoProvider(id),
+                headers = adminHeaders,
+            ).deserialize()
+
+    override suspend fun updateSsoProvider(
+        id: String,
+        request: SsoProviderUpdateRequest,
+    ): SupabaseResult<SsoProvider> {
+        val body = defaultJson.encodeToString(request)
+        return client
+            .put(
+                endpoint = AuthAdminPaths.adminSsoProvider(id),
+                body = body,
+                headers = adminHeaders,
+            ).deserialize()
+    }
+
+    override suspend fun deleteSsoProvider(id: String): SupabaseResult<SsoProvider> =
+        client
+            .delete(
+                endpoint = AuthAdminPaths.adminSsoProvider(id),
+                headers = adminHeaders,
+            ).deserialize()
 
     override suspend fun listPasskeys(userId: String): SupabaseResult<List<Passkey>> =
         client

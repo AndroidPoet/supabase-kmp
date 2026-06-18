@@ -66,6 +66,31 @@ public enum class FunctionRegion(
 }
 
 /**
+ * The HTTP method an Edge Function call is issued with, sent by
+ * [FunctionsClient.invoke] and [FunctionsClient.invokeWithBody].
+ *
+ * Edge Functions default to [POST]; pass another verb when a function routes on
+ * the request method. [GET] carries no request body (a GET with a body is
+ * invalid) — any body supplied alongside it is ignored.
+ */
+public enum class FunctionMethod {
+    /** HTTP `POST` — the default; carries the request body. */
+    POST,
+
+    /** HTTP `GET` — no request body is sent. */
+    GET,
+
+    /** HTTP `PUT` — carries the request body. */
+    PUT,
+
+    /** HTTP `PATCH` — carries the request body. */
+    PATCH,
+
+    /** HTTP `DELETE` — carries the request body. */
+    DELETE,
+}
+
+/**
  * Calls Supabase Edge Functions deployed under `/functions/v1/`, returning each
  * result as a [SupabaseResult] rather than throwing.
  *
@@ -89,18 +114,21 @@ public interface FunctionsClient {
      * Invokes the Edge Function named [functionName] with an optional text [body]
      * and returns its full response body as a [SupabaseResult].
      *
-     * POSTs to `/functions/v1/$functionName`. When [body] is non-null and the
-     * caller didn't set one, a `Content-Type: application/json` header is added
-     * (Edge Functions commonly branch on it). [region] pins the `x-region` header;
-     * [headers] are merged last and win over the defaults. A non-2xx response is a
-     * [SupabaseResult.Failure].
+     * Issues [method] (default [FunctionMethod.POST]) to `/functions/v1/$functionName`.
+     * When [body] is non-null and the caller didn't set one, a
+     * `Content-Type: application/json` header is added (Edge Functions commonly
+     * branch on it). With [FunctionMethod.GET] no body is sent — any [body] is
+     * ignored. [region] pins the `x-region` header; [headers] are merged last and
+     * win over the defaults. A non-2xx response is a [SupabaseResult.Failure].
      *
+     * @param method the HTTP method to issue; defaults to [FunctionMethod.POST].
      * @param headers extra request headers, merged over the auth/region defaults.
      * @param region optional region to pin the call to via `x-region`.
      */
     public suspend fun invoke(
         functionName: String,
         body: String? = null,
+        method: FunctionMethod = FunctionMethod.POST,
         headers: Map<String, String> = emptyMap(),
         region: FunctionRegion? = null,
     ): SupabaseResult<String>
@@ -111,7 +139,11 @@ public interface FunctionsClient {
      * [SupabaseResult]. The byte-oriented counterpart to [invoke]; same routing
      * and `x-region`/[headers] behavior.
      *
+     * Issues [method] (default [FunctionMethod.POST]). [FunctionMethod.GET] is not
+     * meaningful here since it carries no body; pass a body-bearing verb.
+     *
      * @param contentType the `Content-Type` for the uploaded bytes.
+     * @param method the HTTP method to issue; defaults to [FunctionMethod.POST].
      * @param headers extra request headers, merged over the auth/region defaults.
      * @param region optional region to pin the call to via `x-region`.
      */
@@ -119,6 +151,7 @@ public interface FunctionsClient {
         functionName: String,
         body: ByteArray,
         contentType: String = "application/octet-stream",
+        method: FunctionMethod = FunctionMethod.POST,
         headers: Map<String, String> = emptyMap(),
         region: FunctionRegion? = null,
     ): SupabaseResult<String>

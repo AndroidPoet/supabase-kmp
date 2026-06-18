@@ -366,6 +366,10 @@ public interface StorageClient {
      * server additionally requires every chunk except the last to be a multiple of
      * [RESUMABLE_DEFAULT_CHUNK_SIZE] (6 MB); keep the default unless you have a
      * reason to change it, as a non-conforming size is rejected server-side.
+     *
+     * When [metadata] is provided, it is Base64-encoded and sent as the `metadata`
+     * entry of the TUS `Upload-Metadata` header so the server stores it as the
+     * object's user metadata (the same encoding as the non-resumable [upload]).
      */
     public fun createResumableUpload(
         bucket: String,
@@ -376,6 +380,7 @@ public interface StorageClient {
         cacheControl: Int? = null,
         chunkSize: Int = RESUMABLE_DEFAULT_CHUNK_SIZE,
         uploadUrl: String? = null,
+        metadata: JsonObject? = null,
     ): ResumableUpload
 
     /**

@@ -1,7 +1,11 @@
+@file:OptIn(ExperimentalSerializationApi::class)
+
 package io.github.androidpoet.supabase.auth.admin.models
 
 import io.github.androidpoet.supabase.auth.models.MfaFactor
 import io.github.androidpoet.supabase.auth.models.User
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -316,6 +320,65 @@ public data class CustomProviderUpdateRequest(
 @Serializable
 public data class CustomProviderListResponse(
     public val providers: List<CustomProvider> = emptyList(),
+)
+
+@Serializable
+public data class SsoProviderSaml(
+    @SerialName("entity_id") public val entityId: String? = null,
+    @SerialName("metadata_url") public val metadataUrl: String? = null,
+    @SerialName("metadata_xml") public val metadataXml: String? = null,
+    @SerialName("attribute_mapping") public val attributeMapping: JsonObject? = null,
+    @SerialName("name_id_format") public val nameIdFormat: String? = null,
+)
+
+@Serializable
+public data class SsoDomain(
+    public val id: String? = null,
+    public val domain: String? = null,
+    @SerialName("created_at") public val createdAt: String? = null,
+    @SerialName("updated_at") public val updatedAt: String? = null,
+)
+
+@Serializable
+public data class SsoProvider(
+    public val id: String,
+    public val type: String? = null,
+    @SerialName("resource_id") public val resourceId: String? = null,
+    public val disabled: Boolean? = null,
+    public val saml: SsoProviderSaml? = null,
+    public val domains: List<SsoDomain> = emptyList(),
+    @SerialName("created_at") public val createdAt: String? = null,
+    @SerialName("updated_at") public val updatedAt: String? = null,
+)
+
+@Serializable
+public data class SsoProviderCreateRequest(
+    // The server requires `type` on the wire; force it even though it has a default.
+    @EncodeDefault(EncodeDefault.Mode.ALWAYS) public val type: String = "saml",
+    @SerialName("metadata_url") public val metadataUrl: String? = null,
+    @SerialName("metadata_xml") public val metadataXml: String? = null,
+    public val domains: List<String>? = null,
+    @SerialName("attribute_mapping") public val attributeMapping: JsonObject? = null,
+    @SerialName("name_id_format") public val nameIdFormat: String? = null,
+    @SerialName("resource_id") public val resourceId: String? = null,
+    public val disabled: Boolean? = null,
+)
+
+@Serializable
+public data class SsoProviderUpdateRequest(
+    @EncodeDefault(EncodeDefault.Mode.ALWAYS) public val type: String = "saml",
+    @SerialName("metadata_url") public val metadataUrl: String? = null,
+    @SerialName("metadata_xml") public val metadataXml: String? = null,
+    public val domains: List<String>? = null,
+    @SerialName("attribute_mapping") public val attributeMapping: JsonObject? = null,
+    @SerialName("name_id_format") public val nameIdFormat: String? = null,
+    @SerialName("resource_id") public val resourceId: String? = null,
+    public val disabled: Boolean? = null,
+)
+
+@Serializable
+public data class SsoProviderListResponse(
+    public val items: List<SsoProvider> = emptyList(),
 )
 
 @Serializable

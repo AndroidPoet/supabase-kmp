@@ -125,6 +125,45 @@ class StorageClientImplTest {
         }
 
     @Test
+    fun test_resumableUpload_withMetadata_includesBase64MetadataInUploadMetadataHeader() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = StorageClientImpl(client)
+            val data = ByteArray(4) { it.toByte() }
+            val meta = buildJsonObject { put("owner", "alice") }
+
+            val upload =
+                sut.createResumableUpload(
+                    bucket = "videos",
+                    path = "a/b.bin",
+                    data = data,
+                    chunkSize = 4,
+                    metadata = meta,
+                )
+            upload.await()
+
+            // The `metadata` entry must carry the same Base64-JSON wire form as the
+            // non-resumable `x-metadata` header, appended verbatim into the TUS pair.
+            val expected = "metadata ${Base64.encode(meta.toString().encodeToByteArray())}"
+            val header = client.resumableMetadata
+            assertTrue(header != null && header.split(",").contains(expected))
+        }
+
+    @Test
+    fun test_resumableUpload_withoutMetadata_omitsMetadataEntry() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = StorageClientImpl(client)
+            val data = ByteArray(4) { it.toByte() }
+
+            val upload = sut.createResumableUpload(bucket = "videos", path = "a/b.bin", data = data, chunkSize = 4)
+            upload.await()
+
+            val header = client.resumableMetadata
+            assertTrue(header != null && header.split(",").none { it.startsWith("metadata ") })
+        }
+
+    @Test
     fun test_listBuckets_includesQueryParams() =
         runTest {
             val client = FakeSupabaseClient()

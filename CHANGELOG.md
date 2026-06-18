@@ -61,6 +61,18 @@
 - **Core** — `SupabaseException` now carries an optional `cause`, so an underlying
   throwable that produced an error stays in the stack trace; `toException(cause)`
   threads it through.
+- **Auth admin** — SAML SSO identity-provider management: `createSsoProvider`,
+  `listSsoProvider`s, `getSsoProvider`, `updateSsoProvider`, `deleteSsoProvider`
+  (the `/admin/sso/providers` family).
+- **Functions** — `invoke`/`invokeWithBody` accept a `FunctionMethod`
+  (`GET`/`POST`/`PUT`/`PATCH`/`DELETE`) for REST-style Edge Functions that branch on
+  the request verb; the default stays `POST` and `GET` is sent without a body.
+- **Storage** — `createResumableUpload`/`uploadResumable` accept object `metadata`,
+  emitted as the TUS `Upload-Metadata` `metadata` entry with the same Base64-JSON
+  encoding as the non-resumable `x-metadata` path (previously metadata was dropped
+  on the resumable path).
+- **Postgrest** — `isDistinct` filter operator (`IS DISTINCT FROM`, a null-aware
+  inequality), completing the operator set.
 
 ### Fixed
 

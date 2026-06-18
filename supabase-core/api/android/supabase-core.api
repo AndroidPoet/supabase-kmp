@@ -58,6 +58,9 @@ public final class io/github/androidpoet/supabase/core/models/FilterBuilder {
 	public final fun inNumbers (Ljava/lang/String;Ljava/util/List;)V
 	public final fun is (Ljava/lang/String;Ljava/lang/Boolean;)V
 	public final fun is (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun isDistinct (Ljava/lang/String;Ljava/lang/Boolean;)V
+	public final fun isDistinct (Ljava/lang/String;Ljava/lang/Number;)V
+	public final fun isDistinct (Ljava/lang/String;Ljava/lang/String;)V
 	public final fun like (Ljava/lang/String;Ljava/lang/String;)V
 	public final fun likeAllOf (Ljava/lang/String;Ljava/util/List;)V
 	public final fun likeAnyOf (Ljava/lang/String;Ljava/util/List;)V

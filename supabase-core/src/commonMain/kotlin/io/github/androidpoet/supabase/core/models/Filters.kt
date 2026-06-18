@@ -251,6 +251,28 @@ public class FilterBuilder {
     }
 
     /**
+     * Matches rows where [column] is distinct from [value] — a null-aware inequality
+     * (SQL `IS DISTINCT FROM`): true when the values differ OR when [column] is null,
+     * unlike [neq] which is null-unknown. Emits `column=isdistinct.<value>`.
+     */
+    public fun isDistinct(column: String, value: String) {
+        params += column to "isdistinct.${encodeValue(value)}"
+    }
+
+    /** Null-aware inequality against the number [value] (SQL `IS DISTINCT FROM`). Emits `column=isdistinct.<value>`. */
+    public fun isDistinct(column: String, value: Number) {
+        params += column to "isdistinct.$value"
+    }
+
+    /**
+     * Null-aware inequality against `null`/`true`/`false` (SQL `IS DISTINCT FROM`);
+     * pass `null` to match rows where [column] is non-null. Emits `column=isdistinct.<value>`.
+     */
+    public fun isDistinct(column: String, value: Boolean?) {
+        params += column to "isdistinct.${value ?: "null"}"
+    }
+
+    /**
      * Matches rows where [column] equals one of [values] (SQL `IN`). Each member is
      * quoted/escaped if it contains a structural character. Emits `column=in.(a,b,c)`.
      */

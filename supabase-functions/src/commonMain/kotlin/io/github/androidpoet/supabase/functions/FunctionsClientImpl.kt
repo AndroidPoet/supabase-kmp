@@ -20,10 +20,17 @@ internal class FunctionsClientImpl(
     override suspend fun invoke(
         functionName: String,
         body: String?,
+        method: FunctionMethod,
         headers: Map<String, String>,
         region: FunctionRegion?,
     ): SupabaseResult<String> {
+        val endpoint = "${FunctionsPaths.BASE}/$functionName"
         val merged = buildHeaders(headers, region)
+        // GET requests carry no body, so a request body and its Content-Type are
+        // meaningless; dispatch a bodyless GET and ignore any supplied body.
+        if (method == FunctionMethod.GET) {
+            return client.get(endpoint = endpoint, headers = merged)
+        }
         // Edge Functions commonly branch on Content-Type (req.json() vs req.text()).
         // Default a JSON body's content type unless the caller set one explicitly.
         val withContentType =
@@ -32,29 +39,34 @@ internal class FunctionsClientImpl(
             } else {
                 merged
             }
-        return client.post(
-            endpoint = "${FunctionsPaths.BASE}/$functionName",
-            body = body,
-            headers = withContentType,
-        )
+        return when (method) {
+            FunctionMethod.POST -> client.post(endpoint = endpoint, body = body, headers = withContentType)
+            FunctionMethod.PUT -> client.put(endpoint = endpoint, body = body, headers = withContentType)
+            FunctionMethod.PATCH -> client.patch(endpoint = endpoint, body = body, headers = withContentType)
+            FunctionMethod.DELETE -> client.delete(endpoint = endpoint, body = body, headers = withContentType)
+            // GET is handled above before the body/Content-Type logic.
+            FunctionMethod.GET -> client.get(endpoint = endpoint, headers = merged)
+        }
     }
 
     override suspend fun invokeWithBody(
         functionName: String,
         body: ByteArray,
         contentType: String,
+        method: FunctionMethod,
         headers: Map<String, String>,
         region: FunctionRegion?,
     ): SupabaseResult<String> {
-        val merged = buildHeaders(headers, region)
-        // postRaw already prepends projectUrl (see SupabaseClientImpl.postRaw);
+        // postRaw/putRaw already prepend projectUrl (see SupabaseClientImpl);
         // pass a relative path or the project URL is duplicated.
-        return client.postRaw(
-            url = "${FunctionsPaths.BASE}/$functionName",
-            body = body,
-            contentType = contentType,
-            headers = merged,
-        )
+        val url = "${FunctionsPaths.BASE}/$functionName"
+        val merged = buildHeaders(headers, region)
+        return when (method) {
+            FunctionMethod.PUT -> client.putRaw(url = url, body = body, contentType = contentType, headers = merged)
+            // POST is the default; PATCH/DELETE/GET have no raw-byte verb, so fall
+            // back to a raw POST rather than dropping the binary body.
+            else -> client.postRaw(url = url, body = body, contentType = contentType, headers = merged)
+        }
     }
 
     override fun invokeSSE(

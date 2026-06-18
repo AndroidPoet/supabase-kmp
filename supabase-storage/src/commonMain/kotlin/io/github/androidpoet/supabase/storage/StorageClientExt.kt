@@ -1,6 +1,7 @@
 package io.github.androidpoet.supabase.storage
 
 import io.github.androidpoet.supabase.core.result.SupabaseResult
+import kotlinx.serialization.json.JsonObject
 
 /**
  * Appends a cache-busting query param ([name]=[nonce]) to a previously built
@@ -19,6 +20,10 @@ public fun withCacheNonce(url: String, nonce: String?, name: String = "cacheNonc
  * Uploads [data] in resumable (TUS) chunks and suspends until it completes.
  * One-shot convenience over [StorageClient.createResumableUpload]; for progress
  * or pause/resume, use that directly and observe [ResumableUpload.progress].
+ *
+ * When [metadata] is provided, it is Base64-encoded and sent as the `metadata`
+ * entry of the TUS `Upload-Metadata` header so the server stores it as the
+ * object's user metadata (the same encoding as the non-resumable upload).
  */
 public suspend fun StorageClient.uploadResumable(
     bucket: String,
@@ -28,6 +33,7 @@ public suspend fun StorageClient.uploadResumable(
     upsert: Boolean = false,
     cacheControl: Int? = null,
     chunkSize: Int = RESUMABLE_DEFAULT_CHUNK_SIZE,
+    metadata: JsonObject? = null,
 ): SupabaseResult<Unit> =
     createResumableUpload(
         bucket = bucket,
@@ -37,6 +43,7 @@ public suspend fun StorageClient.uploadResumable(
         upsert = upsert,
         cacheControl = cacheControl,
         chunkSize = chunkSize,
+        metadata = metadata,
     ).await()
 
 /**

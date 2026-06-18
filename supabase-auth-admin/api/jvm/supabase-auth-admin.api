@@ -1,16 +1,19 @@
 public abstract interface class io/github/androidpoet/supabase/auth/admin/AuthAdminClient {
 	public abstract fun createCustomProvider (Lio/github/androidpoet/supabase/auth/admin/models/CustomProviderCreateRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun createOAuthClient (Lio/github/androidpoet/supabase/auth/admin/models/OAuthClientCreateRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun createSsoProvider (Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderCreateRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun createUser (Lio/github/androidpoet/supabase/auth/admin/models/AdminUserAttributes;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun deleteCustomProvider (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun deleteFactor (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun deleteOAuthClient (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun deletePasskey (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun deleteSsoProvider (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun deleteUser (Ljava/lang/String;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun deleteUser$default (Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;Ljava/lang/String;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun generateLink (Lio/github/androidpoet/supabase/auth/admin/models/GenerateLinkRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getCustomProvider (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getOAuthClient (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getSsoProvider (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getUserById (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun inviteUserByEmail (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun inviteUserByEmail$default (Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
@@ -20,6 +23,7 @@ public abstract interface class io/github/androidpoet/supabase/auth/admin/AuthAd
 	public abstract fun listOAuthClients (Ljava/lang/Integer;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun listOAuthClients$default (Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;Ljava/lang/Integer;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun listPasskeys (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun listSsoProviders (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun listUsers (Ljava/lang/Integer;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun listUsers$default (Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;Ljava/lang/Integer;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun regenerateOAuthClientSecret (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -27,6 +31,7 @@ public abstract interface class io/github/androidpoet/supabase/auth/admin/AuthAd
 	public static synthetic fun signOut$default (Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/models/SignOutScope;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun updateCustomProvider (Ljava/lang/String;Lio/github/androidpoet/supabase/auth/admin/models/CustomProviderUpdateRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun updateOAuthClient (Ljava/lang/String;Lio/github/androidpoet/supabase/auth/admin/models/OAuthClientUpdateRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun updateSsoProvider (Ljava/lang/String;Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderUpdateRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun updateUserById (Ljava/lang/String;Lio/github/androidpoet/supabase/auth/admin/models/AdminUserAttributes;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
@@ -825,6 +830,235 @@ public final synthetic class io/github/androidpoet/supabase/auth/admin/models/Pa
 }
 
 public final class io/github/androidpoet/supabase/auth/admin/models/Passkey$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class io/github/androidpoet/supabase/auth/admin/models/SsoDomain {
+	public static final field Companion Lio/github/androidpoet/supabase/auth/admin/models/SsoDomain$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lio/github/androidpoet/supabase/auth/admin/models/SsoDomain;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/auth/admin/models/SsoDomain;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/auth/admin/models/SsoDomain;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCreatedAt ()Ljava/lang/String;
+	public final fun getDomain ()Ljava/lang/String;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getUpdatedAt ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class io/github/androidpoet/supabase/auth/admin/models/SsoDomain$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lio/github/androidpoet/supabase/auth/admin/models/SsoDomain$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/auth/admin/models/SsoDomain;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/auth/admin/models/SsoDomain;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class io/github/androidpoet/supabase/auth/admin/models/SsoDomain$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class io/github/androidpoet/supabase/auth/admin/models/SsoProvider {
+	public static final field Companion Lio/github/androidpoet/supabase/auth/admin/models/SsoProvider$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderSaml;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderSaml;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/Boolean;
+	public final fun component5 ()Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderSaml;
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderSaml;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;)Lio/github/androidpoet/supabase/auth/admin/models/SsoProvider;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/auth/admin/models/SsoProvider;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderSaml;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/auth/admin/models/SsoProvider;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCreatedAt ()Ljava/lang/String;
+	public final fun getDisabled ()Ljava/lang/Boolean;
+	public final fun getDomains ()Ljava/util/List;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getResourceId ()Ljava/lang/String;
+	public final fun getSaml ()Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderSaml;
+	public final fun getType ()Ljava/lang/String;
+	public final fun getUpdatedAt ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class io/github/androidpoet/supabase/auth/admin/models/SsoProvider$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lio/github/androidpoet/supabase/auth/admin/models/SsoProvider$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/auth/admin/models/SsoProvider;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/auth/admin/models/SsoProvider;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class io/github/androidpoet/supabase/auth/admin/models/SsoProvider$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class io/github/androidpoet/supabase/auth/admin/models/SsoProviderCreateRequest {
+	public static final field Companion Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderCreateRequest$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/util/List;
+	public final fun component5 ()Lkotlinx/serialization/json/JsonObject;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()Ljava/lang/Boolean;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;)Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderCreateRequest;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderCreateRequest;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;ILjava/lang/Object;)Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderCreateRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAttributeMapping ()Lkotlinx/serialization/json/JsonObject;
+	public final fun getDisabled ()Ljava/lang/Boolean;
+	public final fun getDomains ()Ljava/util/List;
+	public final fun getMetadataUrl ()Ljava/lang/String;
+	public final fun getMetadataXml ()Ljava/lang/String;
+	public final fun getNameIdFormat ()Ljava/lang/String;
+	public final fun getResourceId ()Ljava/lang/String;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class io/github/androidpoet/supabase/auth/admin/models/SsoProviderCreateRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderCreateRequest$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderCreateRequest;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderCreateRequest;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class io/github/androidpoet/supabase/auth/admin/models/SsoProviderCreateRequest$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class io/github/androidpoet/supabase/auth/admin/models/SsoProviderListResponse {
+	public static final field Companion Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderListResponse$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderListResponse;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderListResponse;Ljava/util/List;ILjava/lang/Object;)Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderListResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getItems ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class io/github/androidpoet/supabase/auth/admin/models/SsoProviderListResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderListResponse$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderListResponse;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderListResponse;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class io/github/androidpoet/supabase/auth/admin/models/SsoProviderListResponse$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class io/github/androidpoet/supabase/auth/admin/models/SsoProviderSaml {
+	public static final field Companion Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderSaml$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lkotlinx/serialization/json/JsonObject;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;)Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderSaml;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderSaml;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderSaml;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAttributeMapping ()Lkotlinx/serialization/json/JsonObject;
+	public final fun getEntityId ()Ljava/lang/String;
+	public final fun getMetadataUrl ()Ljava/lang/String;
+	public final fun getMetadataXml ()Ljava/lang/String;
+	public final fun getNameIdFormat ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class io/github/androidpoet/supabase/auth/admin/models/SsoProviderSaml$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderSaml$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderSaml;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderSaml;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class io/github/androidpoet/supabase/auth/admin/models/SsoProviderSaml$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class io/github/androidpoet/supabase/auth/admin/models/SsoProviderUpdateRequest {
+	public static final field Companion Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderUpdateRequest$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/util/List;
+	public final fun component5 ()Lkotlinx/serialization/json/JsonObject;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()Ljava/lang/Boolean;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;)Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderUpdateRequest;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderUpdateRequest;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;ILjava/lang/Object;)Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderUpdateRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAttributeMapping ()Lkotlinx/serialization/json/JsonObject;
+	public final fun getDisabled ()Ljava/lang/Boolean;
+	public final fun getDomains ()Ljava/util/List;
+	public final fun getMetadataUrl ()Ljava/lang/String;
+	public final fun getMetadataXml ()Ljava/lang/String;
+	public final fun getNameIdFormat ()Ljava/lang/String;
+	public final fun getResourceId ()Ljava/lang/String;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class io/github/androidpoet/supabase/auth/admin/models/SsoProviderUpdateRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderUpdateRequest$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderUpdateRequest;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderUpdateRequest;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class io/github/androidpoet/supabase/auth/admin/models/SsoProviderUpdateRequest$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 

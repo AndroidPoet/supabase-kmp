@@ -45,6 +45,13 @@ class FiltersTest {
         assertEquals(listOf("verified" to "is.true"), result)
     }
 
+    @Test
+    fun test_isDistinct_producesCorrectParam() {
+        assertEquals(listOf("status" to "isdistinct.active"), filters { isDistinct("status", "active") })
+        assertEquals(listOf("count" to "isdistinct.5"), filters { isDistinct("count", 5) })
+        assertEquals(listOf("deleted_at" to "isdistinct.null"), filters { isDistinct("deleted_at", null) })
+    }
+
     // --- Value quoting / injection safety -------------------------------------
     // PostgREST treats comma, parentheses and double-quote as structural in a
     // filter value; an unquoted value containing one would change the query's
