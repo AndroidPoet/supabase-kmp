@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://androidpoet.github.io/supabase-kmp/</loc><priority>1.0</priority></url>
+  <url><loc>https://androidpoet.github.io/supabase-kmp/getting-started</loc><priority>0.9</priority></url>
+  <url><loc>https://androidpoet.github.io/supabase-kmp/results-and-errors</loc><priority>0.8</priority></url>
+  <url><loc>https://androidpoet.github.io/supabase-kmp/configuration</loc><priority>0.7</priority></url>
+  <url><loc>https://androidpoet.github.io/supabase-kmp/auth</loc><priority>0.8</priority></url>
+  <url><loc>https://androidpoet.github.io/supabase-kmp/auth/sessions</loc><priority>0.7</priority></url>
+  <url><loc>https://androidpoet.github.io/supabase-kmp/auth/native-sign-in</loc><priority>0.7</priority></url>
+  <url><loc>https://androidpoet.github.io/supabase-kmp/database</loc><priority>0.8</priority></url>
+  <url><loc>https://androidpoet.github.io/supabase-kmp/storage</loc><priority>0.8</priority></url>
+  <url><loc>https://androidpoet.github.io/supabase-kmp/realtime</loc><priority>0.8</priority></url>
+  <url><loc>https://androidpoet.github.io/supabase-kmp/functions</loc><priority>0.8</priority></url>
+  <url><loc>https://androidpoet.github.io/supabase-kmp/platforms</loc><priority>0.7</priority></url>
+</urlset>

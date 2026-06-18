@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <rect width="1200" height="630" fill="#0B0F0D"/>
+  <rect width="1200" height="630" fill="url(#g)"/>
+  <defs>
+    <radialGradient id="g" cx="0.2" cy="0.15" r="1.1">
+      <stop offset="0" stop-color="#10271E"/>
+      <stop offset="1" stop-color="#0B0F0D"/>
+    </radialGradient>
+  </defs>
+  <g transform="translate(96,150) scale(4.2)">
+    <path d="M13.2 1.6 3.3 13.4c-.7.8-.1 2 .9 2h6.4l-1 7.4c-.1.9 1 1.4 1.6.7l9.9-11.8c.7-.8.1-2-.9-2h-6.4l1-7.4c.1-.9-1-1.4-1.6-.7Z" fill="#3ECF8E"/>
+  </g>
+  <text x="210" y="290" font-family="Helvetica, Arial, sans-serif" font-size="84" font-weight="700" fill="#FFFFFF">Supabase KMP</text>
+  <text x="210" y="360" font-family="Helvetica, Arial, sans-serif" font-size="40" font-weight="400" fill="#9DB2A8">A typed Kotlin Multiplatform client for Supabase</text>
+  <text x="210" y="430" font-family="Helvetica, Arial, sans-serif" font-size="32" font-weight="500" fill="#3ECF8E">Auth · Database · Storage · Realtime · Edge Functions</text>
+</svg>
