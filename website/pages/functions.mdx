@@ -6,14 +6,28 @@ import { Callout } from 'nextra/components'
 
 # Edge Functions
 
-`supabase-functions` invokes Supabase Edge Functions with typed request and
-response bodies.
+Edge Functions are small pieces of server-side code (written in TypeScript and run
+on Deno) that you deploy to Supabase and call by name. Reach for one whenever logic
+has to run on a trusted server you control rather than inside the app — calling a
+paid API with a secret key, sending email, or charging a card. "Edge" means each
+function runs in many regions close to your users, so calls stay fast.
+
+The `supabase-functions` module is the Kotlin side of that: it invokes a function
+by name, sends a request body, and parses the JSON it sends back into your own
+Kotlin types. You start, as always, by building a feature client from your
+`SupabaseClient`.
 
 ```kotlin
 val functions = createFunctionsClient(client)
 ```
 
 ## Typed invoke
+
+A *typed invoke* means you send and receive your own `@Serializable` data classes
+instead of hand-writing raw JSON strings. You describe the shape of the request
+and the response once, and the library handles the conversion both ways. The call
+returns a `SupabaseResult`, so you branch on success and failure exactly like
+every other call in the library — see [Results & Errors](/results-and-errors).
 
 ```kotlin
 @Serializable data class HelloRequest(val name: String)
@@ -30,6 +44,9 @@ result.onSuccess { println(it.message) }
 
 ## Variants
 
+There are a few flavours of invoke depending on what you send and what you want
+back. Pick the row that matches your case:
+
 | Method | Body | Returns |
 | --- | --- | --- |
 | `invokeTyped<Req, Resp>(functionName, body, …)` | `@Serializable Req` | `Resp` |
@@ -38,9 +55,16 @@ result.onSuccess { println(it.message) }
 | `invokeUnit(functionName, body?, …)` | optional | `Unit` (fire-and-forget) |
 | `invoke(functionName, body?, headers, region?)` | optional | raw `String` |
 
+A couple of those terms are worth unpacking. *Fire-and-forget* (`invokeUnit`) means
+you call the function but don't care about the response body — you only need to know
+it succeeded, as when triggering a background job. The plain `invoke` hands you the
+response as a raw `String`, which is useful when the function returns something that
+isn't JSON, or when you'd rather parse it yourself.
+
 ## Regions
 
-Pin a function to a region for latency-sensitive calls:
+By default Supabase picks a region for you. If a call is latency-sensitive you can
+*pin* it to a specific region so it always runs there:
 
 ```kotlin
 functions.invokeTyped<HelloResponse>(
@@ -54,5 +78,7 @@ functions.invokeTyped<HelloResponse>(
 
 <Callout type="info">
   Every invoke accepts a `headers: Map<String, String>` — handy for forwarding a
-  user's access token so the function runs under their RLS context.
+  user's access token so the function runs under their RLS context. *RLS context*
+  means the function executes as the signed-in user, so your Row Level Security
+  rules apply to whatever it reads or writes on their behalf.
 </Callout>

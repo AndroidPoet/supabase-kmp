@@ -6,11 +6,33 @@ import { Callout, Tabs } from 'nextra/components'
 
 # Realtime
 
-`supabase-realtime` speaks the Phoenix WebSocket protocol with automatic
-reconnection (exponential backoff), Postgres change streams, broadcast and
-presence. Everything is exposed both as a fluent builder **and** as `Flow`s.
+Realtime keeps a live WebSocket connection open between your app and Supabase so
+you hear about changes the *instant* they happen — no polling, no refresh button.
+A **WebSocket** is a persistent two-way connection: once it's open, the server can
+push messages to you whenever it wants, instead of you asking over and over.
+
+Three kinds of events travel over that connection:
+
+- **Postgres changes** — rows inserted, updated, or deleted in your database.
+- **Broadcast** — quick client-to-client messages that skip the database entirely
+  (great for ephemeral things like cursor positions).
+- **Presence** — who is currently online.
+
+You always work through a **channel**, which is like a chat room you join to
+receive a stream of events. You can mix all three kinds of events on a single
+channel.
+
+The `supabase-realtime` module speaks the Phoenix WebSocket protocol with
+automatic reconnection (**exponential backoff** = the wait between reconnect
+attempts grows after each failure, so a flaky network doesn't get hammered).
+Everything below is offered in two styles: a **fluent builder** (chain `.onX { }`
+calls, then `.subscribe()`) and **`Flow`s** (a `Flow` is a Kotlin stream of values
+you `collect`). Pick whichever reads better in your code — they do the same thing.
 
 ## Create a client
+
+Like every feature in the library, Realtime is built from your `SupabaseClient`.
+This gives you a `RealtimeClient` that manages the single shared connection.
 
 ```kotlin
 val realtime = createRealtimeClient(client)
@@ -25,6 +47,11 @@ public fun createRealtimeClient(
 
 ### `RealtimeConfig`
 
+The optional `config` controls how the connection behaves — mostly how it
+reconnects when the network drops and how often it sends a **heartbeat** (a
+periodic ping that keeps the connection alive and proves it's still healthy). The
+defaults are sensible; tune only what you need.
+
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
 | `autoReconnect` | `Boolean` | `true` | Reconnect automatically when the socket drops. |
@@ -36,6 +63,10 @@ public fun createRealtimeClient(
 | `connectionTimeoutMs` | `Long` | `10_000` | Connect timeout. |
 
 ## Connecting
+
+Call `connect()` once to open the WebSocket. Because the connection lives over
+time, you watch its `connectionState` — a `Flow` that emits a new value every time
+the status changes — so your UI can show "connecting", "reconnecting", and so on.
 
 ```kotlin
 realtime.connect()
@@ -55,13 +86,18 @@ realtime.connectionState.collect { state ->
 realtime.awaitConnected()
 ```
 
-The client also exposes `isConnected`, `isConnecting`, `isDisconnecting`, and a
-`setAuth(token)` method to update the access token on an open connection.
+If you'd rather just wait until the connection is ready before continuing,
+`awaitConnected()` suspends until the socket is up — handy at startup. The client
+also exposes `isConnected`, `isConnecting`, `isDisconnecting`, and a
+`setAuth(token)` method to update the access token on an already-open connection
+(useful after a user signs in or their session refreshes).
 
 ## Postgres changes
 
-Subscribe to row-level `INSERT` / `UPDATE` / `DELETE` events. Use the
-two-argument callback to receive the event type alongside the record.
+This is the headline feature: get notified the moment a row changes in your
+database. You join a channel, then register a callback for each event type
+(`INSERT` / `UPDATE` / `DELETE`) you care about. The callback receives the row
+that changed.
 
 ```kotlin
 val subscription = realtime.channel("todos")
@@ -85,7 +121,8 @@ public fun onPostgresChange(
 ```
 
 `PostgresChangeEvent` is one of `INSERT`, `UPDATE`, `DELETE`, `ALL`. The optional
-`filter` is a PostgREST-style predicate, e.g. `"id=eq.123"`.
+`filter` is a PostgREST-style predicate that narrows which rows you hear about,
+e.g. `"id=eq.123"` to watch a single row.
 
 <Callout type="info">
   Prefer streams? After `subscribe()` you can consume typed flows:
@@ -95,7 +132,10 @@ public fun onPostgresChange(
 
 ## Broadcast
 
-Low-latency client-to-client messages that don't touch the database.
+Broadcast sends low-latency messages straight from one connected client to the
+others, without writing anything to the database. Use it for fast, throwaway data
+— live cursors, typing indicators, reactions — where you don't need a permanent
+record.
 
 ```kotlin
 val sub = realtime.channel("room:lobby")
@@ -111,9 +151,17 @@ sub.broadcast(event = "cursor", payload = buildJsonObject {
 })
 ```
 
+`configureBroadcast` lets you opt out of receiving your own messages
+(`receiveOwnBroadcasts`) and ask the server to confirm delivery
+(`acknowledgeBroadcasts`). Then `onBroadcast` listens for a named event, and
+`broadcast` sends one.
+
 ## Presence
 
-Track who's online in a channel.
+Presence tracks who is currently joined to a channel and keeps that roster in sync
+across everyone. It's how you build "3 people online" or live avatar lists. Each
+client announces itself with `track`, and Presence handles cleaning up when someone
+disconnects.
 
 ```kotlin
 val sub = realtime.channel("room:lobby")
@@ -126,12 +174,16 @@ sub.track(buildJsonObject { put("name", "Ada") })
 sub.untrack()
 ```
 
-`PresenceState` is a `Map<String, JsonObject>` (presence key → data). For typed
-presence, use `sub.presenceDataFlow<MyPresence>()`.
+The `key` uniquely identifies this client in the room. `track` publishes your
+presence data to everyone; `untrack` removes it. `PresenceState` is a
+`Map<String, JsonObject>` (presence key → data). For typed presence, use
+`sub.presenceDataFlow<MyPresence>()`.
 
 ## Subscriptions & flows
 
-`subscribe()` returns a `RealtimeSubscription`:
+Every `subscribe()` call hands back a `RealtimeSubscription` — your handle to that
+one channel. From it you can send broadcasts, track presence, watch the
+subscription `status`, consume events as a `Flow`, and eventually unsubscribe.
 
 ```kotlin
 public interface RealtimeSubscription {
@@ -145,15 +197,19 @@ public interface RealtimeSubscription {
 }
 ```
 
-`asFlow()` emits a sealed `RealtimeEvent`: `PostgresInsert`, `PostgresUpdate`,
-`PostgresDelete`, `Broadcast`, `PresenceSync`, `PresenceJoin`, `PresenceLeave`,
-`SystemEvent`. Convenience flows are available for each
-(`broadcastFlow(event)`, `presenceJoinFlow()`, …) plus `awaitSubscribed()`.
+If you prefer the Flow style over callbacks, `asFlow()` gives you every event on
+the channel as a single stream of `RealtimeEvent` — a sealed type, so a `when`
+handles each case: `PostgresInsert`, `PostgresUpdate`, `PostgresDelete`,
+`Broadcast`, `PresenceSync`, `PresenceJoin`, `PresenceLeave`, `SystemEvent`.
+Convenience flows are available for each (`broadcastFlow(event)`,
+`presenceJoinFlow()`, …) plus `awaitSubscribed()` to suspend until the channel is
+live.
 
 ## One-liner helpers
 
-When you don't need the builder, `RealtimeClient` extensions wire a single
-listener for you:
+When you only need one listener and don't want the builder at all, these
+`RealtimeClient` extensions create the channel, register the listener, and
+subscribe in a single call.
 
 ```kotlin
 realtime.subscribeToPostgresChanges("todos", table = "todos") { record -> /* … */ }
@@ -162,6 +218,10 @@ realtime.subscribeToPresence("room:lobby") { state -> /* … */ }
 ```
 
 ## Teardown
+
+Realtime holds an open connection and live subscriptions, so clean up when you're
+done — unsubscribe from individual channels, then close down the client. Skipping
+this can leak the connection and keep your app awake in the background.
 
 ```kotlin
 subscription.unsubscribe()

@@ -6,7 +6,11 @@ import { Callout } from 'nextra/components'
 
 # Platforms
 
-Supabase KMP publishes for **13 Kotlin Multiplatform targets**. The core, auth,
+A "target" is a specific platform Kotlin can compile to — Android, iPhone,
+desktop JVM, the browser, and so on. The promise of Kotlin Multiplatform is that
+you write your Supabase logic once and it runs on all of them.
+
+Supabase KMP publishes for **16 Kotlin Multiplatform targets**. The core, auth,
 database, storage, realtime, and functions modules are available on every target
 below. The native sign-in modules are the only ones with a narrower reach (see
 the table).
@@ -46,7 +50,7 @@ val client = Supabase.create(url, key, engineFactory = myCustomEngine) { }
 
 | Module | Targets |
 | --- | --- |
-| `supabase-core`, `-auth`, `-database`, `-storage`, `-realtime`, `-functions` | all 13 |
+| `supabase-core`, `-auth`, `-database`, `-storage`, `-realtime`, `-functions` | all 16 |
 | `supabase-auth-google` | android, jvm, ios\*, macos\*, wasmJs |
 | `supabase-auth-apple` | apple targets (ios\*, macos\*, tvos\*, watchos\*) |
 

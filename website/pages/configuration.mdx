@@ -6,10 +6,14 @@ import { Callout } from 'nextra/components'
 
 # Configuration
 
-Every client is created from `Supabase.create`. The trailing `configure { }`
-lambda is a `SupabaseConfigBuilder` — it tunes logging, retries, custom headers,
-and observability hooks. All options have sensible defaults, so you only set what
-you need.
+When you create a client you can hand it a few settings — how chatty its logs
+are, how it retries failed requests, extra headers to send, and hooks for
+tracing. You set these in the optional `{ }` block at the end of
+`Supabase.create`. The good news: everything has a sensible default, so a brand-new
+app can ignore this page entirely and come back when it needs to tune something.
+
+The trailing `{ }` lambda is a `SupabaseConfigBuilder` — it tunes logging,
+retries, custom headers, and observability hooks. You only set what you need.
 
 ```kotlin
 val client = Supabase.create(

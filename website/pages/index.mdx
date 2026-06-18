@@ -2,10 +2,19 @@
 title: Kotlin Multiplatform client for Supabase
 ---
 
-import { Cards } from 'nextra/components'
+import { Cards, Callout } from 'nextra/components'
 import { Hero } from '../components/Hero'
 
 <Hero />
+
+## What is this?
+
+[Supabase](https://supabase.com) is a hosted backend — a database, user
+accounts, file storage and live updates — that your app talks to over the
+internet. **Supabase KMP** is the Kotlin library that does that talking for you.
+
+Instead of hand-writing HTTP requests, parsing JSON and worrying about expired
+logins, you call normal Kotlin functions:
 
 ```kotlin
 val client = Supabase.create(
@@ -17,6 +26,15 @@ val auth = createAuthClient(client)
 val session = auth.signInWithEmail("user@example.com", "secure-password")
 ```
 
+Because it's **Kotlin Multiplatform**, you write that code once and run it on
+Android, iPhone, desktop, the web, and more — the same logic, every platform.
+
+<Callout type="info">
+  New to Supabase itself? Create a free project at
+  [supabase.com](https://supabase.com), then copy your **Project URL** and
+  **anon key** from *Project Settings → API*. That's everything you need to start.
+</Callout>
+
 ## Why Supabase KMP
 
 - **Typed end to end** — a `SupabaseResult` monad, value-class IDs and a PostgREST filter DSL. No stringly-typed surprises.
@@ -26,10 +44,16 @@ val session = auth.signInWithEmail("user@example.com", "secure-password")
 - **Built for production** — configurable retry with exponential backoff, a `Network` error category for offline UI, and `suspend` observability hooks for tracing and metrics.
 - **Bring-your-own everything** — pluggable session storage, HTTP engine and crypto. Nothing heavy is bundled behind your back.
 
-## Explore
+## Start here
 
 <Cards>
-  <Cards.Card title="Getting Started" href="/getting-started" arrow />
+  <Cards.Card title="Getting Started — your first app" href="/getting-started" arrow />
+  <Cards.Card title="Results & Errors — the one idea to learn first" href="/results-and-errors" arrow />
+</Cards>
+
+## Explore the features
+
+<Cards>
   <Cards.Card title="Authentication" href="/auth" arrow />
   <Cards.Card title="Database" href="/database" arrow />
   <Cards.Card title="Storage" href="/storage" arrow />

@@ -6,14 +6,29 @@ import { Callout } from 'nextra/components'
 
 # Storage
 
-`supabase-storage` covers buckets, file CRUD, signed URLs, and on-the-fly image
-transforms.
+Supabase Storage keeps your files — images, videos, PDFs, anything — in named
+containers called **buckets**. Think of a bucket as a top-level folder: a
+**public** bucket is readable by anyone who has the URL (good for avatars or
+product photos), while a **private** bucket hands out files only through a
+temporary, signed link. The `supabase-storage` module lets you create buckets,
+upload and download files, list them, and generate those shareable links — plus
+resize images on the fly.
+
+Like everywhere else in the library, each call returns a `SupabaseResult` you
+handle with `onSuccess` / `onFailure` — see [Results & Errors](/results-and-errors)
+if that's new. Start by building a storage client from your `SupabaseClient`:
 
 ```kotlin
 val storage = createStorageClient(client)
 ```
 
 ## Buckets
+
+A bucket is the container your files live in, and you create it once before
+uploading anything. Setting `public = true` makes its files readable by URL with
+no expiry; `public = false` keeps them private (you'll hand out signed links
+instead). `emptyBucket` clears the files but keeps the bucket; `deleteBucket`
+removes the bucket itself.
 
 ```kotlin
 storage.createBucket(id = "avatars", public = true)
@@ -25,6 +40,13 @@ storage.deleteBucket("avatars")
 ```
 
 ## Upload & download
+
+To store a file you give it a `path` inside the bucket (the part after the
+bucket name, like a sub-folder plus filename) and the raw `data` as a
+`ByteArray`. The `contentType` tells browsers how to render it. `upsert = false`
+means "fail if a file already exists at this path"; set it to `true` to
+overwrite instead (**upsert** = update-or-insert). Downloading does the reverse:
+hand it the same bucket and path and get the bytes back.
 
 ```kotlin
 storage.upload(
@@ -38,6 +60,8 @@ storage.upload(
 val bytes: SupabaseResult<ByteArray> = storage.download("avatars", "user-123/photo.png")
 ```
 
+The full set of file operations:
+
 | Method | Purpose |
 | --- | --- |
 | `upload(bucket, path, data, contentType, upsert, cacheControl?)` | create a file |
@@ -49,9 +73,14 @@ val bytes: SupabaseResult<ByteArray> = storage.download("avatars", "user-123/pho
 
 ## Resumable uploads
 
-For large files or flaky networks, upload in chunks over the **TUS** protocol. The
-server tracks the offset, so an interrupted transfer resumes from where it stopped
-instead of restarting.
+A plain `upload` sends the whole file in one request, so a dropped connection
+means starting over. For large files or flaky networks, use a **resumable**
+(also called **TUS**, after the protocol it speaks) upload instead: the file goes
+up in chunks and the server remembers how far it got, so an interrupted transfer
+picks up where it stopped rather than restarting.
+
+The simplest form suspends until the upload finishes — same idea as `upload`,
+just chunked and resumable under the hood:
 
 ```kotlin
 // One-shot — suspends until done:
@@ -63,8 +92,10 @@ storage.uploadResumable(
 )
 ```
 
-For progress and pause/resume, create the handle directly and observe its
-`progress` flow:
+If you want a progress bar or pause/resume control, create the upload **handle**
+yourself instead. The handle exposes a `progress` flow you can collect (a value
+from `0f` to `1f`), and you start the transfer by launching `await()` in a
+coroutine:
 
 ```kotlin
 val upload = storage.createResumableUpload(
@@ -86,11 +117,16 @@ val job = scope.launch { upload.await() }   // runs to completion
   pauses the upload, leaving uploaded bytes on the server. Persist
   `upload.uploadUrl`; later, recreate the handle with `createResumableUpload(…,
   uploadUrl = saved)` and call `await()` again — it `HEAD`s the server for the
-  current offset and continues. Chunks default to 6 MiB
-  (`RESUMABLE_DEFAULT_CHUNK_SIZE`), the size Supabase requires.
+  current offset and continues. Chunks default to 6 MiB (a *mebibyte* is
+  1,024 KiB ≈ 6.3 MB) (`RESUMABLE_DEFAULT_CHUNK_SIZE`), the size Supabase
+  requires.
 </Callout>
 
 ## Listing
+
+To browse what's in a bucket, `list` returns the files under a `prefix` (think of
+it as the folder path to look inside). Use `limit` and `offset` to page through
+large buckets, and `sortBy` / `sortOrder` to control the order.
 
 ```kotlin
 val files: SupabaseResult<List<FileObject>> = storage.list(
@@ -104,6 +140,14 @@ val files: SupabaseResult<List<FileObject>> = storage.list(
 ```
 
 ## URLs
+
+How you share a file depends on its bucket. For a **public** bucket,
+`getPublicUrl` returns a permanent link anyone can open — it never expires. For a
+**private** bucket, you instead mint a **signed URL**: a temporary link that
+stops working after `expiresIn` seconds, so you can grant access without making
+the file public. There's a batch version for many files at once, and a pre-signed
+*upload* token so a browser or untrusted client can upload directly without your
+keys.
 
 ```kotlin
 // Public bucket — no expiry:
@@ -127,8 +171,10 @@ storage.uploadToSignedUrl("avatars", "user-123/new.png", token = token.token, da
 
 ## Image transforms
 
-`getPublicUrl`, `createSignedUrl`, and `download` accept an
-`ImageTransformOptions` to resize/convert on the fly:
+You don't need to store multiple sizes of an image. Pass `ImageTransformOptions`
+to `getPublicUrl`, `createSignedUrl`, or `download` and Supabase resizes and
+re-encodes the file on the fly — so the same original can serve a 200×200
+thumbnail and a full-size view from one stored file:
 
 ```kotlin
 storage.getPublicUrl(

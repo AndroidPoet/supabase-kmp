@@ -6,9 +6,22 @@ import { Callout } from 'nextra/components'
 
 # Database — PostgREST
 
-`supabase-database` wraps PostgREST with a typed CRUD surface, a Kotlin filter
-DSL, and RPC. Every method has a **typed** variant (deserialize into your
-`@Serializable` model) and a **raw** variant (returns the JSON string).
+Supabase exposes your Postgres database over HTTP through a layer called
+**PostgREST** — it turns each table into a web endpoint you can read from and
+write to, with your database's permission rules (**RLS**, Row Level Security)
+enforced on the server so each user only sees what they're allowed to. The
+`supabase-database` module gives you a typed Kotlin way to drive that: think of
+it as querying your tables in Kotlin instead of writing SQL or hand-building HTTP
+requests.
+
+It offers a typed CRUD surface (create, read, update, delete), a Kotlin filter
+DSL for building `WHERE` conditions, and RPC for calling database functions.
+Every method comes in two flavours: a **typed** variant that deserializes the
+response into your `@Serializable` model, and a **raw** variant that hands you
+back the JSON string for when you need full control.
+
+Start by building a database client from your `SupabaseClient`, and define a
+model that matches the shape of a row in your table:
 
 ```kotlin
 val database = createDatabaseClient(client)
@@ -17,7 +30,15 @@ val database = createDatabaseClient(client)
 data class Todo(val id: String, val title: String, val done: Boolean)
 ```
 
+Every call returns a `SupabaseResult` — see [Results & Errors](/results-and-errors)
+for how to handle the success and failure branches.
+
 ## Select
+
+Reading rows is the most common thing you'll do. `selectTyped<Todo>` fetches rows
+from a table and deserializes them into a list of your model. The trailing `{ }`
+block is where you narrow the results down — filter, sort, and limit — which we
+cover in detail under [Filter DSL](#filter-dsl) below.
 
 ```kotlin
 val todos: SupabaseResult<List<Todo>> = database.selectTyped<Todo>(table = "todos") {
@@ -26,6 +47,8 @@ val todos: SupabaseResult<List<Todo>> = database.selectTyped<Todo>(table = "todo
     limit(25)
 }
 ```
+
+Pick the read method that matches how many rows you expect back:
 
 | Method | Returns | Use |
 | --- | --- | --- |
@@ -41,6 +64,12 @@ relations like `"*,author(*)"`. All read methods accept an optional `schema`, an
 `geojson = true` returns PostGIS rows as a GeoJSON `FeatureCollection`.
 
 ## Insert, Update, Upsert, Delete
+
+These are the writes. `insert` adds new rows, `update` changes existing ones,
+`delete` removes them, and **upsert** means "insert-or-update" — if a row with the
+same key already exists it's updated instead of creating a duplicate (handy for
+syncing, since running the same upsert twice is safe — it's *idempotent*). Note
+that `update` and `delete` take a filter block to choose which rows they affect.
 
 ```kotlin
 database.insertTyped(table = "todos", value = Todo("1", "Ship it", false))
@@ -63,10 +92,16 @@ Mutations accept `returning` (`REPRESENTATION` / `MINIMAL`), `count`, and
 
 ## Filter DSL
 
-All operators run inside the `filters: FilterBuilder.() -> Unit` lambda. Multiple
-calls combine with **AND**.
+This is how you build the `WHERE` part of a query in Kotlin instead of SQL. All
+operators run inside the `filters: FilterBuilder.() -> Unit` lambda — the `{ }`
+block you saw on `selectTyped`, `update`, and `delete`. The mental model: each
+call you add inside the block is another condition, and multiple calls combine
+with **AND** (every condition must match). Use the explicit `or { }` / `and { }`
+helpers when you need different grouping.
 
 ### Comparison
+
+The everyday operators — equals, not-equals, and the greater/less-than family:
 
 ```kotlin
 eq("status", "active");  neq("role", "admin")
@@ -76,6 +111,10 @@ gt("age", 18);  gte("age", 21);  lt("score", 100);  lte("score", 99)
 (Each comparison accepts a `String` or a `Number`.)
 
 ### Pattern matching & membership
+
+`like`/`ilike` do SQL text matching with `%` wildcards (`ilike` is the
+case-insensitive version), and `` `in` `` checks whether a column's value is one
+of a list:
 
 ```kotlin
 like("name", "%ada%");       ilike("name", "%ADA%")
@@ -87,6 +126,9 @@ match(mapOf("org" to "1", "role" to "member"))
 
 ### Arrays, ranges & full-text
 
+For Postgres-specific column types — array columns, range columns, and full-text
+search over text:
+
 ```kotlin
 contains("tags", "{kotlin,kmp}");  containedBy("tags", "{a,b,c}");  overlaps("tags", "{x,y}")
 rangeGt("period", "[2024-01-01,2024-02-01)")  // also rangeGte/Lt/Lte/Adj + strictlyLeft/Right…
@@ -94,6 +136,10 @@ textSearch("body", "kotlin & multiplatform", type = TextSearchType.Websearch)
 ```
 
 ### Logical & raw
+
+Group conditions explicitly with `or` / `and`, negate a group with `not`, or drop
+down to `filter` to use any PostgREST operator by name when the DSL doesn't have a
+dedicated helper:
 
 ```kotlin
 or { eq("status", "active"); eq("status", "pending") }
@@ -104,6 +150,9 @@ filter("price", "gte", "10")   // arbitrary PostgREST operator
 
 ### Ordering & pagination
 
+Sort the results and fetch them in pages — useful for infinite-scroll lists or
+keeping responses small:
+
 ```kotlin
 order("created_at", ascending = false, nullsFirst = false)
 limit(25)
@@ -111,6 +160,13 @@ range(0, 24)   // rows 0..24 inclusive (offset pagination)
 ```
 
 ## RPC (stored functions)
+
+**RPC** ("remote procedure call") means calling a database function by name —
+a stored function you've written in your database that runs custom SQL or logic
+server-side. Use it when a single CRUD call isn't enough: aggregations, multi-step
+transactions, or anything you'd rather keep in the database. Functions that change
+data are called with `POST` and a JSON body; read-only functions can be called
+with `GET`.
 
 ```kotlin
 @Serializable data class StatsReq(val user_id: String)
@@ -129,6 +185,9 @@ RPC mirrors the read API: `rpcTyped`, `rpcListTyped`, `rpcSingleTyped`,
 `rpcGet*` GET form. Pass a `@Serializable` request object or a raw JSON string.
 
 ## Options reference
+
+The enums you'll pass to the options mentioned above (`count`, `returning`,
+`upsertResolution`, and friends), with their accepted values:
 
 | Enum | Values |
 | --- | --- |

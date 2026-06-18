@@ -1,8 +1,8 @@
 # Contributing to Supabase KMP
 
 Thanks for your interest in improving Supabase KMP! This page covers the
-mechanics; see [docs/guides/contributing.md](docs/guides/contributing.md) for
-the deeper API-design conventions.
+mechanics. The user-facing docs live in [`website/`](website/) (Nextra) and are
+published to <https://androidpoet.github.io/supabase-kmp/>.
 
 ## Prerequisites
 

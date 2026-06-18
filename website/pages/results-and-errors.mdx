@@ -6,15 +6,30 @@ import { Callout } from 'nextra/components'
 
 # Results & Errors
 
-Every fallible call in Supabase KMP returns a `SupabaseResult<T>` — a sealed type
-with exactly two cases. There are no thrown exceptions to catch on the happy path.
+This is the one idea to learn before anything else — once it clicks, every other
+page in these docs reads the same way.
+
+## The big idea
+
+Anything that talks to the network can fail: the server might be down, the user
+might be offline, a row might not exist. Most libraries handle this by *throwing
+an exception* — an invisible trapdoor that crashes your app unless you remember to
+wrap the call in `try`/`catch`.
+
+Supabase KMP does it differently. Every call that can fail hands you back a little
+box called a **`SupabaseResult`**. The box contains *either* your value *or* an
+error — and the compiler makes you open it before you can use what's inside. You
+can't forget to handle the failure, because the box won't let you skip it.
 
 ```kotlin
 public sealed interface SupabaseResult<out T> {
-    public data class Success<out T>(val value: T) : SupabaseResult<T>
-    public data class Failure(val error: SupabaseError) : SupabaseResult<Nothing>
+    public data class Success<out T>(val value: T) : SupabaseResult<T>   // got the value
+    public data class Failure(val error: SupabaseError) : SupabaseResult<Nothing> // got an error
 }
 ```
+
+So a call never throws on the happy path — it returns one of these two cases, and
+you decide what to do with each.
 
 ## Consuming a result
 
