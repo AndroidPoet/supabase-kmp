@@ -42,7 +42,7 @@ cover in detail under [Filter DSL](#filter-dsl) below.
 
 ```kotlin
 val todos: SupabaseResult<List<Todo>> = database.selectTyped<Todo>(table = "todos") {
-    eq("done", "false")
+    eq("done", false)
     order("created_at", ascending = false)
     limit(25)
 }
@@ -60,8 +60,9 @@ Pick the read method that matches how many rows you expect back:
 | `select(table, …) { … }` | `String` (raw JSON) | escape hatch |
 
 `columns` accepts PostgREST projection syntax — `"*"`, `"id,title"`, or embedded
-relations like `"*,author(*)"`. All read methods accept an optional `schema`, and
-`geojson = true` returns PostGIS rows as a GeoJSON `FeatureCollection`.
+relations like `"*,author(*)"`. The typed read helpers all accept an optional
+`schema`. For PostGIS rows as a GeoJSON `FeatureCollection`, use `selectGeoJson(…)`
+(or the raw `select(…, geojson = true)`).
 
 ## Insert, Update, Upsert, Delete
 
@@ -72,6 +73,10 @@ syncing, since running the same upsert twice is safe — it's *idempotent*). Not
 that `update` and `delete` take a filter block to choose which rows they affect.
 
 ```kotlin
+// A partial model for updates — only the columns you want to change:
+@Serializable
+data class TodoPatch(val done: Boolean)
+
 database.insertTyped(table = "todos", value = Todo("1", "Ship it", false))
 database.insertTypedMany(table = "todos", values = listOf(/* … */))
 
@@ -84,11 +89,15 @@ database.upsertTyped(table = "todos", value = todo, onConflict = "id")
 database.deleteTyped<Todo>(table = "todos") { eq("id", "1") }
 ```
 
-Each has `*Typed`, `*TypedMany`, `*Unit` (discard the response body), and raw
-string forms. Insert/upsert accept `upsert`, `upsertResolution`
+Writes come in typed, raw-string, and `*Unit` (discard the response body) forms;
+insert and upsert additionally have `*TypedMany` for batch inserts. `insert`
+accepts `upsert`; both insert and upsert accept `upsertResolution`
 (`MERGE_DUPLICATES` / `IGNORE_DUPLICATES`), `onConflict`, and `defaultToNull`.
-Mutations accept `returning` (`REPRESENTATION` / `MINIMAL`), `count`, and
-`maxAffected`.
+
+The tuning options `returning` (`REPRESENTATION` / `MINIMAL`), `count`, and
+`maxAffected` live on the **raw** interface methods (`insert` / `update` /
+`delete` / `rpc`) — the typed helpers expose a reduced subset, so drop down to
+the raw form when you need them.
 
 ## Filter DSL
 
@@ -108,7 +117,8 @@ eq("status", "active");  neq("role", "admin")
 gt("age", 18);  gte("age", 21);  lt("score", 100);  lte("score", 99)
 ```
 
-(Each comparison accepts a `String` or a `Number`.)
+(Each comparison accepts a `String`, a `Number`, or a `Boolean` — so for a
+boolean column write `eq("done", false)`, not `eq("done", "false")`.)
 
 ### Pattern matching & membership
 
@@ -119,7 +129,7 @@ of a list:
 ```kotlin
 like("name", "%ada%");       ilike("name", "%ADA%")
 likeAllOf("tag", listOf("a", "b"));  ilikeAnyOf("tag", listOf("x", "y"))
-`is`("deleted_at", "null")           // IS NULL
+`is`("deleted_at", null)             // IS NULL
 `in`("status", listOf("active", "pending"))
 match(mapOf("org" to "1", "role" to "member"))
 ```
@@ -198,6 +208,7 @@ The enums you'll pass to the options mentioned above (`count`, `returning`,
 | `ExplainFormat` | `TEXT`, `JSON` |
 
 <Callout type="info">
-  Reads default to `retry = true` (transient failures are retried). Every method
-  accepts a `headers: Map<String, String>` for per-request overrides.
+  Reads default to `retry = true` (transient failures are retried). The raw
+  interface methods (`select` / `insert` / `update` / `delete` / `rpc` /
+  `rpcGet`) accept a `headers: Map<String, String>` for per-request overrides.
 </Callout>

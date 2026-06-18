@@ -61,13 +61,16 @@ result
 | `mapError { error -> … }` | rewrite the error |
 | `flatMapError { error -> SupabaseResult<T> }` | recover via another fallible call |
 | `recover { error -> value }` | turn a failure into a success |
-| `validate(lazyError) { value -> Boolean }` | fail a success that breaks an invariant |
+| `validate(predicate, lazyError)` | fail a success that breaks an invariant (predicate first) |
 | `zip(other) { a, b -> … }` | combine two results, short-circuiting on the first failure |
 
 ```kotlin
 // Guard a success value, then combine two independent reads:
 val profile = database.selectSingleTyped<Profile>(table = "profiles") { eq("id", uid) }
-    .validate(lazyError = { SupabaseError("Profile is incomplete") }) { it.isComplete }
+    .validate(
+        predicate = { it.isComplete },
+        lazyError = { SupabaseError("Profile is incomplete") },
+    )
 
 val dashboard = profile.zip(loadSettings()) { p, settings -> Dashboard(p, settings) }
 ```

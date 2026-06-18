@@ -62,6 +62,9 @@ val sessionManager = createSessionManager(
 )
 
 // On launch: load the stored session and refresh it in one call.
+// Note: restoreSession() always performs a token refresh (rotating the refresh
+// token), so it spends one network round-trip rather than reusing a still-valid
+// stored access token as-is.
 sessionManager.restoreSession()
 ```
 

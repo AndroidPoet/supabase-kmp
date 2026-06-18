@@ -31,7 +31,7 @@ instead). `emptyBucket` clears the files but keeps the bucket; `deleteBucket`
 removes the bucket itself.
 
 ```kotlin
-storage.createBucket(id = "avatars", public = true)
+storage.createBucket(id = "avatars", name = "avatars", public = true)
 storage.getBucket("avatars")
 storage.listBuckets()
 storage.updateBucket(id = "avatars", public = false)
@@ -46,7 +46,7 @@ bucket name, like a sub-folder plus filename) and the raw `data` as a
 `ByteArray`. The `contentType` tells browsers how to render it. `upsert = false`
 means "fail if a file already exists at this path"; set it to `true` to
 overwrite instead (**upsert** = update-or-insert). Downloading does the reverse:
-hand it the same bucket and path and get the bytes back.
+hand it the same bucket and path and get the file contents back.
 
 ```kotlin
 storage.upload(
@@ -57,7 +57,7 @@ storage.upload(
     upsert = false,
 )
 
-val bytes: SupabaseResult<ByteArray> = storage.download("avatars", "user-123/photo.png")
+val contents: SupabaseResult<String> = storage.download("avatars", "user-123/photo.png")
 ```
 
 The full set of file operations:
@@ -66,8 +66,8 @@ The full set of file operations:
 | --- | --- |
 | `upload(bucket, path, data, contentType, upsert, cacheControl?)` | create a file |
 | `update(bucket, path, data, …)` | overwrite an existing file |
-| `download(bucket, path)` | fetch bytes |
-| `move(bucket, from, to)` / `copy(bucket, from, to)` | relocate / duplicate |
+| `download(bucket, path)` | fetch the file contents |
+| `move(bucket, fromPath, toPath)` / `copy(bucket, fromPath, toPath)` | relocate / duplicate |
 | `remove(bucket, paths)` / `removeWithResult(…)` | delete one or many |
 | `info(bucket, path)` / `exists(bucket, path)` | metadata / existence |
 
@@ -95,7 +95,9 @@ storage.uploadResumable(
 If you want a progress bar or pause/resume control, create the upload **handle**
 yourself instead. The handle exposes a `progress` flow you can collect (a value
 from `0f` to `1f`), and you start the transfer by launching `await()` in a
-coroutine:
+coroutine. `scope` below is any `CoroutineScope` you own (a `viewModelScope`, a
+screen-scoped scope, etc.); `progress.collect { }` and `await()` are `suspend`,
+so they must run inside one:
 
 ```kotlin
 val upload = storage.createResumableUpload(
@@ -117,9 +119,9 @@ val job = scope.launch { upload.await() }   // runs to completion
   pauses the upload, leaving uploaded bytes on the server. Persist
   `upload.uploadUrl`; later, recreate the handle with `createResumableUpload(…,
   uploadUrl = saved)` and call `await()` again — it `HEAD`s the server for the
-  current offset and continues. Chunks default to 6 MiB (a *mebibyte* is
-  1,024 KiB ≈ 6.3 MB) (`RESUMABLE_DEFAULT_CHUNK_SIZE`), the size Supabase
-  requires.
+  current offset and continues. Chunks default to 6 MiB
+  (`RESUMABLE_DEFAULT_CHUNK_SIZE` = 6 × 1024 × 1024 bytes), the size Supabase's
+  resumable endpoint requires.
 </Callout>
 
 ## Listing
@@ -165,16 +167,17 @@ val signed = storage.createSignedUrl(
 storage.createSignedUrls("avatars", listOf("a.png", "b.png"), expiresIn = 3600)
 
 // Browser-side uploads (pre-signed token):
-val token = storage.createUploadSignedUrl("avatars", "user-123/new.png")
-storage.uploadToSignedUrl("avatars", "user-123/new.png", token = token.token, data = bytes)
+storage.createUploadSignedUrlWithPath("avatars", "user-123/new.png").onSuccess { signed ->
+    storage.uploadToSignedUrl("avatars", "user-123/new.png", token = signed.token, data = bytes)
+}
 ```
 
 ## Image transforms
 
 You don't need to store multiple sizes of an image. Pass `ImageTransformOptions`
-to `getPublicUrl`, `createSignedUrl`, or `download` and Supabase resizes and
-re-encodes the file on the fly — so the same original can serve a 200×200
-thumbnail and a full-size view from one stored file:
+to `getPublicUrl` or `createSignedUrl` and Supabase resizes and re-encodes the
+file on the fly — so the same original can serve a 200×200 thumbnail and a
+full-size view from one stored file:
 
 ```kotlin
 storage.getPublicUrl(

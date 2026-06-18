@@ -32,7 +32,7 @@ val client = Supabase.create(
 | Option | Type | Default | Purpose |
 | --- | --- | --- | --- |
 | `logging` | `Boolean` | `false` | Enable HTTP wire logging. |
-| `logLevel` | `LogLevel` | `NONE` | Ktor verbosity: `NONE`, `INFO`, `HEADERS`, `BODY`, `ALL`. |
+| `logLevel` | `LogLevel` | `NONE` | Ktor verbosity (`io.ktor.client.plugins.logging.LogLevel`): `NONE`, `INFO`, `HEADERS`, `BODY`, `ALL`. |
 | `headers` | `MutableMap` | empty | Extra headers sent on every request. |
 | `retry` | `RetryConfig` | `RetryConfig.Default` | Backoff policy for transient failures. |
 | `logger` | `SupabaseLogger?` | `null` | Route wire logs into your logging framework. |

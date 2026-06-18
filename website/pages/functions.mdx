@@ -36,7 +36,7 @@ every other call in the library — see [Results & Errors](/results-and-errors).
 val result: SupabaseResult<HelloResponse> =
     functions.invokeTyped<HelloRequest, HelloResponse>(
         functionName = "hello-world",
-        body = HelloRequest(name = "Ada"),
+        request = HelloRequest(name = "Ada"),
     )
 
 result.onSuccess { println(it.message) }
@@ -49,11 +49,11 @@ back. Pick the row that matches your case:
 
 | Method | Body | Returns |
 | --- | --- | --- |
-| `invokeTyped<Req, Resp>(functionName, body, …)` | `@Serializable Req` | `Resp` |
-| `invokeTyped<Resp>(functionName, …)` | none | `Resp` |
-| `invokeWithBodyTyped<Resp>(functionName, body, …)` | raw JSON `String` | `Resp` |
-| `invokeUnit(functionName, body?, …)` | optional | `Unit` (fire-and-forget) |
-| `invoke(functionName, body?, headers, region?)` | optional | raw `String` |
+| `invokeTyped<Req, Resp>(functionName, request, …)` | `@Serializable Req` | `Resp` |
+| `invokeTyped<Resp>(functionName, body?, …)` | JSON `String?` | `Resp` |
+| `invokeWithBodyTyped<Resp>(functionName, body, contentType, …)` | `ByteArray` (raw bytes) | `Resp` |
+| `invokeUnit(functionName, body?, …)` | JSON `String?` | `Unit` (fire-and-forget) |
+| `invoke(functionName, body?, headers, region?)` | JSON `String?` | raw `String` |
 
 A couple of those terms are worth unpacking. *Fire-and-forget* (`invokeUnit`) means
 you call the function but don't care about the response body — you only need to know
@@ -73,8 +73,10 @@ functions.invokeTyped<HelloResponse>(
 )
 ```
 
-`FunctionRegion` values: `US_EAST_1`, `US_WEST_1`, `EU_WEST_1`,
-`AP_SOUTHEAST_1`, `AP_NORTHEAST_1`.
+The `FunctionRegion` enum currently exposes these five values: `US_EAST_1`,
+`US_WEST_1`, `EU_WEST_1`, `AP_SOUTHEAST_1`, `AP_NORTHEAST_1`. (Supabase serves
+more edge regions than this; if you need one that isn't listed, leave `region`
+unset and let Supabase route the call.)
 
 <Callout type="info">
   Every invoke accepts a `headers: Map<String, String>` — handy for forwarding a

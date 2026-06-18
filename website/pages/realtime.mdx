@@ -186,7 +186,7 @@ one channel. From it you can send broadcasts, track presence, watch the
 subscription `status`, consume events as a `Flow`, and eventually unsubscribe.
 
 ```kotlin
-public interface RealtimeSubscription {
+public interface RealtimeSubscription {            // abridged — key members
     public val channel: String
     public val status: StateFlow<Status> // SUBSCRIBING, SUBSCRIBED, UNSUBSCRIBING, UNSUBSCRIBED, ERROR
     public fun asFlow(): Flow<RealtimeEvent>
@@ -194,6 +194,7 @@ public interface RealtimeSubscription {
     public suspend fun track(state: JsonObject)
     public suspend fun untrack()
     public suspend fun unsubscribe()
+    // also: presenceState(): PresenceState and send(type, event, payload)
 }
 ```
 
