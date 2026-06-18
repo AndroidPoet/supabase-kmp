@@ -43,8 +43,10 @@ style:
 
 naming:
   FunctionNaming:
-    # PostgREST DSL uses backticked operator names like `in`.
-    ignoreAnnotated: ['FilterDsl']
+    active: true
+    # @Composable functions are PascalCase by convention; the PostgREST DSL
+    # exposes backticked operator names like `in` via @FilterDsl.
+    ignoreAnnotated: ['Composable', 'FilterDsl']
 
 exceptions:
   TooGenericExceptionCaught:
