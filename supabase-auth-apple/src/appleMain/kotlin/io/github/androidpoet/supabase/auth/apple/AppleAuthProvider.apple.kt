@@ -86,10 +86,23 @@ private class AppleAuthProviderImpl(
 
 private class AppleAuthDelegate(
     private val rawNonce: String?,
-    private val onResult: (SupabaseResult<NativeAuthCredential>) -> Unit,
+    onResult: (SupabaseResult<NativeAuthCredential>) -> Unit,
 ) : NSObject(),
     ASAuthorizationControllerDelegateProtocol,
     ASAuthorizationControllerPresentationContextProvidingProtocol {
+    // AuthenticationServices is documented to invoke exactly one delegate callback, but a platform
+    // edge that fired both the success and error callbacks would resume the continuation twice and
+    // crash. Latch on first delivery so only the first outcome is forwarded; the underlying
+    // continuation resume is additionally guarded by isActive.
+    private var delivered = false
+    private val onResult: (SupabaseResult<NativeAuthCredential>) -> Unit = onResult
+
+    private fun deliver(result: SupabaseResult<NativeAuthCredential>) {
+        if (delivered) return
+        delivered = true
+        onResult(result)
+    }
+
     override fun authorizationController(
         controller: ASAuthorizationController,
         didCompleteWithAuthorization: ASAuthorization,
@@ -98,9 +111,9 @@ private class AppleAuthDelegate(
         val tokenData = credential?.identityToken
         val token = tokenData?.let { NSString.create(it, NSUTF8StringEncoding)?.toString() }
         if (token.isNullOrEmpty()) {
-            onResult(SupabaseResult.Failure(SupabaseError(message = "Apple sign-in returned no identity token")))
+            deliver(SupabaseResult.Failure(SupabaseError(message = "Apple sign-in returned no identity token")))
         } else {
-            onResult(
+            deliver(
                 SupabaseResult.Success(
                     NativeAuthCredential(provider = OAuthProvider.APPLE, idToken = token, nonce = rawNonce),
                 ),
@@ -112,18 +125,20 @@ private class AppleAuthDelegate(
         controller: ASAuthorizationController,
         didCompleteWithError: NSError,
     ) {
-        onResult(SupabaseResult.Failure(SupabaseError(message = "Apple sign-in failed: ${didCompleteWithError.localizedDescription}")))
+        deliver(SupabaseResult.Failure(SupabaseError(message = "Apple sign-in failed: ${didCompleteWithError.localizedDescription}")))
     }
 
     override fun presentationAnchorForAuthorizationController(controller: ASAuthorizationController): ASPresentationAnchor =
         keyPresentationAnchor()
 }
 
-private suspend fun sha256Hex(input: String): String {
+private fun sha256Hex(input: String): String {
+    // Hashing a short nonce is pure CPU work, so use the synchronous hashBlocking variant rather
+    // than the suspend hash() — that keeps this a plain function with no coroutine overhead.
     val digest =
         CryptographyProvider.Default
             .get(SHA256)
             .hasher()
-            .hash(input.encodeToByteArray())
+            .hashBlocking(input.encodeToByteArray())
     return digest.joinToString("") { byte -> (byte.toInt() and 0xFF).toString(16).padStart(2, '0') }
 }
