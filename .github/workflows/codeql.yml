@@ -3,8 +3,15 @@ name: CodeQL
 on:
   push:
     branches: [main]
+    paths-ignore: &docs-paths
+      - '**/*.md'
+      - 'website/**'
+      - 'art/**'
+      - 'LICENSE'
+      - '.gitignore'
   pull_request:
     branches: [main]
+    paths-ignore: *docs-paths
   schedule:
     # Weekly, so newly-published CodeQL queries catch issues even without a push.
     - cron: '0 6 * * 1'

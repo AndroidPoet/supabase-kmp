@@ -6,9 +6,22 @@ import { Callout } from 'nextra/components'
 
 # Sessions
 
-`SessionManager` holds the current session, refreshes it, and emits state changes.
+Once a user signs in, you get a **session** — proof they're signed in, made of an
+access token and a refresh token. The `SessionManager` looks after that session for
+you: it **holds** the current session, **refreshes** the access token before it
+expires, and **tells your UI** whenever the login state changes. So you never have
+to juggle tokens or expiry timers by hand.
+
+Why the refresh matters: the **access token expires quickly** (minutes), which
+limits the damage if it ever leaks. The longer-lived **refresh token** is used to
+get a new access token when the old one runs out — quietly, in the background, so
+the user stays signed in.
 
 ## Observing session state
+
+`sessionState` is a flow you can collect to react to login changes — show the home
+screen when authenticated, show the sign-in screen when not. The four cases below
+are the complete set of states.
 
 ```kotlin
 sessionManager.sessionState.collect { state ->
@@ -23,11 +36,17 @@ sessionManager.sessionState.collect { state ->
 
 ## Persisting across restarts
 
-The default `InMemorySessionStorage` keeps the session only for the process
-lifetime. To keep users signed in across restarts, back `KeyValueSessionStorage`
-with your platform's secure store — Keychain (Apple), EncryptedSharedPreferences
-or DataStore (Android), `localStorage` (Web), a file (desktop). You implement
-three string operations; serialization is handled for you:
+By default the session lives only in memory (`InMemorySessionStorage`), so it's
+gone when the app closes — the user would have to sign in again on every launch.
+**Persistence** fixes that: write the session somewhere durable so it survives a
+restart.
+
+That "somewhere" is your choice. The SDK deliberately bundles **no** secure-storage
+dependency, so it doesn't force a particular one on you — instead you plug in the
+right store for each platform: Keychain (Apple), EncryptedSharedPreferences or
+DataStore (Android), `localStorage` (Web), a file (desktop). You implement three
+simple string operations — `get`, `set`, `remove` — and the SDK handles turning the
+session into and out of a string for you.
 
 ```kotlin
 class KeychainStore : KeyValueStore {

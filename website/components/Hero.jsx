@@ -12,7 +12,7 @@ export function Hero() {
   return (
     <div className="skmp-hero">
       <div className="skmp-hero-glow" aria-hidden="true" />
-      <span className="skmp-hero-badge">Kotlin Multiplatform · 13 targets</span>
+      <span className="skmp-hero-badge">Kotlin Multiplatform · 16 targets</span>
       <h1 className="skmp-hero-title">Supabase KMP</h1>
       <p className="skmp-hero-sub">
         A fully typed Kotlin Multiplatform client for Supabase — Auth, Database,

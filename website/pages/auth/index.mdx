@@ -6,11 +6,34 @@ import { Callout } from 'nextra/components'
 
 # Authentication
 
-`supabase-auth` covers the full Supabase Auth surface: email & phone, magic-link
-and SMS OTP, anonymous sessions, OAuth (17 providers), SSO, Web3, passkeys, MFA
-and PKCE — all returning a typed `SupabaseResult<Session>`.
+Authentication is two jobs: **signing users up and in**, and then **proving who
+they are** on every request that follows. The `supabase-auth` module handles both,
+and every call returns a typed `SupabaseResult<Session>` — the same success-or-
+failure box used everywhere in the library (see [Results & Errors](/results-and-errors)).
+
+There are several ways a user can sign in, and you can offer more than one:
+
+- **Email & password** — the classic form.
+- **Phone** — sign in with a phone number.
+- **Magic link / OTP** — the user gets a one-time code (a short-lived
+  "one-time password") by email or SMS instead of typing a password.
+- **OAuth** — "sign in with Google / GitHub / …", where the user authenticates
+  through another provider's account (17 providers are supported).
+- **Passkeys** — passwordless sign-in backed by the device's biometrics.
+- **Anonymous** — a temporary session with no credentials, which you can upgrade
+  to a real account later.
+
+A successful sign-in gives you a **session**: your proof that the user is signed in.
+A session is a pair of tokens — an **access token** (sent with each request to
+identify the user) and a **refresh token** (used to get a fresh access token once
+the access token expires). You don't manage those tokens by hand; the
+`SessionManager` does it for you — see [Sessions](/auth/sessions).
 
 ## Sign up & sign in
+
+Create the auth client from your `SupabaseClient`, and create a `SessionManager`
+to hold the session that sign-in returns. After a successful call, hand the
+session to the manager with `saveSession` so it can keep the user signed in.
 
 ```kotlin
 val auth = createAuthClient(client)
@@ -33,6 +56,16 @@ auth.signInWithEmail(
 
 ## OAuth & PKCE
 
+**OAuth** lets a user sign in through another provider's account instead of
+creating a password with you. The flow is: send the user to the provider's sign-in
+page, the provider redirects back to your app with a short-lived `authCode`, and
+you exchange that code for a session.
+
+On mobile and native there's no server to keep a secret safe, so the exchange uses
+**PKCE** — a secure handshake where your app generates a one-time `codeVerifier`
+up front and proves ownership of it when redeeming the code. `generatePkceParams()`
+creates that verifier for you; pass it back into `exchangeCodeForSession`.
+
 ```kotlin
 val oauthUrl = auth.getOAuthSignInUrl(
     provider = OAuthProvider.GOOGLE,
@@ -53,6 +86,12 @@ auth.exchangeCodeForSession(
 
 ## Multi-factor authentication
 
+**MFA** (multi-factor authentication) asks the user for a second factor on top of
+their password — typically a 6-digit **TOTP** code from an authenticator app. It's
+a two-step setup: `mfaEnroll` registers a new factor, then `mfaVerify` confirms the
+user can produce a valid code from it. Both calls need the current access token, so
+the request is made on the signed-in user's behalf.
+
 ```kotlin
 val accessToken = sessionManager.accessToken!!
 
@@ -68,9 +107,15 @@ auth.mfaEnroll(factorType = MfaFactorType.TOTP, accessToken = accessToken).onSuc
 
 ## Verifying claims locally
 
-`getClaims()` decodes and verifies a JWT. For asymmetric (`ES256`) tokens it
-verifies the signature **on-device** against the project's JWKS — no server
-round-trip — falling back to the Auth server for anything it can't verify locally.
+Every session's access token is a **JWT** — a signed token that carries the user's
+identity. The facts inside it (user id, email, expiry, and so on) are called
+**claims**. `getClaims()` decodes a JWT and verifies that it's genuine and
+untampered.
+
+For asymmetric (`ES256`) tokens it checks the signature **on-device** against your
+project's **JWKS** — the public keys Supabase publishes for verifying tokens — so
+there's no server round-trip. For anything it can't verify locally it falls back to
+the Auth server.
 
 ```kotlin
 val claims = auth.getClaims(jwt = sessionManager.accessToken!!)

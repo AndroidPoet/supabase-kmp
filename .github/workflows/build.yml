@@ -3,8 +3,15 @@ name: Build
 on:
   push:
     branches: [main]
+    paths-ignore: &docs-paths
+      - '**/*.md'
+      - 'website/**'
+      - 'art/**'
+      - 'LICENSE'
+      - '.gitignore'
   pull_request:
     branches: [main]
+    paths-ignore: *docs-paths
   workflow_dispatch:
 
 concurrency:

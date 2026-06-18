@@ -8,6 +8,12 @@ name: Dependency Submission
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**/*.md'
+      - 'website/**'
+      - 'art/**'
+      - 'LICENSE'
+      - '.gitignore'
   workflow_dispatch:
 
 permissions:

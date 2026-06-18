@@ -6,10 +6,15 @@ import { Callout } from 'nextra/components'
 
 # Native Sign-In (Google & Apple)
 
-Every native sign-in flow ends by producing an OIDC **ID token** — which
-`signInWithIdToken` already exchanges for a session. So native sign-in is not a
-new login method; it's the platform glue that gets a native token to the method
-you already have.
+"Native" sign-in is the polished account picker built into the phone — the Google
+sheet that slides up on Android, the *Sign in with Apple* dialog on iOS — instead
+of bouncing the user out to a web browser. It feels faster and more trustworthy,
+so users complete it more often.
+
+Under the hood every native flow produces an OIDC **ID token** (a signed proof of
+who the user is) — which `signInWithIdToken` already exchanges for a session. So
+native sign-in is not a new login method; it's the platform glue that gets a
+native token to the method you already have.
 
 ```
 [provider's native UI]  →  NativeAuthCredential  →  auth.signInWith(provider)  →  Session

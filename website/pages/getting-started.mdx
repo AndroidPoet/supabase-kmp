@@ -6,14 +6,38 @@ import { Steps, Callout, Tabs } from 'nextra/components'
 
 # Getting Started
 
+This page takes you from an empty project to your first successful call to
+Supabase. No prior experience with the library is assumed — we'll explain each
+piece as it appears.
+
+## How the pieces fit together
+
+Supabase KMP is split into small modules so you only ship what you use. There's
+one **client** that holds your project URL, your key and the HTTP machinery — and
+then a **feature client** for each thing you want to do:
+
+```
+                ┌──────────────────┐
+                │  SupabaseClient   │  ← created once, holds URL + key + HTTP
+                └─────────┬────────┘
+        ┌─────────┬───────┼────────┬──────────┐
+     auth      database  storage  realtime  functions   ← built from the client
+   (sign in)   (rows)    (files)  (live)    (server fns)
+```
+
+You always create the `SupabaseClient` first, then build the feature clients you
+need from it. Let's do that.
+
 ## Install
 
 Supabase KMP is published to Maven Central under `io.github.androidpoet`. Add the
-version and the modules you need to your version catalog.
+version and the modules you need to your version catalog. The catalog
+(`libs.versions.toml`) is just a list of dependencies with friendly names —
+nothing Supabase-specific.
 
 ```toml filename="gradle/libs.versions.toml"
 [versions]
-supabase-kmp = "0.4.1"
+supabase-kmp = "0.5.0"
 
 [libraries]
 supabase-client = { module = "io.github.androidpoet:supabase-client", version.ref = "supabase-kmp" }
@@ -41,13 +65,15 @@ kotlin {
 
 <Callout type="info">
   Only depend on the modules you use — each one is published independently, so a
-  small app can pull in just `supabase-client` + `supabase-auth`.
+  small app can pull in just `supabase-client` + `supabase-auth` and add the rest
+  later. `supabase-client` is always required; it's the foundation the others
+  build on.
 </Callout>
 
 ## Create a client
 
 Everything starts from a `SupabaseClient`. Create one with your project URL and
-anon key, then build the feature clients you need from it.
+**anon key**, then build the feature clients you need from it.
 
 ```kotlin
 val client = Supabase.create(
@@ -64,18 +90,43 @@ val realtime = createRealtimeClient(client)
 val functions = createFunctionsClient(client)
 ```
 
+You'll find both values in the Supabase dashboard under *Project Settings → API*.
+The trailing `{ }` block is optional configuration — here we turn on `logging` so
+you can see requests in the console while learning.
+
 <Callout type="warning">
-  Use the **anon** key in client apps — never the service-role key. The
-  `supabase-auth-admin` module uses the service-role key and is for trusted
-  server-side contexts only.
+  Use the **anon** ("anonymous") key in client apps — never the service-role key.
+  The anon key is safe to ship because your database's Row Level Security rules
+  decide what each user can read or write. The service-role key bypasses those
+  rules, so it belongs only on a trusted server (that's what the
+  `supabase-auth-admin` module is for).
 </Callout>
 
-The `configure { }` block tunes logging, retries, custom headers, and
-observability hooks. See [Configuration](/configuration) for the full surface.
+## Make your first call
+
+Every call returns a `SupabaseResult` — a small wrapper that is either a success
+(with your value) or a failure (with an error). You don't use `try`/`catch`;
+you branch with `onSuccess` and `onFailure`:
+
+```kotlin
+@Serializable
+data class Todo(val id: String, val title: String, val done: Boolean)
+
+database.selectTyped<Todo>(table = "todos")
+    .onSuccess { todos -> println("Loaded ${todos.size} todos") }
+    .onFailure { error -> println("Something went wrong: ${error.message}") }
+```
+
+That's the whole rhythm of the library: call a function, get a `SupabaseResult`,
+handle both outcomes. It's worth understanding well — see
+[Results & Errors](/results-and-errors) next.
 
 ## Next steps
 
 <Steps>
+### Learn the error model
+Read [Results & Errors](/results-and-errors) — it's the one concept everything else builds on.
+
 ### Authenticate a user
 Head to [Authentication](/auth) for email, phone, OTP, OAuth and native sign-in.
 
@@ -83,5 +134,5 @@ Head to [Authentication](/auth) for email, phone, OTP, OAuth and native sign-in.
 See [Database](/database) for the typed PostgREST DSL.
 
 ### Go realtime
-Subscribe to changes with [Realtime](/realtime).
+Subscribe to live changes with [Realtime](/realtime).
 </Steps>
