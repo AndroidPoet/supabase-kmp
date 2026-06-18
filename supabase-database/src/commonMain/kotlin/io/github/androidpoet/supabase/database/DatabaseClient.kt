@@ -29,6 +29,8 @@ public enum class ExplainFormat(
 ) {
     TEXT("text"),
     JSON("json"),
+    XML("xml"),
+    YAML("yaml"),
 }
 
 public data class ExplainOptions(

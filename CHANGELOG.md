@@ -8,6 +8,17 @@
   `US_WEST_2`, `CA_CENTRAL_1`, `SA_EAST_1`, `EU_WEST_2`, `EU_WEST_3`,
   `EU_CENTRAL_1`, `AP_SOUTH_1`, `AP_SOUTHEAST_2`, and `AP_NORTHEAST_2` to the
   previous five-region subset.
+- **`OtpType.SIGNUP` and `OtpType.MAGIC_LINK`** for the token-hash verify flow
+  (`verifyOtpWithTokenHash`), which previously couldn't express sign-up
+  confirmation or magic-link tokens.
+- **`ExplainFormat.XML` and `ExplainFormat.YAML`** — PostgREST `EXPLAIN` supports
+  all four output formats.
+
+### Changed
+
+- **`ResizeMode` / `SortOrder` now carry explicit wire values** instead of
+  deriving them from `.name.lowercase()`, removing a latent serialization trap.
+  No wire-format change.
 
 ## 0.5.0
 

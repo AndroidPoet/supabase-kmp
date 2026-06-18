@@ -21,6 +21,8 @@ final enum class io.github.androidpoet.supabase.database/CountOption : kotlin/En
 final enum class io.github.androidpoet.supabase.database/ExplainFormat : kotlin/Enum<io.github.androidpoet.supabase.database/ExplainFormat> { // io.github.androidpoet.supabase.database/ExplainFormat|null[0]
     enum entry JSON // io.github.androidpoet.supabase.database/ExplainFormat.JSON|null[0]
     enum entry TEXT // io.github.androidpoet.supabase.database/ExplainFormat.TEXT|null[0]
+    enum entry XML // io.github.androidpoet.supabase.database/ExplainFormat.XML|null[0]
+    enum entry YAML // io.github.androidpoet.supabase.database/ExplainFormat.YAML|null[0]
 
     final val entries // io.github.androidpoet.supabase.database/ExplainFormat.entries|#static{}entries[0]
         final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.androidpoet.supabase.database/ExplainFormat> // io.github.androidpoet.supabase.database/ExplainFormat.entries.<get-entries>|<get-entries>#static(){}[0]

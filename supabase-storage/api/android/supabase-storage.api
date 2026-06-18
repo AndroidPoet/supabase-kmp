@@ -64,6 +64,7 @@ public final class io/github/androidpoet/supabase/storage/ResizeMode : java/lang
 	public static final field COVER Lio/github/androidpoet/supabase/storage/ResizeMode;
 	public static final field FILL Lio/github/androidpoet/supabase/storage/ResizeMode;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getValue ()Ljava/lang/String;
 	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/storage/ResizeMode;
 	public static fun values ()[Lio/github/androidpoet/supabase/storage/ResizeMode;
 }
@@ -97,6 +98,7 @@ public final class io/github/androidpoet/supabase/storage/SortOrder : java/lang/
 	public static final field ASC Lio/github/androidpoet/supabase/storage/SortOrder;
 	public static final field DESC Lio/github/androidpoet/supabase/storage/SortOrder;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getValue ()Ljava/lang/String;
 	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/storage/SortOrder;
 	public static fun values ()[Lio/github/androidpoet/supabase/storage/SortOrder;
 }

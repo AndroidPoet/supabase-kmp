@@ -76,8 +76,10 @@ final enum class io.github.androidpoet.supabase.auth.models/OtpType : kotlin/Enu
     enum entry EMAIL // io.github.androidpoet.supabase.auth.models/OtpType.EMAIL|null[0]
     enum entry EMAIL_CHANGE // io.github.androidpoet.supabase.auth.models/OtpType.EMAIL_CHANGE|null[0]
     enum entry INVITE // io.github.androidpoet.supabase.auth.models/OtpType.INVITE|null[0]
+    enum entry MAGIC_LINK // io.github.androidpoet.supabase.auth.models/OtpType.MAGIC_LINK|null[0]
     enum entry PHONE_CHANGE // io.github.androidpoet.supabase.auth.models/OtpType.PHONE_CHANGE|null[0]
     enum entry RECOVERY // io.github.androidpoet.supabase.auth.models/OtpType.RECOVERY|null[0]
+    enum entry SIGNUP // io.github.androidpoet.supabase.auth.models/OtpType.SIGNUP|null[0]
     enum entry SMS // io.github.androidpoet.supabase.auth.models/OtpType.SMS|null[0]
 
     final val entries // io.github.androidpoet.supabase.auth.models/OtpType.entries|#static{}entries[0]

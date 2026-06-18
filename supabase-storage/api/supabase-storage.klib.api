@@ -45,6 +45,8 @@ final enum class io.github.androidpoet.supabase.storage/ResizeMode : kotlin/Enum
 
     final val entries // io.github.androidpoet.supabase.storage/ResizeMode.entries|#static{}entries[0]
         final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.androidpoet.supabase.storage/ResizeMode> // io.github.androidpoet.supabase.storage/ResizeMode.entries.<get-entries>|<get-entries>#static(){}[0]
+    final val value // io.github.androidpoet.supabase.storage/ResizeMode.value|{}value[0]
+        final fun <get-value>(): kotlin/String // io.github.androidpoet.supabase.storage/ResizeMode.value.<get-value>|<get-value>(){}[0]
 
     final fun valueOf(kotlin/String): io.github.androidpoet.supabase.storage/ResizeMode // io.github.androidpoet.supabase.storage/ResizeMode.valueOf|valueOf#static(kotlin.String){}[0]
     final fun values(): kotlin/Array<io.github.androidpoet.supabase.storage/ResizeMode> // io.github.androidpoet.supabase.storage/ResizeMode.values|values#static(){}[0]
@@ -56,6 +58,8 @@ final enum class io.github.androidpoet.supabase.storage/SortOrder : kotlin/Enum<
 
     final val entries // io.github.androidpoet.supabase.storage/SortOrder.entries|#static{}entries[0]
         final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.androidpoet.supabase.storage/SortOrder> // io.github.androidpoet.supabase.storage/SortOrder.entries.<get-entries>|<get-entries>#static(){}[0]
+    final val value // io.github.androidpoet.supabase.storage/SortOrder.value|{}value[0]
+        final fun <get-value>(): kotlin/String // io.github.androidpoet.supabase.storage/SortOrder.value.<get-value>|<get-value>(){}[0]
 
     final fun valueOf(kotlin/String): io.github.androidpoet.supabase.storage/SortOrder // io.github.androidpoet.supabase.storage/SortOrder.valueOf|valueOf#static(kotlin.String){}[0]
     final fun values(): kotlin/Array<io.github.androidpoet.supabase.storage/SortOrder> // io.github.androidpoet.supabase.storage/SortOrder.values|values#static(){}[0]

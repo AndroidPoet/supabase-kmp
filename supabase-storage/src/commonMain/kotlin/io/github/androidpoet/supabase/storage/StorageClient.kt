@@ -479,13 +479,17 @@ public data class ImageTransformOptions(
     public val quality: Int? = null,
 )
 
-public enum class ResizeMode {
-    COVER,
-    CONTAIN,
-    FILL,
+public enum class ResizeMode(
+    public val value: String,
+) {
+    COVER("cover"),
+    CONTAIN("contain"),
+    FILL("fill"),
 }
 
-public enum class SortOrder {
-    ASC,
-    DESC,
+public enum class SortOrder(
+    public val value: String,
+) {
+    ASC("asc"),
+    DESC("desc"),
 }

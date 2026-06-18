@@ -73,6 +73,8 @@ public final class io/github/androidpoet/supabase/database/DatabaseFactoryKt {
 public final class io/github/androidpoet/supabase/database/ExplainFormat : java/lang/Enum {
 	public static final field JSON Lio/github/androidpoet/supabase/database/ExplainFormat;
 	public static final field TEXT Lio/github/androidpoet/supabase/database/ExplainFormat;
+	public static final field XML Lio/github/androidpoet/supabase/database/ExplainFormat;
+	public static final field YAML Lio/github/androidpoet/supabase/database/ExplainFormat;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/database/ExplainFormat;
 	public static fun values ()[Lio/github/androidpoet/supabase/database/ExplainFormat;

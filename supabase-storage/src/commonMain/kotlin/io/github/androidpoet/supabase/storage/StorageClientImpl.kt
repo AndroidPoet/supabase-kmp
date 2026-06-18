@@ -87,7 +87,7 @@ internal class StorageClientImpl(
                 limit?.let { add("limit" to it.toString()) }
                 offset?.let { add("offset" to it.toString()) }
                 sortColumn?.let { add("sortColumn" to it) }
-                sortOrder?.let { add("sortOrder" to it.name.lowercase()) }
+                sortOrder?.let { add("sortOrder" to it.value) }
                 search?.let { add("search" to it) }
             }
         return client.get(StoragePaths.BUCKET, queryParams = query).deserialize()
@@ -272,7 +272,7 @@ internal class StorageClientImpl(
                     offset = offset,
                     sortBy =
                         sortBy?.let {
-                            ObjectSortByRequest(column = it, order = sortOrder.name.lowercase())
+                            ObjectSortByRequest(column = it, order = sortOrder.value)
                         },
                     search = search,
                 ),
@@ -298,7 +298,7 @@ internal class StorageClientImpl(
                     withDelimiter = withDelimiter,
                     sortBy =
                         sortBy?.let {
-                            ObjectSortByRequest(column = it, order = sortOrder.name.lowercase())
+                            ObjectSortByRequest(column = it, order = sortOrder.value)
                         },
                 ),
             )
@@ -559,7 +559,7 @@ internal class StorageClientImpl(
                 limit?.let { add("limit" to it.toString()) }
                 offset?.let { add("offset" to it.toString()) }
                 sortColumn?.let { add("sortColumn" to it) }
-                sortOrder?.let { add("sortOrder" to it.name.lowercase()) }
+                sortOrder?.let { add("sortOrder" to it.value) }
                 search?.let { add("search" to it) }
             }
         val endpoint =
@@ -806,7 +806,7 @@ internal class StorageClientImpl(
             buildList {
                 width?.let { add("width" to it.toString()) }
                 height?.let { add("height" to it.toString()) }
-                resize?.let { add("resize" to it.name.lowercase()) }
+                resize?.let { add("resize" to it.value) }
                 format?.let { add("format" to it) }
                 quality?.let { add("quality" to it.toString()) }
             }

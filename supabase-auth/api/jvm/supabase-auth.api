@@ -1145,8 +1145,10 @@ public final class io/github/androidpoet/supabase/auth/models/OtpType : java/lan
 	public static final field EMAIL Lio/github/androidpoet/supabase/auth/models/OtpType;
 	public static final field EMAIL_CHANGE Lio/github/androidpoet/supabase/auth/models/OtpType;
 	public static final field INVITE Lio/github/androidpoet/supabase/auth/models/OtpType;
+	public static final field MAGIC_LINK Lio/github/androidpoet/supabase/auth/models/OtpType;
 	public static final field PHONE_CHANGE Lio/github/androidpoet/supabase/auth/models/OtpType;
 	public static final field RECOVERY Lio/github/androidpoet/supabase/auth/models/OtpType;
+	public static final field SIGNUP Lio/github/androidpoet/supabase/auth/models/OtpType;
 	public static final field SMS Lio/github/androidpoet/supabase/auth/models/OtpType;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/auth/models/OtpType;

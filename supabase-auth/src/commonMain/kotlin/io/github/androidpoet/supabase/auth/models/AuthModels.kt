@@ -120,6 +120,14 @@ public enum class OtpType {
 
     @SerialName("phone_change")
     PHONE_CHANGE,
+
+    // Token-hash verify types (email-link confirmations); the `email` token-hash
+    // type reuses the EMAIL entry above.
+    @SerialName("signup")
+    SIGNUP,
+
+    @SerialName("magiclink")
+    MAGIC_LINK,
 }
 
 @Serializable
