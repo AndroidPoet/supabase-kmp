@@ -22,7 +22,13 @@ public data class NativeAuthCredential(
     public val idToken: String,
     public val accessToken: String? = null,
     public val nonce: String? = null,
-)
+) {
+    // Mask the provider tokens so a native credential never leaks into logs or crash reports.
+    override fun toString(): String =
+        "NativeAuthCredential(provider=$provider, idToken=***, " +
+            "accessToken=${if (accessToken == null) "null" else "***"}, " +
+            "nonce=${if (nonce == null) "null" else "***"})"
+}
 
 /**
  * Acquires a [NativeAuthCredential] using a platform's native sign-in UI.

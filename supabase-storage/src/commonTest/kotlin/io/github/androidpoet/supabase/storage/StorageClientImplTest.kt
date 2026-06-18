@@ -641,7 +641,7 @@ class StorageClientImplTest {
             )
 
         assertEquals(
-            "https://example.supabase.co/storage/v1/object/public/avatars/a.png?width=100&height=100&resize=fill&format=webp",
+            "https://example.supabase.co/storage/v1/render/image/public/avatars/a.png?width=100&height=100&resize=fill&format=webp",
             url,
         )
     }
@@ -660,7 +660,7 @@ class StorageClientImplTest {
             )
 
         assertEquals(
-            "https://example.supabase.co/storage/v1/object/public/avatars/a.png?width=50&download=avatar.png",
+            "https://example.supabase.co/storage/v1/render/image/public/avatars/a.png?width=50&download=avatar.png",
             url,
         )
     }
@@ -682,7 +682,7 @@ class StorageClientImplTest {
             )
 
         assertEquals(
-            "https://example.supabase.co/storage/v1/object/authenticated/avatars/a.png?width=80&height=120&resize=contain",
+            "https://example.supabase.co/storage/v1/render/image/authenticated/avatars/a.png?width=80&height=120&resize=contain",
             url,
         )
     }
@@ -701,7 +701,7 @@ class StorageClientImplTest {
             )
 
         assertEquals(
-            "https://example.supabase.co/storage/v1/object/authenticated/avatars/a.png?width=50&download=auth-avatar.png",
+            "https://example.supabase.co/storage/v1/render/image/authenticated/avatars/a.png?width=50&download=auth-avatar.png",
             url,
         )
     }

@@ -1036,6 +1036,7 @@ private class FakeAuthClient : AuthClient {
         password: String,
         data: JsonObject?,
         emailRedirectTo: String?,
+        captchaToken: String?,
     ): SupabaseResult<Session> {
         lastEmailSignUp = email
         return SupabaseResult.Success(dummySession.copy(accessToken = "sign-up-acc", refreshToken = "sign-up-ref"))
@@ -1046,12 +1047,13 @@ private class FakeAuthClient : AuthClient {
         password: String,
         data: JsonObject?,
         redirectTo: String?,
+        captchaToken: String?,
     ): SupabaseResult<Session> {
         lastPhoneSignUp = phone
         return SupabaseResult.Success(dummySession.copy(accessToken = "phone-sign-up-acc", refreshToken = "phone-sign-up-ref"))
     }
 
-    override suspend fun signInWithEmail(email: String, password: String): SupabaseResult<Session> {
+    override suspend fun signInWithEmail(email: String, password: String, captchaToken: String?): SupabaseResult<Session> {
         lastEmailSignIn = email
         return SupabaseResult.Success(dummySession.copy(accessToken = "sign-in-acc", refreshToken = "sign-in-ref"))
     }
@@ -1059,7 +1061,7 @@ private class FakeAuthClient : AuthClient {
     override suspend fun signInAnonymously(data: JsonObject?, captchaToken: String?): SupabaseResult<Session> =
         SupabaseResult.Success(dummySession.copy(accessToken = "anon-acc", refreshToken = "anon-ref"))
 
-    override suspend fun signInWithPhone(phone: String, password: String): SupabaseResult<Session> =
+    override suspend fun signInWithPhone(phone: String, password: String, captchaToken: String?): SupabaseResult<Session> =
         SupabaseResult.Success(dummySession.copy(accessToken = "phone-sign-in-acc", refreshToken = "phone-sign-in-ref"))
 
     override suspend fun signInWithIdToken(

@@ -152,16 +152,22 @@ internal class HttpTransport(
     ): SupabaseResult<String> {
         val retryEnabled = headers[INTERNAL_RETRY_HEADER]?.toBooleanStrictOrNull() ?: false
         val outgoingHeaders = headers - INTERNAL_RETRY_HEADER
-        // Resolve the Bearer token once per request (not per retry attempt): the
-        // provider lambda is suspend, but Ktor's request builder block is not, so
-        // we must resolve before entering it.
-        val bearer = if ("Authorization" in outgoingHeaders) null else resolveBearerToken()
-        return execute(method = "GET", url = url, retryEnabled = retryEnabled, retryableMethod = true) { attempt ->
+        // Resolve the Bearer token once per request (not per retry attempt) inside
+        // execute, so a throwing accessTokenProvider becomes a Failure. The provider
+        // lambda is suspend, but Ktor's request builder block is not, so the resolved
+        // value is threaded in via the request callback.
+        return execute(
+            method = "GET",
+            url = url,
+            retryEnabled = retryEnabled,
+            retryableMethod = true,
+            resolveBearer = { if (outgoingHeaders.hasAuthorization()) null else resolveBearerToken() },
+        ) { attempt, bearer ->
             httpClient.get(url) {
                 queryParams.forEach { (k, v) -> this.url.parameters.append(k, v) }
                 outgoingHeaders.forEach { (k, v) -> header(k, v) }
                 if (attempt > 0) header(RETRY_COUNT_HEADER, attempt.toString())
-                if ("Authorization" !in outgoingHeaders) {
+                if (!outgoingHeaders.hasAuthorization()) {
                     bearer?.let { header("Authorization", "Bearer $it") }
                 }
             }
@@ -174,13 +180,16 @@ internal class HttpTransport(
         headers: Map<String, String> = emptyMap(),
     ): SupabaseResult<String> {
         val outgoingHeaders = headers - INTERNAL_RETRY_HEADER
-        val bearer = if ("Authorization" in outgoingHeaders) null else resolveBearerToken()
-        return execute(method = "POST", url = url) {
+        return execute(
+            method = "POST",
+            url = url,
+            resolveBearer = { if (outgoingHeaders.hasAuthorization()) null else resolveBearerToken() },
+        ) { _, bearer ->
             httpClient.post(url) {
                 contentType(ContentType.Application.Json)
                 body?.let { setBody(it) }
                 outgoingHeaders.forEach { (k, v) -> header(k, v) }
-                if ("Authorization" !in outgoingHeaders) {
+                if (!outgoingHeaders.hasAuthorization()) {
                     bearer?.let { header("Authorization", "Bearer $it") }
                 }
             }
@@ -205,7 +214,7 @@ internal class HttpTransport(
     ): Flow<String> {
         val outgoingHeaders = headers - INTERNAL_RETRY_HEADER
         return flow {
-            val bearer = if ("Authorization" in outgoingHeaders) null else resolveBearerToken()
+            val bearer = if (outgoingHeaders.hasAuthorization()) null else resolveBearerToken()
             httpClient
                 .preparePost(url) {
                     contentType?.let { contentType(ContentType.parse(it)) }
@@ -215,7 +224,7 @@ internal class HttpTransport(
                         header("Accept", "text/event-stream")
                     }
                     outgoingHeaders.forEach { (k, v) -> header(k, v) }
-                    if ("Authorization" !in outgoingHeaders) {
+                    if (!outgoingHeaders.hasAuthorization()) {
                         bearer?.let { header("Authorization", "Bearer $it") }
                     }
                 }.execute { response ->
@@ -237,13 +246,16 @@ internal class HttpTransport(
         headers: Map<String, String> = emptyMap(),
     ): SupabaseResult<String> {
         val outgoingHeaders = headers - INTERNAL_RETRY_HEADER
-        val bearer = if ("Authorization" in outgoingHeaders) null else resolveBearerToken()
-        return execute(method = "PUT", url = url) {
+        return execute(
+            method = "PUT",
+            url = url,
+            resolveBearer = { if (outgoingHeaders.hasAuthorization()) null else resolveBearerToken() },
+        ) { _, bearer ->
             httpClient.put(url) {
                 contentType(ContentType.Application.Json)
                 body?.let { setBody(it) }
                 outgoingHeaders.forEach { (k, v) -> header(k, v) }
-                if ("Authorization" !in outgoingHeaders) {
+                if (!outgoingHeaders.hasAuthorization()) {
                     bearer?.let { header("Authorization", "Bearer $it") }
                 }
             }
@@ -256,13 +268,16 @@ internal class HttpTransport(
         headers: Map<String, String> = emptyMap(),
     ): SupabaseResult<String> {
         val outgoingHeaders = headers - INTERNAL_RETRY_HEADER
-        val bearer = if ("Authorization" in outgoingHeaders) null else resolveBearerToken()
-        return execute(method = "PATCH", url = url) {
+        return execute(
+            method = "PATCH",
+            url = url,
+            resolveBearer = { if (outgoingHeaders.hasAuthorization()) null else resolveBearerToken() },
+        ) { _, bearer ->
             httpClient.patch(url) {
                 contentType(ContentType.Application.Json)
                 body?.let { setBody(it) }
                 outgoingHeaders.forEach { (k, v) -> header(k, v) }
-                if ("Authorization" !in outgoingHeaders) {
+                if (!outgoingHeaders.hasAuthorization()) {
                     bearer?.let { header("Authorization", "Bearer $it") }
                 }
             }
@@ -275,15 +290,18 @@ internal class HttpTransport(
         headers: Map<String, String> = emptyMap(),
     ): SupabaseResult<String> {
         val outgoingHeaders = headers - INTERNAL_RETRY_HEADER
-        val bearer = if ("Authorization" in outgoingHeaders) null else resolveBearerToken()
-        return execute(method = "DELETE", url = url) {
+        return execute(
+            method = "DELETE",
+            url = url,
+            resolveBearer = { if (outgoingHeaders.hasAuthorization()) null else resolveBearerToken() },
+        ) { _, bearer ->
             httpClient.delete(url) {
                 if (body != null) {
                     contentType(ContentType.Application.Json)
                     setBody(body)
                 }
                 outgoingHeaders.forEach { (k, v) -> header(k, v) }
-                if ("Authorization" !in outgoingHeaders) {
+                if (!outgoingHeaders.hasAuthorization()) {
                     bearer?.let { header("Authorization", "Bearer $it") }
                 }
             }
@@ -297,13 +315,16 @@ internal class HttpTransport(
         headers: Map<String, String> = emptyMap(),
     ): SupabaseResult<String> {
         val outgoingHeaders = headers - INTERNAL_RETRY_HEADER
-        val bearer = if ("Authorization" in outgoingHeaders) null else resolveBearerToken()
-        return execute(method = "POST", url = url) {
+        return execute(
+            method = "POST",
+            url = url,
+            resolveBearer = { if (outgoingHeaders.hasAuthorization()) null else resolveBearerToken() },
+        ) { _, bearer ->
             httpClient.post(url) {
                 contentType(ContentType.parse(contentType))
                 setBody(body)
                 outgoingHeaders.forEach { (k, v) -> header(k, v) }
-                if ("Authorization" !in outgoingHeaders) {
+                if (!outgoingHeaders.hasAuthorization()) {
                     bearer?.let { header("Authorization", "Bearer $it") }
                 }
             }
@@ -317,13 +338,16 @@ internal class HttpTransport(
         headers: Map<String, String> = emptyMap(),
     ): SupabaseResult<String> {
         val outgoingHeaders = headers - INTERNAL_RETRY_HEADER
-        val bearer = if ("Authorization" in outgoingHeaders) null else resolveBearerToken()
-        return execute(method = "PUT", url = url) {
+        return execute(
+            method = "PUT",
+            url = url,
+            resolveBearer = { if (outgoingHeaders.hasAuthorization()) null else resolveBearerToken() },
+        ) { _, bearer ->
             httpClient.put(url) {
                 contentType(ContentType.parse(contentType))
                 setBody(body)
                 outgoingHeaders.forEach { (k, v) -> header(k, v) }
-                if ("Authorization" !in outgoingHeaders) {
+                if (!outgoingHeaders.hasAuthorization()) {
                     bearer?.let { header("Authorization", "Bearer $it") }
                 }
             }
@@ -339,13 +363,13 @@ internal class HttpTransport(
     ): SupabaseResult<SupabaseHttpResponse> {
         val mark = TimeSource.Monotonic.markNow()
         config.interceptor?.onRequest(method, url)
-        val bearer = if ("Authorization" in requestHeaders) null else resolveBearerToken()
         return try {
+            val bearer = if (requestHeaders.hasAuthorization()) null else resolveBearerToken()
             val response =
                 httpClient.request(url) {
                     this.method = HttpMethod.parse(method)
                     requestHeaders.forEach { (k, v) -> header(k, v) }
-                    if ("Authorization" !in requestHeaders) {
+                    if (!requestHeaders.hasAuthorization()) {
                         bearer?.let { header("Authorization", "Bearer $it") }
                     }
                     contentType?.let { contentType(ContentType.parse(it)) }
@@ -385,16 +409,21 @@ internal class HttpTransport(
         url: String,
         retryEnabled: Boolean = false,
         retryableMethod: Boolean = false,
-        crossinline request: suspend (attempt: Int) -> io.ktor.client.statement.HttpResponse,
+        noinline resolveBearer: suspend () -> String? = { null },
+        crossinline request: suspend (attempt: Int, bearer: String?) -> io.ktor.client.statement.HttpResponse,
     ): SupabaseResult<String> {
         val mark = TimeSource.Monotonic.markNow()
         config.interceptor?.onRequest(method, url)
         return try {
+            // Resolve the Bearer token inside the try so a throwing
+            // accessTokenProvider surfaces as SupabaseResult.Failure rather than a
+            // raw throwable. Resolved once per request, not per retry attempt.
+            val bearer = resolveBearer()
             var attempt = 0
             while (attempt <= retry.maxRetries) {
                 val response =
                     try {
-                        request(attempt)
+                        request(attempt, bearer)
                     } catch (e: Throwable) {
                         if (e is CancellationException) throw e
                         if (retryEnabled && retryableMethod && attempt < retry.maxRetries) {
@@ -434,6 +463,11 @@ internal class HttpTransport(
             SupabaseResult.Failure(error)
         }
     }
+
+    // Caller-supplied Authorization headers must be matched case-insensitively so
+    // a lowercased `authorization` isn't missed, which would otherwise cause the
+    // SDK to inject a second `Authorization` header.
+    private fun Map<String, String>.hasAuthorization(): Boolean = keys.any { it.equals("Authorization", ignoreCase = true) }
 
     // A request that throws (rather than returning a response) never reached a
     // usable server response: offline, DNS/TLS failure, connection refused, or a

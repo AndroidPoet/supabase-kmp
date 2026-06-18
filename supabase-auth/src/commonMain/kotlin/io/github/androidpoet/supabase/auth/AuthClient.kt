@@ -52,12 +52,14 @@ public interface AuthClient {
      * @param data optional `user_metadata` stored on the new user.
      * @param emailRedirectTo URL the confirmation email links back to (sent as the
      *   `redirect_to` query param). Fails if [email] is blank.
+     * @param captchaToken captcha response when bot protection is enabled.
      */
     public suspend fun signUpWithEmail(
         email: String,
         password: String,
         data: JsonObject? = null,
         emailRedirectTo: String? = null,
+        captchaToken: String? = null,
     ): SupabaseResult<Session>
 
     /**
@@ -68,18 +70,25 @@ public interface AuthClient {
      * @param data optional `user_metadata` stored on the new user.
      * @param redirectTo post-confirmation redirect (`redirect_to` query param).
      *   Fails if [phone] is blank.
+     * @param captchaToken captcha response when bot protection is enabled.
      */
     public suspend fun signUpWithPhone(
         phone: String,
         password: String,
         data: JsonObject? = null,
         redirectTo: String? = null,
+        captchaToken: String? = null,
     ): SupabaseResult<Session>
 
-    /** Signs in with email + password via the `password` grant (`POST /token?grant_type=password`). */
+    /**
+     * Signs in with email + password via the `password` grant (`POST /token?grant_type=password`).
+     *
+     * @param captchaToken captcha response when bot protection is enabled.
+     */
     public suspend fun signInWithEmail(
         email: String,
         password: String,
+        captchaToken: String? = null,
     ): SupabaseResult<Session>
 
     /**
@@ -95,10 +104,15 @@ public interface AuthClient {
         captchaToken: String? = null,
     ): SupabaseResult<Session>
 
-    /** Signs in with phone + password via the `password` grant (`POST /token?grant_type=password`). */
+    /**
+     * Signs in with phone + password via the `password` grant (`POST /token?grant_type=password`).
+     *
+     * @param captchaToken captcha response when bot protection is enabled.
+     */
     public suspend fun signInWithPhone(
         phone: String,
         password: String,
+        captchaToken: String? = null,
     ): SupabaseResult<Session>
 
     /**

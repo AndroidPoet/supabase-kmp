@@ -101,7 +101,7 @@ class FiltersTest {
                     }
                 }
             }
-        assertEquals(listOf("or" to "(status.eq.active,and.(age.gte.18,age.lt.65))"), result)
+        assertEquals(listOf("or" to "(status.eq.active,and(age.gte.18,age.lt.65))"), result)
     }
 
     @Test
@@ -197,6 +197,34 @@ class FiltersTest {
                 not { eq("role", "admin") }
             }
         assertEquals(listOf("role" to "not.eq.admin"), result)
+    }
+
+    @Test
+    fun test_not_negatesNestedAndGroup_prefixesKey() {
+        val result =
+            filters {
+                not {
+                    and {
+                        gte("age", "18")
+                        lt("age", "65")
+                    }
+                }
+            }
+        assertEquals(listOf("not.and" to "(age.gte.18,age.lt.65)"), result)
+    }
+
+    @Test
+    fun test_not_negatesNestedOrGroup_prefixesKey() {
+        val result =
+            filters {
+                not {
+                    or {
+                        eq("status", "active")
+                        eq("status", "pending")
+                    }
+                }
+            }
+        assertEquals(listOf("not.or" to "(status.eq.active,status.eq.pending)"), result)
     }
 
     @Test

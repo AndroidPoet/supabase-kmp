@@ -556,7 +556,10 @@ internal class StorageClientImpl(
         fileName: String?,
         transform: ImageTransformOptions?,
     ): String {
-        val base = "${client.projectUrl}${StoragePaths.OBJECT_PUBLIC}/${objectRef(bucket, path)}"
+        // A transform is only honoured on the render route; the object route serves the
+        // original bytes and silently ignores transform params, so switch routes accordingly.
+        val basePath = if (transform != null) StoragePaths.RENDER_IMAGE_PUBLIC else StoragePaths.OBJECT_PUBLIC
+        val base = "${client.projectUrl}$basePath/${objectRef(bucket, path)}"
         val queryParts = mutableListOf<String>()
         val transformQuery = transform?.toQueryString()
         if (!transformQuery.isNullOrBlank()) {
@@ -576,7 +579,10 @@ internal class StorageClientImpl(
         fileName: String?,
         transform: ImageTransformOptions?,
     ): String {
-        val base = "${client.projectUrl}${StoragePaths.OBJECT_AUTHENTICATED}/${objectRef(bucket, path)}"
+        // A transform is only honoured on the render route; the object route serves the
+        // original bytes and silently ignores transform params, so switch routes accordingly.
+        val basePath = if (transform != null) StoragePaths.RENDER_IMAGE_AUTHENTICATED else StoragePaths.OBJECT_AUTHENTICATED
+        val base = "${client.projectUrl}$basePath/${objectRef(bucket, path)}"
         val queryParts = mutableListOf<String>()
         val transformQuery = transform?.toQueryString()
         if (!transformQuery.isNullOrBlank()) {
@@ -910,7 +916,7 @@ internal class StorageClientImpl(
 
     private fun buildDownloadQuery(download: Boolean, fileName: String?): String {
         if (!download) return ""
-        if (fileName == null) return "?download"
+        if (fileName == null) return "?download="
         return "?download=${encodeQueryComponent(fileName)}"
     }
 
@@ -961,7 +967,7 @@ internal class StorageClientImpl(
     private fun appendDownloadQuery(url: String, download: Boolean, fileName: String?): String {
         if (!download) return url
         val separator = if (url.contains("?")) "&" else "?"
-        if (fileName == null) return "$url${separator}download"
+        if (fileName == null) return "$url${separator}download="
         return "$url${separator}download=${encodeQueryComponent(fileName)}"
     }
 }

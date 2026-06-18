@@ -29,6 +29,9 @@
   `requestTimeoutMillis` (Ktor `HttpTimeout`, installed only when set so streams
   aren't capped); an explicit `httpClientConfig` raw-Ktor escape hatch; a suspend
   `accessTokenProvider` for third-party-auth JWTs.
+- **Auth** — `captchaToken` on `signUpWithEmail`/`signUpWithPhone`/`signInWithEmail`/
+  `signInWithPhone` (sent under `gotrue_meta_security`), so these flows work when
+  bot/CAPTCHA protection is enabled; previously there was no way to pass the token.
 - **Realtime** — `InboundEventDropped` debug event (see backpressure fix below).
 - **Passkeys** — the opt-in `supabase-auth-passkey` module now drives the native
   WebAuthn ceremony on all platforms; a dedicated docs page documents it.
@@ -57,6 +60,34 @@
   `Failure` instead of throwing `ClassCastException`; the Apple provider can no
   longer double-resume its continuation; the Google provider propagates coroutine
   cancellation to the in-flight Credential Manager request.
+- **Auth `updateUser`** — now sends `PUT /user` instead of `PATCH`; the server
+  only registers `PUT` for that route, so profile/password/metadata updates did
+  not reach the handler.
+- **Auth magic-link redirect** — `signInWithOtp(emailRedirectTo = …)` now sends
+  the redirect as the `redirect_to` query parameter; it was a request-body field
+  the server ignores, so the magic link used the project default redirect.
+- **Auth response decoding** — `Session.tokenType`/`MfaVerifyResponse.tokenType`
+  default to `bearer`, so a response omitting `token_type` still decodes. Secret
+  fields (access/refresh/provider tokens, TOTP secret, native credential tokens)
+  are now redacted from `toString()` to keep credentials out of logs.
+- **Postgrest logical groups** — nested `and`/`or` inside a group now render as
+  `and(…)`/`or(…)` (no spurious dot) and a negated group renders as
+  `not.and=(…)`/`not.or=(…)` (prefix on the key); both forms were malformed and
+  rejected by the server. `range(from, to)` now requires `to >= from`.
+- **Storage image transforms** — `getPublicUrl`/`getAuthenticatedUrl` with a
+  `transform` now target the `/render/image/...` route; on the `/object/...`
+  route the server ignores transform params and returns the original image.
+  `download = true` without a filename now emits `download=` (empty value).
+- **Functions region** — `FunctionRegion.ANY` no longer sends a literal
+  `x-region: any` header (the header is omitted, letting the platform route).
+- **Client transport** — a caller-supplied `Authorization` header is matched
+  case-insensitively (no more duplicate header from a lowercased key); a throwing
+  `accessTokenProvider` is returned as a `SupabaseResult.Failure` rather than
+  thrown; a trailing slash on the project URL is trimmed (no `//` in paths).
+- **Realtime** — a single malformed inbound frame is now dropped in isolation
+  instead of tearing down the socket and forcing every channel to rejoin; a
+  heartbeat reply only clears the liveness watchdog when its `ref` matches the
+  outstanding heartbeat.
 
 ### Added (supabase-kt parity audit)
 

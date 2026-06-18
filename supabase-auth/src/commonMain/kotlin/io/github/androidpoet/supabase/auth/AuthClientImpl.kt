@@ -81,9 +81,13 @@ internal class AuthClientImpl(
         password: String,
         data: JsonObject?,
         emailRedirectTo: String?,
+        captchaToken: String?,
     ): SupabaseResult<Session> {
         if (email.isBlank()) return SupabaseResult.Failure(SupabaseError("email must not be blank"))
-        val body = defaultJson.encodeToString(SignUpRequest(email = email, password = password, data = data))
+        val body =
+            defaultJson.encodeToString(
+                SignUpRequest(email = email, password = password, data = data, captchaToken = captchaToken),
+            )
         return client.post(signUpEndpoint(emailRedirectTo), body = body).deserialize()
     }
 
@@ -92,9 +96,13 @@ internal class AuthClientImpl(
         password: String,
         data: JsonObject?,
         redirectTo: String?,
+        captchaToken: String?,
     ): SupabaseResult<Session> {
         if (phone.isBlank()) return SupabaseResult.Failure(SupabaseError("phone must not be blank"))
-        val body = defaultJson.encodeToString(SignUpRequest(phone = phone, password = password, data = data))
+        val body =
+            defaultJson.encodeToString(
+                SignUpRequest(phone = phone, password = password, data = data, captchaToken = captchaToken),
+            )
         return client.post(signUpEndpoint(redirectTo), body = body).deserialize()
     }
 
@@ -109,11 +117,26 @@ internal class AuthClientImpl(
             }
         }
 
+    // The OTP endpoint takes the magic-link redirect as a `redirect_to` query parameter, mirroring
+    // how signup and the recover/OAuth flows pass theirs — GoTrue ignores it in the body.
+    private fun otpEndpoint(emailRedirectTo: String?): String =
+        buildString {
+            append(AuthPaths.OTP)
+            if (emailRedirectTo != null) {
+                append("?redirect_to=")
+                append(urlEncode(emailRedirectTo))
+            }
+        }
+
     override suspend fun signInWithEmail(
         email: String,
         password: String,
+        captchaToken: String?,
     ): SupabaseResult<Session> {
-        val body = defaultJson.encodeToString(SignInRequest(email = email, password = password))
+        val body =
+            defaultJson.encodeToString(
+                SignInRequest(email = email, password = password, captchaToken = captchaToken),
+            )
         return client.post("${AuthPaths.TOKEN}?grant_type=password", body = body).deserialize()
     }
 
@@ -134,8 +157,12 @@ internal class AuthClientImpl(
     override suspend fun signInWithPhone(
         phone: String,
         password: String,
+        captchaToken: String?,
     ): SupabaseResult<Session> {
-        val body = defaultJson.encodeToString(SignInRequest(phone = phone, password = password))
+        val body =
+            defaultJson.encodeToString(
+                SignInRequest(phone = phone, password = password, captchaToken = captchaToken),
+            )
         return client.post("${AuthPaths.TOKEN}?grant_type=password", body = body).deserialize()
     }
 
@@ -193,10 +220,9 @@ internal class AuthClientImpl(
                     createUser = createUser,
                     channel = channel,
                     captchaToken = captchaToken,
-                    emailRedirectTo = emailRedirectTo,
                 ),
             )
-        return client.post(AuthPaths.OTP, body = body).map { }
+        return client.post(otpEndpoint(emailRedirectTo), body = body).map { }
     }
 
     override suspend fun verifyOtp(
@@ -395,7 +421,7 @@ internal class AuthClientImpl(
     ): SupabaseResult<User> {
         val body = defaultJson.encodeToString(updates)
         return client
-            .patch(
+            .put(
                 endpoint = AuthPaths.USER,
                 body = body,
                 headers = bearerHeaders(accessToken),

@@ -15,16 +15,19 @@ public object Supabase {
             "projectUrl must start with http:// or https:// (got: $projectUrl)"
         }
         require(apiKey.isNotBlank()) { "apiKey must not be blank" }
+        // Strip a single trailing slash so endpoints that start with `/`
+        // (e.g. `/functions/v1/...`) don't produce a doubled `//`.
+        val normalizedUrl = projectUrl.trimEnd('/')
         val config = SupabaseConfigBuilder().apply(configure).build()
         val transport =
             HttpTransport(
                 config = config,
                 engineFactory = engineFactory,
-                projectUrl = projectUrl,
+                projectUrl = normalizedUrl,
                 apiKey = apiKey,
             )
         return SupabaseClientImpl(
-            projectUrl = projectUrl,
+            projectUrl = normalizedUrl,
             apiKey = apiKey,
             transport = transport,
         )

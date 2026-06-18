@@ -13,7 +13,7 @@ public data class Session(
     @SerialName("access_token") val accessToken: String,
     @SerialName("refresh_token") val refreshToken: String,
     @SerialName("expires_in") val expiresIn: Long,
-    @SerialName("token_type") val tokenType: String,
+    @SerialName("token_type") val tokenType: String = "bearer",
     val user: User,
     /**
      * Access token issued by the third-party provider after an OAuth or native sign-in. Present only
@@ -25,7 +25,14 @@ public data class Session(
      * access token. Null for flows that do not return one.
      */
     @SerialName("provider_refresh_token") val providerRefreshToken: String? = null,
-)
+) {
+    // Mask the bearer credentials so a session never leaks into logs or crash reports; the
+    // generated toString() would print every token verbatim.
+    override fun toString(): String =
+        "Session(tokenType=$tokenType, expiresIn=$expiresIn, accessToken=***, refreshToken=***, " +
+            "providerToken=${if (providerToken == null) "null" else "***"}, " +
+            "providerRefreshToken=${if (providerRefreshToken == null) "null" else "***"}, user=$user)"
+}
 
 /** A Supabase auth user: stable [id] plus profile, metadata, linked [identities] and MFA [factors]. */
 @Serializable
@@ -63,22 +70,50 @@ public data class UserIdentity(
     @SerialName("identity_data") val identityData: JsonObject? = null,
 )
 
-/** Request body for `POST /signup` (email or phone + password). */
+/** Request body for `POST /signup` (email or phone + password); the captcha constructor nests the token under `gotrue_meta_security`. */
 @Serializable
 public data class SignUpRequest(
     val email: String? = null,
     val phone: String? = null,
     val password: String,
     val data: JsonObject? = null,
-)
+    @SerialName("gotrue_meta_security") val gotrueMetaSecurity: GotrueMetaSecurity? = null,
+) {
+    public constructor(
+        password: String,
+        email: String? = null,
+        phone: String? = null,
+        data: JsonObject? = null,
+        captchaToken: String?,
+    ) : this(
+        email = email,
+        phone = phone,
+        password = password,
+        data = data,
+        gotrueMetaSecurity = captchaToken?.let(::GotrueMetaSecurity),
+    )
+}
 
-/** Request body for the password grant (email or phone + password). */
+/** Request body for the password grant (email or phone + password); the captcha constructor nests the token under `gotrue_meta_security`. */
 @Serializable
 public data class SignInRequest(
     val email: String? = null,
     val phone: String? = null,
     val password: String,
-)
+    @SerialName("gotrue_meta_security") val gotrueMetaSecurity: GotrueMetaSecurity? = null,
+) {
+    public constructor(
+        password: String,
+        email: String? = null,
+        phone: String? = null,
+        captchaToken: String?,
+    ) : this(
+        email = email,
+        phone = phone,
+        password = password,
+        gotrueMetaSecurity = captchaToken?.let(::GotrueMetaSecurity),
+    )
+}
 
 /**
  * Request body for the `id_token` grant — signing in (or linking) with a provider
@@ -124,7 +159,11 @@ public data class AnonymousSignInRequest(
     )
 }
 
-/** Request body for `POST /otp` (passwordless code / magic-link); the captcha constructor nests the token under `gotrue_meta_security`. */
+/**
+ * Request body for `POST /otp` (passwordless code / magic-link); the captcha constructor nests the
+ * token under `gotrue_meta_security`. The magic-link redirect is sent as a `redirect_to` query
+ * param, not a body field — GoTrue ignores it in the body.
+ */
 @Serializable
 public data class OtpRequest(
     val email: String? = null,
@@ -133,14 +172,12 @@ public data class OtpRequest(
     // Delivery channel for phone OTP: "sms" (default, server-side) or "whatsapp".
     val channel: String? = null,
     @SerialName("gotrue_meta_security") val gotrueMetaSecurity: GotrueMetaSecurity? = null,
-    @SerialName("email_redirect_to") val emailRedirectTo: String? = null,
 ) {
     public constructor(
         email: String? = null,
         phone: String? = null,
         createUser: Boolean? = null,
         channel: String? = null,
-        emailRedirectTo: String? = null,
         captchaToken: String?,
     ) : this(
         email = email,
@@ -148,7 +185,6 @@ public data class OtpRequest(
         createUser = createUser,
         channel = channel,
         gotrueMetaSecurity = captchaToken?.let(::GotrueMetaSecurity),
-        emailRedirectTo = emailRedirectTo,
     )
 }
 
@@ -424,7 +460,10 @@ public data class MfaTotpDetails(
     @SerialName("qr_code") public val qrCode: String,
     @SerialName("secret") public val secret: String,
     @SerialName("uri") public val uri: String,
-)
+) {
+    // Mask the TOTP secret (and the uri, which embeds it) so enrollment material never lands in logs.
+    override fun toString(): String = "MfaTotpDetails(qrCode=$qrCode, secret=***, uri=***)"
+}
 
 /** Request body for `POST /factors/{id}/challenge`; carries only the phone delivery [channel] (the factor id is in the path). */
 @Serializable
@@ -455,10 +494,15 @@ public data class MfaVerifyRequest(
 public data class MfaVerifyResponse(
     @SerialName("access_token") public val accessToken: String,
     @SerialName("refresh_token") public val refreshToken: String,
-    @SerialName("token_type") public val tokenType: String,
+    @SerialName("token_type") public val tokenType: String = "bearer",
     @SerialName("expires_in") public val expiresIn: Long,
     @SerialName("user") public val user: User,
-)
+) {
+    // Mask the bearer credentials so this MFA session never leaks into logs or crash reports.
+    override fun toString(): String =
+        "MfaVerifyResponse(tokenType=$tokenType, expiresIn=$expiresIn, accessToken=***, " +
+            "refreshToken=***, user=$user)"
+}
 
 /** Result of un-enrolling a factor: the [id] of the removed factor. */
 @Serializable

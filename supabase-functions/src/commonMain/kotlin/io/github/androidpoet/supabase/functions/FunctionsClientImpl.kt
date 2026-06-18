@@ -83,7 +83,9 @@ internal class FunctionsClientImpl(
             // Prefer an explicitly pinned token, otherwise fall back to the client's
             // current session token so refreshes are picked up automatically.
             (authToken ?: client.accessTokenOrNull)?.let { put("Authorization", "Bearer $it") }
-            if (region != null) {
+            // ANY means "no region pin, let the platform route", so omit the header
+            // entirely rather than sending a literal `x-region: any`.
+            if (region != null && region != FunctionRegion.ANY) {
                 put("x-region", region.value)
             }
             putAll(extra)

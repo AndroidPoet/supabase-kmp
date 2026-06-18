@@ -393,15 +393,20 @@ public class FilterBuilder {
     /**
      * Negates every filter declared inside [block] (SQL `NOT`). Each inner pair is
      * re-emitted with a `not.` prefix, e.g. an inner `eq` becomes
-     * `column=not.eq.<value>`. Use the [not] (column, operator, value) overload for
-     * a single negated operator.
+     * `column=not.eq.<value>`. A negated nested logical group prefixes the KEY
+     * instead, e.g. `not { and { … } }` renders as `not.and=(…)`. Use the
+     * [not] (column, operator, value) overload for a single negated operator.
      *
      * @param block a nested DSL block whose filters are individually negated.
      */
     public fun not(block: FilterBuilder.() -> Unit) {
         val inner = FilterBuilder().apply(block).build()
         for ((key, value) in inner) {
-            params += key to "not.$value"
+            if (isLogicalKey(key)) {
+                params += "not.$key" to value
+            } else {
+                params += key to "not.$value"
+            }
         }
     }
 
@@ -425,7 +430,7 @@ public class FilterBuilder {
      */
     public fun or(block: FilterBuilder.() -> Unit) {
         val inner = FilterBuilder().apply(block).build()
-        val combined = inner.joinToString(",") { (k, v) -> "$k.$v" }
+        val combined = flattenLogical(inner)
         params += "or" to "($combined)"
     }
 
@@ -438,9 +443,28 @@ public class FilterBuilder {
      */
     public fun and(block: FilterBuilder.() -> Unit) {
         val inner = FilterBuilder().apply(block).build()
-        val combined = inner.joinToString(",") { (k, v) -> "$k.$v" }
+        val combined = flattenLogical(inner)
         params += "and" to "($combined)"
     }
+
+    /**
+     * Returns `true` when [key] denotes a nested logical group (`and`/`or`),
+     * optionally qualified by a referenced table (e.g. `tbl.and`/`tbl.or`).
+     * Such entries carry a value already wrapped in `(…)` and must NOT have a
+     * dot inserted between key and value when flattened.
+     */
+    private fun isLogicalKey(key: String): Boolean =
+        key == "and" || key == "or" || key.endsWith(".and") || key.endsWith(".or")
+
+    /**
+     * Flattens the inner pairs of a logical group into PostgREST's comma-joined
+     * form. Normal entries render as `key.value`; nested logical-group entries
+     * (whose value already begins with `(`) render as `keyvalue` with no dot.
+     */
+    private fun flattenLogical(inner: List<Pair<String, String>>): String =
+        inner.joinToString(",") { (k, v) ->
+            if (isLogicalKey(k)) "$k$v" else "$k.$v"
+        }
 
     /**
      * Full-text search on [column] against [query], using the parse mode [type]
@@ -541,6 +565,7 @@ public class FilterBuilder {
      * @param referencedTable page an embedded/joined resource when set.
      */
     public fun range(from: Int, to: Int, referencedTable: String? = null) {
+        require(to >= from) { "range 'to' ($to) must be >= 'from' ($from)" }
         val offsetKey = if (referencedTable == null) "offset" else "$referencedTable.offset"
         val limitKey = if (referencedTable == null) "limit" else "$referencedTable.limit"
         params += offsetKey to from.toString()

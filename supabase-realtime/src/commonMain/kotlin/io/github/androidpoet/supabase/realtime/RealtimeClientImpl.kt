@@ -443,12 +443,17 @@ internal class RealtimeClientImpl(
         newScope.launch {
             try {
                 for (frame in ws.incoming) {
-                    if (frame is Frame.Text) {
-                        val text = frame.readText()
-                        val message = json.decodeFromString<RealtimeMessage>(text)
-                        recordInboundMessage(message)
-                        dispatchToSubscription(message)
-                    }
+                    if (frame !is Frame.Text) continue
+                    val message =
+                        try {
+                            json.decodeFromString<RealtimeMessage>(frame.readText())
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (_: Throwable) {
+                            continue
+                        }
+                    recordInboundMessage(message)
+                    dispatchToSubscription(message)
                 }
             } catch (e: Throwable) {
                 if (e is CancellationException) throw e
@@ -514,8 +519,8 @@ internal class RealtimeClientImpl(
             )
         }
         _debugEvents.tryEmit(RealtimeDebugEvent.InboundMessage(message))
-        if (message.isHeartbeatReply()) {
-            pendingHeartbeatRef.value = null
+        if (message.isHeartbeatReply() && message.ref != null) {
+            pendingHeartbeatRef.compareAndSet(message.ref, null)
             _debugEvents.tryEmit(RealtimeDebugEvent.HeartbeatReceived(message.ref))
         }
     }

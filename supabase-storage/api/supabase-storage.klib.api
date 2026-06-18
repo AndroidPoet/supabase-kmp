@@ -253,7 +253,7 @@ final class io.github.androidpoet.supabase.storage.models/AnalyticsBucketDeleteR
 }
 
 final class io.github.androidpoet.supabase.storage.models/Bucket { // io.github.androidpoet.supabase.storage.models/Bucket|null[0]
-    constructor <init>(kotlin/String, kotlin/String, kotlin/Boolean, kotlin/String? = ..., kotlin/String? = ..., kotlin/Long? = ..., kotlin.collections/List<kotlin/String>? = ...) // io.github.androidpoet.supabase.storage.models/Bucket.<init>|<init>(kotlin.String;kotlin.String;kotlin.Boolean;kotlin.String?;kotlin.String?;kotlin.Long?;kotlin.collections.List<kotlin.String>?){}[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/Boolean = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/Long? = ..., kotlin.collections/List<kotlin/String>? = ...) // io.github.androidpoet.supabase.storage.models/Bucket.<init>|<init>(kotlin.String;kotlin.String;kotlin.Boolean;kotlin.String?;kotlin.String?;kotlin.Long?;kotlin.collections.List<kotlin.String>?){}[0]
 
     final val allowedMimeTypes // io.github.androidpoet.supabase.storage.models/Bucket.allowedMimeTypes|{}allowedMimeTypes[0]
         final fun <get-allowedMimeTypes>(): kotlin.collections/List<kotlin/String>? // io.github.androidpoet.supabase.storage.models/Bucket.allowedMimeTypes.<get-allowedMimeTypes>|<get-allowedMimeTypes>(){}[0]
@@ -930,31 +930,31 @@ final class io.github.androidpoet.supabase.storage.models/ObjectListV2Folder { /
 }
 
 final class io.github.androidpoet.supabase.storage.models/ObjectListV2Object { // io.github.androidpoet.supabase.storage.models/ObjectListV2Object|null[0]
-    constructor <init>(kotlin/String, kotlin/String? = ..., kotlin/String, kotlin/String, kotlin/String, kotlin/String, kotlinx.serialization.json/JsonObject? = ...) // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.<init>|<init>(kotlin.String;kotlin.String?;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlinx.serialization.json.JsonObject?){}[0]
+    constructor <init>(kotlin/String, kotlin/String? = ..., kotlin/String, kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ...) // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.<init>|<init>(kotlin.String;kotlin.String?;kotlin.String;kotlin.String?;kotlin.String?;kotlin.String?;kotlinx.serialization.json.JsonObject?){}[0]
 
     final val createdAt // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.createdAt|{}createdAt[0]
-        final fun <get-createdAt>(): kotlin/String // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.createdAt.<get-createdAt>|<get-createdAt>(){}[0]
+        final fun <get-createdAt>(): kotlin/String? // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.createdAt.<get-createdAt>|<get-createdAt>(){}[0]
     final val id // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.id|{}id[0]
         final fun <get-id>(): kotlin/String // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.id.<get-id>|<get-id>(){}[0]
     final val key // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.key|{}key[0]
         final fun <get-key>(): kotlin/String? // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.key.<get-key>|<get-key>(){}[0]
     final val lastAccessedAt // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.lastAccessedAt|{}lastAccessedAt[0]
-        final fun <get-lastAccessedAt>(): kotlin/String // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.lastAccessedAt.<get-lastAccessedAt>|<get-lastAccessedAt>(){}[0]
+        final fun <get-lastAccessedAt>(): kotlin/String? // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.lastAccessedAt.<get-lastAccessedAt>|<get-lastAccessedAt>(){}[0]
     final val metadata // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.metadata|{}metadata[0]
         final fun <get-metadata>(): kotlinx.serialization.json/JsonObject? // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.metadata.<get-metadata>|<get-metadata>(){}[0]
     final val name // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.name|{}name[0]
         final fun <get-name>(): kotlin/String // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.name.<get-name>|<get-name>(){}[0]
     final val updatedAt // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.updatedAt|{}updatedAt[0]
-        final fun <get-updatedAt>(): kotlin/String // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.updatedAt.<get-updatedAt>|<get-updatedAt>(){}[0]
+        final fun <get-updatedAt>(): kotlin/String? // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.updatedAt.<get-updatedAt>|<get-updatedAt>(){}[0]
 
     final fun component1(): kotlin/String // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.component1|component1(){}[0]
     final fun component2(): kotlin/String? // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.component2|component2(){}[0]
     final fun component3(): kotlin/String // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.component3|component3(){}[0]
-    final fun component4(): kotlin/String // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.component4|component4(){}[0]
-    final fun component5(): kotlin/String // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.component5|component5(){}[0]
-    final fun component6(): kotlin/String // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.component6|component6(){}[0]
+    final fun component4(): kotlin/String? // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.component4|component4(){}[0]
+    final fun component5(): kotlin/String? // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.component5|component5(){}[0]
+    final fun component6(): kotlin/String? // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.component6|component6(){}[0]
     final fun component7(): kotlinx.serialization.json/JsonObject? // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.component7|component7(){}[0]
-    final fun copy(kotlin/String = ..., kotlin/String? = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlinx.serialization.json/JsonObject? = ...): io.github.androidpoet.supabase.storage.models/ObjectListV2Object // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.copy|copy(kotlin.String;kotlin.String?;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlinx.serialization.json.JsonObject?){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String? = ..., kotlin/String = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ...): io.github.androidpoet.supabase.storage.models/ObjectListV2Object // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.copy|copy(kotlin.String;kotlin.String?;kotlin.String;kotlin.String?;kotlin.String?;kotlin.String?;kotlinx.serialization.json.JsonObject?){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/ObjectListV2Object.toString|toString(){}[0]

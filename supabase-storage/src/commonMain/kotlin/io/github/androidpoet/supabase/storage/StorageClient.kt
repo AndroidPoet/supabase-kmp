@@ -685,8 +685,9 @@ public interface StorageClient {
 
     /**
      * Builds the authenticated URL (`/object/authenticated`) for [path] locally. The URL still
-     * requires valid credentials when fetched; this only composes the address. See [getPublicUrl]
-     * for public buckets.
+     * requires valid credentials when fetched; this only composes the address. Pass [transform] to
+     * target the render endpoint with a server-side image transform. See [getPublicUrl] for public
+     * buckets.
      */
     public fun getAuthenticatedUrl(
         bucket: String,
