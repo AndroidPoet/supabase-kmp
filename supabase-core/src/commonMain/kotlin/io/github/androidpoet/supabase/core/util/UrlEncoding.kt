@@ -11,7 +11,12 @@ private const val HEX_CHARS = "0123456789ABCDEF"
 public fun urlEncode(value: String): String =
     buildString {
         for (char in value) {
-            if (char.isLetterOrDigit() || char in "-._~") {
+            // RFC 3986 unreserved is ASCII-only. Char.isLetterOrDigit() is
+            // Unicode-aware and would let accented/CJK letters (é, 中) through
+            // unencoded, so check the ASCII ranges explicitly.
+            val isUnreserved =
+                char in 'A'..'Z' || char in 'a'..'z' || char in '0'..'9' || char in "-._~"
+            if (isUnreserved) {
                 append(char)
             } else {
                 for (byte in char.toString().encodeToByteArray()) {

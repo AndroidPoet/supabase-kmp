@@ -342,6 +342,73 @@ class FiltersTest {
         assertEquals(listOf("period" to "nxl.(1,10)"), result)
     }
 
+    // --- Escaping of scalar operators that previously interpolated raw values ---
+    // These lock in that like/ilike/is/textSearch/filter/not(3-arg) quote
+    // structural characters so a value can't break out of the filter grammar
+    // (e.g. close an enclosing or(...) group). Wildcards and spaces are NOT
+    // structural, so normal patterns stay unquoted.
+
+    @Test
+    fun test_like_plainPattern_isNotQuoted() {
+        assertEquals(listOf("name" to "like.%john%"), filters { like("name", "%john%") })
+    }
+
+    @Test
+    fun test_like_patternWithComma_isQuoted() {
+        assertEquals(listOf("name" to """like."a,b%""""), filters { like("name", "a,b%") })
+    }
+
+    @Test
+    fun test_like_patternWithParen_isQuoted() {
+        assertEquals(listOf("name" to """like."x)y""""), filters { like("name", "x)y") })
+    }
+
+    @Test
+    fun test_ilike_patternWithComma_isQuoted() {
+        assertEquals(listOf("email" to """ilike."a,b""""), filters { ilike("email", "a,b") })
+    }
+
+    @Test
+    fun test_likeAllOf_quotesElementsContainingSeparators() {
+        assertEquals(
+            listOf("name" to """like(all).{"a,b",O%}"""),
+            filters { likeAllOf("name", listOf("a,b", "O%")) },
+        )
+    }
+
+    @Test
+    fun test_is_stringWithSeparator_isQuoted() {
+        assertEquals(listOf("col" to """is."a,b""""), filters { `is`("col", "a,b") })
+    }
+
+    @Test
+    fun test_textSearch_queryWithComma_isQuoted() {
+        assertEquals(listOf("body" to """plfts."a,b""""), filters { textSearch("body", "a,b") })
+    }
+
+    @Test
+    fun test_textSearch_plainQueryWithSpace_isNotQuoted() {
+        assertEquals(listOf("body" to "plfts.hello world"), filters { textSearch("body", "hello world") })
+    }
+
+    @Test
+    fun test_filter_valueWithParen_isQuoted() {
+        assertEquals(listOf("col" to """eq."a)b""""), filters { filter("col", "eq", "a)b") })
+    }
+
+    @Test
+    fun test_not_operatorOverload_valueWithComma_isQuoted() {
+        assertEquals(listOf("col" to """not.eq."a,b""""), filters { not("col", "eq", "a,b") })
+    }
+
+    @Test
+    fun test_filter_injectionAttemptCannotBreakOutOfGroup() {
+        // A value crafted to close an or(...) group and append a clause must be
+        // neutralized by quoting rather than altering the query structure.
+        val result = filters { or { eq("status", "active)") } }
+        assertEquals(listOf("or" to """(status.eq."active)")"""), result)
+    }
+
     @Test
     fun test_filterBuilder_buildReturnsImmutableCopy() {
         val builder = FilterBuilder()

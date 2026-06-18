@@ -73,31 +73,31 @@ public class FilterBuilder {
     }
 
     public fun like(column: String, pattern: String) {
-        params += column to "like.$pattern"
+        params += column to "like.${encodeValue(pattern)}"
     }
 
     public fun likeAllOf(column: String, patterns: List<String>) {
-        params += column to "like(all).{${patterns.joinToString(",")}}"
+        params += column to "like(all).{${patterns.joinToString(",") { encodeValue(it) }}}"
     }
 
     public fun likeAnyOf(column: String, patterns: List<String>) {
-        params += column to "like(any).{${patterns.joinToString(",")}}"
+        params += column to "like(any).{${patterns.joinToString(",") { encodeValue(it) }}}"
     }
 
     public fun ilike(column: String, pattern: String) {
-        params += column to "ilike.$pattern"
+        params += column to "ilike.${encodeValue(pattern)}"
     }
 
     public fun ilikeAllOf(column: String, patterns: List<String>) {
-        params += column to "ilike(all).{${patterns.joinToString(",")}}"
+        params += column to "ilike(all).{${patterns.joinToString(",") { encodeValue(it) }}}"
     }
 
     public fun ilikeAnyOf(column: String, patterns: List<String>) {
-        params += column to "ilike(any).{${patterns.joinToString(",")}}"
+        params += column to "ilike(any).{${patterns.joinToString(",") { encodeValue(it) }}}"
     }
 
     public fun `is`(column: String, value: String) {
-        params += column to "is.$value"
+        params += column to "is.${encodeValue(value)}"
     }
 
     /**
@@ -117,6 +117,10 @@ public class FilterBuilder {
         values.forEach { (column, value) -> eq(column, value) }
     }
 
+    // The array/range operators below take a caller-formatted PostgREST literal
+    // (e.g. `{a,b}`, `[1,10)`) whose commas/parens are structural to that literal,
+    // so the value is passed through verbatim and is NOT quoted. The caller owns
+    // formatting (and escaping individual elements) for these operators.
     public fun contains(column: String, value: String) {
         params += column to "cs.$value"
     }
@@ -157,7 +161,7 @@ public class FilterBuilder {
     }
 
     public fun not(column: String, operator: String, value: String) {
-        params += column to "not.$operator.$value"
+        params += column to "not.$operator.${encodeValue(value)}"
     }
 
     public fun or(block: FilterBuilder.() -> Unit) {
@@ -179,11 +183,11 @@ public class FilterBuilder {
         type: TextSearchType = TextSearchType.Plain,
     ) {
         val configPart = if (config != null) "($config)" else ""
-        params += column to "${type.postgrestName}fts$configPart.$query"
+        params += column to "${type.postgrestName}fts$configPart.${encodeValue(query)}"
     }
 
     public fun filter(column: String, operator: String, value: String) {
-        params += column to "$operator.$value"
+        params += column to "$operator.${encodeValue(value)}"
     }
 
     public fun order(
