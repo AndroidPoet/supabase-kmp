@@ -10,6 +10,7 @@ import io.ktor.client.engine.HttpClientEngineFactory
 import io.ktor.client.network.sockets.ConnectTimeoutException
 import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.plugins.HttpRequestTimeoutException
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.Logging
@@ -83,6 +84,18 @@ internal class HttpTransport(
                         explicitNulls = false
                     },
                 )
+            }
+            // Timeouts are opt-in (all null by default) so we never silently cap a
+            // streaming response or a large transfer. Install only when configured.
+            if (config.connectTimeoutMillis != null ||
+                config.socketTimeoutMillis != null ||
+                config.requestTimeoutMillis != null
+            ) {
+                install(HttpTimeout) {
+                    config.connectTimeoutMillis?.let { connectTimeoutMillis = it }
+                    config.socketTimeoutMillis?.let { socketTimeoutMillis = it }
+                    config.requestTimeoutMillis?.let { requestTimeoutMillis = it }
+                }
             }
             if (config.logging) {
                 install(Logging) {

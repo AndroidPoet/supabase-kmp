@@ -145,8 +145,10 @@ final class io.github.androidpoet.supabase.client/RetryConfig { // io.github.and
 }
 
 final class io.github.androidpoet.supabase.client/SupabaseConfig { // io.github.androidpoet.supabase.client/SupabaseConfig|null[0]
-    constructor <init>(kotlin/Boolean, io.ktor.client.plugins.logging/LogLevel, kotlin.collections/Map<kotlin/String, kotlin/String>, io.github.androidpoet.supabase.client/RetryConfig = ..., io.github.androidpoet.supabase.client/SupabaseLogger? = ..., io.github.androidpoet.supabase.client/SupabaseInterceptor? = ...) // io.github.androidpoet.supabase.client/SupabaseConfig.<init>|<init>(kotlin.Boolean;io.ktor.client.plugins.logging.LogLevel;kotlin.collections.Map<kotlin.String,kotlin.String>;io.github.androidpoet.supabase.client.RetryConfig;io.github.androidpoet.supabase.client.SupabaseLogger?;io.github.androidpoet.supabase.client.SupabaseInterceptor?){}[0]
+    constructor <init>(kotlin/Boolean, io.ktor.client.plugins.logging/LogLevel, kotlin.collections/Map<kotlin/String, kotlin/String>, io.github.androidpoet.supabase.client/RetryConfig = ..., io.github.androidpoet.supabase.client/SupabaseLogger? = ..., io.github.androidpoet.supabase.client/SupabaseInterceptor? = ..., kotlin/Long? = ..., kotlin/Long? = ..., kotlin/Long? = ...) // io.github.androidpoet.supabase.client/SupabaseConfig.<init>|<init>(kotlin.Boolean;io.ktor.client.plugins.logging.LogLevel;kotlin.collections.Map<kotlin.String,kotlin.String>;io.github.androidpoet.supabase.client.RetryConfig;io.github.androidpoet.supabase.client.SupabaseLogger?;io.github.androidpoet.supabase.client.SupabaseInterceptor?;kotlin.Long?;kotlin.Long?;kotlin.Long?){}[0]
 
+    final val connectTimeoutMillis // io.github.androidpoet.supabase.client/SupabaseConfig.connectTimeoutMillis|{}connectTimeoutMillis[0]
+        final fun <get-connectTimeoutMillis>(): kotlin/Long? // io.github.androidpoet.supabase.client/SupabaseConfig.connectTimeoutMillis.<get-connectTimeoutMillis>|<get-connectTimeoutMillis>(){}[0]
     final val headers // io.github.androidpoet.supabase.client/SupabaseConfig.headers|{}headers[0]
         final fun <get-headers>(): kotlin.collections/Map<kotlin/String, kotlin/String> // io.github.androidpoet.supabase.client/SupabaseConfig.headers.<get-headers>|<get-headers>(){}[0]
     final val interceptor // io.github.androidpoet.supabase.client/SupabaseConfig.interceptor|{}interceptor[0]
@@ -157,8 +159,12 @@ final class io.github.androidpoet.supabase.client/SupabaseConfig { // io.github.
         final fun <get-logger>(): io.github.androidpoet.supabase.client/SupabaseLogger? // io.github.androidpoet.supabase.client/SupabaseConfig.logger.<get-logger>|<get-logger>(){}[0]
     final val logging // io.github.androidpoet.supabase.client/SupabaseConfig.logging|{}logging[0]
         final fun <get-logging>(): kotlin/Boolean // io.github.androidpoet.supabase.client/SupabaseConfig.logging.<get-logging>|<get-logging>(){}[0]
+    final val requestTimeoutMillis // io.github.androidpoet.supabase.client/SupabaseConfig.requestTimeoutMillis|{}requestTimeoutMillis[0]
+        final fun <get-requestTimeoutMillis>(): kotlin/Long? // io.github.androidpoet.supabase.client/SupabaseConfig.requestTimeoutMillis.<get-requestTimeoutMillis>|<get-requestTimeoutMillis>(){}[0]
     final val retry // io.github.androidpoet.supabase.client/SupabaseConfig.retry|{}retry[0]
         final fun <get-retry>(): io.github.androidpoet.supabase.client/RetryConfig // io.github.androidpoet.supabase.client/SupabaseConfig.retry.<get-retry>|<get-retry>(){}[0]
+    final val socketTimeoutMillis // io.github.androidpoet.supabase.client/SupabaseConfig.socketTimeoutMillis|{}socketTimeoutMillis[0]
+        final fun <get-socketTimeoutMillis>(): kotlin/Long? // io.github.androidpoet.supabase.client/SupabaseConfig.socketTimeoutMillis.<get-socketTimeoutMillis>|<get-socketTimeoutMillis>(){}[0]
 
     final fun component1(): kotlin/Boolean // io.github.androidpoet.supabase.client/SupabaseConfig.component1|component1(){}[0]
     final fun component2(): io.ktor.client.plugins.logging/LogLevel // io.github.androidpoet.supabase.client/SupabaseConfig.component2|component2(){}[0]
@@ -166,7 +172,10 @@ final class io.github.androidpoet.supabase.client/SupabaseConfig { // io.github.
     final fun component4(): io.github.androidpoet.supabase.client/RetryConfig // io.github.androidpoet.supabase.client/SupabaseConfig.component4|component4(){}[0]
     final fun component5(): io.github.androidpoet.supabase.client/SupabaseLogger? // io.github.androidpoet.supabase.client/SupabaseConfig.component5|component5(){}[0]
     final fun component6(): io.github.androidpoet.supabase.client/SupabaseInterceptor? // io.github.androidpoet.supabase.client/SupabaseConfig.component6|component6(){}[0]
-    final fun copy(kotlin/Boolean = ..., io.ktor.client.plugins.logging/LogLevel = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., io.github.androidpoet.supabase.client/RetryConfig = ..., io.github.androidpoet.supabase.client/SupabaseLogger? = ..., io.github.androidpoet.supabase.client/SupabaseInterceptor? = ...): io.github.androidpoet.supabase.client/SupabaseConfig // io.github.androidpoet.supabase.client/SupabaseConfig.copy|copy(kotlin.Boolean;io.ktor.client.plugins.logging.LogLevel;kotlin.collections.Map<kotlin.String,kotlin.String>;io.github.androidpoet.supabase.client.RetryConfig;io.github.androidpoet.supabase.client.SupabaseLogger?;io.github.androidpoet.supabase.client.SupabaseInterceptor?){}[0]
+    final fun component7(): kotlin/Long? // io.github.androidpoet.supabase.client/SupabaseConfig.component7|component7(){}[0]
+    final fun component8(): kotlin/Long? // io.github.androidpoet.supabase.client/SupabaseConfig.component8|component8(){}[0]
+    final fun component9(): kotlin/Long? // io.github.androidpoet.supabase.client/SupabaseConfig.component9|component9(){}[0]
+    final fun copy(kotlin/Boolean = ..., io.ktor.client.plugins.logging/LogLevel = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., io.github.androidpoet.supabase.client/RetryConfig = ..., io.github.androidpoet.supabase.client/SupabaseLogger? = ..., io.github.androidpoet.supabase.client/SupabaseInterceptor? = ..., kotlin/Long? = ..., kotlin/Long? = ..., kotlin/Long? = ...): io.github.androidpoet.supabase.client/SupabaseConfig // io.github.androidpoet.supabase.client/SupabaseConfig.copy|copy(kotlin.Boolean;io.ktor.client.plugins.logging.LogLevel;kotlin.collections.Map<kotlin.String,kotlin.String>;io.github.androidpoet.supabase.client.RetryConfig;io.github.androidpoet.supabase.client.SupabaseLogger?;io.github.androidpoet.supabase.client.SupabaseInterceptor?;kotlin.Long?;kotlin.Long?;kotlin.Long?){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.client/SupabaseConfig.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.client/SupabaseConfig.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // io.github.androidpoet.supabase.client/SupabaseConfig.toString|toString(){}[0]
@@ -178,6 +187,9 @@ final class io.github.androidpoet.supabase.client/SupabaseConfigBuilder { // io.
     final val headers // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.headers|{}headers[0]
         final fun <get-headers>(): kotlin.collections/MutableMap<kotlin/String, kotlin/String> // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.headers.<get-headers>|<get-headers>(){}[0]
 
+    final var connectTimeoutMillis // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.connectTimeoutMillis|{}connectTimeoutMillis[0]
+        final fun <get-connectTimeoutMillis>(): kotlin/Long? // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.connectTimeoutMillis.<get-connectTimeoutMillis>|<get-connectTimeoutMillis>(){}[0]
+        final fun <set-connectTimeoutMillis>(kotlin/Long?) // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.connectTimeoutMillis.<set-connectTimeoutMillis>|<set-connectTimeoutMillis>(kotlin.Long?){}[0]
     final var interceptor // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.interceptor|{}interceptor[0]
         final fun <get-interceptor>(): io.github.androidpoet.supabase.client/SupabaseInterceptor? // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.interceptor.<get-interceptor>|<get-interceptor>(){}[0]
         final fun <set-interceptor>(io.github.androidpoet.supabase.client/SupabaseInterceptor?) // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.interceptor.<set-interceptor>|<set-interceptor>(io.github.androidpoet.supabase.client.SupabaseInterceptor?){}[0]
@@ -190,9 +202,15 @@ final class io.github.androidpoet.supabase.client/SupabaseConfigBuilder { // io.
     final var logging // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.logging|{}logging[0]
         final fun <get-logging>(): kotlin/Boolean // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.logging.<get-logging>|<get-logging>(){}[0]
         final fun <set-logging>(kotlin/Boolean) // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.logging.<set-logging>|<set-logging>(kotlin.Boolean){}[0]
+    final var requestTimeoutMillis // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.requestTimeoutMillis|{}requestTimeoutMillis[0]
+        final fun <get-requestTimeoutMillis>(): kotlin/Long? // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.requestTimeoutMillis.<get-requestTimeoutMillis>|<get-requestTimeoutMillis>(){}[0]
+        final fun <set-requestTimeoutMillis>(kotlin/Long?) // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.requestTimeoutMillis.<set-requestTimeoutMillis>|<set-requestTimeoutMillis>(kotlin.Long?){}[0]
     final var retry // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.retry|{}retry[0]
         final fun <get-retry>(): io.github.androidpoet.supabase.client/RetryConfig // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.retry.<get-retry>|<get-retry>(){}[0]
         final fun <set-retry>(io.github.androidpoet.supabase.client/RetryConfig) // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.retry.<set-retry>|<set-retry>(io.github.androidpoet.supabase.client.RetryConfig){}[0]
+    final var socketTimeoutMillis // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.socketTimeoutMillis|{}socketTimeoutMillis[0]
+        final fun <get-socketTimeoutMillis>(): kotlin/Long? // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.socketTimeoutMillis.<get-socketTimeoutMillis>|<get-socketTimeoutMillis>(){}[0]
+        final fun <set-socketTimeoutMillis>(kotlin/Long?) // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.socketTimeoutMillis.<set-socketTimeoutMillis>|<set-socketTimeoutMillis>(kotlin.Long?){}[0]
 }
 
 final class io.github.androidpoet.supabase.client/SupabaseHttpResponse { // io.github.androidpoet.supabase.client/SupabaseHttpResponse|null[0]
