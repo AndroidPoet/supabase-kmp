@@ -39,6 +39,10 @@ public suspend fun StorageClient.uploadResumable(
         chunkSize = chunkSize,
     ).await()
 
+/**
+ * Convenience over [StorageClient.createSignedUrl] that always sets `download = true`, producing a
+ * signed URL that serves the object as an attachment ([fileName] suggests the saved name).
+ */
 public suspend fun StorageClient.createSignedDownloadUrl(
     bucket: String,
     path: String,
@@ -53,6 +57,7 @@ public suspend fun StorageClient.createSignedDownloadUrl(
         fileName = fileName,
     )
 
+/** [createSignedDownloadUrl] that also bakes in an image [transform] (render endpoint). */
 public suspend fun StorageClient.createSignedDownloadUrl(
     bucket: String,
     path: String,
@@ -69,6 +74,10 @@ public suspend fun StorageClient.createSignedDownloadUrl(
         transform = transform,
     )
 
+/**
+ * Batch [createSignedDownloadUrl]: signs every path in [paths] with `download = true`, returning
+ * the attachment URLs in the same order. See [StorageClient.createSignedUrls].
+ */
 public suspend fun StorageClient.createSignedDownloadUrls(
     bucket: String,
     paths: List<String>,
@@ -83,6 +92,7 @@ public suspend fun StorageClient.createSignedDownloadUrls(
         fileName = fileName,
     )
 
+/** `vararg` overload of [createSignedDownloadUrls] (no attachment file name). */
 public suspend fun StorageClient.createSignedDownloadUrls(
     bucket: String,
     expiresIn: Long,
@@ -95,6 +105,7 @@ public suspend fun StorageClient.createSignedDownloadUrls(
         fileName = null,
     )
 
+/** `vararg` overload of [createSignedDownloadUrls] with a suggested attachment [fileName]. */
 public suspend fun StorageClient.createSignedDownloadUrls(
     bucket: String,
     expiresIn: Long,
@@ -108,6 +119,10 @@ public suspend fun StorageClient.createSignedDownloadUrls(
         fileName = fileName,
     )
 
+/**
+ * Convenience over [StorageClient.createSignedUrl] for a transformed image: signs an inline
+ * (non-download) render URL applying [transform].
+ */
 public suspend fun StorageClient.createSignedRenderUrl(
     bucket: String,
     path: String,
@@ -123,6 +138,10 @@ public suspend fun StorageClient.createSignedRenderUrl(
         transform = transform,
     )
 
+/**
+ * Batch [createSignedRenderUrl]: signs a render URL for each path in [paths] applying [transform].
+ * Signs sequentially and short-circuits to [SupabaseResult.Failure] on the first failing path.
+ */
 public suspend fun StorageClient.createSignedRenderUrls(
     bucket: String,
     paths: List<String>,
@@ -148,6 +167,7 @@ public suspend fun StorageClient.createSignedRenderUrls(
     return SupabaseResult.Success(urls)
 }
 
+/** `vararg` overload of [createSignedRenderUrls]. */
 public suspend fun StorageClient.createSignedRenderUrls(
     bucket: String,
     expiresIn: Long,
@@ -161,6 +181,10 @@ public suspend fun StorageClient.createSignedRenderUrls(
         transform = transform,
     )
 
+/**
+ * Like [createSignedDownloadUrls] but returns a path-to-URL [Map] instead of a positional list,
+ * pairing each input path with its signed download URL.
+ */
 public suspend fun StorageClient.createSignedDownloadUrlsByPath(
     bucket: String,
     paths: List<String>,
@@ -180,6 +204,7 @@ public suspend fun StorageClient.createSignedDownloadUrlsByPath(
         is SupabaseResult.Success -> SupabaseResult.Success(paths.zip(result.value).toMap())
     }
 
+/** `vararg` overload of [createSignedDownloadUrlsByPath] (no attachment file name). */
 public suspend fun StorageClient.createSignedDownloadUrlsByPath(
     bucket: String,
     expiresIn: Long,
@@ -192,6 +217,7 @@ public suspend fun StorageClient.createSignedDownloadUrlsByPath(
         fileName = null,
     )
 
+/** `vararg` overload of [createSignedDownloadUrlsByPath] with a suggested attachment [fileName]. */
 public suspend fun StorageClient.createSignedDownloadUrlsByPath(
     bucket: String,
     expiresIn: Long,
@@ -205,6 +231,10 @@ public suspend fun StorageClient.createSignedDownloadUrlsByPath(
         fileName = fileName,
     )
 
+/**
+ * Like [createSignedRenderUrls] but returns a path-to-URL [Map], pairing each input path with its
+ * signed render URL.
+ */
 public suspend fun StorageClient.createSignedRenderUrlsByPath(
     bucket: String,
     paths: List<String>,
@@ -224,6 +254,7 @@ public suspend fun StorageClient.createSignedRenderUrlsByPath(
         is SupabaseResult.Success -> SupabaseResult.Success(paths.zip(result.value).toMap())
     }
 
+/** `vararg` overload of [createSignedRenderUrlsByPath]. */
 public suspend fun StorageClient.createSignedRenderUrlsByPath(
     bucket: String,
     expiresIn: Long,
@@ -237,18 +268,24 @@ public suspend fun StorageClient.createSignedRenderUrlsByPath(
         transform = transform,
     )
 
+/** `vararg` overload of [StorageClient.remove] for deleting several object paths in one call. */
 public suspend fun StorageClient.remove(
     bucket: String,
     vararg paths: String,
 ): SupabaseResult<Unit> =
     remove(bucket = bucket, paths = paths.toList())
 
+/** `vararg` overload of [StorageClient.removeWithResult], returning the deleted objects. */
 public suspend fun StorageClient.removeWithResult(
     bucket: String,
     vararg paths: String,
 ): SupabaseResult<List<io.github.androidpoet.supabase.storage.models.FileObject>> =
     removeWithResult(bucket = bucket, paths = paths.toList())
 
+/**
+ * Builds public URLs for many [paths] at once via [StorageClient.getPublicUrl], returning them in
+ * order. Purely local; no network call. See [StorageClient.getPublicUrl] for the parameters.
+ */
 public fun StorageClient.getPublicUrls(
     bucket: String,
     paths: List<String>,
@@ -266,11 +303,13 @@ public fun StorageClient.getPublicUrls(
         )
     }
 
+/** `vararg` overload of [getPublicUrls] with default download/transform options. */
 public fun StorageClient.getPublicUrls(
     bucket: String,
     vararg paths: String,
 ): List<String> = getPublicUrls(bucket = bucket, paths = paths.toList())
 
+/** `vararg` overload of [getPublicUrls] with explicit download/transform options. */
 public fun StorageClient.getPublicUrls(
     bucket: String,
     download: Boolean = false,
@@ -286,6 +325,9 @@ public fun StorageClient.getPublicUrls(
         transform = transform,
     )
 
+/**
+ * Like [getPublicUrls] but returns a path-to-URL [Map] instead of a positional list. Purely local.
+ */
 public fun StorageClient.getPublicUrlsByPath(
     bucket: String,
     paths: List<String>,
@@ -303,11 +345,13 @@ public fun StorageClient.getPublicUrlsByPath(
         )
     }
 
+/** `vararg` overload of [getPublicUrlsByPath] with default download/transform options. */
 public fun StorageClient.getPublicUrlsByPath(
     bucket: String,
     vararg paths: String,
 ): Map<String, String> = getPublicUrlsByPath(bucket = bucket, paths = paths.toList())
 
+/** `vararg` overload of [getPublicUrlsByPath] with explicit download/transform options. */
 public fun StorageClient.getPublicUrlsByPath(
     bucket: String,
     download: Boolean = false,
@@ -323,6 +367,10 @@ public fun StorageClient.getPublicUrlsByPath(
         transform = transform,
     )
 
+/**
+ * Builds authenticated URLs for many [paths] at once via [StorageClient.getAuthenticatedUrl],
+ * returning them in order. Purely local; the URLs still require credentials when fetched.
+ */
 public fun StorageClient.getAuthenticatedUrls(
     bucket: String,
     paths: List<String>,
@@ -340,11 +388,13 @@ public fun StorageClient.getAuthenticatedUrls(
         )
     }
 
+/** `vararg` overload of [getAuthenticatedUrls] with default download/transform options. */
 public fun StorageClient.getAuthenticatedUrls(
     bucket: String,
     vararg paths: String,
 ): List<String> = getAuthenticatedUrls(bucket = bucket, paths = paths.toList())
 
+/** `vararg` overload of [getAuthenticatedUrls] with explicit download/transform options. */
 public fun StorageClient.getAuthenticatedUrls(
     bucket: String,
     download: Boolean = false,
@@ -360,6 +410,7 @@ public fun StorageClient.getAuthenticatedUrls(
         transform = transform,
     )
 
+/** Like [getAuthenticatedUrls] but returns a path-to-URL [Map] instead of a positional list. */
 public fun StorageClient.getAuthenticatedUrlsByPath(
     bucket: String,
     paths: List<String>,
@@ -377,11 +428,13 @@ public fun StorageClient.getAuthenticatedUrlsByPath(
         )
     }
 
+/** `vararg` overload of [getAuthenticatedUrlsByPath] with default download/transform options. */
 public fun StorageClient.getAuthenticatedUrlsByPath(
     bucket: String,
     vararg paths: String,
 ): Map<String, String> = getAuthenticatedUrlsByPath(bucket = bucket, paths = paths.toList())
 
+/** `vararg` overload of [getAuthenticatedUrlsByPath] with explicit download/transform options. */
 public fun StorageClient.getAuthenticatedUrlsByPath(
     bucket: String,
     download: Boolean = false,
@@ -397,6 +450,10 @@ public fun StorageClient.getAuthenticatedUrlsByPath(
         transform = transform,
     )
 
+/**
+ * Builds public render/transform URLs for many [paths] via [StorageClient.getPublicRenderUrl],
+ * returning them in order. Purely local; no network call.
+ */
 public fun StorageClient.getPublicRenderUrls(
     bucket: String,
     paths: List<String>,
@@ -406,12 +463,14 @@ public fun StorageClient.getPublicRenderUrls(
         getPublicRenderUrl(bucket = bucket, path = path, transform = transform)
     }
 
+/** `vararg` overload of [getPublicRenderUrls]. */
 public fun StorageClient.getPublicRenderUrls(
     bucket: String,
     transform: ImageTransformOptions? = null,
     vararg paths: String,
 ): List<String> = getPublicRenderUrls(bucket = bucket, paths = paths.toList(), transform = transform)
 
+/** Like [getPublicRenderUrls] but returns a path-to-URL [Map] instead of a positional list. */
 public fun StorageClient.getPublicRenderUrlsByPath(
     bucket: String,
     paths: List<String>,
@@ -421,12 +480,18 @@ public fun StorageClient.getPublicRenderUrlsByPath(
         getPublicRenderUrl(bucket = bucket, path = path, transform = transform)
     }
 
+/** `vararg` overload of [getPublicRenderUrlsByPath]. */
 public fun StorageClient.getPublicRenderUrlsByPath(
     bucket: String,
     transform: ImageTransformOptions? = null,
     vararg paths: String,
 ): Map<String, String> = getPublicRenderUrlsByPath(bucket = bucket, paths = paths.toList(), transform = transform)
 
+/**
+ * Builds authenticated render/transform URLs for many [paths] via
+ * [StorageClient.getAuthenticatedRenderUrl], returning them in order. Purely local; the URLs still
+ * require credentials when fetched.
+ */
 public fun StorageClient.getAuthenticatedRenderUrls(
     bucket: String,
     paths: List<String>,
@@ -436,12 +501,14 @@ public fun StorageClient.getAuthenticatedRenderUrls(
         getAuthenticatedRenderUrl(bucket = bucket, path = path, transform = transform)
     }
 
+/** `vararg` overload of [getAuthenticatedRenderUrls]. */
 public fun StorageClient.getAuthenticatedRenderUrls(
     bucket: String,
     transform: ImageTransformOptions? = null,
     vararg paths: String,
 ): List<String> = getAuthenticatedRenderUrls(bucket = bucket, paths = paths.toList(), transform = transform)
 
+/** Like [getAuthenticatedRenderUrls] but returns a path-to-URL [Map] instead of a positional list. */
 public fun StorageClient.getAuthenticatedRenderUrlsByPath(
     bucket: String,
     paths: List<String>,
@@ -451,6 +518,7 @@ public fun StorageClient.getAuthenticatedRenderUrlsByPath(
         getAuthenticatedRenderUrl(bucket = bucket, path = path, transform = transform)
     }
 
+/** `vararg` overload of [getAuthenticatedRenderUrlsByPath]. */
 public fun StorageClient.getAuthenticatedRenderUrlsByPath(
     bucket: String,
     transform: ImageTransformOptions? = null,

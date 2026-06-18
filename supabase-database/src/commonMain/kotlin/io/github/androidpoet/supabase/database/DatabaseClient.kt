@@ -2,6 +2,16 @@ package io.github.androidpoet.supabase.database
 import io.github.androidpoet.supabase.core.models.FilterBuilder
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 
+/**
+ * How PostgREST should compute the total row count, sent as the `count=`
+ * directive of the `Prefer` header.
+ *
+ * The resulting total is surfaced in the `Content-Range` response header and
+ * parsed into [PostgrestRange]/[PostgrestPage]. [EXACT] runs a full count and is
+ * accurate but slowest; [PLANNED] and [ESTIMATED] read the query planner's
+ * estimate (and, for [ESTIMATED], may fall back to an exact count for small
+ * results), trading precision for speed on large tables.
+ */
 public enum class CountOption(
     internal val headerValue: String,
 ) {
@@ -10,6 +20,14 @@ public enum class CountOption(
     ESTIMATED("estimated"),
 }
 
+/**
+ * What a write should return, sent as the `return=` directive of the `Prefer`
+ * header.
+ *
+ * [REPRESENTATION] makes PostgREST echo the affected rows back in the body (so
+ * the typed helpers can decode them); [MINIMAL] returns an empty body, which the
+ * `*Unit` helpers use when the result is not needed.
+ */
 public enum class ReturnOption(
     internal val headerValue: String,
 ) {
@@ -17,6 +35,13 @@ public enum class ReturnOption(
     REPRESENTATION("representation"),
 }
 
+/**
+ * How an upsert resolves a conflict on the target key, sent as the `resolution=`
+ * directive of the `Prefer` header when `upsert` is enabled on [DatabaseClient.insert].
+ *
+ * [MERGE_DUPLICATES] updates the existing row with the incoming values;
+ * [IGNORE_DUPLICATES] leaves the existing row untouched.
+ */
 public enum class UpsertResolution(
     internal val headerValue: String,
 ) {
@@ -24,6 +49,10 @@ public enum class UpsertResolution(
     IGNORE_DUPLICATES("ignore-duplicates"),
 }
 
+/**
+ * Output format for an `EXPLAIN` plan, selecting the `application/vnd.pgrst.plan+<format>`
+ * media type requested via [ExplainOptions].
+ */
 public enum class ExplainFormat(
     internal val headerValue: String,
 ) {
@@ -33,6 +62,22 @@ public enum class ExplainFormat(
     YAML("yaml"),
 }
 
+/**
+ * Requests a PostgREST query plan (`EXPLAIN`) instead of executing the request
+ * for its result, mapping to the `application/vnd.pgrst.plan` Accept media type
+ * and its `options=` flags.
+ *
+ * Pass an instance to [DatabaseClient.select], [DatabaseClient.update],
+ * [DatabaseClient.delete], or the `rpc` calls to have them return the plan text
+ * in the body rather than rows. Each flag toggles the matching `EXPLAIN` option;
+ * [format] picks the rendering (see [ExplainFormat]).
+ *
+ * @param analyze actually run the query and report real timings, not just the estimated plan.
+ * @param verbose include additional per-node detail.
+ * @param settings include configuration parameters that affect planning.
+ * @param buffers include buffer usage (requires [analyze]).
+ * @param wal include write-ahead-log usage (requires [analyze]).
+ */
 public data class ExplainOptions(
     public val analyze: Boolean = false,
     public val verbose: Boolean = false,
@@ -65,7 +110,43 @@ public data class PostgrestPage<T>(
     public val range: LongRange? = null,
 )
 
+/**
+ * Thin, stateless client over a Supabase project's PostgREST (`/rest/v1`) API.
+ *
+ * Every call maps to a single HTTP request and returns the raw response body as
+ * a [String] inside a [SupabaseResult] — failures (HTTP errors, transport
+ * problems, malformed requests) are returned as [SupabaseResult.Failure] carrying
+ * a typed [io.github.androidpoet.supabase.core.result.SupabaseError], never
+ * thrown. These string-returning methods are the wire-level core; for ergonomic,
+ * type-safe access prefer the `reified` extensions in `DatabaseClientExt`
+ * ([selectTyped], [insertTyped], [rpcTyped], etc.), which serialize/deserialize
+ * around them. Obtain an instance via [createDatabaseClient] or the
+ * [SupabaseClient.database] accessor.
+ *
+ * [WHERE]-style row filters are expressed through the [FilterBuilder] receiver
+ * and translated to PostgREST query parameters; common options surface as the
+ * `Prefer` header ([CountOption], [ReturnOption], [UpsertResolution]).
+ */
 public interface DatabaseClient {
+    /**
+     * Reads rows from [table] via `GET /rest/v1/{table}`, returning the response
+     * body as a raw string (typically a JSON array).
+     *
+     * The [columns] selector becomes `select=` (supporting embedded resources and
+     * renames); [filters] add the row predicates, ordering, and range. The body
+     * shape is chosen by the request's `Accept` header: [single] expects exactly
+     * one row (`application/vnd.pgrst.object+json`, a 406 if not), [csv] returns
+     * `text/csv`, [geojson] returns a PostGIS `FeatureCollection`, and [stripNulls]
+     * omits null fields. [head] issues the request for its headers only and yields
+     * an empty body — pair it with [count] to fetch just a total. [explain] returns
+     * the query plan instead of data. Mutually exclusive combinations (e.g. [single]
+     * with [csv]) are rejected before the request is sent.
+     *
+     * @param schema target Postgres schema; sent as `Accept-Profile` when non-null, otherwise the default schema.
+     * @param count adds a `count=` preference so the total appears in `Content-Range`.
+     * @param retry whether this read may be transparently retried by the transport.
+     * @param headers extra request headers, merged with the computed ones.
+     */
     public suspend fun select(
         table: String,
         schema: String? = null,
@@ -114,6 +195,25 @@ public interface DatabaseClient {
         filters: FilterBuilder.() -> Unit = {},
     ): SupabaseResult<Pair<String, PostgrestRange>>
 
+    /**
+     * Inserts (or upserts) into [table] via `POST /rest/v1/{table}`, with [body]
+     * being the JSON of a single object or an array for a bulk insert.
+     *
+     * When [upsert] is set, an `on_conflict=` parameter (from [onConflict]) and a
+     * `resolution=` preference ([upsertResolution]) turn this into an upsert.
+     * [returning] controls whether the affected rows are echoed back
+     * ([ReturnOption.REPRESENTATION]) or the body is empty ([ReturnOption.MINIMAL]);
+     * the typed helper [insertTyped] decodes the former while [insertUnit] uses the
+     * latter. For a multi-row [body] the union of all rows' keys is sent as
+     * `columns=` so columns absent from the first row are not silently dropped; pass
+     * [columns] to override. [defaultToNull] = false sends `missing=default` so
+     * omitted fields take their column DEFAULT instead of NULL.
+     *
+     * @param columns explicit column list (`columns=`); when null it is derived for bulk inserts.
+     * @param count adds a `count=` preference, surfacing the affected total in `Content-Range`.
+     * @param rollback when true sends `tx=rollback` so the write is validated but not committed.
+     * @return the response body (representation rows, or empty for [ReturnOption.MINIMAL]).
+     */
     public suspend fun insert(
         table: String,
         schema: String? = null,
@@ -130,6 +230,21 @@ public interface DatabaseClient {
         headers: Map<String, String> = emptyMap(),
     ): SupabaseResult<String>
 
+    /**
+     * Updates rows of [table] matching [filters] via `PATCH /rest/v1/{table}`,
+     * applying the partial JSON object in [body] to every matched row.
+     *
+     * Because the rows changed are whatever [filters] select, an empty filter set
+     * updates the whole table — set [maxAffected] to cap the change (sends
+     * `handling=strict` + `max-affected=`, failing the request rather than touching
+     * more rows than allowed). [returning]/[stripNulls] shape the echoed body as in
+     * [insert]; the typed helpers [updateTyped]/[updateUnit] sit on top. [explain]
+     * returns the query plan instead of mutating.
+     *
+     * @param count adds a `count=` preference, surfacing the affected total in `Content-Range`.
+     * @param rollback when true sends `tx=rollback` so the change is validated but not committed.
+     * @param maxAffected must be greater than 0 when set; caps the rows the statement may modify.
+     */
     public suspend fun update(
         table: String,
         schema: String? = null,
@@ -144,6 +259,20 @@ public interface DatabaseClient {
         filters: FilterBuilder.() -> Unit = {},
     ): SupabaseResult<String>
 
+    /**
+     * Deletes rows of [table] matching [filters] via `DELETE /rest/v1/{table}`.
+     *
+     * As with [update], the rows removed are exactly those [filters] select, so an
+     * empty filter set deletes the whole table — guard large or accidental deletes
+     * with [maxAffected] (`handling=strict` + `max-affected=`, which fails the
+     * request when more rows would be affected). [returning] decides whether the
+     * deleted rows are echoed back ([deleteTyped]) or the body is empty
+     * ([deleteUnit]); [explain] returns the query plan instead of deleting.
+     *
+     * @param count adds a `count=` preference, surfacing the affected total in `Content-Range`.
+     * @param rollback when true sends `tx=rollback` so the delete is validated but not committed.
+     * @param maxAffected must be greater than 0 when set; caps the rows the statement may delete.
+     */
     public suspend fun delete(
         table: String,
         schema: String? = null,
@@ -157,6 +286,22 @@ public interface DatabaseClient {
         filters: FilterBuilder.() -> Unit = {},
     ): SupabaseResult<String>
 
+    /**
+     * Calls a stored procedure (`POST /rest/v1/rpc/{function}`) with [params] as the
+     * JSON request body, returning the function's result as a raw string.
+     *
+     * This is the mutating/POST form, suitable for functions with side effects or
+     * large argument payloads; for a read-only function prefer [rpcGet], which is
+     * cacheable. [single] expects a scalar/object result, [csv] requests `text/csv`,
+     * and [explain] returns the plan. The typed wrappers ([rpcTyped],
+     * [rpcSingleTyped], [rpcListTyped], [rpcUnit]) decode the body for you.
+     *
+     * @param params JSON object of named arguments, or null for a no-argument call.
+     * @param head issue the request for headers/count only, yielding an empty body.
+     * @param count adds a `count=` preference, surfacing the total in `Content-Range`.
+     * @param rollback when true sends `tx=rollback` so any writes are rolled back.
+     * @param maxAffected must be greater than 0 when set; caps rows the function may modify.
+     */
     public suspend fun rpc(
         function: String,
         schema: String? = null,
@@ -172,6 +317,20 @@ public interface DatabaseClient {
         headers: Map<String, String> = emptyMap(),
     ): SupabaseResult<String>
 
+    /**
+     * Calls a stored procedure over `GET /rest/v1/rpc/{function}`, passing arguments
+     * as [queryParams] rather than a body — the cacheable, side-effect-free
+     * counterpart to [rpc] for functions marked `STABLE`/`IMMUTABLE`.
+     *
+     * Each pair becomes a query-string argument; the extensions in `DatabaseClientExt`
+     * accept a `Map` or a serializable request object and flatten it into these pairs.
+     * [single], [csv], and [explain] behave as on [rpc]; typed decoding is provided by
+     * [rpcGetTyped] and friends.
+     *
+     * @param head issue the request for headers/count only, yielding an empty body.
+     * @param count adds a `count=` preference, surfacing the total in `Content-Range`.
+     * @param retry whether this read may be transparently retried by the transport.
+     */
     public suspend fun rpcGet(
         function: String,
         schema: String? = null,

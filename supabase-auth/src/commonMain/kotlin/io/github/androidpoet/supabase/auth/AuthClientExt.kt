@@ -30,6 +30,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.time.Clock
 
+/** Email sign-up shorthand for [AuthClient.signUpWithEmail]. */
 public suspend fun AuthClient.signUp(
     email: String,
     password: String,
@@ -37,12 +38,14 @@ public suspend fun AuthClient.signUp(
 ): SupabaseResult<Session> =
     signUpWithEmail(email = email, password = password, data = data)
 
+/** Email sign-in shorthand for [AuthClient.signInWithEmail]. */
 public suspend fun AuthClient.signIn(
     email: String,
     password: String,
 ): SupabaseResult<Session> =
     signInWithEmail(email = email, password = password)
 
+/** Phone sign-up shorthand for [AuthClient.signUpWithPhone]. */
 public suspend fun AuthClient.signUpPhone(
     phone: String,
     password: String,
@@ -50,21 +53,29 @@ public suspend fun AuthClient.signUpPhone(
 ): SupabaseResult<Session> =
     signUpWithPhone(phone = phone, password = password, data = data)
 
+/** Phone sign-in shorthand for [AuthClient.signInWithPhone]. */
 public suspend fun AuthClient.signInPhone(
     phone: String,
     password: String,
 ): SupabaseResult<Session> =
     signInWithPhone(phone = phone, password = password)
 
+/** Sends an email magic-link / OTP. Shorthand for [AuthClient.signInWithOtp] with just an email. */
 public suspend fun AuthClient.sendOtp(email: String): SupabaseResult<Unit> =
     signInWithOtp(email = email)
 
+/**
+ * Sends a phone OTP. Shorthand for [AuthClient.signInWithOtp] with just a phone.
+ *
+ * @param channel delivery channel: `"sms"` (server default) or `"whatsapp"`.
+ */
 public suspend fun AuthClient.sendPhoneOtp(
     phone: String,
     channel: String? = null,
 ): SupabaseResult<Unit> =
     signInWithOtp(phone = phone, channel = channel)
 
+/** Resends the sign-up confirmation email. Shorthand for [AuthClient.resendEmailOtp] with [OtpType.EMAIL]. */
 public suspend fun AuthClient.resendSignUpEmailOtp(
     email: String,
     captchaToken: String? = null,
@@ -77,6 +88,7 @@ public suspend fun AuthClient.resendSignUpEmailOtp(
         redirectTo = redirectTo,
     )
 
+/** Resends a phone sign-in OTP. Shorthand for [AuthClient.resendPhoneOtp] with [OtpType.SMS]. */
 public suspend fun AuthClient.resendPhoneSignInOtp(
     phone: String,
     captchaToken: String? = null,
@@ -87,6 +99,7 @@ public suspend fun AuthClient.resendPhoneSignInOtp(
         captchaToken = captchaToken,
     )
 
+/** Verifies an email OTP. Shorthand for [AuthClient.verifyOtp] keyed by email. */
 public suspend fun AuthClient.verifyEmailOtp(
     email: String,
     token: String,
@@ -95,6 +108,7 @@ public suspend fun AuthClient.verifyEmailOtp(
 ): SupabaseResult<Session> =
     verifyOtp(email = email, token = token, type = type, captchaToken = captchaToken)
 
+/** Verifies a phone OTP. Shorthand for [AuthClient.verifyOtp] keyed by phone. */
 public suspend fun AuthClient.verifyPhoneOtp(
     phone: String,
     token: String,
@@ -103,6 +117,7 @@ public suspend fun AuthClient.verifyPhoneOtp(
 ): SupabaseResult<Session> =
     verifyOtp(phone = phone, token = token, type = type, captchaToken = captchaToken)
 
+/** Verifies a sign-up email OTP with [OtpType.EMAIL] fixed. See [verifyEmailOtp]. */
 public suspend fun AuthClient.verifyEmailSignUpOtp(
     email: String,
     token: String,
@@ -110,6 +125,7 @@ public suspend fun AuthClient.verifyEmailSignUpOtp(
 ): SupabaseResult<Session> =
     verifyEmailOtp(email = email, token = token, type = OtpType.EMAIL, captchaToken = captchaToken)
 
+/** Verifies a phone sign-in OTP with [OtpType.SMS] fixed. See [verifyPhoneOtp]. */
 public suspend fun AuthClient.verifyPhoneSignInOtp(
     phone: String,
     token: String,
@@ -117,6 +133,7 @@ public suspend fun AuthClient.verifyPhoneSignInOtp(
 ): SupabaseResult<Session> =
     verifyPhoneOtp(phone = phone, token = token, type = OtpType.SMS, captchaToken = captchaToken)
 
+/** Verifies an email-link confirmation by token hash. Shorthand for [AuthClient.verifyOtpWithTokenHash]. */
 public suspend fun AuthClient.verifyEmailOtpWithTokenHash(
     tokenHash: String,
     type: OtpType,
@@ -128,6 +145,7 @@ public suspend fun AuthClient.verifyEmailOtpWithTokenHash(
         captchaToken = captchaToken,
     )
 
+/** Email-keyed [AuthClient.verifyOtpWithResult] that distinguishes session vs. no-session outcomes. */
 public suspend fun AuthClient.verifyEmailOtpWithResult(
     email: String,
     token: String,
@@ -141,6 +159,7 @@ public suspend fun AuthClient.verifyEmailOtpWithResult(
         captchaToken = captchaToken,
     )
 
+/** Phone-keyed [AuthClient.verifyOtpWithResult] that distinguishes session vs. no-session outcomes. */
 public suspend fun AuthClient.verifyPhoneOtpWithResult(
     phone: String,
     token: String,
@@ -154,6 +173,7 @@ public suspend fun AuthClient.verifyPhoneOtpWithResult(
         captchaToken = captchaToken,
     )
 
+/** Sign-up email verification returning an [OtpVerifyResult], with [OtpType.EMAIL] fixed. See [verifyEmailOtpWithResult]. */
 public suspend fun AuthClient.verifyEmailSignUpOtpWithResult(
     email: String,
     token: String,
@@ -166,6 +186,7 @@ public suspend fun AuthClient.verifyEmailSignUpOtpWithResult(
         captchaToken = captchaToken,
     )
 
+/** Phone sign-in verification returning an [OtpVerifyResult], with [OtpType.SMS] fixed. See [verifyPhoneOtpWithResult]. */
 public suspend fun AuthClient.verifyPhoneSignInOtpWithResult(
     phone: String,
     token: String,
@@ -178,6 +199,7 @@ public suspend fun AuthClient.verifyPhoneSignInOtpWithResult(
         captchaToken = captchaToken,
     )
 
+/** Token-hash verification returning an [OtpVerifyResult]. Shorthand for [AuthClient.verifyOtpWithTokenHashWithResult]. */
 public suspend fun AuthClient.verifyEmailOtpWithTokenHashWithResult(
     tokenHash: String,
     type: OtpType,
@@ -189,6 +211,7 @@ public suspend fun AuthClient.verifyEmailOtpWithTokenHashWithResult(
         captchaToken = captchaToken,
     )
 
+/** Sends a password-reset email. Reads-better alias for [AuthClient.resetPasswordForEmail]. */
 public suspend fun AuthClient.forgotPassword(
     email: String,
     redirectTo: String? = null,
@@ -200,15 +223,25 @@ public suspend fun AuthClient.forgotPassword(
         captchaToken = captchaToken,
     )
 
+/** Signs out every session of the user. Shorthand for [AuthClient.signOut] with [SignOutScope.GLOBAL]. */
 public suspend fun AuthClient.signOutGlobal(accessToken: String): SupabaseResult<Unit> =
     signOut(accessToken = accessToken, scope = SignOutScope.GLOBAL)
 
+/** Signs out only this session. Shorthand for [AuthClient.signOut] with [SignOutScope.LOCAL]. */
 public suspend fun AuthClient.signOutLocal(accessToken: String): SupabaseResult<Unit> =
     signOut(accessToken = accessToken, scope = SignOutScope.LOCAL)
 
+/** Signs out all *other* sessions, keeping this one. Shorthand for [AuthClient.signOut] with [SignOutScope.OTHERS]. */
 public suspend fun AuthClient.signOutOthers(accessToken: String): SupabaseResult<Unit> =
     signOut(accessToken = accessToken, scope = SignOutScope.OTHERS)
 
+/**
+ * Fetches the current session's user via [SessionManager.accessToken], failing if
+ * there is no active session.
+ *
+ * @param updateStoredSession when true, writes the refreshed [User] back into the
+ *   stored session so cached metadata stays current.
+ */
 public suspend fun AuthClient.getUserForCurrentSession(
     sessionManager: SessionManager,
     updateStoredSession: Boolean = false,
@@ -230,6 +263,7 @@ public suspend fun AuthClient.getUserForCurrentSession(
     }
 }
 
+/** Requests a reauthentication nonce for the current session. See [AuthClient.reauthenticate]. Fails with no active session. */
 public suspend fun AuthClient.reauthenticateCurrentSession(
     sessionManager: SessionManager,
 ): SupabaseResult<Unit> {
@@ -239,6 +273,11 @@ public suspend fun AuthClient.reauthenticateCurrentSession(
     return reauthenticate(token)
 }
 
+/**
+ * Runs an MFA challenge-then-verify in one call: [AuthClient.mfaChallenge] to
+ * obtain a challenge id, then [AuthClient.mfaVerify] with the user's [code].
+ * Short-circuits to [SupabaseResult.Failure] if the challenge step fails.
+ */
 public suspend fun AuthClient.mfaChallengeAndVerify(
     factorId: String,
     code: String,
@@ -255,6 +294,15 @@ public suspend fun AuthClient.mfaChallengeAndVerify(
             )
     }
 
+/**
+ * Signs out the current session and clears it from storage. On success (or when
+ * there is no session and [succeedIfNoSession] is true) the stored session is
+ * cleared if [clearStoredSessionOnSuccess].
+ *
+ * @param scope which sessions to revoke server-side. See [AuthClient.signOut].
+ * @param succeedIfNoSession when true, an absent session is treated as a
+ *   successful (idempotent) sign-out rather than a failure.
+ */
 public suspend fun AuthClient.signOutCurrentSession(
     sessionManager: SessionManager,
     scope: SignOutScope = SignOutScope.LOCAL,
@@ -283,6 +331,11 @@ public suspend fun AuthClient.signOutCurrentSession(
     }
 }
 
+/**
+ * Updates the current session's user (see [AuthClient.updateUser]) and, when
+ * [updateStoredSession] is true, writes the returned [User] back into the stored
+ * session. Fails with no active session.
+ */
 public suspend fun AuthClient.updateUserForCurrentSession(
     sessionManager: SessionManager,
     updates: UserUpdateRequest,
@@ -305,10 +358,21 @@ public suspend fun AuthClient.updateUserForCurrentSession(
     }
 }
 
+/** Refreshes and persists the current session by delegating to [SessionManager.refreshSession]. */
 public suspend fun AuthClient.refreshCurrentSession(
     sessionManager: SessionManager,
 ): SupabaseResult<Session> = sessionManager.refreshSession()
 
+/**
+ * Imports an externally obtained token as a [Session] and saves it — for adopting
+ * a token minted outside this client (e.g. by a server or another SDK).
+ *
+ * @param refreshToken refresh token to store, if any (empty means non-refreshable).
+ * @param expiresIn lifetime in seconds; used to schedule auto-refresh.
+ * @param tokenType token type, normally `"bearer"`.
+ * @param retrieveUser when true, fetches the [User] via [AuthClient.getUser];
+ *   when false, reuses the user from the stored session (and fails if none exists).
+ */
 public suspend fun AuthClient.importAuthToken(
     sessionManager: SessionManager,
     accessToken: String,
@@ -341,6 +405,7 @@ public suspend fun AuthClient.importAuthToken(
     return SupabaseResult.Success(session)
 }
 
+/** Resolves an SSO sign-in URL using the current session's token. See [AuthClient.retrieveSsoUrl]. */
 public suspend fun AuthClient.retrieveSsoUrlForCurrentSession(
     sessionManager: SessionManager,
     domain: String? = null,
@@ -354,6 +419,7 @@ public suspend fun AuthClient.retrieveSsoUrlForCurrentSession(
         redirectTo = redirectTo,
     )
 
+/** Email sign-in that saves the resulting session on success. See [AuthClient.signInWithEmail] and [SessionManager.saveSession]. */
 public suspend fun AuthClient.signInWithEmailAndSaveSession(
     sessionManager: SessionManager,
     email: String,
@@ -361,6 +427,7 @@ public suspend fun AuthClient.signInWithEmailAndSaveSession(
 ): SupabaseResult<Session> =
     saveSessionOnSuccess(sessionManager) { signInWithEmail(email = email, password = password) }
 
+/** Phone sign-in that saves the resulting session on success. See [AuthClient.signInWithPhone]. */
 public suspend fun AuthClient.signInWithPhoneAndSaveSession(
     sessionManager: SessionManager,
     phone: String,
@@ -368,6 +435,7 @@ public suspend fun AuthClient.signInWithPhoneAndSaveSession(
 ): SupabaseResult<Session> =
     saveSessionOnSuccess(sessionManager) { signInWithPhone(phone = phone, password = password) }
 
+/** Email sign-up that saves the resulting session on success. See [AuthClient.signUpWithEmail]. */
 public suspend fun AuthClient.signUpWithEmailAndSaveSession(
     sessionManager: SessionManager,
     email: String,
@@ -376,6 +444,7 @@ public suspend fun AuthClient.signUpWithEmailAndSaveSession(
 ): SupabaseResult<Session> =
     saveSessionOnSuccess(sessionManager) { signUpWithEmail(email = email, password = password, data = data) }
 
+/** Phone sign-up that saves the resulting session on success. See [AuthClient.signUpWithPhone]. */
 public suspend fun AuthClient.signUpWithPhoneAndSaveSession(
     sessionManager: SessionManager,
     phone: String,
@@ -384,6 +453,7 @@ public suspend fun AuthClient.signUpWithPhoneAndSaveSession(
 ): SupabaseResult<Session> =
     saveSessionOnSuccess(sessionManager) { signUpWithPhone(phone = phone, password = password, data = data) }
 
+/** Anonymous sign-in that saves the resulting session on success. See [AuthClient.signInAnonymously]. */
 public suspend fun AuthClient.signInAnonymouslyAndSaveSession(
     sessionManager: SessionManager,
     data: JsonObject? = null,
@@ -391,6 +461,7 @@ public suspend fun AuthClient.signInAnonymouslyAndSaveSession(
 ): SupabaseResult<Session> =
     saveSessionOnSuccess(sessionManager) { signInAnonymously(data = data, captchaToken = captchaToken) }
 
+/** ID-token sign-in that saves the resulting session on success. See [AuthClient.signInWithIdToken]. */
 public suspend fun AuthClient.signInWithIdTokenAndSaveSession(
     sessionManager: SessionManager,
     provider: OAuthProvider,
@@ -409,6 +480,7 @@ public suspend fun AuthClient.signInWithIdTokenAndSaveSession(
         )
     }
 
+/** Verifies an OTP and saves the resulting session on success. See [AuthClient.verifyOtp]. */
 public suspend fun AuthClient.verifyOtpAndSaveSession(
     sessionManager: SessionManager,
     email: String? = null,
@@ -427,6 +499,7 @@ public suspend fun AuthClient.verifyOtpAndSaveSession(
         )
     }
 
+/** Verifies a token-hash confirmation and saves the resulting session on success. See [AuthClient.verifyOtpWithTokenHash]. */
 public suspend fun AuthClient.verifyOtpWithTokenHashAndSaveSession(
     sessionManager: SessionManager,
     tokenHash: String,
@@ -441,6 +514,11 @@ public suspend fun AuthClient.verifyOtpWithTokenHashAndSaveSession(
         )
     }
 
+/**
+ * Verifies an OTP and, only when the result is [OtpVerifyResult.Authenticated],
+ * saves its session — a no-session verification is returned untouched. See
+ * [AuthClient.verifyOtpWithResult].
+ */
 public suspend fun AuthClient.verifyOtpWithResultAndSaveSession(
     sessionManager: SessionManager,
     email: String? = null,
@@ -469,6 +547,7 @@ public suspend fun AuthClient.verifyOtpWithResultAndSaveSession(
         }
     }
 
+/** Token-hash counterpart to [verifyOtpWithResultAndSaveSession]. See [AuthClient.verifyOtpWithTokenHashWithResult]. */
 public suspend fun AuthClient.verifyOtpWithTokenHashWithResultAndSaveSession(
     sessionManager: SessionManager,
     tokenHash: String,
@@ -493,6 +572,7 @@ public suspend fun AuthClient.verifyOtpWithTokenHashWithResultAndSaveSession(
         }
     }
 
+/** Refreshes using an explicit [refreshToken] and saves the resulting session on success. See [AuthClient.refreshToken]. */
 public suspend fun AuthClient.refreshTokenAndSaveSession(
     sessionManager: SessionManager,
     refreshToken: String,
@@ -511,6 +591,11 @@ private suspend fun AuthClient.saveSessionOnSuccess(
         }
     }
 
+/**
+ * Unlinks an identity (see [AuthClient.unlinkIdentity]) and, when
+ * [updateStoredSession] is true, removes it from the stored session's user so the
+ * cached identity list stays consistent without a re-fetch.
+ */
 public suspend fun AuthClient.unlinkIdentityAndUpdateSession(
     accessToken: String,
     identityId: String,
@@ -534,6 +619,7 @@ public suspend fun AuthClient.unlinkIdentityAndUpdateSession(
         }
     }
 
+/** Lists the current session's linked identities. See [AuthClient.getUserIdentities]. Fails with no active session. */
 public suspend fun AuthClient.getUserIdentitiesForCurrentSession(
     sessionManager: SessionManager,
 ): SupabaseResult<List<UserIdentity>> {
@@ -543,6 +629,7 @@ public suspend fun AuthClient.getUserIdentitiesForCurrentSession(
     return getUserIdentities(accessToken = token)
 }
 
+/** Starts linking an OAuth identity for the current session. See [AuthClient.linkIdentity]. Fails with no active session. */
 public suspend fun AuthClient.linkIdentityForCurrentSession(
     sessionManager: SessionManager,
     provider: OAuthProvider,
@@ -562,6 +649,11 @@ public suspend fun AuthClient.linkIdentityForCurrentSession(
     )
 }
 
+/**
+ * Links an identity by ID token for the current session and, when
+ * [updateStoredSession] is true, saves the returned session. See
+ * [AuthClient.linkIdentityWithIdToken]. Fails with no active session.
+ */
 public suspend fun AuthClient.linkIdentityWithIdTokenForCurrentSession(
     sessionManager: SessionManager,
     provider: OAuthProvider,
@@ -593,6 +685,7 @@ public suspend fun AuthClient.linkIdentityWithIdTokenForCurrentSession(
     }
 }
 
+/** Unlinks an identity for the current session, updating storage. See [unlinkIdentityAndUpdateSession]. Fails with no active session. */
 public suspend fun AuthClient.unlinkIdentityForCurrentSession(
     sessionManager: SessionManager,
     identityId: String,
@@ -609,6 +702,7 @@ public suspend fun AuthClient.unlinkIdentityForCurrentSession(
     )
 }
 
+/** Session tokens parsed out of an implicit-flow redirect URL fragment. See [parseSessionTokensFromFragment]. */
 public data class ParsedSessionTokens(
     public val accessToken: String,
     public val refreshToken: String,
@@ -616,6 +710,13 @@ public data class ParsedSessionTokens(
     public val tokenType: String,
 )
 
+/**
+ * Parses [ParsedSessionTokens] from an OAuth implicit-flow URL [fragment] (the
+ * `#access_token=…&refresh_token=…&expires_in=…&token_type=…` part the provider
+ * appends on redirect). A leading `#` is tolerated and components are
+ * percent-decoded. Returns [SupabaseResult.Failure] if any required field is
+ * missing.
+ */
 public fun parseSessionTokensFromFragment(fragment: String): SupabaseResult<ParsedSessionTokens> {
     val normalized = fragment.removePrefix("#")
     val pairs =
@@ -651,9 +752,15 @@ public fun parseSessionTokensFromFragment(fragment: String): SupabaseResult<Pars
     )
 }
 
+/** Extracts the fragment from a full redirect [url] and parses it. See [parseSessionTokensFromFragment]. */
 public fun parseSessionTokensFromUrl(url: String): SupabaseResult<ParsedSessionTokens> =
     parseSessionTokensFromFragment(url.substringAfter('#', ""))
 
+/**
+ * Parses tokens from an implicit-flow redirect [fragment], fetches the matching
+ * [User], builds a [Session] and saves it — the implicit-flow counterpart to
+ * [exchangeCodeForSessionAndSave]. See [parseSessionTokensFromFragment].
+ */
 public suspend fun AuthClient.importSessionFromFragment(
     fragment: String,
     sessionManager: SessionManager,
@@ -662,6 +769,7 @@ public suspend fun AuthClient.importSessionFromFragment(
     return importParsedSessionTokens(parsed, sessionManager)
 }
 
+/** Imports and saves a session from a full implicit-flow redirect [url]. See [importSessionFromFragment]. */
 public suspend fun AuthClient.importSessionFromUrl(
     url: String,
     sessionManager: SessionManager,
@@ -670,6 +778,7 @@ public suspend fun AuthClient.importSessionFromUrl(
     return importParsedSessionTokens(parsed, sessionManager)
 }
 
+/** Exchanges a PKCE auth code for a session and saves it on success. See [AuthClient.exchangeCodeForSession]. */
 public suspend fun AuthClient.exchangeCodeForSessionAndSave(
     authCode: String,
     codeVerifier: String,
@@ -734,6 +843,12 @@ private fun decodeQueryComponent(input: String): String {
     return out.toString()
 }
 
+/**
+ * Decodes the payload of a [jwt] into its raw claims [JsonObject] **without
+ * verifying the signature** — a cheap local read for inspecting claims you don't
+ * need to trust. When the signature matters (e.g. authorization decisions), use
+ * [getClaims], which verifies it.
+ */
 public fun parseJwtClaims(jwt: String): SupabaseResult<JsonObject> {
     val parts = jwt.split('.')
     if (parts.size < 2) {
@@ -754,6 +869,7 @@ public fun parseJwtClaims(jwt: String): SupabaseResult<JsonObject> {
     }
 }
 
+/** Parses the current session access token's raw claims, without verifying. See [parseJwtClaims]. Fails with no active session. */
 public fun SessionManager.parseCurrentSessionJwtClaims(): SupabaseResult<JsonObject> {
     val token =
         accessToken

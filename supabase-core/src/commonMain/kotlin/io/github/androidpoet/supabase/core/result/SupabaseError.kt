@@ -2,6 +2,20 @@ package io.github.androidpoet.supabase.core.result
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
+/**
+ * A normalized Supabase failure — the [error][SupabaseResult.Failure.error] half of
+ * a [SupabaseResult], unifying PostgREST, GoTrue, Storage and client-side faults.
+ *
+ * [code] holds a textual service code or a synthetic [SupabaseErrorCodes.Client]
+ * code; [httpStatus] is kept separately so [category] can classify even when the
+ * body carries no machine-readable code. Derive a [SupabaseErrorCategory] via
+ * [category] and convert to a throwable via [toException].
+ *
+ * @param message human-readable error message.
+ * @param code machine-readable service or client code, when known.
+ * @param details additional structured context from the error body, when present.
+ * @param hint a suggested remedy, when present.
+ */
 @Serializable
 public data class SupabaseError(
     public val message: String,
@@ -22,18 +36,43 @@ public data class SupabaseError(
     public val retryAfterSeconds: Long? = null,
 )
 
+/**
+ * The throwable form of a [SupabaseError], thrown by [SupabaseResult.getOrThrow]
+ * and caught by [SupabaseResult.catching]. Carries the original [error] so callers
+ * can still inspect its [SupabaseError.code]/[SupabaseError.category].
+ */
 public class SupabaseException(
     public val error: SupabaseError,
 ) : Exception(error.message)
 
+/** Wraps this [SupabaseError] in a [SupabaseException] for throw-based call sites. */
 public fun SupabaseError.toException(): SupabaseException = SupabaseException(this)
 
+/**
+ * Coarse classification of a [SupabaseError], derived via [SupabaseError.category],
+ * so callers can branch on the kind of failure without matching individual codes.
+ *
+ * Resolved from the error's [code][SupabaseError.code] first, then its
+ * [httpStatus][SupabaseError.httpStatus]. See [isRetryable] for which categories
+ * are worth retrying.
+ */
 public enum class SupabaseErrorCategory {
+    /** A uniqueness/foreign-key clash or an already-existing resource (HTTP 409). */
     Conflict,
+
+    /** The requested table, row, user or object does not exist (HTTP 404). */
     NotFound,
+
+    /** Missing, invalid or insufficient credentials/permissions (HTTP 401/403). */
     Unauthorized,
+
+    /** The caller exceeded a rate limit; back off and retry (HTTP 429). */
     RateLimited,
+
+    /** The request was malformed or failed validation (HTTP 400/422). */
     Validation,
+
+    /** A server-side failure unrelated to the request's content (HTTP 5xx). */
     Internal,
 
     /**
@@ -42,6 +81,8 @@ public enum class SupabaseErrorCategory {
      * decoded. Distinct from [Unknown] so callers can show offline/retry UI.
      */
     Network,
+
+    /** No more specific category applied; the catch-all fallback. */
     Unknown,
 }
 
@@ -141,6 +182,12 @@ private val internalCodes =
         SupabaseErrorCodes.Functions.WORKER_LIMIT,
     )
 
+/**
+ * Classifies this error into a [SupabaseErrorCategory]. Matches the textual
+ * [code][SupabaseError.code] against the known per-service code sets first, then
+ * falls back to the [httpStatus][SupabaseError.httpStatus] (or a numeric `code`),
+ * so structured error bodies without a textual code are still categorized.
+ */
 public val SupabaseError.category: SupabaseErrorCategory
     get() =
         when {
@@ -169,18 +216,23 @@ private fun categorizeByStatus(status: Int?): SupabaseErrorCategory =
         else -> SupabaseErrorCategory.Unknown
     }
 
+/** True when this is a Postgres unique-constraint violation (`23505`) — a duplicate row. */
 public fun SupabaseError.isUniquenessViolation(): Boolean =
     code == SupabaseErrorCodes.Database.UNIQUENESS_VIOLATION
 
+/** True when this is a Postgres foreign-key violation (`23503`) — a missing referenced row. */
 public fun SupabaseError.isForeignKeyViolation(): Boolean =
     code == SupabaseErrorCodes.Database.FOREIGN_KEY_VIOLATION
 
+/** True when sign-in failed due to wrong email/password (GoTrue `invalid_credentials`). */
 public fun SupabaseError.isInvalidCredentials(): Boolean =
     code == SupabaseErrorCodes.Auth.INVALID_CREDENTIALS
 
+/** True when sign-up failed because the user already exists (GoTrue `user_already_exists`). */
 public fun SupabaseError.isUserAlreadyExists(): Boolean =
     code == SupabaseErrorCodes.Auth.USER_ALREADY_EXISTS
 
+/** True when a Storage object was not found (`NoSuchKey`). */
 public fun SupabaseError.isFileNotFound(): Boolean =
     code == SupabaseErrorCodes.Storage.NO_SUCH_KEY
 

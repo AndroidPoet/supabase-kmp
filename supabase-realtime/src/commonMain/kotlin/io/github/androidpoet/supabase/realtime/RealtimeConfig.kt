@@ -1,5 +1,21 @@
 package io.github.androidpoet.supabase.realtime
 
+/**
+ * Tuning for the Realtime client's reconnect and heartbeat behavior, passed to
+ * [createRealtimeClient]. The defaults are production-sane (exponential backoff
+ * with jitter, 25s heartbeat); override only what you need.
+ *
+ * @param autoReconnect reconnect automatically when the socket drops.
+ * @param initialReconnectDelayMs delay before the first reconnect attempt.
+ * @param maxReconnectDelayMs upper bound the exponential backoff is clamped to.
+ * @param backoffMultiplier factor the delay grows by each failed attempt.
+ * @param maxReconnectAttempts give up after this many tries (`0` = retry forever),
+ *   transitioning to [ConnectionState.Failed].
+ * @param heartbeatIntervalMs how often to send a Phoenix heartbeat to keep the
+ *   socket alive.
+ * @param connectionTimeoutMs how long to wait for a connection or channel join to
+ *   settle before failing it.
+ */
 public data class RealtimeConfig(
     public val autoReconnect: Boolean = true,
     public val initialReconnectDelayMs: Long = 1_000L,

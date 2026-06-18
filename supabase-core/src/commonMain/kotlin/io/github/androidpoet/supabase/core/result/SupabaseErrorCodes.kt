@@ -1,6 +1,15 @@
 package io.github.androidpoet.supabase.core.result
 
+/**
+ * Catalog of the string error codes Supabase services return, grouped by service,
+ * for matching against [SupabaseError.code] without sprinkling magic strings.
+ *
+ * Drives the category sets behind [SupabaseError.category] and the `is*` helpers
+ * (e.g. [SupabaseError.isUniquenessViolation]). [Client] is the only group not
+ * emitted by a server — those codes are synthesized by the SDK.
+ */
 public object SupabaseErrorCodes {
+    /** PostgREST (`PGRST*`) and raw PostgreSQL `SQLSTATE` codes from the database layer. */
     public object Database {
         public const val CONNECTION_ERROR: String = "PGRST000"
         public const val INTERNAL_CONNECTION_ERROR: String = "PGRST001"
@@ -53,6 +62,7 @@ public object SupabaseErrorCodes {
         public const val STATEMENT_TIMEOUT: String = "57014"
     }
 
+    /** GoTrue (auth) error codes for sign-in/sign-up, MFA and rate limiting. */
     public object Auth {
         public const val INVALID_CREDENTIALS: String = "invalid_credentials"
         public const val USER_NOT_FOUND: String = "user_not_found"
@@ -75,6 +85,7 @@ public object SupabaseErrorCodes {
         public const val MFA_VERIFICATION_FAILED: String = "mfa_verification_failed"
     }
 
+    /** Storage (object/bucket) error codes, including S3-compatibility codes. */
     public object Storage {
         public const val NO_SUCH_BUCKET: String = "NoSuchBucket"
         public const val BUCKET_ALREADY_EXISTS: String = "BucketAlreadyExists"
@@ -110,6 +121,7 @@ public object SupabaseErrorCodes {
         public const val INTERNAL_SERVER_ERROR: String = "internal_server_error"
     }
 
+    /** Realtime (WebSocket) error codes for channel limits, auth and topics. */
     public object Realtime {
         public const val CHANNEL_RATE_LIMIT_REACHED: String = "ChannelRateLimitReached"
         public const val CONNECTION_RATE_LIMIT_REACHED: String = "ConnectionRateLimitReached"
@@ -121,6 +133,7 @@ public object SupabaseErrorCodes {
         public const val PAYLOAD_TOO_LARGE: String = "PayloadTooLarge"
     }
 
+    /** Edge Functions error codes for boot, worker and deployment failures. */
     public object Functions {
         public const val BOOT_ERROR: String = "BOOT_ERROR"
         public const val WORKER_ERROR: String = "WORKER_ERROR"
@@ -143,6 +156,7 @@ public object SupabaseErrorCodes {
         public const val CONNECTION_FAILED: String = "connection_failed"
     }
 
+    /** Management API error codes for projects, organizations and access. */
     public object Management {
         public const val PROJECT_NOT_FOUND: String = "PROJECT_NOT_FOUND"
         public const val ORGANIZATION_NOT_FOUND: String = "ORGANIZATION_NOT_FOUND"

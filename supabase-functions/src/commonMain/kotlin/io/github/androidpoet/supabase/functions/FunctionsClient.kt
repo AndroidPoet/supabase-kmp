@@ -4,6 +4,16 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * The Edge Functions region to pin a call to, sent as the `x-region` request
+ * header by [FunctionsClient.invoke] and friends.
+ *
+ * Edge Functions are normally routed to the region nearest the caller; pin one
+ * when a function must run close to a regional resource (e.g. a co-located
+ * database) to avoid the cross-region round trip. [value] is the wire string
+ * placed in the header. [ANY] (the default behavior when no region is passed)
+ * leaves routing to Supabase.
+ */
 @Serializable
 public enum class FunctionRegion(
     public val value: String,
@@ -55,9 +65,39 @@ public enum class FunctionRegion(
     AP_NORTHEAST_2("ap-northeast-2"),
 }
 
+/**
+ * Calls Supabase Edge Functions deployed under `/functions/v1/`, returning each
+ * result as a [SupabaseResult] rather than throwing.
+ *
+ * One client wraps a [io.github.androidpoet.supabase.client.SupabaseClient] and
+ * reuses its base URL and session token, so calls are authenticated with the
+ * current session unless a token is pinned via [setAuth]. [invoke] posts a text
+ * body and reads the full response; [invokeWithBody] posts arbitrary bytes; and
+ * [invokeSSE] streams a `text/event-stream` response as a [Flow]. Obtain an
+ * instance with [createFunctionsClient].
+ */
 public interface FunctionsClient {
+    /**
+     * Pins [token] as the bearer token for every subsequent call, overriding the
+     * wrapped client's current session token. Pass the new token to rotate it;
+     * there is no unset — to fall back to the session token, construct a fresh
+     * client.
+     */
     public fun setAuth(token: String)
 
+    /**
+     * Invokes the Edge Function named [functionName] with an optional text [body]
+     * and returns its full response body as a [SupabaseResult].
+     *
+     * POSTs to `/functions/v1/$functionName`. When [body] is non-null and the
+     * caller didn't set one, a `Content-Type: application/json` header is added
+     * (Edge Functions commonly branch on it). [region] pins the `x-region` header;
+     * [headers] are merged last and win over the defaults. A non-2xx response is a
+     * [SupabaseResult.Failure].
+     *
+     * @param headers extra request headers, merged over the auth/region defaults.
+     * @param region optional region to pin the call to via `x-region`.
+     */
     public suspend fun invoke(
         functionName: String,
         body: String? = null,
@@ -65,6 +105,16 @@ public interface FunctionsClient {
         region: FunctionRegion? = null,
     ): SupabaseResult<String>
 
+    /**
+     * Invokes [functionName] with a raw binary [body] (e.g. an image or protobuf)
+     * under the given [contentType], returning the full response as a
+     * [SupabaseResult]. The byte-oriented counterpart to [invoke]; same routing
+     * and `x-region`/[headers] behavior.
+     *
+     * @param contentType the `Content-Type` for the uploaded bytes.
+     * @param headers extra request headers, merged over the auth/region defaults.
+     * @param region optional region to pin the call to via `x-region`.
+     */
     public suspend fun invokeWithBody(
         functionName: String,
         body: ByteArray,

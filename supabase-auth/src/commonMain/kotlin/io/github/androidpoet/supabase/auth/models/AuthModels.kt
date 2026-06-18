@@ -3,6 +3,11 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
+/**
+ * An authenticated session: the access/refresh tokens, their lifetime, and the
+ * signed-in [user]. Returned by every successful sign-in/up flow and refresh, and
+ * the unit a `SessionManager` persists and auto-refreshes.
+ */
 @Serializable
 public data class Session(
     @SerialName("access_token") val accessToken: String,
@@ -22,6 +27,7 @@ public data class Session(
     @SerialName("provider_refresh_token") val providerRefreshToken: String? = null,
 )
 
+/** A Supabase auth user: stable [id] plus profile, metadata, linked [identities] and MFA [factors]. */
 @Serializable
 public data class User(
     val id: String,
@@ -47,6 +53,7 @@ public data class User(
     @SerialName("last_sign_in_at") val lastSignInAt: String? = null,
 )
 
+/** One third-party identity linked to a [User] (e.g. a Google or GitHub login), with the [provider]'s raw `identity_data`. */
 @Serializable
 public data class UserIdentity(
     val id: String,
@@ -56,6 +63,7 @@ public data class UserIdentity(
     @SerialName("identity_data") val identityData: JsonObject? = null,
 )
 
+/** Request body for `POST /signup` (email or phone + password). */
 @Serializable
 public data class SignUpRequest(
     val email: String? = null,
@@ -64,6 +72,7 @@ public data class SignUpRequest(
     val data: JsonObject? = null,
 )
 
+/** Request body for the password grant (email or phone + password). */
 @Serializable
 public data class SignInRequest(
     val email: String? = null,
@@ -71,6 +80,11 @@ public data class SignInRequest(
     val password: String,
 )
 
+/**
+ * Request body for the `id_token` grant — signing in (or linking) with a provider
+ * OIDC ID token. The captcha [constructor] nests a token under
+ * `gotrue_meta_security` as GoTrue expects.
+ */
 @Serializable
 public data class IdTokenRequest(
     @SerialName("id_token") val idToken: String,
@@ -95,6 +109,7 @@ public data class IdTokenRequest(
     )
 }
 
+/** Request body for anonymous sign-up; the captcha constructor nests the token under `gotrue_meta_security`. */
 @Serializable
 public data class AnonymousSignInRequest(
     val data: JsonObject? = null,
@@ -109,6 +124,7 @@ public data class AnonymousSignInRequest(
     )
 }
 
+/** Request body for `POST /otp` (passwordless code / magic-link); the captcha constructor nests the token under `gotrue_meta_security`. */
 @Serializable
 public data class OtpRequest(
     val email: String? = null,
@@ -136,6 +152,7 @@ public data class OtpRequest(
     )
 }
 
+/** Request body for `POST /verify` (by `token` or `token_hash`); the captcha constructor nests the token under `gotrue_meta_security`. */
 @Serializable
 public data class OtpVerifyRequest(
     val email: String? = null,
@@ -162,14 +179,22 @@ public data class OtpVerifyRequest(
     )
 }
 
+/**
+ * Outcome of a result-returning OTP verification: either a new [Session] was
+ * minted or the code verified without one (some confirmations, e.g. an email
+ * change, don't issue a session). See `AuthClient.verifyOtpWithResult`.
+ */
 public sealed interface OtpVerifyResult {
+    /** Verification succeeded and produced an authenticated [session]. */
     public data class Authenticated(
         public val session: Session,
     ) : OtpVerifyResult
 
+    /** Verification succeeded but did not produce a session. */
     public data object VerifiedNoSession : OtpVerifyResult
 }
 
+/** Request body for `POST /resend`; the captcha constructor nests the token under `gotrue_meta_security`. */
 @Serializable
 public data class ResendOtpRequest(
     val type: OtpType,
@@ -193,6 +218,7 @@ public data class ResendOtpRequest(
     )
 }
 
+/** The flow an OTP / email-link belongs to, selecting how GoTrue verifies it. */
 @Serializable
 public enum class OtpType {
     @SerialName("sms")
@@ -222,11 +248,17 @@ public enum class OtpType {
     MAGIC_LINK,
 }
 
+/** Request body for the `refresh_token` grant. */
 @Serializable
 public data class RefreshTokenRequest(
     @SerialName("refresh_token") val refreshToken: String,
 )
 
+/**
+ * Fields to change on the authenticated user (`PUT /user`); only non-null fields
+ * are applied. A password change may require [currentPassword] or a reauth
+ * [nonce]; [data] sets `user_metadata`.
+ */
 @Serializable
 public data class UserUpdateRequest(
     val email: String? = null,
@@ -237,6 +269,7 @@ public data class UserUpdateRequest(
     val nonce: String? = null,
 )
 
+/** How widely a sign-out revokes sessions: just this one, all of them, or all others. */
 @Serializable
 public enum class SignOutScope {
     @SerialName("global")
@@ -249,12 +282,14 @@ public enum class SignOutScope {
     OTHERS,
 }
 
+/** Response from starting identity linking: the [url] to open for provider consent. */
 @Serializable
 public data class LinkIdentityResponse(
     @SerialName("url") public val url: String,
     @SerialName("provider") public val provider: String? = null,
 )
 
+/** Request body for `POST /sso`; supply exactly one of [domain] or [providerId]. */
 @Serializable
 public data class SsoRequest(
     @SerialName("domain") public val domain: String? = null,
@@ -262,11 +297,13 @@ public data class SsoRequest(
     @SerialName("redirect_to") public val redirectTo: String? = null,
 )
 
+/** Response from `POST /sso`: the IdP [url] to open to begin SSO. */
 @Serializable
 public data class SsoResponse(
     @SerialName("url") public val url: String,
 )
 
+/** Supported third-party OAuth providers; [value] is the slug GoTrue expects on the wire. */
 @Serializable
 public enum class OAuthProvider(
     @SerialName("value") public val value: String,
@@ -323,12 +360,18 @@ public enum class OAuthProvider(
     FIGMA("figma"),
 }
 
+/** Result of starting an OAuth flow: the authorize [url] to open and the [provider] it targets. */
 @Serializable
 public data class OAuthResponse(
     @SerialName("url") public val url: String,
     @SerialName("provider") public val provider: String,
 )
 
+/**
+ * PKCE parameters for an OAuth flow. Persist [codeVerifier] when starting the flow
+ * and replay it to `exchangeCodeForSession`; [codeChallenge]/[codeChallengeMethod]
+ * go into the authorize URL.
+ */
 @Serializable
 public data class PkceParams(
     public val codeVerifier: String,
@@ -336,12 +379,14 @@ public data class PkceParams(
     public val codeChallengeMethod: String = "S256",
 )
 
+/** Request body for the `pkce` grant: the authorization code plus its original verifier. */
 @Serializable
 public data class ExchangeCodeRequest(
     @SerialName("auth_code") public val authCode: String,
     @SerialName("code_verifier") public val codeVerifier: String,
 )
 
+/** Kind of MFA factor: authenticator-app TOTP, SMS phone, or WebAuthn. */
 @Serializable
 public enum class MfaFactorType {
     @SerialName("totp")
@@ -354,6 +399,7 @@ public enum class MfaFactorType {
     WEBAUTHN,
 }
 
+/** Request body for `POST /factors` (enroll a new MFA factor). */
 @Serializable
 public data class MfaEnrollRequest(
     @SerialName("factor_type") public val factorType: MfaFactorType,
@@ -362,6 +408,7 @@ public data class MfaEnrollRequest(
     @SerialName("phone") public val phone: String? = null,
 )
 
+/** Result of enrolling a factor: its [id] plus, for TOTP, the [totp] secret/QR to present to the user. */
 @Serializable
 public data class MfaEnrollResponse(
     @SerialName("id") public val id: String,
@@ -371,6 +418,7 @@ public data class MfaEnrollResponse(
     @SerialName("phone") public val phone: String? = null,
 )
 
+/** TOTP enrollment material: the [secret], a provisioning [uri], and a rendered [qrCode] for authenticator apps. */
 @Serializable
 public data class MfaTotpDetails(
     @SerialName("qr_code") public val qrCode: String,
@@ -378,6 +426,7 @@ public data class MfaTotpDetails(
     @SerialName("uri") public val uri: String,
 )
 
+/** Request body for `POST /factors/{id}/challenge`; carries only the phone delivery [channel] (the factor id is in the path). */
 @Serializable
 public data class MfaChallengeRequest(
     // Phone factors accept a delivery channel ("sms" or "whatsapp"). The factor id
@@ -385,6 +434,7 @@ public data class MfaChallengeRequest(
     @SerialName("channel") public val channel: String? = null,
 )
 
+/** Result of creating an MFA challenge: the challenge [id] to pass to verify, and when it [expiresAt]. */
 @Serializable
 public data class MfaChallengeResponse(
     @SerialName("id") public val id: String,
@@ -392,6 +442,7 @@ public data class MfaChallengeResponse(
     @SerialName("expires_at") public val expiresAt: Long? = null,
 )
 
+/** Request body for `POST /factors/{id}/verify`: the challenge id plus the user-entered [code]. */
 @Serializable
 public data class MfaVerifyRequest(
     @SerialName("factor_id") public val factorId: String,
@@ -399,6 +450,7 @@ public data class MfaVerifyRequest(
     @SerialName("code") public val code: String,
 )
 
+/** New AAL2 session minted by a successful MFA verification — same token shape as a [Session]. */
 @Serializable
 public data class MfaVerifyResponse(
     @SerialName("access_token") public val accessToken: String,
@@ -408,11 +460,13 @@ public data class MfaVerifyResponse(
     @SerialName("user") public val user: User,
 )
 
+/** Result of un-enrolling a factor: the [id] of the removed factor. */
 @Serializable
 public data class MfaUnenrollResponse(
     @SerialName("id") public val id: String,
 )
 
+/** Authenticator assurance level of a session: [AAL1] (single factor) or [AAL2] (MFA satisfied). */
 @Serializable
 public enum class AuthenticatorAssuranceLevel {
     @SerialName("aal1")
@@ -436,6 +490,7 @@ public data class AuthenticatorAssuranceLevels(
     public val next: AuthenticatorAssuranceLevel,
 )
 
+/** The user's enrolled MFA factors, both flat ([all]) and grouped by type for convenience. */
 @Serializable
 public data class MfaListFactorsResponse(
     @SerialName("all") public val all: List<MfaFactor> = emptyList(),
@@ -444,6 +499,7 @@ public data class MfaListFactorsResponse(
     @SerialName("webauthn") public val webauthn: List<MfaFactor> = emptyList(),
 )
 
+/** A single enrolled MFA factor: its [id], type, [status], and label. */
 @Serializable
 public data class MfaFactor(
     @SerialName("id") public val id: String,
@@ -466,6 +522,10 @@ public enum class MfaFactorStatus {
     UNVERIFIED,
 }
 
+/**
+ * Server's response to starting passkey registration: the [challengeId] to echo
+ * back on verify and the WebAuthn [options] to hand to the device authenticator.
+ */
 @Serializable
 public data class PasskeyRegistrationOptionsResponse(
     @SerialName("challenge_id") public val challengeId: String,
@@ -473,6 +533,7 @@ public data class PasskeyRegistrationOptionsResponse(
     @SerialName("expires_at") public val expiresAt: Long,
 )
 
+/** Server's response to starting passkey authentication: the [challengeId] and WebAuthn [options] for the authenticator. */
 @Serializable
 public data class PasskeyAuthenticationOptionsResponse(
     @SerialName("challenge_id") public val challengeId: String,
@@ -480,6 +541,7 @@ public data class PasskeyAuthenticationOptionsResponse(
     @SerialName("expires_at") public val expiresAt: Long,
 )
 
+/** Metadata of a passkey just registered (returned by verify-registration). */
 @Serializable
 public data class PasskeyMetadata(
     public val id: String,
@@ -487,6 +549,7 @@ public data class PasskeyMetadata(
     @SerialName("created_at") public val createdAt: String,
 )
 
+/** A passkey already registered to the user, as returned when listing passkeys. */
 @Serializable
 public data class Passkey(
     public val id: String,
@@ -495,6 +558,7 @@ public data class Passkey(
     @SerialName("last_used_at") public val lastUsedAt: String? = null,
 )
 
+/** The third-party client in an OAuth authorization request, for rendering a consent screen. */
 @Serializable
 public data class OAuthAuthorizationClient(
     public val id: String,
@@ -503,12 +567,14 @@ public data class OAuthAuthorizationClient(
     @SerialName("logo_uri") public val logoUri: String,
 )
 
+/** The resource-owner user shown on an OAuth consent screen. */
 @Serializable
 public data class OAuthAuthorizationUser(
     public val id: String,
     public val email: String,
 )
 
+/** Details of a pending OAuth authorization to display for consent: requesting [client], [user], and requested [scope]. */
 @Serializable
 public data class OAuthAuthorizationDetails(
     @SerialName("authorization_id") public val authorizationId: String? = null,
@@ -519,11 +585,13 @@ public data class OAuthAuthorizationDetails(
     public val scope: String? = null,
 )
 
+/** Where to send a third-party client after an approve/deny consent decision. */
 @Serializable
 public data class OAuthRedirect(
     @SerialName("redirect_url") public val redirectUrl: String,
 )
 
+/** A consent the user previously granted to a third-party OAuth [client], with its [scopes] and grant time. */
 @Serializable
 public data class OAuthGrant(
     public val client: OAuthAuthorizationClient,
@@ -531,11 +599,13 @@ public data class OAuthGrant(
     @SerialName("granted_at") public val grantedAt: String,
 )
 
+/** Request body for an OAuth consent decision; [action] is `"approve"` or `"deny"`. */
 @Serializable
 public data class OAuthConsentRequest(
     public val action: String,
 )
 
+/** Blockchain network for a Web3 wallet sign-in. */
 @Serializable
 public enum class Web3Chain {
     @SerialName("ethereum")
@@ -545,6 +615,7 @@ public enum class Web3Chain {
     SOLANA,
 }
 
+/** Request body for the `web3` grant: the signed [message] and its [signature] for the given [chain]. */
 @Serializable
 public data class Web3SignInRequest(
     public val chain: Web3Chain,
@@ -565,17 +636,20 @@ public data class Web3SignInRequest(
     )
 }
 
+/** Request body for verifying a passkey registration or authentication: the [challengeId] plus the WebAuthn [credential]. */
 @Serializable
 public data class PasskeyVerifyRequest(
     @SerialName("challenge_id") public val challengeId: String,
     public val credential: JsonObject,
 )
 
+/** Request body for renaming a passkey. */
 @Serializable
 public data class PasskeyUpdateRequest(
     @SerialName("friendly_name") public val friendlyName: String,
 )
 
+/** Request body for starting passkey authentication; the captcha constructor nests the token under `gotrue_meta_security`. */
 @Serializable
 public data class PasskeyAuthenticationOptionsRequest(
     @SerialName("gotrue_meta_security") public val gotrueMetaSecurity: GotrueMetaSecurity? = null,
@@ -585,6 +659,7 @@ public data class PasskeyAuthenticationOptionsRequest(
     )
 }
 
+/** GoTrue's `gotrue_meta_security` wrapper that carries a captcha token on protected flows. */
 @Serializable
 public data class GotrueMetaSecurity(
     @SerialName("captcha_token") public val captchaToken: String,
