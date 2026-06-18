@@ -7,6 +7,7 @@ import io.github.androidpoet.supabase.realtime.models.PresenceState
 import io.github.androidpoet.supabase.realtime.models.RealtimeChannel
 import io.github.androidpoet.supabase.realtime.models.RealtimeMessage
 import io.ktor.client.HttpClient
+import io.ktor.client.engine.HttpClientEngineFactory
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.webSocketSession
 import io.ktor.websocket.Frame
@@ -52,6 +53,7 @@ private const val MAX_OUTBOUND_BUFFER = 100
 internal class RealtimeClientImpl(
     private val supabaseClient: SupabaseClient,
     private val config: RealtimeConfig = RealtimeConfig(),
+    engineFactory: HttpClientEngineFactory<*> = platformEngine(),
 ) : RealtimeClient {
     private val json =
         Json {
@@ -62,7 +64,7 @@ internal class RealtimeClientImpl(
             explicitNulls = false
         }
     private val httpClient =
-        HttpClient {
+        HttpClient(engineFactory) {
             install(WebSockets)
         }
 

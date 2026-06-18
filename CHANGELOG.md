@@ -14,11 +14,28 @@
 - **`ExplainFormat.XML` and `ExplainFormat.YAML`** — PostgREST `EXPLAIN` supports
   all four output formats.
 
+### Fixed
+
+- **Realtime now bundles a WebSocket engine on every target.** `supabase-realtime`
+  previously declared only `ktor-client-core` + `websockets` and built its
+  `HttpClient` with no engine, so the realtime connection failed at runtime on
+  Kotlin/Native (Apple, Linux, Windows) and Wasm — and relied on a transitively
+  leaked engine on JVM. Each target now supplies a concrete WebSocket-capable
+  engine (OkHttp on Android/JVM, Darwin on Apple, CIO on Linux/Windows, Js on
+  Wasm), mirroring `supabase-client`.
+
 ### Changed
 
 - **`ResizeMode` / `SortOrder` now carry explicit wire values** instead of
   deriving them from `.name.lowercase()`, removing a latent serialization trap.
   No wire-format change.
+- **`createRealtimeClient` gained an optional `engineFactory` parameter**
+  (defaulting to the platform engine) so callers can supply their own Ktor
+  engine — e.g. a mock in tests. Source-compatible for existing callers.
+- **Log redaction now also covers `Cookie` / `Set-Cookie`**, so GoTrue session
+  cookies never reach the debug log sink.
+- **Realtime `Json` now matches the rest of the SDK** (`isLenient`,
+  `explicitNulls = false`).
 
 ## 0.5.0
 

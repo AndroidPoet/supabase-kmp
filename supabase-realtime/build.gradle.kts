@@ -41,6 +41,31 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
         }
+        // The WebSocket transport needs a concrete Ktor engine on every target.
+        // Without these, HttpClient { } has no engine to resolve on Kotlin/Native
+        // and Wasm and fails at runtime. Mirrors supabase-client's engine wiring.
+        androidMain.dependencies {
+            implementation(libs.ktor.client.okhttp)
+        }
+        jvmMain.dependencies {
+            implementation(libs.ktor.client.okhttp)
+        }
+        appleMain.dependencies {
+            implementation(libs.ktor.client.darwin)
+        }
+        val linuxX64Main by getting {
+            dependencies {
+                implementation(libs.ktor.client.cio)
+            }
+        }
+        val mingwX64Main by getting {
+            dependencies {
+                implementation(libs.ktor.client.cio)
+            }
+        }
+        wasmJsMain.dependencies {
+            implementation(libs.ktor.client.js)
+        }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)

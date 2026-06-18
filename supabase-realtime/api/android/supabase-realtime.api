@@ -351,8 +351,8 @@ public final class io/github/androidpoet/supabase/realtime/RealtimeExtKt {
 }
 
 public final class io/github/androidpoet/supabase/realtime/RealtimeFactoryKt {
-	public static final fun createRealtimeClient (Lio/github/androidpoet/supabase/client/SupabaseClient;Lio/github/androidpoet/supabase/realtime/RealtimeConfig;)Lio/github/androidpoet/supabase/realtime/RealtimeClient;
-	public static synthetic fun createRealtimeClient$default (Lio/github/androidpoet/supabase/client/SupabaseClient;Lio/github/androidpoet/supabase/realtime/RealtimeConfig;ILjava/lang/Object;)Lio/github/androidpoet/supabase/realtime/RealtimeClient;
+	public static final fun createRealtimeClient (Lio/github/androidpoet/supabase/client/SupabaseClient;Lio/github/androidpoet/supabase/realtime/RealtimeConfig;Lio/ktor/client/engine/HttpClientEngineFactory;)Lio/github/androidpoet/supabase/realtime/RealtimeClient;
+	public static synthetic fun createRealtimeClient$default (Lio/github/androidpoet/supabase/client/SupabaseClient;Lio/github/androidpoet/supabase/realtime/RealtimeConfig;Lio/ktor/client/engine/HttpClientEngineFactory;ILjava/lang/Object;)Lio/github/androidpoet/supabase/realtime/RealtimeClient;
 }
 
 public final class io/github/androidpoet/supabase/realtime/RealtimeFilter {
