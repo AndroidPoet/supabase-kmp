@@ -358,7 +358,9 @@ public data class MfaTotpDetails(
 
 @Serializable
 public data class MfaChallengeRequest(
-    @SerialName("factor_id") public val factorId: String,
+    // Phone factors accept a delivery channel ("sms" or "whatsapp"). The factor id
+    // is carried in the URL path, not the body, so the body only needs the channel.
+    @SerialName("channel") public val channel: String? = null,
 )
 
 @Serializable

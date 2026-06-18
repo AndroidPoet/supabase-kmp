@@ -191,7 +191,7 @@ abstract interface io.github.androidpoet.supabase.auth/AuthClient { // io.github
     abstract suspend fun getUserIdentities(kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin.collections/List<io.github.androidpoet.supabase.auth.models/UserIdentity>> // io.github.androidpoet.supabase.auth/AuthClient.getUserIdentities|getUserIdentities(kotlin.String){}[0]
     abstract suspend fun linkIdentity(kotlin/String, io.github.androidpoet.supabase.auth.models/OAuthProvider, kotlin/String? = ..., kotlin.collections/List<kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth.models/LinkIdentityResponse> // io.github.androidpoet.supabase.auth/AuthClient.linkIdentity|linkIdentity(kotlin.String;io.github.androidpoet.supabase.auth.models.OAuthProvider;kotlin.String?;kotlin.collections.List<kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
     abstract suspend fun linkIdentityWithIdToken(kotlin/String, io.github.androidpoet.supabase.auth.models/OAuthProvider, kotlin/String, kotlin/String? = ..., kotlin/String? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth.models/Session> // io.github.androidpoet.supabase.auth/AuthClient.linkIdentityWithIdToken|linkIdentityWithIdToken(kotlin.String;io.github.androidpoet.supabase.auth.models.OAuthProvider;kotlin.String;kotlin.String?;kotlin.String?){}[0]
-    abstract suspend fun mfaChallenge(kotlin/String, kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth.models/MfaChallengeResponse> // io.github.androidpoet.supabase.auth/AuthClient.mfaChallenge|mfaChallenge(kotlin.String;kotlin.String){}[0]
+    abstract suspend fun mfaChallenge(kotlin/String, kotlin/String, kotlin/String? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth.models/MfaChallengeResponse> // io.github.androidpoet.supabase.auth/AuthClient.mfaChallenge|mfaChallenge(kotlin.String;kotlin.String;kotlin.String?){}[0]
     abstract suspend fun mfaEnroll(io.github.androidpoet.supabase.auth.models/MfaFactorType, kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth.models/MfaEnrollResponse> // io.github.androidpoet.supabase.auth/AuthClient.mfaEnroll|mfaEnroll(io.github.androidpoet.supabase.auth.models.MfaFactorType;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String){}[0]
     abstract suspend fun mfaGetAuthenticatorAssuranceLevel(kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth.models/AuthenticatorAssuranceLevel> // io.github.androidpoet.supabase.auth/AuthClient.mfaGetAuthenticatorAssuranceLevel|mfaGetAuthenticatorAssuranceLevel(kotlin.String){}[0]
     abstract suspend fun mfaListFactors(kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth.models/MfaListFactorsResponse> // io.github.androidpoet.supabase.auth/AuthClient.mfaListFactors|mfaListFactors(kotlin.String){}[0]
@@ -647,13 +647,13 @@ final class io.github.androidpoet.supabase.auth.models/LinkIdentityResponse { //
 }
 
 final class io.github.androidpoet.supabase.auth.models/MfaChallengeRequest { // io.github.androidpoet.supabase.auth.models/MfaChallengeRequest|null[0]
-    constructor <init>(kotlin/String) // io.github.androidpoet.supabase.auth.models/MfaChallengeRequest.<init>|<init>(kotlin.String){}[0]
+    constructor <init>(kotlin/String? = ...) // io.github.androidpoet.supabase.auth.models/MfaChallengeRequest.<init>|<init>(kotlin.String?){}[0]
 
-    final val factorId // io.github.androidpoet.supabase.auth.models/MfaChallengeRequest.factorId|{}factorId[0]
-        final fun <get-factorId>(): kotlin/String // io.github.androidpoet.supabase.auth.models/MfaChallengeRequest.factorId.<get-factorId>|<get-factorId>(){}[0]
+    final val channel // io.github.androidpoet.supabase.auth.models/MfaChallengeRequest.channel|{}channel[0]
+        final fun <get-channel>(): kotlin/String? // io.github.androidpoet.supabase.auth.models/MfaChallengeRequest.channel.<get-channel>|<get-channel>(){}[0]
 
-    final fun component1(): kotlin/String // io.github.androidpoet.supabase.auth.models/MfaChallengeRequest.component1|component1(){}[0]
-    final fun copy(kotlin/String = ...): io.github.androidpoet.supabase.auth.models/MfaChallengeRequest // io.github.androidpoet.supabase.auth.models/MfaChallengeRequest.copy|copy(kotlin.String){}[0]
+    final fun component1(): kotlin/String? // io.github.androidpoet.supabase.auth.models/MfaChallengeRequest.component1|component1(){}[0]
+    final fun copy(kotlin/String? = ...): io.github.androidpoet.supabase.auth.models/MfaChallengeRequest // io.github.androidpoet.supabase.auth.models/MfaChallengeRequest.copy|copy(kotlin.String?){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.auth.models/MfaChallengeRequest.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.auth.models/MfaChallengeRequest.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // io.github.androidpoet.supabase.auth.models/MfaChallengeRequest.toString|toString(){}[0]

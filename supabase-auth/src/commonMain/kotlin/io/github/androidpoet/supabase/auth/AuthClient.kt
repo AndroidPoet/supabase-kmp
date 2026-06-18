@@ -241,6 +241,7 @@ public interface AuthClient {
     public suspend fun mfaChallenge(
         factorId: String,
         accessToken: String,
+        channel: String? = null,
     ): SupabaseResult<MfaChallengeResponse>
 
     public suspend fun mfaVerify(

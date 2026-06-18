@@ -7,6 +7,7 @@ import io.github.androidpoet.supabase.auth.models.IdTokenRequest
 import io.github.androidpoet.supabase.auth.models.Jwk
 import io.github.androidpoet.supabase.auth.models.JwkSet
 import io.github.androidpoet.supabase.auth.models.LinkIdentityResponse
+import io.github.androidpoet.supabase.auth.models.MfaChallengeRequest
 import io.github.androidpoet.supabase.auth.models.MfaChallengeResponse
 import io.github.androidpoet.supabase.auth.models.MfaEnrollRequest
 import io.github.androidpoet.supabase.auth.models.MfaEnrollResponse
@@ -624,10 +625,12 @@ internal class AuthClientImpl(
     override suspend fun mfaChallenge(
         factorId: String,
         accessToken: String,
+        channel: String?,
     ): SupabaseResult<MfaChallengeResponse> =
         client
             .post(
                 endpoint = "${AuthPaths.FACTORS}/$factorId/challenge",
+                body = channel?.let { defaultJson.encodeToString(MfaChallengeRequest(channel = it)) },
                 headers = bearerHeaders(accessToken),
             ).deserialize()
 

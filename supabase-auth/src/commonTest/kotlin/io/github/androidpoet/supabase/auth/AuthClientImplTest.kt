@@ -17,6 +17,31 @@ import kotlin.test.assertTrue
 
 class AuthClientImplTest {
     @Test
+    fun test_mfaChallenge_withChannel_sendsChannelBody() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            val result = sut.mfaChallenge(factorId = "factor-1", accessToken = "tok", channel = "whatsapp")
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals("/auth/v1/factors/factor-1/challenge", client.lastPostEndpoint)
+            assertTrue(client.lastPostBody?.contains("\"channel\":\"whatsapp\"") == true)
+        }
+
+    @Test
+    fun test_mfaChallenge_withoutChannel_sendsNoBody() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            sut.mfaChallenge(factorId = "factor-1", accessToken = "tok")
+
+            // No channel → no request body (the server defaults the delivery method).
+            assertEquals(null, client.lastPostBody)
+        }
+
+    @Test
     fun test_signInWithIdToken_usesIdTokenGrantPayload() =
         runTest {
             val client = FakeSupabaseClient()
@@ -613,6 +638,8 @@ private class FakeSupabaseClient : SupabaseClient {
                     """{"access_token":"web3-acc","refresh_token":"web3-ref","expires_in":3600,"token_type":"bearer","user":{"id":"u1"}}""",
                 )
             endpoint == "/auth/v1/verify" -> SupabaseResult.Success(verifyResponse)
+            endpoint.endsWith("/challenge") ->
+                SupabaseResult.Success("""{"id":"challenge-1","factor_id":"factor-1","expires_at":1893456000}""")
             else -> SupabaseResult.Success("{}")
         }
     }
