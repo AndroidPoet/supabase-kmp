@@ -27,7 +27,9 @@ public final class io/github/androidpoet/supabase/functions/FunctionRegion$Compa
 
 public abstract interface class io/github/androidpoet/supabase/functions/FunctionsClient {
 	public abstract fun invoke (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lio/github/androidpoet/supabase/functions/FunctionRegion;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun invoke$default (Lio/github/androidpoet/supabase/functions/FunctionsClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lio/github/androidpoet/supabase/functions/FunctionRegion;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun invokeWithBody (Ljava/lang/String;[BLjava/lang/String;Ljava/util/Map;Lio/github/androidpoet/supabase/functions/FunctionRegion;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun invokeWithBody$default (Lio/github/androidpoet/supabase/functions/FunctionsClient;Ljava/lang/String;[BLjava/lang/String;Ljava/util/Map;Lio/github/androidpoet/supabase/functions/FunctionRegion;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun setAuth (Ljava/lang/String;)V
 }
 

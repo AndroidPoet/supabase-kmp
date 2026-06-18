@@ -25,9 +25,9 @@ import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.core.result.map
 import kotlinx.coroutines.CancellationException
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlin.time.Clock
 
 public suspend fun AuthClient.signUp(
     email: String,

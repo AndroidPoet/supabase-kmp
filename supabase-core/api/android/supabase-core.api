@@ -17,7 +17,7 @@ public final class io/github/androidpoet/supabase/core/models/ErrorResponse {
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class io/github/androidpoet/supabase/core/models/ErrorResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class io/github/androidpoet/supabase/core/models/ErrorResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lio/github/androidpoet/supabase/core/models/ErrorResponse$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/core/models/ErrorResponse;
@@ -25,6 +25,7 @@ public synthetic class io/github/androidpoet/supabase/core/models/ErrorResponse$
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/core/models/ErrorResponse;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class io/github/androidpoet/supabase/core/models/ErrorResponse$Companion {
@@ -107,7 +108,7 @@ public final class io/github/androidpoet/supabase/core/models/PostgrestResponse 
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class io/github/androidpoet/supabase/core/models/PostgrestResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class io/github/androidpoet/supabase/core/models/PostgrestResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public fun <init> (Lkotlinx/serialization/KSerializer;)V
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/core/models/PostgrestResponse;
@@ -154,7 +155,7 @@ public final class io/github/androidpoet/supabase/core/result/SupabaseError {
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class io/github/androidpoet/supabase/core/result/SupabaseError$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class io/github/androidpoet/supabase/core/result/SupabaseError$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lio/github/androidpoet/supabase/core/result/SupabaseError$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/core/result/SupabaseError;
@@ -162,6 +163,7 @@ public synthetic class io/github/androidpoet/supabase/core/result/SupabaseError$
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/core/result/SupabaseError;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class io/github/androidpoet/supabase/core/result/SupabaseError$Companion {
@@ -356,11 +358,11 @@ public final class io/github/androidpoet/supabase/core/result/SupabaseException 
 
 public abstract interface class io/github/androidpoet/supabase/core/result/SupabaseResult {
 	public static final field Companion Lio/github/androidpoet/supabase/core/result/SupabaseResult$Companion;
-	public abstract fun errorOrNull ()Lio/github/androidpoet/supabase/core/result/SupabaseError;
-	public abstract fun getOrNull ()Ljava/lang/Object;
-	public abstract fun getOrThrow ()Ljava/lang/Object;
-	public abstract fun isFailure ()Z
-	public abstract fun isSuccess ()Z
+	public fun errorOrNull ()Lio/github/androidpoet/supabase/core/result/SupabaseError;
+	public fun getOrNull ()Ljava/lang/Object;
+	public fun getOrThrow ()Ljava/lang/Object;
+	public fun isFailure ()Z
+	public fun isSuccess ()Z
 }
 
 public final class io/github/androidpoet/supabase/core/result/SupabaseResult$Companion {
@@ -478,7 +480,7 @@ public final class io/github/androidpoet/supabase/core/types/BucketId {
 	public final synthetic fun unbox-impl ()Ljava/lang/String;
 }
 
-public synthetic class io/github/androidpoet/supabase/core/types/BucketId$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class io/github/androidpoet/supabase/core/types/BucketId$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lio/github/androidpoet/supabase/core/types/BucketId$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
@@ -486,6 +488,7 @@ public synthetic class io/github/androidpoet/supabase/core/types/BucketId$$seria
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
 	public final fun serialize-h-AVPUU (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/String;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class io/github/androidpoet/supabase/core/types/BucketId$Companion {
@@ -507,7 +510,7 @@ public final class io/github/androidpoet/supabase/core/types/ChannelId {
 	public final synthetic fun unbox-impl ()Ljava/lang/String;
 }
 
-public synthetic class io/github/androidpoet/supabase/core/types/ChannelId$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class io/github/androidpoet/supabase/core/types/ChannelId$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lio/github/androidpoet/supabase/core/types/ChannelId$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
@@ -515,6 +518,7 @@ public synthetic class io/github/androidpoet/supabase/core/types/ChannelId$$seri
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
 	public final fun serialize-1pB_3NQ (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/String;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class io/github/androidpoet/supabase/core/types/ChannelId$Companion {
@@ -541,7 +545,7 @@ public final class io/github/androidpoet/supabase/core/types/ProjectUrl {
 	public final synthetic fun unbox-impl ()Ljava/lang/String;
 }
 
-public synthetic class io/github/androidpoet/supabase/core/types/ProjectUrl$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class io/github/androidpoet/supabase/core/types/ProjectUrl$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lio/github/androidpoet/supabase/core/types/ProjectUrl$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
@@ -549,6 +553,7 @@ public synthetic class io/github/androidpoet/supabase/core/types/ProjectUrl$$ser
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
 	public final fun serialize-T9SveD8 (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/String;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class io/github/androidpoet/supabase/core/types/ProjectUrl$Companion {
@@ -570,7 +575,7 @@ public final class io/github/androidpoet/supabase/core/types/SessionId {
 	public final synthetic fun unbox-impl ()Ljava/lang/String;
 }
 
-public synthetic class io/github/androidpoet/supabase/core/types/SessionId$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class io/github/androidpoet/supabase/core/types/SessionId$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lio/github/androidpoet/supabase/core/types/SessionId$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
@@ -578,6 +583,7 @@ public synthetic class io/github/androidpoet/supabase/core/types/SessionId$$seri
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
 	public final fun serialize-LqNKX84 (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/String;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class io/github/androidpoet/supabase/core/types/SessionId$Companion {
@@ -599,7 +605,7 @@ public final class io/github/androidpoet/supabase/core/types/UserId {
 	public final synthetic fun unbox-impl ()Ljava/lang/String;
 }
 
-public synthetic class io/github/androidpoet/supabase/core/types/UserId$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class io/github/androidpoet/supabase/core/types/UserId$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lio/github/androidpoet/supabase/core/types/UserId$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
@@ -607,6 +613,7 @@ public synthetic class io/github/androidpoet/supabase/core/types/UserId$$seriali
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
 	public final fun serialize-w2-PR-8 (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/String;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class io/github/androidpoet/supabase/core/types/UserId$Companion {

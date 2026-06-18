@@ -8,7 +8,7 @@ kotlin {
     jvmToolchain(17)
 
     wasmJs {
-        moduleName = "passkeyweb"
+        outputModuleName = "passkeyweb"
         browser {
             commonWebpackConfig {
                 outputFileName = "passkeyweb.js"

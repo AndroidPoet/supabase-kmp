@@ -99,6 +99,7 @@ public abstract interface class io/github/androidpoet/supabase/realtime/Realtime
 	public abstract fun removeSubscriptions (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun sendHeartbeat (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun setAuth (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun setAuth$default (Lio/github/androidpoet/supabase/realtime/RealtimeClient;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 }
 
 public final class io/github/androidpoet/supabase/realtime/RealtimeClient$DefaultImpls {
@@ -385,6 +386,7 @@ public abstract interface class io/github/androidpoet/supabase/realtime/Realtime
 	public abstract fun getStatus ()Lkotlinx/coroutines/flow/StateFlow;
 	public abstract fun presenceState ()Ljava/util/Map;
 	public abstract fun send (Lio/github/androidpoet/supabase/realtime/RealtimeSubscription$SendType;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun send$default (Lio/github/androidpoet/supabase/realtime/RealtimeSubscription;Lio/github/androidpoet/supabase/realtime/RealtimeSubscription$SendType;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun track (Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun unsubscribe (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun untrack (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -429,7 +431,7 @@ public final class io/github/androidpoet/supabase/realtime/models/BroadcastPaylo
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class io/github/androidpoet/supabase/realtime/models/BroadcastPayload$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class io/github/androidpoet/supabase/realtime/models/BroadcastPayload$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lio/github/androidpoet/supabase/realtime/models/BroadcastPayload$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/realtime/models/BroadcastPayload;
@@ -437,6 +439,7 @@ public synthetic class io/github/androidpoet/supabase/realtime/models/BroadcastP
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/realtime/models/BroadcastPayload;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class io/github/androidpoet/supabase/realtime/models/BroadcastPayload$Companion {
@@ -463,7 +466,7 @@ public final class io/github/androidpoet/supabase/realtime/models/PostgresChange
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class io/github/androidpoet/supabase/realtime/models/PostgresChange$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class io/github/androidpoet/supabase/realtime/models/PostgresChange$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lio/github/androidpoet/supabase/realtime/models/PostgresChange$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/realtime/models/PostgresChange;
@@ -471,6 +474,7 @@ public synthetic class io/github/androidpoet/supabase/realtime/models/PostgresCh
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/realtime/models/PostgresChange;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class io/github/androidpoet/supabase/realtime/models/PostgresChange$Companion {
@@ -526,7 +530,7 @@ public final class io/github/androidpoet/supabase/realtime/models/RealtimeMessag
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class io/github/androidpoet/supabase/realtime/models/RealtimeMessage$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class io/github/androidpoet/supabase/realtime/models/RealtimeMessage$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lio/github/androidpoet/supabase/realtime/models/RealtimeMessage$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/realtime/models/RealtimeMessage;
@@ -534,6 +538,7 @@ public synthetic class io/github/androidpoet/supabase/realtime/models/RealtimeMe
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/realtime/models/RealtimeMessage;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class io/github/androidpoet/supabase/realtime/models/RealtimeMessage$Companion {

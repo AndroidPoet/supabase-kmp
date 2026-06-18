@@ -37,16 +37,24 @@ public abstract interface class io/github/androidpoet/supabase/client/SupabaseCl
 	public abstract fun clearAccessToken ()V
 	public abstract fun close ()V
 	public abstract fun delete (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun delete$default (Lio/github/androidpoet/supabase/client/SupabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun get (Ljava/lang/String;Ljava/util/List;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun get$default (Lio/github/androidpoet/supabase/client/SupabaseClient;Ljava/lang/String;Ljava/util/List;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun getAccessTokenOrNull ()Ljava/lang/String;
 	public abstract fun getApiKey ()Ljava/lang/String;
 	public abstract fun getProjectUrl ()Ljava/lang/String;
 	public abstract fun patch (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun patch$default (Lio/github/androidpoet/supabase/client/SupabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun post (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun post$default (Lio/github/androidpoet/supabase/client/SupabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun postRaw (Ljava/lang/String;[BLjava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun postRaw$default (Lio/github/androidpoet/supabase/client/SupabaseClient;Ljava/lang/String;[BLjava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun put (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun put$default (Lio/github/androidpoet/supabase/client/SupabaseClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun putRaw (Ljava/lang/String;[BLjava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun putRaw$default (Lio/github/androidpoet/supabase/client/SupabaseClient;Ljava/lang/String;[BLjava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun rawRequest (Lio/github/androidpoet/supabase/client/SupabaseHttpMethod;Ljava/lang/String;[BLjava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun rawRequest$default (Lio/github/androidpoet/supabase/client/SupabaseClient;Lio/github/androidpoet/supabase/client/SupabaseHttpMethod;Ljava/lang/String;[BLjava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun setAccessToken (Ljava/lang/String;)V
 }
 
@@ -126,9 +134,12 @@ public final class io/github/androidpoet/supabase/client/SupabaseHttpResponse {
 }
 
 public abstract interface class io/github/androidpoet/supabase/client/SupabaseInterceptor {
-	public abstract fun onError (Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/core/result/SupabaseError;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onRequest (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onResponse (Ljava/lang/String;Ljava/lang/String;IJLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun onError (Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/core/result/SupabaseError;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun onError$suspendImpl (Lio/github/androidpoet/supabase/client/SupabaseInterceptor;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/core/result/SupabaseError;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun onRequest (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun onRequest$suspendImpl (Lio/github/androidpoet/supabase/client/SupabaseInterceptor;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun onResponse (Ljava/lang/String;Ljava/lang/String;IJLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun onResponse$suspendImpl (Lio/github/androidpoet/supabase/client/SupabaseInterceptor;Ljava/lang/String;Ljava/lang/String;IJLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class io/github/androidpoet/supabase/client/SupabaseInterceptor$DefaultImpls {
@@ -149,6 +160,7 @@ public final class io/github/androidpoet/supabase/client/SupabaseLogLevel : java
 
 public abstract interface class io/github/androidpoet/supabase/client/SupabaseLogger {
 	public abstract fun log (Lio/github/androidpoet/supabase/client/SupabaseLogLevel;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public static synthetic fun log$default (Lio/github/androidpoet/supabase/client/SupabaseLogger;Lio/github/androidpoet/supabase/client/SupabaseLogLevel;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)V
 }
 
 public final class io/github/androidpoet/supabase/client/SupabaseLogger$DefaultImpls {
