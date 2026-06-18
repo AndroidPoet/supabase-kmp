@@ -47,15 +47,19 @@ jobs:
       # the JVM source sets of the library modules — enough for CodeQL to trace
       # every published module without pulling in the Android sample build.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: java-kotlin
           build-mode: manual
 
+      # --rerun-tasks --no-build-cache force kotlinc to actually run under the
+      # tracer; otherwise setup-gradle's restored cache makes compileKotlinJvm
+      # UP-TO-DATE, CodeQL sees no compilation, and the analysis fails with
+      # "no source code seen during build".
       - name: Compile JVM sources (traced by CodeQL)
-        run: ./gradlew compileKotlinJvm --no-daemon
+        run: ./gradlew compileKotlinJvm --no-daemon --no-build-cache --rerun-tasks
 
       - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
           category: "/language:java-kotlin"

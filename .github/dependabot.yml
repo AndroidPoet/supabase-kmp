@@ -11,6 +11,11 @@ updates:
           - "org.jetbrains.kotlin*"
           - "io.ktor*"
           - "org.jetbrains.kotlinx*"
+        # Keep build tooling out of the language group — a kover/BCV DSL bump
+        # bundled with a Kotlin upgrade produces a mega-PR that can never go green.
+        exclude-patterns:
+          - "org.jetbrains.kotlinx.kover*"
+          - "org.jetbrains.kotlinx.binary-compatibility-validator*"
 
   - package-ecosystem: github-actions
     directory: "/"
