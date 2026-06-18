@@ -28,7 +28,6 @@ internal object StoragePaths {
     const val OBJECT_UPLOAD_SIGN: String = OBJECT + "/upload/sign"
     const val OBJECT_LIST: String = OBJECT + "/list"
     const val OBJECT_LIST_V2: String = OBJECT + "/list-v2"
-    const val OBJECT_REMOVE: String = OBJECT + "/remove"
     const val OBJECT_MOVE: String = OBJECT + "/move"
     const val OBJECT_COPY: String = OBJECT + "/copy"
 

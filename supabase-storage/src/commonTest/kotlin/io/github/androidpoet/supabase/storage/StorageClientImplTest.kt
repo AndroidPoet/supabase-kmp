@@ -322,8 +322,8 @@ class StorageClientImplTest {
                 upsert = true,
             )
 
-            assertEquals("/storage/v1/object/upload/sign/avatars/a.png?token=abc", client.lastPostRawUrl)
-            assertEquals("true", client.lastPostRawHeaders["x-upsert"])
+            assertEquals("/storage/v1/object/upload/sign/avatars/a.png?token=abc", client.lastPutRawUrl)
+            assertEquals("true", client.lastPutRawHeaders["x-upsert"])
         }
 
     @Test
@@ -341,8 +341,8 @@ class StorageClientImplTest {
             )
 
             // cacheControl is a request header, not a query param — the server ignores the query form.
-            assertEquals("/storage/v1/object/upload/sign/avatars/a.png?token=abc", client.lastPostRawUrl)
-            assertEquals("max-age=3600", client.lastPostRawHeaders["Cache-Control"])
+            assertEquals("/storage/v1/object/upload/sign/avatars/a.png?token=abc", client.lastPutRawUrl)
+            assertEquals("max-age=3600", client.lastPutRawHeaders["Cache-Control"])
         }
 
     @Test
@@ -437,7 +437,7 @@ class StorageClientImplTest {
 
             val result = sut.removeWithResult(bucket = "avatars", paths = listOf("a.png"))
 
-            assertEquals("/storage/v1/object/remove/avatars", client.lastPostEndpoint)
+            assertEquals("/storage/v1/object/avatars", client.lastDeleteEndpoint)
             assertTrue(result is SupabaseResult.Success)
             assertEquals(1, result.value.size)
             assertEquals("a.png", result.value.first().name)
@@ -1109,9 +1109,6 @@ private class FakeSupabaseClient : SupabaseClient {
             endpoint.contains("/object/list/") ->
                 SupabaseResult.Success("""[]""")
 
-            endpoint.contains("/object/remove/") ->
-                SupabaseResult.Success("""[{"name":"a.png"}]""")
-
             endpoint == "/storage/v1/iceberg/bucket" && body?.contains("\"name\":\"events\"") == true ->
                 SupabaseResult.Success("""{"name":"events","type":"ANALYTICS","format":"iceberg","created_at":"2026-01-01T00:00:00Z","updated_at":"2026-01-01T00:00:00Z"}""")
             endpoint.contains("/storage/v1/iceberg/v1/catalog-prefix/namespaces") &&
@@ -1173,7 +1170,11 @@ private class FakeSupabaseClient : SupabaseClient {
         headers: Map<String, String>,
     ): SupabaseResult<String> {
         lastDeleteEndpoint = endpoint
-        return SupabaseResult.Success("{}")
+        return when {
+            // Object removal: DELETE /object/{bucket} with {"prefixes":[...]} returns the deleted entries.
+            endpoint.startsWith("/storage/v1/object/") -> SupabaseResult.Success("""[{"name":"a.png"}]""")
+            else -> SupabaseResult.Success("{}")
+        }
     }
 
     override suspend fun postRaw(

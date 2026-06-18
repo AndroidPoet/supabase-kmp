@@ -382,8 +382,8 @@ internal class StorageClientImpl(
     ): SupabaseResult<List<FileObject>> {
         val body = defaultJson.encodeToString(mapOf("prefixes" to paths))
         return client
-            .post(
-                endpoint = "${StoragePaths.OBJECT_REMOVE}/$bucket",
+            .delete(
+                endpoint = "${StoragePaths.OBJECT}/$bucket",
                 body = body,
             ).deserialize()
     }
@@ -457,7 +457,7 @@ internal class StorageClientImpl(
                 if (upsert) put("x-upsert", "true")
                 cacheControlHeader(cacheControl)?.let { put("Cache-Control", it) }
             }
-        return client.postRaw(
+        return client.putRaw(
             url = "${StoragePaths.OBJECT_UPLOAD_SIGN}/${objectRef(bucket, path)}?token=${encodeQueryComponent(token)}",
             body = data,
             contentType = contentType,

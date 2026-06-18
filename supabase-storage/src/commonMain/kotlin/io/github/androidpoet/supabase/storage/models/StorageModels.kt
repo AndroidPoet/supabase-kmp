@@ -36,7 +36,9 @@ public data class CreateBucketRequest(
 
 @Serializable
 public data class SignedUrlRequest(
-    @SerialName("expires_in") val expiresIn: Long,
+    // The storage server reads the request body as camelCase `expiresIn`; sending
+    // snake_case `expires_in` left the TTL unset, so signed URLs used the server default.
+    @SerialName("expiresIn") val expiresIn: Long,
     @SerialName("transform") val transform: SignedUrlTransformRequest? = null,
 )
 
@@ -59,7 +61,7 @@ public data class SignedUrlResponse(
 @Serializable
 public data class SignedUrlsRequest(
     @SerialName("paths") val paths: List<String>,
-    @SerialName("expires_in") val expiresIn: Long,
+    @SerialName("expiresIn") val expiresIn: Long,
 )
 
 @Serializable
