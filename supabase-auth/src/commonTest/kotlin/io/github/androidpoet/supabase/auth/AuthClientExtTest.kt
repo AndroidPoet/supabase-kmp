@@ -71,6 +71,8 @@ private const val JWKS_ES256_JSON =
         "\"use\":\"sig\",\"x\":\"Rxw-dYxJBChbun5TEY7Q9SSt6wdX0lvS-Oew1236cUw\",\"y\":\"3VIPesqKi5F6" +
         "zDf1HejwybvjrYWDgucC3CWhLQn3qFg\"}]}"
 
+private val fakeJwksJson = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+
 class AuthClientExtTest {
     @Test
     fun test_signUp_alias_routesToEmailSignup() =
@@ -1148,6 +1150,25 @@ private class FakeAuthClient : AuthClient {
         }
 
     override suspend fun fetchJwks(): SupabaseResult<String> = jwksResponse
+
+    override suspend fun resolveSigningKey(
+        kid: String,
+    ): SupabaseResult<io.github.androidpoet.supabase.auth.models.Jwk?> =
+        when (val raw = jwksResponse) {
+            is SupabaseResult.Failure -> raw
+            is SupabaseResult.Success ->
+                SupabaseResult.Success(
+                    fakeJwksJson
+                        .decodeFromString(
+                            io.github.androidpoet.supabase.auth.models.JwkSet
+                                .serializer(),
+                            raw.value,
+                        ).keys
+                        .firstOrNull { it.keyId == kid },
+                )
+        }
+
+    override fun generateOAuthState(): String = "test-state"
 
     override suspend fun getUserIdentities(accessToken: String): SupabaseResult<List<UserIdentity>> =
         SupabaseResult.Success(currentUserIdentities).also {

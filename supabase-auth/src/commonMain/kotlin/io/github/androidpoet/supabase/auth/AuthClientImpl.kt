@@ -4,6 +4,8 @@ import io.github.androidpoet.supabase.auth.models.AnonymousSignInRequest
 import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevel
 import io.github.androidpoet.supabase.auth.models.ExchangeCodeRequest
 import io.github.androidpoet.supabase.auth.models.IdTokenRequest
+import io.github.androidpoet.supabase.auth.models.Jwk
+import io.github.androidpoet.supabase.auth.models.JwkSet
 import io.github.androidpoet.supabase.auth.models.LinkIdentityResponse
 import io.github.androidpoet.supabase.auth.models.MfaChallengeResponse
 import io.github.androidpoet.supabase.auth.models.MfaEnrollRequest
@@ -51,13 +53,25 @@ import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.core.result.map
 import io.github.androidpoet.supabase.core.util.urlEncode
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
+import kotlin.time.Clock
 
 internal class AuthClientImpl(
     private val client: SupabaseClient,
 ) : AuthClient {
+    // In-memory JWKS cache for local signature verification (see [resolveSigningKey]). The map is the
+    // last fetched key set keyed by `kid`; [jwksCacheExpiryEpochMs] gates the TTL. All reads/writes go
+    // through [jwksMutex] so a refetch is single-flighted across concurrent verifications — a plain
+    // @Volatile would only give visibility, not the compound check-then-fetch atomicity we need.
+    private val jwksMutex = Mutex()
+    private var jwksCache: Map<String, Jwk> = emptyMap()
+    private var jwksCacheExpiryEpochMs: Long = 0L
+
     override suspend fun signUpWithEmail(
         email: String,
         password: String,
@@ -319,6 +333,39 @@ internal class AuthClientImpl(
 
     override suspend fun fetchJwks(): SupabaseResult<String> = client.get(endpoint = AuthPaths.JWKS)
 
+    override suspend fun resolveSigningKey(kid: String): SupabaseResult<Jwk?> =
+        jwksMutex.withLock {
+            val now = Clock.System.now().toEpochMilliseconds()
+            val fresh = now < jwksCacheExpiryEpochMs
+            // A fresh cache that already holds the key is an unconditional hit. Any other case (stale
+            // cache, or a fresh cache missing this kid — e.g. a rotated key) forces one refetch.
+            jwksCache[kid]?.let { if (fresh) return@withLock SupabaseResult.Success(it) }
+            val raw =
+                when (val result = fetchJwks()) {
+                    is SupabaseResult.Failure -> return@withLock result
+                    is SupabaseResult.Success -> result.value
+                }
+            val parsed =
+                try {
+                    defaultJson
+                        .decodeFromString(JwkSet.serializer(), raw)
+                        .keys
+                        .mapNotNull { jwk -> jwk.keyId?.let { it to jwk } }
+                        .toMap()
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Throwable) {
+                    return@withLock SupabaseResult.Failure(
+                        SupabaseError(message = "Failed to parse JWKS: ${e.message}"),
+                    )
+                }
+            jwksCache = parsed
+            jwksCacheExpiryEpochMs = now + JWKS_CACHE_TTL_MS
+            // Cache hit or miss is now settled for this TTL window; an absent kid returns null and
+            // won't trigger another refetch until the cache expires (fail closed).
+            SupabaseResult.Success(parsed[kid])
+        }
+
     override suspend fun getUserIdentities(accessToken: String): SupabaseResult<List<UserIdentity>> =
         when (val result = getUser(accessToken = accessToken)) {
             is SupabaseResult.Failure -> result
@@ -530,6 +577,14 @@ internal class AuthClientImpl(
             )
         }
     }
+
+    override fun generateOAuthState(): String =
+        // Same CSPRNG and alphabet as the PKCE verifier — a CSRF token has the same secrecy needs.
+        buildString(OAUTH_STATE_LENGTH) {
+            repeat(OAUTH_STATE_LENGTH) {
+                append(PKCE_ALPHABET[CryptographyRandom.nextInt(PKCE_ALPHABET.length)])
+            }
+        }
 
     override suspend fun exchangeCodeForSession(
         authCode: String,
@@ -856,5 +911,10 @@ internal class AuthClientImpl(
     private companion object {
         const val PKCE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
         const val PKCE_VERIFIER_LENGTH = 43
+        const val OAUTH_STATE_LENGTH = 32
+
+        // JWKS rotate rarely; a 10-minute TTL keeps verifications offline while still picking up a
+        // rotated key promptly (an unknown kid also forces an immediate refetch — see resolveSigningKey).
+        const val JWKS_CACHE_TTL_MS = 10 * 60 * 1000L
     }
 }

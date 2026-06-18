@@ -5,7 +5,6 @@ import dev.whyoleg.cryptography.algorithms.EC
 import dev.whyoleg.cryptography.algorithms.ECDSA
 import dev.whyoleg.cryptography.algorithms.SHA256
 import io.github.androidpoet.supabase.auth.models.Jwk
-import io.github.androidpoet.supabase.auth.models.JwkSet
 import io.github.androidpoet.supabase.auth.models.JwtClaims
 import io.github.androidpoet.supabase.auth.models.JwtClaimsResult
 import io.github.androidpoet.supabase.auth.models.JwtHeader
@@ -26,7 +25,9 @@ import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.core.result.map
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlin.time.Clock
 
 public suspend fun AuthClient.signUp(
@@ -830,30 +831,99 @@ private fun decodeJwt(jwt: String): SupabaseResult<JwtClaimsResult> {
  * Local verification uses platform-native crypto (JDK/JCA, Apple Security, WebCrypto, OpenSSL3) via
  * the `cryptography-kotlin` library; signature math is never hand-rolled.
  *
+ * Standard registered-claim checks: `exp` and `nbf` are always validated (with a small clock-skew
+ * leeway), since a valid token never legitimately fails them. `iss`/`aud` validation is **opt-in** —
+ * pass [expectedIssuer]/[expectedAudience] to enforce them — so this stays backward-compatible and
+ * works for self-hosted projects with non-default issuers.
+ *
  * @param jwt the JWT to inspect, e.g. a session access token.
  * @param verify when true, verify the token's signature before returning the claims.
  * @param allowExpired when false, a token whose `exp` is in the past is rejected without a network call.
+ * @param expectedIssuer when non-null, the token's `iss` must equal this value (e.g. `"<project>/auth/v1"`).
+ * @param expectedAudience when non-null, the token's `aud` (string or array) must contain this value (e.g. `"authenticated"`).
  */
 public suspend fun AuthClient.getClaims(
     jwt: String,
     verify: Boolean = true,
     allowExpired: Boolean = false,
+    expectedIssuer: String? = null,
+    expectedAudience: String? = null,
 ): SupabaseResult<JwtClaimsResult> {
     val decoded =
         when (val result = decodeJwt(jwt)) {
             is SupabaseResult.Failure -> return result
             is SupabaseResult.Success -> result.value
         }
-    val expiresAt = decoded.claims.expiresAt
-    if (!allowExpired && expiresAt != null && expiresAt <= Clock.System.now().epochSeconds) {
-        return SupabaseResult.Failure(SupabaseError(message = "JWT has expired"))
-    }
+    validateRegisteredClaims(decoded, allowExpired, expectedIssuer, expectedAudience)?.let { return it }
     if (verify) {
         val validation = verifyJwt(jwt, decoded.header)
         if (validation is SupabaseResult.Failure) return validation
     }
     return SupabaseResult.Success(decoded)
 }
+
+// Validates the standard registered claims locally, returning the first failure or null if all pass.
+// `exp`/`nbf` are always checked (with clock-skew leeway); `iss`/`aud` only when an expected value is
+// given. Extracted from getClaims so each guard is an early return without tripping the return-count limit.
+private fun validateRegisteredClaims(
+    decoded: JwtClaimsResult,
+    allowExpired: Boolean,
+    expectedIssuer: String?,
+    expectedAudience: String?,
+): SupabaseResult.Failure? {
+    val now = Clock.System.now().epochSeconds
+    val expiresAt = decoded.claims.expiresAt
+    if (!allowExpired && expiresAt != null && expiresAt + JWT_CLOCK_SKEW_LEEWAY_SECONDS <= now) {
+        return SupabaseResult.Failure(SupabaseError(message = "JWT has expired"))
+    }
+    val notBefore = decoded.claims.notBefore
+    if (notBefore != null && now + JWT_CLOCK_SKEW_LEEWAY_SECONDS < notBefore) {
+        return SupabaseResult.Failure(SupabaseError(message = "JWT is not yet valid (nbf)"))
+    }
+    if (expectedIssuer != null && decoded.claims.issuer != expectedIssuer) {
+        return SupabaseResult.Failure(SupabaseError(message = "JWT issuer mismatch"))
+    }
+    if (expectedAudience != null && expectedAudience !in audienceValues(decoded.raw)) {
+        return SupabaseResult.Failure(SupabaseError(message = "JWT audience mismatch"))
+    }
+    return null
+}
+
+private const val JWT_CLOCK_SKEW_LEEWAY_SECONDS = 60L
+
+/**
+ * Verifies an OAuth `state` (CSRF) parameter on callback. Returns a [SupabaseResult.Success] only when
+ * [expected] (the value you persisted from [AuthClient.generateOAuthState]) matches [returned] (the
+ * `state` query param the provider sent back). A blank/absent [returned] is always a failure. The
+ * comparison is constant-time so a mismatch doesn't leak how much of the value was correct.
+ */
+public fun verifyOAuthState(
+    expected: String,
+    returned: String?,
+): SupabaseResult<Unit> {
+    if (returned.isNullOrEmpty() || !constantTimeEquals(expected, returned)) {
+        return SupabaseResult.Failure(SupabaseError(message = "OAuth state mismatch (possible CSRF)"))
+    }
+    return SupabaseResult.Success(Unit)
+}
+
+private fun constantTimeEquals(
+    a: String,
+    b: String,
+): Boolean {
+    if (a.length != b.length) return false
+    var diff = 0
+    for (i in a.indices) diff = diff or (a[i].code xor b[i].code)
+    return diff == 0
+}
+
+/** Extracts the `aud` claim, which may be a single string or an array of strings, as a flat list. */
+private fun audienceValues(raw: JsonObject): List<String> =
+    when (val aud = raw["aud"]) {
+        is JsonPrimitive -> if (aud.isString) listOf(aud.content) else emptyList()
+        is JsonArray -> aud.mapNotNull { (it as? JsonPrimitive)?.takeIf { p -> p.isString }?.content }
+        else -> emptyList()
+    }
 
 /**
  * Verifies [jwt] either locally (asymmetric ES256 against the project JWKS) or, when local
@@ -920,19 +990,11 @@ private suspend fun AuthClient.buildEs256Material(
     )
 }
 
-private suspend fun AuthClient.resolveJwk(kid: String): Jwk? {
-    val raw =
-        when (val result = fetchJwks()) {
-            is SupabaseResult.Failure -> return null
-            is SupabaseResult.Success -> result.value
-        }
-    return try {
-        claimsJson.decodeFromString(JwkSet.serializer(), raw).keys.firstOrNull { it.keyId == kid }
-    } catch (e: Throwable) {
-        if (e is CancellationException) throw e
-        null
+private suspend fun AuthClient.resolveJwk(kid: String): Jwk? =
+    when (val result = resolveSigningKey(kid)) {
+        is SupabaseResult.Failure -> null
+        is SupabaseResult.Success -> result.value
     }
-}
 
 /** Reconstructs the RAW (uncompressed `0x04 || X || Y`) public key bytes for an EC P-256 JWK. */
 private fun ecPublicKeyBytes(jwk: Jwk): ByteArray? {
@@ -959,11 +1021,19 @@ public suspend fun SessionManager.getClaimsForCurrentSession(
     authClient: AuthClient,
     verify: Boolean = true,
     allowExpired: Boolean = false,
+    expectedIssuer: String? = null,
+    expectedAudience: String? = null,
 ): SupabaseResult<JwtClaimsResult> {
     val token =
         accessToken
             ?: return SupabaseResult.Failure(SupabaseError(message = "No active session"))
-    return authClient.getClaims(jwt = token, verify = verify, allowExpired = allowExpired)
+    return authClient.getClaims(
+        jwt = token,
+        verify = verify,
+        allowExpired = allowExpired,
+        expectedIssuer = expectedIssuer,
+        expectedAudience = expectedAudience,
+    )
 }
 
 private fun decodeBase64Url(input: String): String? = decodeBase64UrlBytes(input)?.decodeToString()

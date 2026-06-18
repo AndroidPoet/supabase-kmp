@@ -1,5 +1,6 @@
 package io.github.androidpoet.supabase.auth
 import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevel
+import io.github.androidpoet.supabase.auth.models.Jwk
 import io.github.androidpoet.supabase.auth.models.LinkIdentityResponse
 import io.github.androidpoet.supabase.auth.models.MfaChallengeResponse
 import io.github.androidpoet.supabase.auth.models.MfaEnrollResponse
@@ -150,6 +151,16 @@ public interface AuthClient {
      */
     public suspend fun fetchJwks(): SupabaseResult<String>
 
+    /**
+     * Resolves the signing key for [kid] from the project JWKS, backed by an in-memory cache so
+     * repeated local verifications don't re-fetch on every call. A cache miss (unknown [kid]) forces
+     * exactly one refetch — to pick up a rotated key — before giving up, then the result (hit or miss)
+     * is cached until the TTL expires. Returns the key, `null` if it isn't present even after a forced
+     * refetch, or a [SupabaseResult.Failure] only when the JWKS fetch itself failed. Concurrent callers
+     * share a single in-flight refetch.
+     */
+    public suspend fun resolveSigningKey(kid: String): SupabaseResult<Jwk?>
+
     public suspend fun getUserIdentities(accessToken: String): SupabaseResult<List<UserIdentity>>
 
     public suspend fun updateUser(
@@ -202,6 +213,17 @@ public interface AuthClient {
     ): String
 
     public fun generatePkceParams(sha256: ((ByteArray) -> ByteArray)? = null): PkceParams
+
+    /**
+     * Generates a cryptographically-random opaque `state` value for CSRF protection on the OAuth
+     * implicit/redirect flow. Pass it to [getOAuthSignInUrl] via `queryParams = mapOf("state" to ...)`,
+     * persist it the same way you persist a PKCE [PkceParams.codeVerifier], and on callback compare it
+     * to the returned `state` with [verifyOAuthState].
+     *
+     * Note: the PKCE flow already binds the request via `code_verifier`, so `state` is additive there;
+     * it matters most for the implicit flow, which has no verifier.
+     */
+    public fun generateOAuthState(): String
 
     public suspend fun exchangeCodeForSession(
         authCode: String,

@@ -557,6 +557,7 @@ public data class JwtClaims(
     @SerialName("role") public val role: String? = null,
     @SerialName("iss") public val issuer: String? = null,
     @SerialName("exp") public val expiresAt: Long? = null,
+    @SerialName("nbf") public val notBefore: Long? = null,
     @SerialName("iat") public val issuedAt: Long? = null,
     @SerialName("session_id") public val sessionId: String? = null,
     @SerialName("aal") public val authenticatorAssuranceLevel: String? = null,
