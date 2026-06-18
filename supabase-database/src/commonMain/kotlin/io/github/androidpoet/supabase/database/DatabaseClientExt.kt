@@ -22,6 +22,37 @@ public suspend inline fun <reified T> DatabaseClient.selectTyped(
 }
 
 /**
+ * Selects rows and decodes them into a [PostgrestPage] carrying the total
+ * [PostgrestPage.count] reported by PostgREST's `Content-Range` header. Combine
+ * with `limit`/`range` filters for count-aware pagination.
+ */
+public suspend inline fun <reified T> DatabaseClient.selectWithCount(
+    table: String,
+    schema: String? = null,
+    columns: String = "*",
+    count: CountOption = CountOption.EXACT,
+    noinline filters: FilterBuilder.() -> Unit = {},
+): SupabaseResult<PostgrestPage<T>> =
+    when (
+        val result =
+            selectRange(table = table, schema = schema, columns = columns, count = count, filters = filters)
+    ) {
+        is SupabaseResult.Success ->
+            when (val rows = SupabaseResult.Success(result.value.first).deserialize<List<T>>()) {
+                is SupabaseResult.Success ->
+                    SupabaseResult.Success(
+                        PostgrestPage(
+                            rows = rows.value,
+                            count = result.value.second.count,
+                            range = result.value.second.range,
+                        ),
+                    )
+                is SupabaseResult.Failure -> rows
+            }
+        is SupabaseResult.Failure -> result
+    }
+
+/**
  * Selects rows as a GeoJSON `FeatureCollection` (PostGIS), returned as the raw
  * JSON string. Requests `Accept: application/geo+json`.
  */

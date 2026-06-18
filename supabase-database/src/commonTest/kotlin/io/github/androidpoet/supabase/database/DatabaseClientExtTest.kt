@@ -666,6 +666,34 @@ private class FakeDatabaseClient(
         filters: FilterBuilder.() -> Unit,
     ): SupabaseResult<String> = selectResult
 
+    override suspend fun selectCount(
+        table: String,
+        schema: String?,
+        columns: String,
+        count: CountOption,
+        headers: Map<String, String>,
+        filters: FilterBuilder.() -> Unit,
+    ): SupabaseResult<PostgrestRange> =
+        when (selectResult) {
+            is SupabaseResult.Success -> SupabaseResult.Success(PostgrestRange())
+            is SupabaseResult.Failure -> selectResult
+        }
+
+    override suspend fun selectRange(
+        table: String,
+        schema: String?,
+        columns: String,
+        single: Boolean,
+        count: CountOption,
+        stripNulls: Boolean,
+        headers: Map<String, String>,
+        filters: FilterBuilder.() -> Unit,
+    ): SupabaseResult<Pair<String, PostgrestRange>> =
+        when (selectResult) {
+            is SupabaseResult.Success -> SupabaseResult.Success(selectResult.value to PostgrestRange())
+            is SupabaseResult.Failure -> selectResult
+        }
+
     override suspend fun insert(
         table: String,
         schema: String?,

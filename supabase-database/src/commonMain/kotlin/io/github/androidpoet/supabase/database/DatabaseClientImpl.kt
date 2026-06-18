@@ -1,6 +1,7 @@
 package io.github.androidpoet.supabase.database
 
 import io.github.androidpoet.supabase.client.SupabaseClient
+import io.github.androidpoet.supabase.client.SupabaseHttpMethod
 import io.github.androidpoet.supabase.core.models.FilterBuilder
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 
@@ -26,6 +27,7 @@ internal class DatabaseClientImpl(
     ): SupabaseResult<String> {
         require(!(single && csv)) { "single and csv cannot both be true" }
         require(!(csv && stripNulls)) { "stripNulls cannot be used with csv" }
+        require(!(geojson && stripNulls)) { "stripNulls cannot be used with geojson" }
         require(!(geojson && csv)) { "geojson and csv cannot both be true" }
         require(!(geojson && single)) { "geojson and single cannot both be true" }
         val safeTable = validatePathSegment(table, "table")
@@ -58,6 +60,81 @@ internal class DatabaseClientImpl(
             queryParams = queryParams,
             headers = headersWithSchema + ("Accept" to acceptHeader(single, csv, stripNulls, explain, geojson)),
         )
+    }
+
+    override suspend fun selectCount(
+        table: String,
+        schema: String?,
+        columns: String,
+        count: CountOption,
+        headers: Map<String, String>,
+        filters: FilterBuilder.() -> Unit,
+    ): SupabaseResult<PostgrestRange> {
+        val safeTable = validatePathSegment(table, "table")
+        val safeSchema = schema?.let { validatePathSegment(it, "schema") }
+        val queryParams =
+            buildList {
+                add("select" to columns)
+                addAll(FilterBuilder().apply(filters).build())
+            }
+        val requestHeaders =
+            headers +
+                buildPreferHeader { add("count=${count.headerValue}") }
+        val headersWithSchema =
+            addSchemaHeaders(requestHeaders, safeSchema, isReadRequest = true) +
+                ("Accept" to acceptHeader())
+        val endpoint = buildEndpoint("${DatabasePaths.BASE}/$safeTable", queryParams)
+        return when (
+            val result =
+                client.rawRequest(
+                    method = SupabaseHttpMethod.HEAD,
+                    url = endpoint,
+                    headers = headersWithSchema,
+                )
+        ) {
+            is SupabaseResult.Success -> SupabaseResult.Success(parseContentRange(result.value.header("Content-Range")))
+            is SupabaseResult.Failure -> result
+        }
+    }
+
+    override suspend fun selectRange(
+        table: String,
+        schema: String?,
+        columns: String,
+        single: Boolean,
+        count: CountOption,
+        stripNulls: Boolean,
+        headers: Map<String, String>,
+        filters: FilterBuilder.() -> Unit,
+    ): SupabaseResult<Pair<String, PostgrestRange>> {
+        val safeTable = validatePathSegment(table, "table")
+        val safeSchema = schema?.let { validatePathSegment(it, "schema") }
+        val queryParams =
+            buildList {
+                add("select" to columns)
+                addAll(FilterBuilder().apply(filters).build())
+            }
+        val requestHeaders =
+            headers +
+                buildPreferHeader { add("count=${count.headerValue}") }
+        val headersWithSchema =
+            addSchemaHeaders(requestHeaders, safeSchema, isReadRequest = true) +
+                ("Accept" to acceptHeader(single = single, stripNulls = stripNulls))
+        val endpoint = buildEndpoint("${DatabasePaths.BASE}/$safeTable", queryParams)
+        return when (
+            val result =
+                client.rawRequest(
+                    method = SupabaseHttpMethod.GET,
+                    url = endpoint,
+                    headers = headersWithSchema,
+                )
+        ) {
+            is SupabaseResult.Success ->
+                SupabaseResult.Success(
+                    result.value.body.decodeToString() to parseContentRange(result.value.header("Content-Range")),
+                )
+            is SupabaseResult.Failure -> result
+        }
     }
 
     override suspend fun insert(
@@ -268,6 +345,32 @@ internal class DatabaseClientImpl(
             endpoint = endpoint,
             headers = readHeaders + ("Accept" to acceptHeader(single, csv, stripNulls, explain)),
         )
+    }
+
+    // Parses PostgREST's `Content-Range` header (`<range>/<total>`), e.g.
+    // `0-9/27` -> range 0..9, count 27; `*/27` -> count 27, no range;
+    // `*/*` or a malformed/absent header -> both null. Never throws.
+    private fun parseContentRange(header: String?): PostgrestRange {
+        if (header.isNullOrBlank()) return PostgrestRange()
+        val slash = header.indexOf('/')
+        if (slash < 0) return PostgrestRange()
+        val rangePart = header.substring(0, slash).trim()
+        val totalPart = header.substring(slash + 1).trim()
+        val count = if (totalPart == "*") null else totalPart.toLongOrNull()
+        val range =
+            if (rangePart == "*") {
+                null
+            } else {
+                val dash = rangePart.indexOf('-')
+                if (dash < 0) {
+                    null
+                } else {
+                    val from = rangePart.substring(0, dash).trim().toLongOrNull()
+                    val to = rangePart.substring(dash + 1).trim().toLongOrNull()
+                    if (from != null && to != null && to >= from) from..to else null
+                }
+            }
+        return PostgrestRange(count = count, range = range)
     }
 
     private inline fun buildPreferHeader(
