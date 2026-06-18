@@ -1,4 +1,5 @@
 package io.github.androidpoet.supabase.client
+import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.logging.LogLevel
 
 @DslMarker
@@ -39,6 +40,33 @@ public class SupabaseConfigBuilder {
      */
     public var requestTimeoutMillis: Long? = null
 
+    /**
+     * Raw Ktor escape hatch applied to the underlying [HttpClientConfig] AFTER the
+     * library's own installs (content negotiation, optional timeouts/logging, the
+     * default `apikey`/`X-Client-Info` headers). Use it to install arbitrary Ktor
+     * plugins or tweak engine behaviour the library does not expose — e.g.
+     * `HttpCache`, a proxy, custom TLS/cookies, or `HttpRequestRetry`.
+     *
+     * This is NOT a library plugin-registration DSL: it is the unfiltered Ktor
+     * builder, so anything you do here can override or conflict with the library's
+     * own configuration. Prefer the typed config fields where they exist.
+     */
+    public var httpClientConfig: (HttpClientConfig<*>.() -> Unit)? = null
+
+    /**
+     * Supplies the `Authorization: Bearer` token per request, resolved fresh on
+     * every call. Intended for third-party-auth setups (e.g. Firebase/Auth0) where
+     * a JWT comes from an external identity provider rather than the library's
+     * session manager.
+     *
+     * When set and it returns a non-null value, that token wins over both the
+     * session token and the API key. Returning `null` falls back to the normal
+     * rules (session token, then a legacy JWT API key). A caller-supplied
+     * `Authorization` header on an individual request still takes precedence and is
+     * never overwritten.
+     */
+    public var accessTokenProvider: (suspend () -> String?)? = null
+
     internal fun build(): SupabaseConfig =
         SupabaseConfig(
             logging = logging,
@@ -50,6 +78,8 @@ public class SupabaseConfigBuilder {
             connectTimeoutMillis = connectTimeoutMillis,
             socketTimeoutMillis = socketTimeoutMillis,
             requestTimeoutMillis = requestTimeoutMillis,
+            httpClientConfig = httpClientConfig,
+            accessTokenProvider = accessTokenProvider,
         )
 }
 
@@ -63,4 +93,8 @@ public data class SupabaseConfig(
     val connectTimeoutMillis: Long? = null,
     val socketTimeoutMillis: Long? = null,
     val requestTimeoutMillis: Long? = null,
+    /** Raw Ktor escape hatch applied after the library's own installs. See [SupabaseConfigBuilder.httpClientConfig]. */
+    val httpClientConfig: (HttpClientConfig<*>.() -> Unit)? = null,
+    /** Per-request Bearer token provider for third-party auth. See [SupabaseConfigBuilder.accessTokenProvider]. */
+    val accessTokenProvider: (suspend () -> String?)? = null,
 )

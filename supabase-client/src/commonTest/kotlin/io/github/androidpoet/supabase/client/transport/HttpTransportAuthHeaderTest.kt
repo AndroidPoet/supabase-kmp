@@ -14,18 +14,20 @@ import kotlin.test.assertNull
 private const val LEGACY_ANON_JWT = "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiYW5vbiJ9.sig"
 private const val MODERN_PUBLISHABLE = "sb_publishable_abc123"
 
-private fun config() =
+private fun config(accessTokenProvider: (suspend () -> String?)? = null) =
     SupabaseConfig(
         logging = false,
         logLevel = io.ktor.client.plugins.logging.LogLevel.NONE,
         headers = emptyMap(),
+        accessTokenProvider = accessTokenProvider,
     )
 
 private fun transport(
     apiKey: String,
     captured: MutableList<HttpRequestData>,
+    accessTokenProvider: (suspend () -> String?)? = null,
 ) = HttpTransport(
-    config = config(),
+    config = config(accessTokenProvider),
     engineFactory =
         TestMockEngineFactory { request ->
             captured += request
@@ -82,5 +84,61 @@ class HttpTransportAuthHeaderTest {
             transport.clearAccessToken()
             transport.get(url = "https://example.supabase.co/rest/v1/x")
             assertNull(seen.single().headers[HttpHeaders.Authorization])
+        }
+
+    @Test
+    fun test_accessTokenProvider_suppliesBearer_withoutSession() =
+        runTest {
+            val seen = mutableListOf<HttpRequestData>()
+            // Third-party-auth: no session set, key is a modern publishable key that
+            // would otherwise omit Authorization entirely.
+            val transport = transport(MODERN_PUBLISHABLE, seen, accessTokenProvider = { "external-jwt" })
+            transport.get(url = "https://example.supabase.co/rest/v1/x")
+            assertEquals("Bearer external-jwt", seen.single().headers[HttpHeaders.Authorization])
+            // The apikey header is still always sent.
+            assertEquals(MODERN_PUBLISHABLE, seen.single().headers["apikey"])
+        }
+
+    @Test
+    fun test_accessTokenProvider_winsOverSessionToken() =
+        runTest {
+            val seen = mutableListOf<HttpRequestData>()
+            val transport = transport(MODERN_PUBLISHABLE, seen, accessTokenProvider = { "external-jwt" })
+            transport.setAccessToken("user-session-jwt")
+            transport.get(url = "https://example.supabase.co/rest/v1/x")
+            assertEquals("Bearer external-jwt", seen.single().headers[HttpHeaders.Authorization])
+        }
+
+    @Test
+    fun test_accessTokenProvider_returningNull_fallsBackToSession() =
+        runTest {
+            val seen = mutableListOf<HttpRequestData>()
+            val transport = transport(MODERN_PUBLISHABLE, seen, accessTokenProvider = { null })
+            transport.setAccessToken("user-session-jwt")
+            transport.get(url = "https://example.supabase.co/rest/v1/x")
+            assertEquals("Bearer user-session-jwt", seen.single().headers[HttpHeaders.Authorization])
+        }
+
+    @Test
+    fun test_accessTokenProvider_returningNull_fallsBackToKeyRules() =
+        runTest {
+            val seen = mutableListOf<HttpRequestData>()
+            // Provider returns null and key is modern publishable => no Authorization.
+            val transport = transport(MODERN_PUBLISHABLE, seen, accessTokenProvider = { null })
+            transport.get(url = "https://example.supabase.co/rest/v1/x")
+            assertNull(seen.single().headers[HttpHeaders.Authorization])
+        }
+
+    @Test
+    fun test_callerAuthorizationHeader_overridesProvider() =
+        runTest {
+            val seen = mutableListOf<HttpRequestData>()
+            val transport = transport(MODERN_PUBLISHABLE, seen, accessTokenProvider = { "external-jwt" })
+            transport.get(
+                url = "https://example.supabase.co/rest/v1/x",
+                headers = mapOf("Authorization" to "Bearer caller-supplied"),
+            )
+            // A caller-provided Authorization header must never be overwritten.
+            assertEquals("Bearer caller-supplied", seen.single().headers[HttpHeaders.Authorization])
         }
 }
