@@ -76,6 +76,8 @@ public final class io/github/androidpoet/supabase/core/models/FilterBuilder {
 	public final fun not (Lkotlin/jvm/functions/Function1;)V
 	public final fun notExtendLeft (Ljava/lang/String;Ljava/lang/String;)V
 	public final fun notExtendRight (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun offset (ILjava/lang/String;)V
+	public static synthetic fun offset$default (Lio/github/androidpoet/supabase/core/models/FilterBuilder;ILjava/lang/String;ILjava/lang/Object;)V
 	public final fun or (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
 	public static synthetic fun or$default (Lio/github/androidpoet/supabase/core/models/FilterBuilder;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 	public final fun order (Ljava/lang/String;Lio/github/androidpoet/supabase/core/models/OrderDirection;Lio/github/androidpoet/supabase/core/models/NullsPlacement;Ljava/lang/String;)V
@@ -153,6 +155,7 @@ public final class io/github/androidpoet/supabase/core/models/PostgrestResponse$
 public final class io/github/androidpoet/supabase/core/models/TextSearchType : java/lang/Enum {
 	public static final field Phrase Lio/github/androidpoet/supabase/core/models/TextSearchType;
 	public static final field Plain Lio/github/androidpoet/supabase/core/models/TextSearchType;
+	public static final field Raw Lio/github/androidpoet/supabase/core/models/TextSearchType;
 	public static final field Websearch Lio/github/androidpoet/supabase/core/models/TextSearchType;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/core/models/TextSearchType;

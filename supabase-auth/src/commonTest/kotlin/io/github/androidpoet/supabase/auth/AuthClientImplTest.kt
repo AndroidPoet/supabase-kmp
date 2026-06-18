@@ -520,10 +520,10 @@ class AuthClientImplTest {
                         ),
                 )
 
-            assertEquals("/auth/v1/user", client.lastPatchEndpoint)
-            assertEquals("Bearer token-upd", client.lastPatchHeaders["Authorization"])
-            assertTrue(client.lastPatchBody?.contains("\"current_password\":\"old-password\"") == true)
-            assertTrue(client.lastPatchBody?.contains("\"nonce\":\"nonce-xyz\"") == true)
+            assertEquals("/auth/v1/user", client.lastPutEndpoint)
+            assertEquals("Bearer token-upd", client.lastPutHeaders["Authorization"])
+            assertTrue(client.lastPutBody?.contains("\"current_password\":\"old-password\"") == true)
+            assertTrue(client.lastPutBody?.contains("\"nonce\":\"nonce-xyz\"") == true)
             assertTrue(result is SupabaseResult.Success)
         }
 
@@ -701,6 +701,9 @@ private class FakeSupabaseClient : SupabaseClient {
     var lastPatchEndpoint: String? = null
     var lastPatchBody: String? = null
     var lastPatchHeaders: Map<String, String> = emptyMap()
+    var lastPutEndpoint: String? = null
+    var lastPutBody: String? = null
+    var lastPutHeaders: Map<String, String> = emptyMap()
     var lastDeleteEndpoint: String? = null
     var lastDeleteHeaders: Map<String, String> = emptyMap()
     var verifyResponse: String =
@@ -786,7 +789,12 @@ private class FakeSupabaseClient : SupabaseClient {
         endpoint: String,
         body: String?,
         headers: Map<String, String>,
-    ): SupabaseResult<String> = SupabaseResult.Failure(SupabaseError("not used"))
+    ): SupabaseResult<String> {
+        lastPutEndpoint = endpoint
+        lastPutBody = body
+        lastPutHeaders = headers
+        return SupabaseResult.Success("""{"id":"u1"}""")
+    }
 
     override suspend fun patch(
         endpoint: String,

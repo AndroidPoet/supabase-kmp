@@ -1,5 +1,7 @@
 package io.github.androidpoet.supabase.auth
 
+import io.github.androidpoet.supabase.auth.models.AuthHealthStatus
+import io.github.androidpoet.supabase.auth.models.AuthSettings
 import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevel
 import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevels
 import io.github.androidpoet.supabase.auth.models.LinkIdentityResponse
@@ -1164,6 +1166,10 @@ private class FakeAuthClient : AuthClient {
         }
 
     override suspend fun fetchJwks(): SupabaseResult<String> = jwksResponse
+
+    override suspend fun getSettings(): SupabaseResult<AuthSettings> = SupabaseResult.Success(AuthSettings())
+
+    override suspend fun getHealth(): SupabaseResult<AuthHealthStatus> = SupabaseResult.Success(AuthHealthStatus())
 
     override suspend fun resolveSigningKey(
         kid: String,

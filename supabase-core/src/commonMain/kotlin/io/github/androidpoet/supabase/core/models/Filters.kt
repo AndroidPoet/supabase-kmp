@@ -15,12 +15,18 @@ public annotation class FilterDsl
  * Full-text search mode for [FilterBuilder.textSearch], selecting how [query] is
  * parsed into a `tsquery`.
  *
- * Each constant maps to a PostgREST operator prefix: `plfts` ([Plain]),
- * `phfts` ([Phrase]) or `wfts` ([Websearch]) — see the wire forms below.
+ * Each constant maps to a PostgREST operator prefix: `fts` ([Raw]), `plfts`
+ * ([Plain]), `phfts` ([Phrase]) or `wfts` ([Websearch]) — see the wire forms below.
  */
 public enum class TextSearchType(
     internal val postgrestName: String,
 ) {
+    /**
+     * Passes [query] straight to `to_tsquery` (the bare `fts` operator). Carries no
+     * prefix, so it emits `fts.<query>` (or `fts(english).<query>` with a config).
+     */
+    Raw(""),
+
     /** Treats [query] as space-separated lexemes (`plfts`, `to_tsquery`'s plain form). */
     Plain("pl"),
 
@@ -559,6 +565,17 @@ public class FilterBuilder {
      */
     public fun limit(count: Int, referencedTable: String? = null) {
         val key = if (referencedTable == null) "limit" else "$referencedTable.limit"
+        params += key to count.toString()
+    }
+
+    /**
+     * Skips the first [count] rows. Emits `offset=<count>` (or
+     * `<referencedTable>.offset=<count>` for an embedded resource).
+     *
+     * @param referencedTable offset an embedded/joined resource when set.
+     */
+    public fun offset(count: Int, referencedTable: String? = null) {
+        val key = if (referencedTable == null) "offset" else "$referencedTable.offset"
         params += key to count.toString()
     }
 

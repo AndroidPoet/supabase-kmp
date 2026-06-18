@@ -1,4 +1,6 @@
 package io.github.androidpoet.supabase.auth
+import io.github.androidpoet.supabase.auth.models.AuthHealthStatus
+import io.github.androidpoet.supabase.auth.models.AuthSettings
 import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevel
 import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevels
 import io.github.androidpoet.supabase.auth.models.Jwk
@@ -318,6 +320,18 @@ public interface AuthClient {
      * [getClaims] to verify asymmetric token signatures locally without an Auth server round-trip.
      */
     public suspend fun fetchJwks(): SupabaseResult<String>
+
+    /**
+     * Fetches the Auth server's public settings (`GET /auth/v1/settings`) — which providers and flows
+     * are enabled. Requires only the project `apikey`; no user authentication is needed.
+     */
+    public suspend fun getSettings(): SupabaseResult<AuthSettings>
+
+    /**
+     * Fetches the Auth server's health status (`GET /auth/v1/health`), reporting its name and version.
+     * Requires only the project `apikey`; no user authentication is needed.
+     */
+    public suspend fun getHealth(): SupabaseResult<AuthHealthStatus>
 
     /**
      * Resolves the signing key for [kid] from the project JWKS, backed by an in-memory cache so

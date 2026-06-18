@@ -35,6 +35,7 @@ final enum class io.github.androidpoet.supabase.core.models/OrderDirection : kot
 final enum class io.github.androidpoet.supabase.core.models/TextSearchType : kotlin/Enum<io.github.androidpoet.supabase.core.models/TextSearchType> { // io.github.androidpoet.supabase.core.models/TextSearchType|null[0]
     enum entry Phrase // io.github.androidpoet.supabase.core.models/TextSearchType.Phrase|null[0]
     enum entry Plain // io.github.androidpoet.supabase.core.models/TextSearchType.Plain|null[0]
+    enum entry Raw // io.github.androidpoet.supabase.core.models/TextSearchType.Raw|null[0]
     enum entry Websearch // io.github.androidpoet.supabase.core.models/TextSearchType.Websearch|null[0]
 
     final val entries // io.github.androidpoet.supabase.core.models/TextSearchType.entries|#static{}entries[0]
@@ -218,6 +219,7 @@ final class io.github.androidpoet.supabase.core.models/FilterBuilder { // io.git
     final fun not(kotlin/String, kotlin/String, kotlin/String) // io.github.androidpoet.supabase.core.models/FilterBuilder.not|not(kotlin.String;kotlin.String;kotlin.String){}[0]
     final fun notExtendLeft(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.core.models/FilterBuilder.notExtendLeft|notExtendLeft(kotlin.String;kotlin.String){}[0]
     final fun notExtendRight(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.core.models/FilterBuilder.notExtendRight|notExtendRight(kotlin.String;kotlin.String){}[0]
+    final fun offset(kotlin/Int, kotlin/String? = ...) // io.github.androidpoet.supabase.core.models/FilterBuilder.offset|offset(kotlin.Int;kotlin.String?){}[0]
     final fun or(kotlin/String? = ..., kotlin/Function1<io.github.androidpoet.supabase.core.models/FilterBuilder, kotlin/Unit>) // io.github.androidpoet.supabase.core.models/FilterBuilder.or|or(kotlin.String?;kotlin.Function1<io.github.androidpoet.supabase.core.models.FilterBuilder,kotlin.Unit>){}[0]
     final fun order(kotlin/String, io.github.androidpoet.supabase.core.models/OrderDirection, io.github.androidpoet.supabase.core.models/NullsPlacement? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.core.models/FilterBuilder.order|order(kotlin.String;io.github.androidpoet.supabase.core.models.OrderDirection;io.github.androidpoet.supabase.core.models.NullsPlacement?;kotlin.String?){}[0]
     final fun order(kotlin/String, kotlin/Boolean = ..., kotlin/Boolean? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.core.models/FilterBuilder.order|order(kotlin.String;kotlin.Boolean;kotlin.Boolean?;kotlin.String?){}[0]

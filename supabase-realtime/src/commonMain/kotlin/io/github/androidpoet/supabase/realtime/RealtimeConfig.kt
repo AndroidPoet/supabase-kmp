@@ -15,6 +15,9 @@ package io.github.androidpoet.supabase.realtime
  *   socket alive.
  * @param connectionTimeoutMs how long to wait for a connection or channel join to
  *   settle before failing it.
+ * @param logLevel server-side log verbosity, passed as the `log_level` query
+ *   param when opening the socket (e.g. `info`, `warn`, `error`); `null` omits the
+ *   param and leaves the server default in effect.
  */
 public data class RealtimeConfig(
     public val autoReconnect: Boolean = true,
@@ -30,4 +33,5 @@ public data class RealtimeConfig(
     public val maxReconnectAttempts: Int = 0,
     public val heartbeatIntervalMs: Long = 25_000L,
     public val connectionTimeoutMs: Long = 10_000L,
+    public val logLevel: String? = null,
 )

@@ -276,6 +276,18 @@ class FiltersTest {
     }
 
     @Test
+    fun test_offset_producesCorrectParam() {
+        val result = filters { offset(10) }
+        assertEquals(listOf("offset" to "10"), result)
+    }
+
+    @Test
+    fun test_offset_withReferencedTable() {
+        val result = filters { offset(5, referencedTable = "authors") }
+        assertEquals(listOf("authors.offset" to "5"), result)
+    }
+
+    @Test
     fun test_range_producesOffsetAndLimit() {
         val result = filters { range(10, 19) }
         assertEquals(2, result.size)

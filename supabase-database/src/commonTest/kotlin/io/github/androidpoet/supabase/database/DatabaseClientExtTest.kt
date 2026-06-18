@@ -642,6 +642,7 @@ private class FakeDatabaseClient(
     private val selectResult: SupabaseResult<String>,
     private val insertResult: SupabaseResult<String> = SupabaseResult.Success("[]"),
     private val updateResult: SupabaseResult<String> = SupabaseResult.Success("[]"),
+    private val replaceResult: SupabaseResult<String> = SupabaseResult.Success("[]"),
     private val deleteResult: SupabaseResult<String> = SupabaseResult.Success("[]"),
     private val rpcResult: SupabaseResult<String> = SupabaseResult.Success("{}"),
     private val rpcGetResult: SupabaseResult<String> = SupabaseResult.Success("""{"id":1}"""),
@@ -726,6 +727,14 @@ private class FakeDatabaseClient(
         headers: Map<String, String>,
         filters: FilterBuilder.() -> Unit,
     ): SupabaseResult<String> = updateResult
+
+    override suspend fun replace(
+        table: String,
+        body: String,
+        returning: ReturnOption,
+        columns: String,
+        filters: FilterBuilder.() -> Unit,
+    ): SupabaseResult<String> = replaceResult
 
     override suspend fun delete(
         table: String,

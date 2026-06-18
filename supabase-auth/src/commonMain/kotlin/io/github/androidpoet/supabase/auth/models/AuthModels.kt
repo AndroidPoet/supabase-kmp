@@ -820,3 +820,28 @@ public data class Jwk(
 public data class JwkSet(
     @SerialName("keys") public val keys: List<Jwk> = emptyList(),
 )
+
+/**
+ * The Auth server's public settings, as returned by `/auth/v1/settings`: which providers and flows
+ * are enabled. Every field is nullable so a server that omits a key (or adds one this version does not
+ * model) still decodes.
+ */
+@Serializable
+public data class AuthSettings(
+    /** Per-provider enablement map (provider slug -> enabled), e.g. `{"google": true, "github": false}`. */
+    @SerialName("external") public val external: Map<String, Boolean>? = null,
+    @SerialName("disable_signup") public val disableSignup: Boolean? = null,
+    @SerialName("mailer_autoconfirm") public val mailerAutoconfirm: Boolean? = null,
+    @SerialName("phone_autoconfirm") public val phoneAutoconfirm: Boolean? = null,
+    @SerialName("sms_provider") public val smsProvider: String? = null,
+    @SerialName("mfa_enabled") public val mfaEnabled: Boolean? = null,
+    @SerialName("saml_enabled") public val samlEnabled: Boolean? = null,
+)
+
+/** The Auth server's health/version info, as returned by `/auth/v1/health`. */
+@Serializable
+public data class AuthHealthStatus(
+    @SerialName("name") public val name: String? = null,
+    @SerialName("version") public val version: String? = null,
+    @SerialName("description") public val description: String? = null,
+)

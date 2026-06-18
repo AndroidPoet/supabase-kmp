@@ -3,6 +3,7 @@ import io.github.androidpoet.supabase.client.SupabaseClient
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.core.result.map
+import io.github.androidpoet.supabase.core.util.urlEncode
 import io.github.androidpoet.supabase.realtime.models.PostgresChangeEvent
 import io.github.androidpoet.supabase.realtime.models.PresenceState
 import io.github.androidpoet.supabase.realtime.models.RealtimeChannel
@@ -437,7 +438,10 @@ internal class RealtimeClientImpl(
                 .removePrefix("http://")
                 .trimEnd('/')
         val wsScheme = if (isHttps) "wss" else "ws"
-        val url = "$wsScheme://$host/realtime/v1/websocket?apikey=${supabaseClient.apiKey}&vsn=1.0.0"
+        // Append &log_level=<level> only when configured; null leaves the param off
+        // so the server keeps its default verbosity.
+        val logLevelParam = config.logLevel?.let { "&log_level=${urlEncode(it)}" } ?: ""
+        val url = "$wsScheme://$host/realtime/v1/websocket?apikey=${supabaseClient.apiKey}&vsn=1.0.0$logLevelParam"
         val newScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         // Bound the handshake so a stalled connect surfaces as a timeout (and
         // triggers reconnect/Failed) instead of hanging on the platform default.
@@ -876,8 +880,44 @@ internal class ChannelSubscriptionImpl(
                     )
                 publish(event)
             }
+            "phx_close" -> handleChannelClose(message.payload)
+            "system" -> handleSystemEvent(message.payload)
             else -> { }
         }
+    }
+
+    // A channel-level `phx_close`: the server closed this channel (e.g. after a
+    // leave or a server-side teardown). Move to UNSUBSCRIBED and surface it; this
+    // is the channel closing, not the socket, so the socket teardown/reconnect
+    // path is left untouched.
+    private fun handleChannelClose(payload: JsonObject) {
+        _status.value = RealtimeSubscription.Status.UNSUBSCRIBED
+        publish(
+            RealtimeEvent.SystemEvent(
+                status = "closed",
+                message = payload.toString(),
+            ),
+        )
+    }
+
+    // A channel-level `system` message. Phoenix uses these for extension status
+    // (e.g. postgres bindings) but also to report channel errors such as an
+    // expired token. Treat an "error" status or an error-flavored message as a
+    // failure (status -> ERROR); otherwise surface it informationally without
+    // disturbing the subscription status.
+    private fun handleSystemEvent(payload: JsonObject) {
+        val status = payload["status"]?.jsonPrimitive?.content
+        val systemMessage = payload["message"]?.jsonPrimitive?.content
+        val isError = status == "error" || systemMessage?.contains("Token has expired") == true
+        if (isError) {
+            _status.value = RealtimeSubscription.Status.ERROR
+        }
+        publish(
+            RealtimeEvent.SystemEvent(
+                status = if (isError) "error" else (status ?: "system"),
+                message = systemMessage ?: payload.toString(),
+            ),
+        )
     }
 
     private suspend fun handlePostgresChange(payload: JsonObject) {
@@ -885,7 +925,10 @@ internal class ChannelSubscriptionImpl(
         val type = data["type"]?.jsonPrimitive?.content ?: return
         val record = data["record"]?.jsonObject
         val oldRecord = data["old_record"]?.jsonObject
-        val event = buildPostgresEvent(type, record, oldRecord) ?: return
+        val commitTimestamp = data["commit_timestamp"]?.jsonPrimitive?.content
+        val schema = data["schema"]?.jsonPrimitive?.content
+        val table = data["table"]?.jsonPrimitive?.content
+        val event = buildPostgresEvent(type, record, oldRecord, commitTimestamp, schema, table) ?: return
         publish(event)
         val callbackPayload = record ?: oldRecord ?: return
         for (config in resolvePostgresConfigs(payload, type)) {
@@ -893,11 +936,44 @@ internal class ChannelSubscriptionImpl(
         }
     }
 
-    private fun buildPostgresEvent(type: String, record: JsonObject?, oldRecord: JsonObject?): RealtimeEvent? =
+    private fun buildPostgresEvent(
+        type: String,
+        record: JsonObject?,
+        oldRecord: JsonObject?,
+        commitTimestamp: String?,
+        schema: String?,
+        table: String?,
+    ): RealtimeEvent? =
         when (type) {
-            "INSERT" -> record?.let { RealtimeEvent.PostgresInsert(record = it, oldRecord = oldRecord) }
-            "UPDATE" -> record?.let { RealtimeEvent.PostgresUpdate(record = it, oldRecord = oldRecord) }
-            "DELETE" -> oldRecord?.let { RealtimeEvent.PostgresDelete(oldRecord = it) }
+            "INSERT" ->
+                record?.let {
+                    RealtimeEvent.PostgresInsert(
+                        record = it,
+                        oldRecord = oldRecord,
+                        commitTimestamp = commitTimestamp,
+                        schema = schema,
+                        table = table,
+                    )
+                }
+            "UPDATE" ->
+                record?.let {
+                    RealtimeEvent.PostgresUpdate(
+                        record = it,
+                        oldRecord = oldRecord,
+                        commitTimestamp = commitTimestamp,
+                        schema = schema,
+                        table = table,
+                    )
+                }
+            "DELETE" ->
+                oldRecord?.let {
+                    RealtimeEvent.PostgresDelete(
+                        oldRecord = it,
+                        commitTimestamp = commitTimestamp,
+                        schema = schema,
+                        table = table,
+                    )
+                }
             else -> null
         }
 
@@ -935,7 +1011,16 @@ internal class ChannelSubscriptionImpl(
     private suspend fun handleBroadcast(payload: JsonObject) {
         val eventName = payload["event"]?.jsonPrimitive?.content ?: return
         val broadcastPayload = payload["payload"]?.jsonObject ?: buildJsonObject {}
-        val event = RealtimeEvent.Broadcast(event = eventName, payload = broadcastPayload)
+        // Replayed broadcasts (delivered to a late joiner that requested replay)
+        // carry a `meta.replayed` flag; live messages omit it, so default to false.
+        val replayed =
+            payload["meta"]
+                ?.jsonObject
+                ?.get("replayed")
+                ?.jsonPrimitive
+                ?.content
+                ?.toBoolean() ?: false
+        val event = RealtimeEvent.Broadcast(event = eventName, payload = broadcastPayload, replayed = replayed)
         publish(event)
         broadcastCallbacks[eventName]?.invoke(broadcastPayload)
     }

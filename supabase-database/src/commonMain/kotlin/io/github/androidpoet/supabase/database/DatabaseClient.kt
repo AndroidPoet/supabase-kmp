@@ -26,13 +26,15 @@ public enum class CountOption(
  *
  * [REPRESENTATION] makes PostgREST echo the affected rows back in the body (so
  * the typed helpers can decode them); [MINIMAL] returns an empty body, which the
- * `*Unit` helpers use when the result is not needed.
+ * `*Unit` helpers use when the result is not needed; [HEADERS_ONLY] also returns
+ * an empty body but keeps response headers such as `Location` populated.
  */
 public enum class ReturnOption(
     internal val headerValue: String,
 ) {
     MINIMAL("minimal"),
     REPRESENTATION("representation"),
+    HEADERS_ONLY("headers-only"),
 }
 
 /**
@@ -256,6 +258,29 @@ public interface DatabaseClient {
         maxAffected: Int? = null,
         explain: ExplainOptions? = null,
         headers: Map<String, String> = emptyMap(),
+        filters: FilterBuilder.() -> Unit = {},
+    ): SupabaseResult<String>
+
+    /**
+     * Replaces (or inserts) a single row of [table] via `PUT /rest/v1/{table}`,
+     * the PostgREST replace-by-primary-key write.
+     *
+     * Unlike [update]'s partial `PATCH`, this is a full-row replace: [body] must be
+     * a JSON object carrying **every** column (including the primary key), and
+     * [filters] must select **exactly** that primary key (e.g. `eq("id", 7)` for a
+     * row whose body has `"id": 7`). PostgREST replaces the matching row, or inserts
+     * the row when none matches. [returning] shapes the echoed body as in [update];
+     * [columns] becomes the `select=` projection of any returned representation.
+     *
+     * @param returning whether the affected row is echoed back ([ReturnOption.REPRESENTATION]) or the body is empty.
+     * @param columns the `select=` projection applied to the returned representation.
+     * @return the response body (the replaced row, or empty for non-representation returns).
+     */
+    public suspend fun replace(
+        table: String,
+        body: String,
+        returning: ReturnOption = ReturnOption.REPRESENTATION,
+        columns: String = "*",
         filters: FilterBuilder.() -> Unit = {},
     ): SupabaseResult<String>
 

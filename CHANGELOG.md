@@ -39,8 +39,29 @@
 - **Realtime** — `InboundEventDropped` debug event (see backpressure fix below).
 - **Passkeys** — the opt-in `supabase-auth-passkey` module now drives the native
   WebAuthn ceremony on all platforms; a dedicated docs page documents it.
+- **Auth** — `getSettings()` (`GET /auth/v1/settings`, reports which providers and
+  flags the project has enabled) and `getHealth()` (`GET /auth/v1/health`); both
+  decode tolerantly so unknown/missing keys don't break the response.
+- **Postgrest** — `TextSearchType.Raw` exposes the bare `fts` operator
+  (`to_tsquery`); a standalone `offset()`; `ReturnOption.HEADERS_ONLY`
+  (`Prefer: return=headers-only`, an empty body that keeps headers like
+  `Location`); and `replace()` — `PUT`-based single-row upsert by primary key.
+- **Realtime** — postgres-change events now carry `commitTimestamp`, `schema`, and
+  `table`; broadcast events expose `replayed` (set when the server replays a
+  message); and `RealtimeConfig.logLevel` forwards a `log_level` to the server.
 
 ### Fixed
+
+- **Auth `updateUser`** — fixed a test that still asserted the old `PATCH` verb
+  after the endpoint moved to `PUT`, so the change is now actually covered.
+- **Client `Retry-After`** — the header is now parsed in both RFC 7231 forms
+  (delta-seconds *and* HTTP-date); previously a date-form value was dropped and the
+  server's backoff hint was lost.
+- **Errors** — HTTP `406` (Not Acceptable) and `416` (Range Not Satisfiable) now map
+  to the `Validation` category instead of falling through to `Unknown`.
+- **Realtime** — channel-level `phx_close` and `system` close frames now move the
+  channel to `UNSUBSCRIBED`/`ERROR` and surface a `SystemEvent`; previously they
+  were silently ignored.
 
 - **Storage signed-URL TTL** — the request body now sends camelCase `expiresIn`;
   it was `expires_in`, which the server ignored, so signed URLs silently used the

@@ -234,6 +234,33 @@ internal class DatabaseClientImpl(
         )
     }
 
+    override suspend fun replace(
+        table: String,
+        body: String,
+        returning: ReturnOption,
+        columns: String,
+        filters: FilterBuilder.() -> Unit,
+    ): SupabaseResult<String> {
+        val safeTable = validatePathSegment(table, "table")
+        val filterParams = FilterBuilder().apply(filters).build()
+        val endpoint =
+            buildEndpoint("${DatabasePaths.BASE}/$safeTable", filterParams) {
+                add("select" to columns)
+            }
+        val requestHeaders =
+            buildPreferHeader {
+                add("return=${returning.headerValue}")
+            }
+        return client.put(
+            endpoint = endpoint,
+            body = body,
+            headers =
+                requestHeaders +
+                    jsonContentHeaders() +
+                    ("Accept" to acceptHeader()),
+        )
+    }
+
     override suspend fun delete(
         table: String,
         schema: String?,

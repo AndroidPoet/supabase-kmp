@@ -1,6 +1,8 @@
 package io.github.androidpoet.supabase.auth
 import dev.whyoleg.cryptography.random.CryptographyRandom
 import io.github.androidpoet.supabase.auth.models.AnonymousSignInRequest
+import io.github.androidpoet.supabase.auth.models.AuthHealthStatus
+import io.github.androidpoet.supabase.auth.models.AuthSettings
 import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevel
 import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevels
 import io.github.androidpoet.supabase.auth.models.ExchangeCodeRequest
@@ -377,6 +379,12 @@ internal class AuthClientImpl(
             ).deserialize()
 
     override suspend fun fetchJwks(): SupabaseResult<String> = client.get(endpoint = AuthPaths.JWKS)
+
+    override suspend fun getSettings(): SupabaseResult<AuthSettings> =
+        client.get(endpoint = AuthPaths.SETTINGS).deserialize()
+
+    override suspend fun getHealth(): SupabaseResult<AuthHealthStatus> =
+        client.get(endpoint = AuthPaths.HEALTH).deserialize()
 
     override suspend fun resolveSigningKey(kid: String): SupabaseResult<Jwk?> =
         jwksMutex.withLock {

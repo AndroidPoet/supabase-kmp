@@ -43,6 +43,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlin.concurrent.Volatile
+import kotlin.time.Clock
 import kotlin.time.TimeSource
 import io.ktor.client.plugins.logging.Logger as KtorLogger
 
@@ -381,7 +382,7 @@ internal class HttpTransport(
                 val flatHeaders = response.headers.entries().associate { (k, v) -> k to v.joinToString(",") }
                 SupabaseResult.Success(SupabaseHttpResponse(response.status.value, flatHeaders, bytes))
             } else {
-                val retryAfter = response.headers["Retry-After"]?.toLongOrNull()
+                val retryAfter = parseRetryAfterSeconds(response.headers["Retry-After"], Clock.System.now().epochSeconds)
                 SupabaseResult.Failure(parseError(bytes.decodeToString(), response.status.value, retryAfter))
             }
         } catch (e: Throwable) {
@@ -448,7 +449,7 @@ internal class HttpTransport(
                     attempt++
                     continue
                 }
-                val retryAfter = response.headers["Retry-After"]?.toLongOrNull()
+                val retryAfter = parseRetryAfterSeconds(response.headers["Retry-After"], Clock.System.now().epochSeconds)
                 val error = parseError(text, statusCode, retryAfter)
                 config.interceptor?.onResponse(method, url, statusCode, mark.elapsedNow().inWholeMilliseconds)
                 return SupabaseResult.Failure(error)
@@ -503,9 +504,10 @@ internal class HttpTransport(
         )
     }
 
-    // A Retry-After header (seconds) wins over the configured exponential backoff.
+    // A Retry-After header wins over the configured exponential backoff. The
+    // header may be delta-seconds or an HTTP-date (RFC 7231); both are honored.
     private fun io.ktor.client.statement.HttpResponse.retryDelayMillis(attempt: Int): Long {
-        val retryAfterSeconds = headers["Retry-After"]?.toLongOrNull()
+        val retryAfterSeconds = parseRetryAfterSeconds(headers["Retry-After"], Clock.System.now().epochSeconds)
         return if (retryAfterSeconds != null) {
             retryAfterSeconds.coerceAtLeast(0) * 1_000
         } else {
@@ -550,4 +552,64 @@ internal class HttpTransport(
             retryAfterSeconds = retryAfterSeconds,
         )
     }
+}
+
+// RFC 7231 allows `Retry-After` to be either delta-seconds (e.g. `120`) or an
+// HTTP-date (e.g. `Wed, 21 Oct 2025 07:28:00 GMT`). A bare `toLongOrNull` drops
+// the date form, silently discarding the server's hint. Returns the number of
+// seconds to wait: delta-seconds verbatim, or `max(0, dateEpoch - now)` for the
+// date form; null when [raw] is null/blank or can't be parsed.
+private fun parseRetryAfterSeconds(
+    raw: String?,
+    nowEpochSeconds: Long,
+): Long? {
+    val trimmed = raw?.trim()
+    if (trimmed.isNullOrEmpty()) return null
+    trimmed.toLongOrNull()?.let { return it }
+    val epoch = parseHttpDateEpochSeconds(trimmed) ?: return null
+    return (epoch - nowEpochSeconds).coerceAtLeast(0)
+}
+
+// Self-contained parser for the canonical RFC-1123 / IMF-fixdate form servers
+// send — `EEE, dd MMM yyyy HH:mm:ss GMT`. Computes epoch seconds directly so it
+// compiles on every KMP target (no JDK-only date APIs). Returns null for any
+// other shape; the obsolete RFC-850 and asctime forms are intentionally
+// unsupported because servers don't emit them for `Retry-After`.
+private fun parseHttpDateEpochSeconds(value: String): Long? {
+    val parts = value.split(' ')
+    val time = parts.getOrElse(4) { "" }.split(':')
+    if (parts.size != 6 || parts[5] != "GMT" || time.size != 3) return null
+    val month = monthIndex(parts[2]) ?: return null
+    val nums = listOf(parts[1], parts[3], time[0], time[1], time[2]).mapNotNull { it.toIntOrNull() }
+    if (nums.size != 5) return null
+    val day = nums[0]
+    val year = nums[1]
+    val hour = nums[2]
+    val minute = nums[3]
+    val second = nums[4]
+    val timeOk = hour in 0..23 && minute in 0..59 && second in 0..60
+    if (day !in 1..31 || !timeOk) return null
+    val days = daysFromCivil(year, month, day)
+    return days * 86_400L + hour * 3_600L + minute * 60L + second
+}
+
+private fun monthIndex(name: String): Int? {
+    val months = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+    val index = months.indexOf(name)
+    return if (index >= 0) index + 1 else null
+}
+
+// Days from 1970-01-01 (the Unix epoch) using Howard Hinnant's days_from_civil
+// algorithm — pure integer math, valid for any proleptic Gregorian date.
+private fun daysFromCivil(
+    year: Int,
+    month: Int,
+    day: Int,
+): Long {
+    val y = if (month <= 2) year - 1 else year
+    val era = (if (y >= 0) y else y - 399) / 400
+    val yoe = (y - era * 400).toLong()
+    val doy = ((153 * (if (month > 2) month - 3 else month + 9) + 2) / 5 + day - 1).toLong()
+    val doe = yoe * 365 + yoe / 4 - yoe / 100 + doy
+    return era.toLong() * 146_097 + doe - 719_468
 }

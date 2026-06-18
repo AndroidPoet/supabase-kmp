@@ -210,7 +210,9 @@ private fun categorizeByStatus(status: Int?): SupabaseErrorCategory =
         401, 403 -> SupabaseErrorCategory.Unauthorized
         404 -> SupabaseErrorCategory.NotFound
         409 -> SupabaseErrorCategory.Conflict
-        400, 422 -> SupabaseErrorCategory.Validation
+        // 406 Not Acceptable (Accept/cardinality unsatisfiable) and 416 Range Not
+        // Satisfiable are request-shape problems, so they map to Validation too.
+        400, 406, 416, 422 -> SupabaseErrorCategory.Validation
         429 -> SupabaseErrorCategory.RateLimited
         in 500..599 -> SupabaseErrorCategory.Internal
         else -> SupabaseErrorCategory.Unknown
