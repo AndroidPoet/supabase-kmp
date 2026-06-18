@@ -92,6 +92,11 @@ public data class SignUpRequest(
         data = data,
         gotrueMetaSecurity = captchaToken?.let(::GotrueMetaSecurity),
     )
+
+    // Mask the password so credentials never leak into logs or crash reports.
+    override fun toString(): String =
+        "SignUpRequest(email=$email, phone=$phone, password=***, data=$data, " +
+            "gotrueMetaSecurity=$gotrueMetaSecurity)"
 }
 
 /** Request body for the password grant (email or phone + password); the captcha constructor nests the token under `gotrue_meta_security`. */
@@ -113,6 +118,10 @@ public data class SignInRequest(
         password = password,
         gotrueMetaSecurity = captchaToken?.let(::GotrueMetaSecurity),
     )
+
+    // Mask the password so credentials never leak into logs or crash reports.
+    override fun toString(): String =
+        "SignInRequest(email=$email, phone=$phone, password=***, gotrueMetaSecurity=$gotrueMetaSecurity)"
 }
 
 /**
@@ -142,6 +151,12 @@ public data class IdTokenRequest(
         nonce = nonce,
         gotrueMetaSecurity = captchaToken?.let(::GotrueMetaSecurity),
     )
+
+    // Mask the ID/access tokens so provider credentials never leak into logs or crash reports.
+    override fun toString(): String =
+        "IdTokenRequest(idToken=***, provider=$provider, " +
+            "accessToken=${if (accessToken == null) "null" else "***"}, nonce=$nonce, " +
+            "gotrueMetaSecurity=$gotrueMetaSecurity, linkIdentity=$linkIdentity)"
 }
 
 /** Request body for anonymous sign-up; the captcha constructor nests the token under `gotrue_meta_security`. */
@@ -171,6 +186,7 @@ public data class OtpRequest(
     @SerialName("create_user") val createUser: Boolean? = null,
     // Delivery channel for phone OTP: "sms" (default, server-side) or "whatsapp".
     val channel: String? = null,
+    @SerialName("data") val data: JsonObject? = null,
     @SerialName("gotrue_meta_security") val gotrueMetaSecurity: GotrueMetaSecurity? = null,
 ) {
     public constructor(
@@ -178,12 +194,33 @@ public data class OtpRequest(
         phone: String? = null,
         createUser: Boolean? = null,
         channel: String? = null,
+        data: JsonObject? = null,
         captchaToken: String?,
     ) : this(
         email = email,
         phone = phone,
         createUser = createUser,
         channel = channel,
+        data = data,
+        gotrueMetaSecurity = captchaToken?.let(::GotrueMetaSecurity),
+    )
+}
+
+/**
+ * Request body for `POST /recover` (send a password-reset email); the captcha constructor nests the
+ * token under `gotrue_meta_security`. The reset redirect is sent as a `redirect_to` query param, not
+ * a body field. This endpoint defines only `email` (+ optional captcha), so nothing else is sent.
+ */
+@Serializable
+public data class RecoverRequest(
+    val email: String,
+    @SerialName("gotrue_meta_security") val gotrueMetaSecurity: GotrueMetaSecurity? = null,
+) {
+    public constructor(
+        email: String,
+        captchaToken: String?,
+    ) : this(
+        email = email,
         gotrueMetaSecurity = captchaToken?.let(::GotrueMetaSecurity),
     )
 }
@@ -288,7 +325,10 @@ public enum class OtpType {
 @Serializable
 public data class RefreshTokenRequest(
     @SerialName("refresh_token") val refreshToken: String,
-)
+) {
+    // Mask the refresh token so it never leaks into logs or crash reports.
+    override fun toString(): String = "RefreshTokenRequest(refreshToken=***)"
+}
 
 /**
  * Fields to change on the authenticated user (`PUT /user`); only non-null fields
@@ -303,7 +343,14 @@ public data class UserUpdateRequest(
     @SerialName("current_password") val currentPassword: String? = null,
     val data: JsonObject? = null,
     val nonce: String? = null,
-)
+) {
+    // Mask the password fields so credentials never leak into logs or crash reports.
+    override fun toString(): String =
+        "UserUpdateRequest(email=$email, phone=$phone, " +
+            "password=${if (password == null) "null" else "***"}, " +
+            "currentPassword=${if (currentPassword == null) "null" else "***"}, " +
+            "data=$data, nonce=$nonce)"
+}
 
 /** How widely a sign-out revokes sessions: just this one, all of them, or all others. */
 @Serializable
@@ -433,6 +480,10 @@ public enum class MfaFactorType {
 
     @SerialName("webauthn")
     WEBAUTHN,
+
+    /** A factor type the server returned that this version does not recognise. */
+    @SerialName("unknown")
+    UNKNOWN,
 }
 
 /** Request body for `POST /factors` (enroll a new MFA factor). */
@@ -448,7 +499,7 @@ public data class MfaEnrollRequest(
 @Serializable
 public data class MfaEnrollResponse(
     @SerialName("id") public val id: String,
-    @SerialName("type") public val type: MfaFactorType,
+    @SerialName("type") public val type: MfaFactorType = MfaFactorType.UNKNOWN,
     @SerialName("totp") public val totp: MfaTotpDetails? = null,
     @SerialName("friendly_name") public val friendlyName: String? = null,
     @SerialName("phone") public val phone: String? = null,
@@ -548,8 +599,8 @@ public data class MfaListFactorsResponse(
 public data class MfaFactor(
     @SerialName("id") public val id: String,
     @SerialName("friendly_name") public val friendlyName: String? = null,
-    @SerialName("factor_type") public val factorType: MfaFactorType,
-    @SerialName("status") public val status: MfaFactorStatus,
+    @SerialName("factor_type") public val factorType: MfaFactorType = MfaFactorType.UNKNOWN,
+    @SerialName("status") public val status: MfaFactorStatus = MfaFactorStatus.UNKNOWN,
     @SerialName("created_at") public val createdAt: String? = null,
     @SerialName("updated_at") public val updatedAt: String? = null,
 )
@@ -564,6 +615,10 @@ public enum class MfaFactorStatus {
     /** The factor was enrolled but its verification challenge has not been completed yet. */
     @SerialName("unverified")
     UNVERIFIED,
+
+    /** A status the server returned that this version does not recognise. */
+    @SerialName("unknown")
+    UNKNOWN,
 }
 
 /**

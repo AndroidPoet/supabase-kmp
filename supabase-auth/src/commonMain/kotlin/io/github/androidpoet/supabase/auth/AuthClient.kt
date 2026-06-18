@@ -182,6 +182,7 @@ public interface AuthClient {
      * @param emailRedirectTo magic-link redirect for the email channel.
      * @param channel phone delivery channel: `"sms"` (server default) or
      *   `"whatsapp"`; ignored for email.
+     * @param data optional `user_metadata` stored when the user is auto-created.
      */
     public suspend fun signInWithOtp(
         email: String? = null,
@@ -191,6 +192,7 @@ public interface AuthClient {
         emailRedirectTo: String? = null,
         // Phone OTP delivery channel: "sms" (server default) or "whatsapp". Ignored for email OTP.
         channel: String? = null,
+        data: JsonObject? = null,
     ): SupabaseResult<Unit>
 
     /**

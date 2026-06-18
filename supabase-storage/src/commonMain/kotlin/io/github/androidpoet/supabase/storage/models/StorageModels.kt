@@ -460,6 +460,10 @@ public enum class VectorDataType {
     /** 32-bit IEEE float components. */
     @SerialName("float32")
     FLOAT32,
+
+    /** Fallback for a data type this client does not recognize (e.g. added server-side later). */
+    @SerialName("unknown")
+    UNKNOWN,
 }
 
 /** Similarity metric a vector index uses to rank query matches. */
@@ -476,6 +480,10 @@ public enum class VectorDistanceMetric {
     /** Dot-product (inner product) similarity. */
     @SerialName("dotproduct")
     DOTPRODUCT,
+
+    /** Fallback for a metric this client does not recognize (e.g. added server-side later). */
+    @SerialName("unknown")
+    UNKNOWN,
 }
 
 /** Declares which metadata keys are non-filterable for an index, so queries cannot filter on them. */
@@ -517,9 +525,9 @@ public data class VectorIndexRequest(
 public data class VectorIndex(
     val indexName: String,
     val vectorBucketName: String,
-    val dataType: VectorDataType,
+    val dataType: VectorDataType = VectorDataType.UNKNOWN,
     val dimension: Int,
-    val distanceMetric: VectorDistanceMetric,
+    val distanceMetric: VectorDistanceMetric = VectorDistanceMetric.UNKNOWN,
     val metadataConfiguration: VectorMetadataConfiguration? = null,
     val creationTime: Long? = null,
 )
@@ -653,5 +661,5 @@ public data class VectorQueryRequest(
 @Serializable
 public data class VectorQueryResponse(
     val vectors: List<VectorMatch>,
-    val distanceMetric: VectorDistanceMetric? = null,
+    val distanceMetric: VectorDistanceMetric? = VectorDistanceMetric.UNKNOWN,
 )

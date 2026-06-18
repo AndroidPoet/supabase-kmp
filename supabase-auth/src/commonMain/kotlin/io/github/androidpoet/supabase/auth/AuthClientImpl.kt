@@ -37,6 +37,7 @@ import io.github.androidpoet.supabase.auth.models.PasskeyRegistrationOptionsResp
 import io.github.androidpoet.supabase.auth.models.PasskeyUpdateRequest
 import io.github.androidpoet.supabase.auth.models.PasskeyVerifyRequest
 import io.github.androidpoet.supabase.auth.models.PkceParams
+import io.github.androidpoet.supabase.auth.models.RecoverRequest
 import io.github.androidpoet.supabase.auth.models.RefreshTokenRequest
 import io.github.androidpoet.supabase.auth.models.ResendOtpRequest
 import io.github.androidpoet.supabase.auth.models.Session
@@ -211,6 +212,7 @@ internal class AuthClientImpl(
         captchaToken: String?,
         emailRedirectTo: String?,
         channel: String?,
+        data: JsonObject?,
     ): SupabaseResult<Unit> {
         val body =
             defaultJson.encodeToString(
@@ -219,6 +221,7 @@ internal class AuthClientImpl(
                     phone = phone,
                     createUser = createUser,
                     channel = channel,
+                    data = data,
                     captchaToken = captchaToken,
                 ),
             )
@@ -242,7 +245,7 @@ internal class AuthClientImpl(
                     captchaToken = captchaToken,
                 ),
             )
-        return client.post(AuthPaths.VERIFY, body = body).deserialize()
+        return verifyOtpSessionFromRawResponse(client.post(AuthPaths.VERIFY, body = body))
     }
 
     override suspend fun verifyOtpWithTokenHash(
@@ -258,7 +261,7 @@ internal class AuthClientImpl(
                     captchaToken = captchaToken,
                 ),
             )
-        return client.post(AuthPaths.VERIFY, body = body).deserialize()
+        return verifyOtpSessionFromRawResponse(client.post(AuthPaths.VERIFY, body = body))
     }
 
     override suspend fun verifyOtpWithResult(
@@ -338,9 +341,8 @@ internal class AuthClientImpl(
     ): SupabaseResult<Unit> {
         val body =
             defaultJson.encodeToString(
-                OtpRequest(
+                RecoverRequest(
                     email = email,
-                    createUser = false,
                     captchaToken = captchaToken,
                 ),
             )
@@ -939,6 +941,37 @@ internal class AuthClientImpl(
 
     private fun bearerHeaders(token: String): Map<String, String> =
         mapOf("Authorization" to "Bearer $token")
+
+    // The plain verifyOtp variants promise a Session, but some confirmations (e.g. email_change /
+    // phone_change) verify without minting one, so the body has no access_token. Detect that and
+    // return a clear failure pointing at verifyOtpWithResult rather than a confusing decode error.
+    private fun verifyOtpSessionFromRawResponse(response: SupabaseResult<String>): SupabaseResult<Session> =
+        when (response) {
+            is SupabaseResult.Failure -> SupabaseResult.Failure(response.error)
+            is SupabaseResult.Success -> {
+                val element =
+                    runCatching { defaultJson.parseToJsonElement(response.value) }.getOrElse {
+                        return SupabaseResult.Failure(SupabaseError(message = "Invalid verify response: ${it.message}"))
+                    }
+                val obj =
+                    element as? JsonObject
+                        ?: return SupabaseResult.Failure(SupabaseError(message = "Invalid verify response shape"))
+                if ("access_token" in obj) {
+                    runCatching { defaultJson.decodeFromJsonElement<Session>(obj) }.fold(
+                        onSuccess = { SupabaseResult.Success(it) },
+                        onFailure = {
+                            SupabaseResult.Failure(SupabaseError(message = "Invalid verify session payload: ${it.message}"))
+                        },
+                    )
+                } else {
+                    SupabaseResult.Failure(
+                        SupabaseError(
+                            message = "verification succeeded but produced no session; use verifyOtpWithResult",
+                        ),
+                    )
+                }
+            }
+        }
 
     private fun verifyOtpResultFromRawResponse(response: SupabaseResult<String>): SupabaseResult<OtpVerifyResult> =
         when (response) {

@@ -258,6 +258,7 @@ public final class io/github/androidpoet/supabase/auth/admin/models/CustomProvid
 	public static final field Companion Lio/github/androidpoet/supabase/auth/admin/models/CustomProviderType$Companion;
 	public static final field OAUTH2 Lio/github/androidpoet/supabase/auth/admin/models/CustomProviderType;
 	public static final field OIDC Lio/github/androidpoet/supabase/auth/admin/models/CustomProviderType;
+	public static final field UNKNOWN Lio/github/androidpoet/supabase/auth/admin/models/CustomProviderType;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public final fun getValue ()Ljava/lang/String;
 	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/auth/admin/models/CustomProviderType;
@@ -666,6 +667,7 @@ public final class io/github/androidpoet/supabase/auth/admin/models/OAuthClientR
 	public static final field Companion Lio/github/androidpoet/supabase/auth/admin/models/OAuthClientRegistrationType$Companion;
 	public static final field DYNAMIC Lio/github/androidpoet/supabase/auth/admin/models/OAuthClientRegistrationType;
 	public static final field MANUAL Lio/github/androidpoet/supabase/auth/admin/models/OAuthClientRegistrationType;
+	public static final field UNKNOWN Lio/github/androidpoet/supabase/auth/admin/models/OAuthClientRegistrationType;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public final fun getValue ()Ljava/lang/String;
 	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/auth/admin/models/OAuthClientRegistrationType;
@@ -681,6 +683,7 @@ public final class io/github/androidpoet/supabase/auth/admin/models/OAuthClientT
 	public static final field CLIENT_SECRET_POST Lio/github/androidpoet/supabase/auth/admin/models/OAuthClientTokenEndpointAuthMethod;
 	public static final field Companion Lio/github/androidpoet/supabase/auth/admin/models/OAuthClientTokenEndpointAuthMethod$Companion;
 	public static final field NONE Lio/github/androidpoet/supabase/auth/admin/models/OAuthClientTokenEndpointAuthMethod;
+	public static final field UNKNOWN Lio/github/androidpoet/supabase/auth/admin/models/OAuthClientTokenEndpointAuthMethod;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public final fun getValue ()Ljava/lang/String;
 	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/auth/admin/models/OAuthClientTokenEndpointAuthMethod;
@@ -695,6 +698,7 @@ public final class io/github/androidpoet/supabase/auth/admin/models/OAuthClientT
 	public static final field CONFIDENTIAL Lio/github/androidpoet/supabase/auth/admin/models/OAuthClientType;
 	public static final field Companion Lio/github/androidpoet/supabase/auth/admin/models/OAuthClientType$Companion;
 	public static final field PUBLIC Lio/github/androidpoet/supabase/auth/admin/models/OAuthClientType;
+	public static final field UNKNOWN Lio/github/androidpoet/supabase/auth/admin/models/OAuthClientType;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public final fun getValue ()Ljava/lang/String;
 	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/auth/admin/models/OAuthClientType;

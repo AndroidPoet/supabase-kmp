@@ -8,6 +8,7 @@ import io.github.androidpoet.supabase.core.result.category
 import io.github.androidpoet.supabase.core.result.map
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 
 /**
@@ -970,14 +971,23 @@ internal fun Map<String, String>.toPairList(): List<Pair<String, String>> =
 internal inline fun <reified Request : Any> requestToQueryMap(params: Request): Map<String, String> {
     val element = defaultJson.parseToJsonElement(defaultJson.encodeToString(params))
     if (element !is JsonObject) error("rpcGet request params must serialize to a JSON object")
-    return element.entries.associate { (key, value) ->
-        key to jsonElementToQueryValue(value)
+    // A `null` argument is omitted from the query map entirely so the function
+    // receives its SQL default (or no argument) rather than the literal string
+    // `"null"` (`JsonNull.content == "null"`).
+    return buildMap {
+        for ((key, value) in element.entries) {
+            val encoded = jsonElementToQueryValue(value) ?: continue
+            put(key, encoded)
+        }
     }
 }
 
 @PublishedApi
-internal fun jsonElementToQueryValue(value: JsonElement): String =
+internal fun jsonElementToQueryValue(value: JsonElement): String? =
     when (value) {
+        // `JsonNull` is a `JsonPrimitive`, so it must be checked first; a null arg
+        // is omitted (returns `null`) rather than emitting the string `"null"`.
+        is JsonNull -> null
         is JsonObject -> defaultJson.encodeToString(value)
         is kotlinx.serialization.json.JsonPrimitive -> value.content
         else -> defaultJson.encodeToString(value)

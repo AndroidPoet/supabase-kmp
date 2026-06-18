@@ -1658,6 +1658,7 @@ public final class io/github/androidpoet/supabase/storage/models/VectorData$Comp
 public final class io/github/androidpoet/supabase/storage/models/VectorDataType : java/lang/Enum {
 	public static final field Companion Lio/github/androidpoet/supabase/storage/models/VectorDataType$Companion;
 	public static final field FLOAT32 Lio/github/androidpoet/supabase/storage/models/VectorDataType;
+	public static final field UNKNOWN Lio/github/androidpoet/supabase/storage/models/VectorDataType;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/storage/models/VectorDataType;
 	public static fun values ()[Lio/github/androidpoet/supabase/storage/models/VectorDataType;
@@ -1703,6 +1704,7 @@ public final class io/github/androidpoet/supabase/storage/models/VectorDistanceM
 	public static final field Companion Lio/github/androidpoet/supabase/storage/models/VectorDistanceMetric$Companion;
 	public static final field DOTPRODUCT Lio/github/androidpoet/supabase/storage/models/VectorDistanceMetric;
 	public static final field EUCLIDEAN Lio/github/androidpoet/supabase/storage/models/VectorDistanceMetric;
+	public static final field UNKNOWN Lio/github/androidpoet/supabase/storage/models/VectorDistanceMetric;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/storage/models/VectorDistanceMetric;
 	public static fun values ()[Lio/github/androidpoet/supabase/storage/models/VectorDistanceMetric;

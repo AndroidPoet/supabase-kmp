@@ -1093,6 +1093,7 @@ private class FakeAuthClient : AuthClient {
         captchaToken: String?,
         emailRedirectTo: String?,
         channel: String?,
+        data: JsonObject?,
     ): SupabaseResult<Unit> = SupabaseResult.Failure(SupabaseError("not used"))
 
     override suspend fun verifyOtp(

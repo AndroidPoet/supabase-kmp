@@ -18,18 +18,17 @@ import io.github.androidpoet.supabase.auth.admin.models.OAuthClientListResponse
 import io.github.androidpoet.supabase.auth.admin.models.OAuthClientUpdateRequest
 import io.github.androidpoet.supabase.auth.admin.models.Passkey
 import io.github.androidpoet.supabase.auth.admin.models.UserDeleteRequest
-import io.github.androidpoet.supabase.auth.admin.models.UserResponse
 import io.github.androidpoet.supabase.auth.models.SignOutScope
 import io.github.androidpoet.supabase.auth.models.User
 import io.github.androidpoet.supabase.client.SupabaseClient
 import io.github.androidpoet.supabase.client.defaultJson
 import io.github.androidpoet.supabase.client.deserialize
-import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.core.result.map
 import io.github.androidpoet.supabase.core.util.urlEncode
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.decodeFromJsonElement
 
 internal class AuthAdminClientImpl(
     private val client: SupabaseClient,
@@ -63,9 +62,11 @@ internal class AuthAdminClientImpl(
 
     override suspend fun generateLink(request: GenerateLinkRequest): SupabaseResult<GenerateLinkResponse> {
         val body = defaultJson.encodeToString(request)
+        // The redirect is carried in the request body (redirect_to) for this endpoint, which is
+        // authoritative — so it is not also appended as a query param.
         return client
             .post(
-                endpoint = withRedirectTo(AuthAdminPaths.ADMIN_GENERATE_LINK, request.redirectTo),
+                endpoint = AuthAdminPaths.ADMIN_GENERATE_LINK,
                 body = body,
                 headers = adminHeaders,
             ).deserialize()
@@ -276,17 +277,18 @@ internal class AuthAdminClientImpl(
                 headers = adminHeaders,
             ).map { }
 
+    // GoTrue returns a bare User from the admin user endpoints, but some deployments wrap it as
+    // `{"user": …}`. Accept both: unwrap a `"user"` object when present, otherwise decode the body
+    // as a bare User. Decoding stays inside SupabaseResult.catching so a malformed body still Fails.
     private fun SupabaseResult<String>.deserializeUserResponse(): SupabaseResult<User> =
-        when (val result = deserialize<UserResponse>()) {
-            is SupabaseResult.Failure -> result
-            is SupabaseResult.Success -> {
-                val user = result.value.user
-                if (user == null) {
-                    SupabaseResult.Failure(SupabaseError("Auth admin response did not include a user"))
-                } else {
-                    SupabaseResult.Success(user)
+        when (this) {
+            is SupabaseResult.Failure -> this
+            is SupabaseResult.Success ->
+                SupabaseResult.catching {
+                    val element = defaultJson.parseToJsonElement(value)
+                    val wrapped = (element as? JsonObject)?.get("user")
+                    defaultJson.decodeFromJsonElement<User>(wrapped ?: element)
                 }
-            }
         }
 
     private fun withRedirectTo(endpoint: String, redirectTo: String?): String =

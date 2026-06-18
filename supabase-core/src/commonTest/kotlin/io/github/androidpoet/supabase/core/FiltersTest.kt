@@ -105,6 +105,18 @@ class FiltersTest {
     }
 
     @Test
+    fun test_or_withReferencedTable_scopesKeyToEmbeddedResource() {
+        val result = filters { or(referencedTable = "authors") { eq("active", true) } }
+        assertEquals(listOf("authors.or" to "(active.eq.true)"), result)
+    }
+
+    @Test
+    fun test_and_withReferencedTable_scopesKeyToEmbeddedResource() {
+        val result = filters { and(referencedTable = "authors") { eq("active", true) } }
+        assertEquals(listOf("authors.and" to "(active.eq.true)"), result)
+    }
+
+    @Test
     fun test_gt_producesCorrectParam() {
         val result = filters { gt("age", "18") }
         assertEquals(listOf("age" to "gt.18"), result)

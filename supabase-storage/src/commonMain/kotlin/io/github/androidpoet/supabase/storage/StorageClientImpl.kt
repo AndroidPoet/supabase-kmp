@@ -199,8 +199,14 @@ internal class StorageClientImpl(
         cacheControl: Int?,
         chunkSize: Int,
         uploadUrl: String?,
-    ): ResumableUpload =
-        ResumableUploadImpl(
+    ): ResumableUpload {
+        // chunkSize must advance the upload; a non-positive value would never make
+        // progress. The TUS server additionally requires every chunk except the last
+        // to be a 6 MB multiple (see [RESUMABLE_DEFAULT_CHUNK_SIZE] and the KDoc on
+        // createResumableUpload) — that constraint is documented rather than enforced
+        // here so callers stay free to tune the size within the server's rules.
+        require(chunkSize > 0) { "chunkSize must be positive; got $chunkSize" }
+        return ResumableUploadImpl(
             client = client,
             bucket = bucket,
             path = path,
@@ -211,6 +217,7 @@ internal class StorageClientImpl(
             chunkSize = chunkSize,
             initialUploadUrl = uploadUrl,
         )
+    }
 
     override suspend fun download(bucket: String, path: String): SupabaseResult<String> =
         client.get("${StoragePaths.OBJECT_AUTHENTICATED}/${objectRef(bucket, path)}")

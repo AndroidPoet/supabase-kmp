@@ -23,6 +23,7 @@ final enum class io.github.androidpoet.supabase.auth.models/AuthenticatorAssuran
 }
 
 final enum class io.github.androidpoet.supabase.auth.models/MfaFactorStatus : kotlin/Enum<io.github.androidpoet.supabase.auth.models/MfaFactorStatus> { // io.github.androidpoet.supabase.auth.models/MfaFactorStatus|null[0]
+    enum entry UNKNOWN // io.github.androidpoet.supabase.auth.models/MfaFactorStatus.UNKNOWN|null[0]
     enum entry UNVERIFIED // io.github.androidpoet.supabase.auth.models/MfaFactorStatus.UNVERIFIED|null[0]
     enum entry VERIFIED // io.github.androidpoet.supabase.auth.models/MfaFactorStatus.VERIFIED|null[0]
 
@@ -41,6 +42,7 @@ final enum class io.github.androidpoet.supabase.auth.models/MfaFactorStatus : ko
 final enum class io.github.androidpoet.supabase.auth.models/MfaFactorType : kotlin/Enum<io.github.androidpoet.supabase.auth.models/MfaFactorType> { // io.github.androidpoet.supabase.auth.models/MfaFactorType|null[0]
     enum entry PHONE // io.github.androidpoet.supabase.auth.models/MfaFactorType.PHONE|null[0]
     enum entry TOTP // io.github.androidpoet.supabase.auth.models/MfaFactorType.TOTP|null[0]
+    enum entry UNKNOWN // io.github.androidpoet.supabase.auth.models/MfaFactorType.UNKNOWN|null[0]
     enum entry WEBAUTHN // io.github.androidpoet.supabase.auth.models/MfaFactorType.WEBAUTHN|null[0]
 
     final val entries // io.github.androidpoet.supabase.auth.models/MfaFactorType.entries|#static{}entries[0]
@@ -237,7 +239,7 @@ abstract interface io.github.androidpoet.supabase.auth/AuthClient { // io.github
     abstract suspend fun signInWithEmail(kotlin/String, kotlin/String, kotlin/String? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth.models/Session> // io.github.androidpoet.supabase.auth/AuthClient.signInWithEmail|signInWithEmail(kotlin.String;kotlin.String;kotlin.String?){}[0]
     abstract suspend fun signInWithIdToken(io.github.androidpoet.supabase.auth.models/OAuthProvider, kotlin/String, kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth.models/Session> // io.github.androidpoet.supabase.auth/AuthClient.signInWithIdToken|signInWithIdToken(io.github.androidpoet.supabase.auth.models.OAuthProvider;kotlin.String;kotlin.String?;kotlin.String?;kotlin.String?){}[0]
     abstract suspend fun signInWithOAuth(io.github.androidpoet.supabase.auth.models/OAuthProvider, kotlin/String? = ..., kotlin.collections/List<kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin/Boolean = ..., io.github.androidpoet.supabase.auth.models/PkceParams? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth.models/OAuthResponse> // io.github.androidpoet.supabase.auth/AuthClient.signInWithOAuth|signInWithOAuth(io.github.androidpoet.supabase.auth.models.OAuthProvider;kotlin.String?;kotlin.collections.List<kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.Boolean;io.github.androidpoet.supabase.auth.models.PkceParams?){}[0]
-    abstract suspend fun signInWithOtp(kotlin/String? = ..., kotlin/String? = ..., kotlin/Boolean? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.auth/AuthClient.signInWithOtp|signInWithOtp(kotlin.String?;kotlin.String?;kotlin.Boolean?;kotlin.String?;kotlin.String?;kotlin.String?){}[0]
+    abstract suspend fun signInWithOtp(kotlin/String? = ..., kotlin/String? = ..., kotlin/Boolean? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.auth/AuthClient.signInWithOtp|signInWithOtp(kotlin.String?;kotlin.String?;kotlin.Boolean?;kotlin.String?;kotlin.String?;kotlin.String?;kotlinx.serialization.json.JsonObject?){}[0]
     abstract suspend fun signInWithPhone(kotlin/String, kotlin/String, kotlin/String? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth.models/Session> // io.github.androidpoet.supabase.auth/AuthClient.signInWithPhone|signInWithPhone(kotlin.String;kotlin.String;kotlin.String?){}[0]
     abstract suspend fun signInWithWeb3(io.github.androidpoet.supabase.auth.models/Web3Chain, kotlin/String, kotlin/String, kotlin/String? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.auth.models/Session> // io.github.androidpoet.supabase.auth/AuthClient.signInWithWeb3|signInWithWeb3(io.github.androidpoet.supabase.auth.models.Web3Chain;kotlin.String;kotlin.String;kotlin.String?){}[0]
     abstract suspend fun signOut(kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.auth/AuthClient.signOut|signOut(kotlin.String){}[0]
@@ -775,7 +777,7 @@ final class io.github.androidpoet.supabase.auth.models/MfaEnrollRequest { // io.
 }
 
 final class io.github.androidpoet.supabase.auth.models/MfaEnrollResponse { // io.github.androidpoet.supabase.auth.models/MfaEnrollResponse|null[0]
-    constructor <init>(kotlin/String, io.github.androidpoet.supabase.auth.models/MfaFactorType, io.github.androidpoet.supabase.auth.models/MfaTotpDetails? = ..., kotlin/String? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.auth.models/MfaEnrollResponse.<init>|<init>(kotlin.String;io.github.androidpoet.supabase.auth.models.MfaFactorType;io.github.androidpoet.supabase.auth.models.MfaTotpDetails?;kotlin.String?;kotlin.String?){}[0]
+    constructor <init>(kotlin/String, io.github.androidpoet.supabase.auth.models/MfaFactorType = ..., io.github.androidpoet.supabase.auth.models/MfaTotpDetails? = ..., kotlin/String? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.auth.models/MfaEnrollResponse.<init>|<init>(kotlin.String;io.github.androidpoet.supabase.auth.models.MfaFactorType;io.github.androidpoet.supabase.auth.models.MfaTotpDetails?;kotlin.String?;kotlin.String?){}[0]
 
     final val friendlyName // io.github.androidpoet.supabase.auth.models/MfaEnrollResponse.friendlyName|{}friendlyName[0]
         final fun <get-friendlyName>(): kotlin/String? // io.github.androidpoet.supabase.auth.models/MfaEnrollResponse.friendlyName.<get-friendlyName>|<get-friendlyName>(){}[0]
@@ -815,7 +817,7 @@ final class io.github.androidpoet.supabase.auth.models/MfaEnrollResponse { // io
 }
 
 final class io.github.androidpoet.supabase.auth.models/MfaFactor { // io.github.androidpoet.supabase.auth.models/MfaFactor|null[0]
-    constructor <init>(kotlin/String, kotlin/String? = ..., io.github.androidpoet.supabase.auth.models/MfaFactorType, io.github.androidpoet.supabase.auth.models/MfaFactorStatus, kotlin/String? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.auth.models/MfaFactor.<init>|<init>(kotlin.String;kotlin.String?;io.github.androidpoet.supabase.auth.models.MfaFactorType;io.github.androidpoet.supabase.auth.models.MfaFactorStatus;kotlin.String?;kotlin.String?){}[0]
+    constructor <init>(kotlin/String, kotlin/String? = ..., io.github.androidpoet.supabase.auth.models/MfaFactorType = ..., io.github.androidpoet.supabase.auth.models/MfaFactorStatus = ..., kotlin/String? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.auth.models/MfaFactor.<init>|<init>(kotlin.String;kotlin.String?;io.github.androidpoet.supabase.auth.models.MfaFactorType;io.github.androidpoet.supabase.auth.models.MfaFactorStatus;kotlin.String?;kotlin.String?){}[0]
 
     final val createdAt // io.github.androidpoet.supabase.auth.models/MfaFactor.createdAt|{}createdAt[0]
         final fun <get-createdAt>(): kotlin/String? // io.github.androidpoet.supabase.auth.models/MfaFactor.createdAt.<get-createdAt>|<get-createdAt>(){}[0]
@@ -1243,13 +1245,15 @@ final class io.github.androidpoet.supabase.auth.models/OAuthResponse { // io.git
 }
 
 final class io.github.androidpoet.supabase.auth.models/OtpRequest { // io.github.androidpoet.supabase.auth.models/OtpRequest|null[0]
-    constructor <init>(kotlin/String? = ..., kotlin/String? = ..., kotlin/Boolean? = ..., kotlin/String? = ..., io.github.androidpoet.supabase.auth.models/GotrueMetaSecurity? = ...) // io.github.androidpoet.supabase.auth.models/OtpRequest.<init>|<init>(kotlin.String?;kotlin.String?;kotlin.Boolean?;kotlin.String?;io.github.androidpoet.supabase.auth.models.GotrueMetaSecurity?){}[0]
-    constructor <init>(kotlin/String? = ..., kotlin/String? = ..., kotlin/Boolean? = ..., kotlin/String? = ..., kotlin/String?) // io.github.androidpoet.supabase.auth.models/OtpRequest.<init>|<init>(kotlin.String?;kotlin.String?;kotlin.Boolean?;kotlin.String?;kotlin.String?){}[0]
+    constructor <init>(kotlin/String? = ..., kotlin/String? = ..., kotlin/Boolean? = ..., kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ..., io.github.androidpoet.supabase.auth.models/GotrueMetaSecurity? = ...) // io.github.androidpoet.supabase.auth.models/OtpRequest.<init>|<init>(kotlin.String?;kotlin.String?;kotlin.Boolean?;kotlin.String?;kotlinx.serialization.json.JsonObject?;io.github.androidpoet.supabase.auth.models.GotrueMetaSecurity?){}[0]
+    constructor <init>(kotlin/String? = ..., kotlin/String? = ..., kotlin/Boolean? = ..., kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlin/String?) // io.github.androidpoet.supabase.auth.models/OtpRequest.<init>|<init>(kotlin.String?;kotlin.String?;kotlin.Boolean?;kotlin.String?;kotlinx.serialization.json.JsonObject?;kotlin.String?){}[0]
 
     final val channel // io.github.androidpoet.supabase.auth.models/OtpRequest.channel|{}channel[0]
         final fun <get-channel>(): kotlin/String? // io.github.androidpoet.supabase.auth.models/OtpRequest.channel.<get-channel>|<get-channel>(){}[0]
     final val createUser // io.github.androidpoet.supabase.auth.models/OtpRequest.createUser|{}createUser[0]
         final fun <get-createUser>(): kotlin/Boolean? // io.github.androidpoet.supabase.auth.models/OtpRequest.createUser.<get-createUser>|<get-createUser>(){}[0]
+    final val data // io.github.androidpoet.supabase.auth.models/OtpRequest.data|{}data[0]
+        final fun <get-data>(): kotlinx.serialization.json/JsonObject? // io.github.androidpoet.supabase.auth.models/OtpRequest.data.<get-data>|<get-data>(){}[0]
     final val email // io.github.androidpoet.supabase.auth.models/OtpRequest.email|{}email[0]
         final fun <get-email>(): kotlin/String? // io.github.androidpoet.supabase.auth.models/OtpRequest.email.<get-email>|<get-email>(){}[0]
     final val gotrueMetaSecurity // io.github.androidpoet.supabase.auth.models/OtpRequest.gotrueMetaSecurity|{}gotrueMetaSecurity[0]
@@ -1261,8 +1265,9 @@ final class io.github.androidpoet.supabase.auth.models/OtpRequest { // io.github
     final fun component2(): kotlin/String? // io.github.androidpoet.supabase.auth.models/OtpRequest.component2|component2(){}[0]
     final fun component3(): kotlin/Boolean? // io.github.androidpoet.supabase.auth.models/OtpRequest.component3|component3(){}[0]
     final fun component4(): kotlin/String? // io.github.androidpoet.supabase.auth.models/OtpRequest.component4|component4(){}[0]
-    final fun component5(): io.github.androidpoet.supabase.auth.models/GotrueMetaSecurity? // io.github.androidpoet.supabase.auth.models/OtpRequest.component5|component5(){}[0]
-    final fun copy(kotlin/String? = ..., kotlin/String? = ..., kotlin/Boolean? = ..., kotlin/String? = ..., io.github.androidpoet.supabase.auth.models/GotrueMetaSecurity? = ...): io.github.androidpoet.supabase.auth.models/OtpRequest // io.github.androidpoet.supabase.auth.models/OtpRequest.copy|copy(kotlin.String?;kotlin.String?;kotlin.Boolean?;kotlin.String?;io.github.androidpoet.supabase.auth.models.GotrueMetaSecurity?){}[0]
+    final fun component5(): kotlinx.serialization.json/JsonObject? // io.github.androidpoet.supabase.auth.models/OtpRequest.component5|component5(){}[0]
+    final fun component6(): io.github.androidpoet.supabase.auth.models/GotrueMetaSecurity? // io.github.androidpoet.supabase.auth.models/OtpRequest.component6|component6(){}[0]
+    final fun copy(kotlin/String? = ..., kotlin/String? = ..., kotlin/Boolean? = ..., kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ..., io.github.androidpoet.supabase.auth.models/GotrueMetaSecurity? = ...): io.github.androidpoet.supabase.auth.models/OtpRequest // io.github.androidpoet.supabase.auth.models/OtpRequest.copy|copy(kotlin.String?;kotlin.String?;kotlin.Boolean?;kotlin.String?;kotlinx.serialization.json.JsonObject?;io.github.androidpoet.supabase.auth.models.GotrueMetaSecurity?){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.auth.models/OtpRequest.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.auth.models/OtpRequest.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // io.github.androidpoet.supabase.auth.models/OtpRequest.toString|toString(){}[0]
@@ -1567,6 +1572,36 @@ final class io.github.androidpoet.supabase.auth.models/PkceParams { // io.github
 
     final object Companion { // io.github.androidpoet.supabase.auth.models/PkceParams.Companion|null[0]
         final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.auth.models/PkceParams> // io.github.androidpoet.supabase.auth.models/PkceParams.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class io.github.androidpoet.supabase.auth.models/RecoverRequest { // io.github.androidpoet.supabase.auth.models/RecoverRequest|null[0]
+    constructor <init>(kotlin/String, io.github.androidpoet.supabase.auth.models/GotrueMetaSecurity? = ...) // io.github.androidpoet.supabase.auth.models/RecoverRequest.<init>|<init>(kotlin.String;io.github.androidpoet.supabase.auth.models.GotrueMetaSecurity?){}[0]
+    constructor <init>(kotlin/String, kotlin/String?) // io.github.androidpoet.supabase.auth.models/RecoverRequest.<init>|<init>(kotlin.String;kotlin.String?){}[0]
+
+    final val email // io.github.androidpoet.supabase.auth.models/RecoverRequest.email|{}email[0]
+        final fun <get-email>(): kotlin/String // io.github.androidpoet.supabase.auth.models/RecoverRequest.email.<get-email>|<get-email>(){}[0]
+    final val gotrueMetaSecurity // io.github.androidpoet.supabase.auth.models/RecoverRequest.gotrueMetaSecurity|{}gotrueMetaSecurity[0]
+        final fun <get-gotrueMetaSecurity>(): io.github.androidpoet.supabase.auth.models/GotrueMetaSecurity? // io.github.androidpoet.supabase.auth.models/RecoverRequest.gotrueMetaSecurity.<get-gotrueMetaSecurity>|<get-gotrueMetaSecurity>(){}[0]
+
+    final fun component1(): kotlin/String // io.github.androidpoet.supabase.auth.models/RecoverRequest.component1|component1(){}[0]
+    final fun component2(): io.github.androidpoet.supabase.auth.models/GotrueMetaSecurity? // io.github.androidpoet.supabase.auth.models/RecoverRequest.component2|component2(){}[0]
+    final fun copy(kotlin/String = ..., io.github.androidpoet.supabase.auth.models/GotrueMetaSecurity? = ...): io.github.androidpoet.supabase.auth.models/RecoverRequest // io.github.androidpoet.supabase.auth.models/RecoverRequest.copy|copy(kotlin.String;io.github.androidpoet.supabase.auth.models.GotrueMetaSecurity?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.auth.models/RecoverRequest.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.auth.models/RecoverRequest.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.auth.models/RecoverRequest.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.auth.models/RecoverRequest> { // io.github.androidpoet.supabase.auth.models/RecoverRequest.$serializer|null[0]
+        final val descriptor // io.github.androidpoet.supabase.auth.models/RecoverRequest.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.auth.models/RecoverRequest.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.auth.models/RecoverRequest.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.auth.models/RecoverRequest // io.github.androidpoet.supabase.auth.models/RecoverRequest.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.auth.models/RecoverRequest) // io.github.androidpoet.supabase.auth.models/RecoverRequest.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.auth.models.RecoverRequest){}[0]
+    }
+
+    final object Companion { // io.github.androidpoet.supabase.auth.models/RecoverRequest.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.auth.models/RecoverRequest> // io.github.androidpoet.supabase.auth.models/RecoverRequest.Companion.serializer|serializer(){}[0]
     }
 }
 

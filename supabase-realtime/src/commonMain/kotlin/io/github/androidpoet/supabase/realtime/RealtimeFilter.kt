@@ -7,12 +7,18 @@ public annotation class RealtimeFilterDsl
 /**
  * Builds the single server-side filter for a `postgres_changes` subscription
  * without hand-writing the `column=op.value` wire string (and getting the
- * escaping or operator name subtly wrong).
+ * operator name subtly wrong).
  *
  * Realtime supports exactly **one** filter per change subscription and a fixed
  * operator set (`eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`) — setting more than
  * one throws. Use it via [realtimeFilter] or the typed `onPostgresChange`
  * overloads:
+ *
+ * **Escaping:** values are passed through verbatim — this DSL does **not** quote
+ * or escape them. The realtime filter parser is a limited subset, not full
+ * PostgREST, so callers must avoid values containing characters the
+ * `column=op.value` grammar is sensitive to: notably a `,` inside an `in (...)`
+ * list (it separates entries) and the `=`/`.` separators of the wire string.
  *
  * ```
  * channel.onPostgresChange(table = "messages", filter = realtimeFilter { eq("room_id", roomId) }) { json -> … }

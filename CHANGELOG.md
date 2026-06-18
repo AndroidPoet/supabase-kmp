@@ -32,6 +32,10 @@
 - **Auth** — `captchaToken` on `signUpWithEmail`/`signUpWithPhone`/`signInWithEmail`/
   `signInWithPhone` (sent under `gotrue_meta_security`), so these flows work when
   bot/CAPTCHA protection is enabled; previously there was no way to pass the token.
+- **Auth** — `signInWithOtp(data = …)` attaches `user_metadata` at magic-link/OTP
+  signup time, matching the other sign-up entry points.
+- **Postgrest** — `or`/`and` accept a `referencedTable` to scope a logical group to
+  an embedded resource (e.g. `authors.or=(…)`), mirroring `order`/`limit`/`range`.
 - **Realtime** — `InboundEventDropped` debug event (see backpressure fix below).
 - **Passkeys** — the opt-in `supabase-auth-passkey` module now drives the native
   WebAuthn ceremony on all platforms; a dedicated docs page documents it.
@@ -88,6 +92,26 @@
   instead of tearing down the socket and forcing every channel to rejoin; a
   heartbeat reply only clears the liveness watchdog when its `ref` matches the
   outstanding heartbeat.
+- **Auth admin** — `createUser`/`getUserById`/`updateUserById`/`inviteUserByEmail`
+  now decode the bare `User` the server returns (a `{"user":…}` wrapper is still
+  accepted). They previously required the wrapper and so failed on every valid
+  `200`; the unit tests had masked this by mocking the wrapper shape.
+- **Auth** — `resetPasswordForEmail` no longer sends a `create_user` field the
+  `/recover` endpoint doesn't define; `verifyOtp` returns a clear failure on a
+  no-session confirmation (e.g. email change) instead of an opaque decode error;
+  `generateLink` no longer sends `redirect_to` in both the body and the query.
+- **Enums from server responses** — MFA factor type/status, the admin OAuth-client
+  enums, and the Storage vector data-type/distance-metric enums now tolerate an
+  unknown server value (coerced to `UNKNOWN`) instead of failing the whole
+  response decode, so a new server-side value can't break e.g. `listFactors()`.
+- **Postgrest** — a `null` argument to a GET-based RPC is now omitted from the
+  query string instead of being sent as the literal text `"null"`.
+- **Realtime** — a handshake that times out during `connect()` no longer leaks the
+  connection scope or rethrows a raw cancellation; it routes through the normal
+  reconnect/`Failed` path.
+- **Secret redaction** — `toString()` now masks secrets on the auth request bodies
+  (passwords, id/refresh tokens) and on the admin client-secret/password carriers,
+  extending the redaction already applied to `Session` and the MFA/native types.
 
 ### Added (supabase-kt parity audit)
 

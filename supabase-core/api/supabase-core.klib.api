@@ -178,7 +178,7 @@ final class io.github.androidpoet.supabase.core.models/ErrorResponse { // io.git
 final class io.github.androidpoet.supabase.core.models/FilterBuilder { // io.github.androidpoet.supabase.core.models/FilterBuilder|null[0]
     constructor <init>() // io.github.androidpoet.supabase.core.models/FilterBuilder.<init>|<init>(){}[0]
 
-    final fun and(kotlin/Function1<io.github.androidpoet.supabase.core.models/FilterBuilder, kotlin/Unit>) // io.github.androidpoet.supabase.core.models/FilterBuilder.and|and(kotlin.Function1<io.github.androidpoet.supabase.core.models.FilterBuilder,kotlin.Unit>){}[0]
+    final fun and(kotlin/String? = ..., kotlin/Function1<io.github.androidpoet.supabase.core.models/FilterBuilder, kotlin/Unit>) // io.github.androidpoet.supabase.core.models/FilterBuilder.and|and(kotlin.String?;kotlin.Function1<io.github.androidpoet.supabase.core.models.FilterBuilder,kotlin.Unit>){}[0]
     final fun build(): kotlin.collections/List<kotlin/Pair<kotlin/String, kotlin/String>> // io.github.androidpoet.supabase.core.models/FilterBuilder.build|build(){}[0]
     final fun containedBy(kotlin/String, kotlin.collections/List<kotlin/Any>) // io.github.androidpoet.supabase.core.models/FilterBuilder.containedBy|containedBy(kotlin.String;kotlin.collections.List<kotlin.Any>){}[0]
     final fun containedBy(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.core.models/FilterBuilder.containedBy|containedBy(kotlin.String;kotlin.String){}[0]
@@ -218,7 +218,7 @@ final class io.github.androidpoet.supabase.core.models/FilterBuilder { // io.git
     final fun not(kotlin/String, kotlin/String, kotlin/String) // io.github.androidpoet.supabase.core.models/FilterBuilder.not|not(kotlin.String;kotlin.String;kotlin.String){}[0]
     final fun notExtendLeft(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.core.models/FilterBuilder.notExtendLeft|notExtendLeft(kotlin.String;kotlin.String){}[0]
     final fun notExtendRight(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.core.models/FilterBuilder.notExtendRight|notExtendRight(kotlin.String;kotlin.String){}[0]
-    final fun or(kotlin/Function1<io.github.androidpoet.supabase.core.models/FilterBuilder, kotlin/Unit>) // io.github.androidpoet.supabase.core.models/FilterBuilder.or|or(kotlin.Function1<io.github.androidpoet.supabase.core.models.FilterBuilder,kotlin.Unit>){}[0]
+    final fun or(kotlin/String? = ..., kotlin/Function1<io.github.androidpoet.supabase.core.models/FilterBuilder, kotlin/Unit>) // io.github.androidpoet.supabase.core.models/FilterBuilder.or|or(kotlin.String?;kotlin.Function1<io.github.androidpoet.supabase.core.models.FilterBuilder,kotlin.Unit>){}[0]
     final fun order(kotlin/String, io.github.androidpoet.supabase.core.models/OrderDirection, io.github.androidpoet.supabase.core.models/NullsPlacement? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.core.models/FilterBuilder.order|order(kotlin.String;io.github.androidpoet.supabase.core.models.OrderDirection;io.github.androidpoet.supabase.core.models.NullsPlacement?;kotlin.String?){}[0]
     final fun order(kotlin/String, kotlin/Boolean = ..., kotlin/Boolean? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.core.models/FilterBuilder.order|order(kotlin.String;kotlin.Boolean;kotlin.Boolean?;kotlin.String?){}[0]
     final fun overlaps(kotlin/String, kotlin.collections/List<kotlin/Any>) // io.github.androidpoet.supabase.core.models/FilterBuilder.overlaps|overlaps(kotlin.String;kotlin.collections.List<kotlin.Any>){}[0]

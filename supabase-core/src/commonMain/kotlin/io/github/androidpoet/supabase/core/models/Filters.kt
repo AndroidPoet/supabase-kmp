@@ -424,27 +424,35 @@ public class FilterBuilder {
     /**
      * Combines the filters declared inside [block] with logical OR (SQL `OR`). The
      * inner filters are flattened into PostgREST's grouped form, e.g.
-     * `or { eq("a", 1); eq("b", 2) }` → `or=(a.eq.1,b.eq.2)`.
+     * `or { eq("a", 1); eq("b", 2) }` → `or=(a.eq.1,b.eq.2)`. When
+     * [referencedTable] is set the key is scoped to that embedded/joined resource,
+     * e.g. `or(referencedTable = "authors") { … }` → `authors.or=(…)`.
      *
      * @param block a nested DSL block whose filters are OR-ed together.
+     * @param referencedTable scope the OR group to an embedded/joined resource when set.
      */
-    public fun or(block: FilterBuilder.() -> Unit) {
+    public fun or(referencedTable: String? = null, block: FilterBuilder.() -> Unit) {
         val inner = FilterBuilder().apply(block).build()
         val combined = flattenLogical(inner)
-        params += "or" to "($combined)"
+        val key = if (referencedTable == null) "or" else "$referencedTable.or"
+        params += key to "($combined)"
     }
 
     /**
      * Combines the filters declared inside [block] with logical AND (SQL `AND`) as
      * an explicit group — useful nested inside [or]. Emits the grouped form, e.g.
-     * `and { gte("a", 1); lt("a", 9) }` → `and=(a.gte.1,a.lt.9)`.
+     * `and { gte("a", 1); lt("a", 9) }` → `and=(a.gte.1,a.lt.9)`. When
+     * [referencedTable] is set the key is scoped to that embedded/joined resource,
+     * e.g. `and(referencedTable = "authors") { … }` → `authors.and=(…)`.
      *
      * @param block a nested DSL block whose filters are AND-ed together.
+     * @param referencedTable scope the AND group to an embedded/joined resource when set.
      */
-    public fun and(block: FilterBuilder.() -> Unit) {
+    public fun and(referencedTable: String? = null, block: FilterBuilder.() -> Unit) {
         val inner = FilterBuilder().apply(block).build()
         val combined = flattenLogical(inner)
-        params += "and" to "($combined)"
+        val key = if (referencedTable == null) "and" else "$referencedTable.and"
+        params += key to "($combined)"
     }
 
     /**

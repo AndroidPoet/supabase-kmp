@@ -360,6 +360,12 @@ public interface StorageClient {
      * [ResumableUpload.await] is called. Pass [uploadUrl] (a previously captured
      * [ResumableUpload.uploadUrl]) to resume an interrupted upload instead of
      * starting a new one.
+     *
+     * [chunkSize] must be positive (a non-positive value throws
+     * [IllegalArgumentException] eagerly, before any request is made). The TUS
+     * server additionally requires every chunk except the last to be a multiple of
+     * [RESUMABLE_DEFAULT_CHUNK_SIZE] (6 MB); keep the default unless you have a
+     * reason to change it, as a non-conforming size is rejected server-side.
      */
     public fun createResumableUpload(
         bucket: String,

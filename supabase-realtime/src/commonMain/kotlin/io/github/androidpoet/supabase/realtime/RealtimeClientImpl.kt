@@ -24,6 +24,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
@@ -241,7 +242,11 @@ internal class RealtimeClientImpl(
                 reconnectAttempt.value = 0
                 _connectionState.value = ConnectionState.Connected
             } catch (e: Throwable) {
-                if (e is CancellationException) throw e
+                // A handshake timeout arrives as a TimeoutCancellationException (a
+                // CancellationException), but it is a connection failure — route it
+                // through the reconnect/Failed path. Only genuine structured
+                // cancellation (not a timeout) is rethrown.
+                if (e is CancellationException && e !is TimeoutCancellationException) throw e
                 session = null
                 if (config.autoReconnect && !intentionalDisconnect) {
                     scheduleReconnect()
@@ -434,11 +439,20 @@ internal class RealtimeClientImpl(
         val wsScheme = if (isHttps) "wss" else "ws"
         val url = "$wsScheme://$host/realtime/v1/websocket?apikey=${supabaseClient.apiKey}&vsn=1.0.0"
         val newScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-        scope = newScope
-        pendingHeartbeatRef.value = null
         // Bound the handshake so a stalled connect surfaces as a timeout (and
         // triggers reconnect/Failed) instead of hanging on the platform default.
-        val ws = withTimeout(config.connectionTimeoutMs) { httpClient.webSocketSession(url) }
+        // The scope is left unassigned until the session is obtained: a handshake
+        // timeout must cancel newScope here, otherwise it would be orphaned (the
+        // TimeoutCancellationException propagates past connect()'s catch).
+        val ws =
+            try {
+                withTimeout(config.connectionTimeoutMs) { httpClient.webSocketSession(url) }
+            } catch (e: Throwable) {
+                newScope.cancel()
+                throw e
+            }
+        scope = newScope
+        pendingHeartbeatRef.value = null
         session = ws
         newScope.launch {
             try {

@@ -226,10 +226,12 @@ class AuthAdminClientImplTest {
                 )
 
             val success = assertIs<SupabaseResult.Success<*>>(result)
-            assertEquals("/auth/v1/admin/generate_link?redirect_to=app%3A%2F%2Fcallback", client.lastPostEndpoint)
+            // redirect_to travels in the body for this endpoint, not as a query param.
+            assertEquals("/auth/v1/admin/generate_link", client.lastPostEndpoint)
             val body = json.parseToJsonElement(client.lastPostBody ?: error("missing body")).jsonObject
             assertEquals("email_change_new", body["type"]?.jsonPrimitive?.content)
             assertEquals("new@example.com", body["new_email"]?.jsonPrimitive?.content)
+            assertEquals("app://callback", body["redirect_to"]?.jsonPrimitive?.content)
             val value = success.value as io.github.androidpoet.supabase.auth.admin.models.GenerateLinkResponse
             assertEquals("https://example.com/action", value.properties.actionLink)
             assertEquals("magiclink", value.properties.verificationType)
@@ -466,9 +468,10 @@ private class FakeSupabaseClient : SupabaseClient {
                     ]
                     """.trimIndent(),
                 )
+            // GoTrue returns a bare User from this endpoint (no {"user":…} wrapper).
             endpoint.startsWith("/auth/v1/admin/users/") ->
                 SupabaseResult.Success(
-                    """{"user":{"id":"u1","email":"user@example.com"}}""",
+                    """{"id":"u1","email":"user@example.com"}""",
                 )
             else -> SupabaseResult.Failure(SupabaseError("unexpected GET $endpoint"))
         }
@@ -490,13 +493,14 @@ private class FakeSupabaseClient : SupabaseClient {
                     oauthClientJson(clientSecret = "new-secret"),
                 )
             endpoint == "/auth/v1/admin/custom-providers" -> SupabaseResult.Success(customProviderJson())
+            // GoTrue returns a bare User from create/invite (no {"user":…} wrapper).
             endpoint == "/auth/v1/admin/users" ->
                 SupabaseResult.Success(
-                    """{"user":{"id":"u1","email":"user@example.com"}}""",
+                    """{"id":"u1","email":"user@example.com"}""",
                 )
             endpoint.startsWith("/auth/v1/invite") ->
                 SupabaseResult.Success(
-                    """{"user":{"id":"u1","email":"invite@example.com"}}""",
+                    """{"id":"u1","email":"invite@example.com"}""",
                 )
             endpoint.startsWith("/auth/v1/admin/generate_link") ->
                 SupabaseResult.Success(
@@ -528,6 +532,7 @@ private class FakeSupabaseClient : SupabaseClient {
         return when {
             endpoint.startsWith("/auth/v1/admin/oauth/clients/") -> SupabaseResult.Success(oauthClientJson())
             endpoint.startsWith("/auth/v1/admin/custom-providers/") -> SupabaseResult.Success(customProviderJson(name = "Acme Updated"))
+            // updateUserById: deliberately the {"user":…} wrapper shape so tolerance for it stays covered.
             else -> SupabaseResult.Success("""{"user":{"id":"u1","phone":"+15555550100"}}""")
         }
     }

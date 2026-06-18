@@ -8,6 +8,7 @@
 // Library unique name: <supabase-kmp:supabase-storage>
 final enum class io.github.androidpoet.supabase.storage.models/VectorDataType : kotlin/Enum<io.github.androidpoet.supabase.storage.models/VectorDataType> { // io.github.androidpoet.supabase.storage.models/VectorDataType|null[0]
     enum entry FLOAT32 // io.github.androidpoet.supabase.storage.models/VectorDataType.FLOAT32|null[0]
+    enum entry UNKNOWN // io.github.androidpoet.supabase.storage.models/VectorDataType.UNKNOWN|null[0]
 
     final val entries // io.github.androidpoet.supabase.storage.models/VectorDataType.entries|#static{}entries[0]
         final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.androidpoet.supabase.storage.models/VectorDataType> // io.github.androidpoet.supabase.storage.models/VectorDataType.entries.<get-entries>|<get-entries>#static(){}[0]
@@ -25,6 +26,7 @@ final enum class io.github.androidpoet.supabase.storage.models/VectorDistanceMet
     enum entry COSINE // io.github.androidpoet.supabase.storage.models/VectorDistanceMetric.COSINE|null[0]
     enum entry DOTPRODUCT // io.github.androidpoet.supabase.storage.models/VectorDistanceMetric.DOTPRODUCT|null[0]
     enum entry EUCLIDEAN // io.github.androidpoet.supabase.storage.models/VectorDistanceMetric.EUCLIDEAN|null[0]
+    enum entry UNKNOWN // io.github.androidpoet.supabase.storage.models/VectorDistanceMetric.UNKNOWN|null[0]
 
     final val entries // io.github.androidpoet.supabase.storage.models/VectorDistanceMetric.entries|#static{}entries[0]
         final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.androidpoet.supabase.storage.models/VectorDistanceMetric> // io.github.androidpoet.supabase.storage.models/VectorDistanceMetric.entries.<get-entries>|<get-entries>#static(){}[0]
@@ -1604,7 +1606,7 @@ final class io.github.androidpoet.supabase.storage.models/VectorGetRequest { // 
 }
 
 final class io.github.androidpoet.supabase.storage.models/VectorIndex { // io.github.androidpoet.supabase.storage.models/VectorIndex|null[0]
-    constructor <init>(kotlin/String, kotlin/String, io.github.androidpoet.supabase.storage.models/VectorDataType, kotlin/Int, io.github.androidpoet.supabase.storage.models/VectorDistanceMetric, io.github.androidpoet.supabase.storage.models/VectorMetadataConfiguration? = ..., kotlin/Long? = ...) // io.github.androidpoet.supabase.storage.models/VectorIndex.<init>|<init>(kotlin.String;kotlin.String;io.github.androidpoet.supabase.storage.models.VectorDataType;kotlin.Int;io.github.androidpoet.supabase.storage.models.VectorDistanceMetric;io.github.androidpoet.supabase.storage.models.VectorMetadataConfiguration?;kotlin.Long?){}[0]
+    constructor <init>(kotlin/String, kotlin/String, io.github.androidpoet.supabase.storage.models/VectorDataType = ..., kotlin/Int, io.github.androidpoet.supabase.storage.models/VectorDistanceMetric = ..., io.github.androidpoet.supabase.storage.models/VectorMetadataConfiguration? = ..., kotlin/Long? = ...) // io.github.androidpoet.supabase.storage.models/VectorIndex.<init>|<init>(kotlin.String;kotlin.String;io.github.androidpoet.supabase.storage.models.VectorDataType;kotlin.Int;io.github.androidpoet.supabase.storage.models.VectorDistanceMetric;io.github.androidpoet.supabase.storage.models.VectorMetadataConfiguration?;kotlin.Long?){}[0]
 
     final val creationTime // io.github.androidpoet.supabase.storage.models/VectorIndex.creationTime|{}creationTime[0]
         final fun <get-creationTime>(): kotlin/Long? // io.github.androidpoet.supabase.storage.models/VectorIndex.creationTime.<get-creationTime>|<get-creationTime>(){}[0]
