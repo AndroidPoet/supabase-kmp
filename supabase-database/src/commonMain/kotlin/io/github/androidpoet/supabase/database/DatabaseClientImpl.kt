@@ -2,8 +2,11 @@ package io.github.androidpoet.supabase.database
 
 import io.github.androidpoet.supabase.client.SupabaseClient
 import io.github.androidpoet.supabase.client.SupabaseHttpMethod
+import io.github.androidpoet.supabase.client.defaultJson
 import io.github.androidpoet.supabase.core.models.FilterBuilder
 import io.github.androidpoet.supabase.core.result.SupabaseResult
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
 
 private const val INTERNAL_RETRY_HEADER = "X-Supabase-Kmp-Retry"
 
@@ -154,10 +157,11 @@ internal class DatabaseClientImpl(
     ): SupabaseResult<String> {
         val safeTable = validatePathSegment(table, "table")
         val safeSchema = schema?.let { validatePathSegment(it, "schema") }
+        val effectiveColumns = if (!columns.isNullOrEmpty()) columns else deriveBulkInsertColumns(body)
         val endpoint =
             buildEndpoint("${DatabasePaths.BASE}/$safeTable") {
                 if (onConflict != null) add("on_conflict" to onConflict)
-                if (!columns.isNullOrEmpty()) add("columns" to columns.joinToString(","))
+                if (effectiveColumns.isNotEmpty()) add("columns" to effectiveColumns.joinToString(","))
             }
         val requestHeaders =
             headers +
@@ -177,6 +181,19 @@ internal class DatabaseClientImpl(
                     ("Accept" to acceptHeader(stripNulls = stripNulls)),
         )
     }
+
+    // PostgREST infers the insert columns from the FIRST row only. For a bulk insert
+    // whose rows carry different key sets, columns missing from row 0 are silently
+    // dropped. Sending the union of every row's keys as `columns=` forces all of them
+    // to be considered (rows omitting one fall back to DEFAULT/NULL). A single row has
+    // no such ambiguity, so we only derive for an array of more than one object and
+    // never override a caller-supplied `columns`.
+    private fun deriveBulkInsertColumns(body: String): List<String> =
+        runCatching {
+            val array = defaultJson.parseToJsonElement(body) as? JsonArray ?: return@runCatching emptyList()
+            if (array.size <= 1) return@runCatching emptyList()
+            array.flatMap { (it as? JsonObject)?.keys ?: emptySet() }.distinct()
+        }.getOrDefault(emptyList())
 
     override suspend fun update(
         table: String,

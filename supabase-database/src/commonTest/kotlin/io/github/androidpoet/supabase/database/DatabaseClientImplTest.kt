@@ -62,6 +62,39 @@ class DatabaseClientImplTest {
         }
 
     @Test
+    fun test_insert_bulkRows_derivesColumnsUnionWhenNotSupplied() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = DatabaseClientImpl(client)
+
+            // Second row carries a key absent from the first. Without an explicit
+            // columns= union, PostgREST would infer columns from row 0 and silently
+            // drop "b" — so we send the union derived from every row.
+            runSuspend {
+                sut.insert(
+                    table = "messages",
+                    body = """[{"a":1},{"a":2,"b":3}]""",
+                )
+            }
+
+            assertEquals("/rest/v1/messages?columns=a%2Cb", client.lastPostEndpoint)
+        }
+
+    @Test
+    fun test_insert_singleObject_doesNotDeriveColumns() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = DatabaseClientImpl(client)
+
+            runSuspend {
+                sut.insert(table = "messages", body = """{"a":1}""")
+            }
+
+            // A single row is unambiguous; no columns= hint is added.
+            assertEquals("/rest/v1/messages", client.lastPostEndpoint)
+        }
+
+    @Test
     fun test_select_singleUsesObjectAcceptHeader() =
         runTest {
             val client = FakeSupabaseClient()
