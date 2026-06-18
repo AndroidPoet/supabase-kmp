@@ -52,8 +52,8 @@ public abstract interface class io/github/androidpoet/supabase/auth/AuthClient {
 	public static synthetic fun signInWithIdToken$default (Lio/github/androidpoet/supabase/auth/AuthClient;Lio/github/androidpoet/supabase/auth/models/OAuthProvider;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun signInWithOAuth (Lio/github/androidpoet/supabase/auth/models/OAuthProvider;Ljava/lang/String;Ljava/util/List;Ljava/util/Map;ZLio/github/androidpoet/supabase/auth/models/PkceParams;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun signInWithOAuth$default (Lio/github/androidpoet/supabase/auth/AuthClient;Lio/github/androidpoet/supabase/auth/models/OAuthProvider;Ljava/lang/String;Ljava/util/List;Ljava/util/Map;ZLio/github/androidpoet/supabase/auth/models/PkceParams;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public abstract fun signInWithOtp (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun signInWithOtp$default (Lio/github/androidpoet/supabase/auth/AuthClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun signInWithOtp (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun signInWithOtp$default (Lio/github/androidpoet/supabase/auth/AuthClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun signInWithPhone (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun signInWithWeb3 (Lio/github/androidpoet/supabase/auth/models/Web3Chain;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun signInWithWeb3$default (Lio/github/androidpoet/supabase/auth/AuthClient;Lio/github/androidpoet/supabase/auth/models/Web3Chain;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
@@ -89,7 +89,7 @@ public final class io/github/androidpoet/supabase/auth/AuthClient$DefaultImpls {
 	public static synthetic fun signInAnonymously$default (Lio/github/androidpoet/supabase/auth/AuthClient;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun signInWithIdToken$default (Lio/github/androidpoet/supabase/auth/AuthClient;Lio/github/androidpoet/supabase/auth/models/OAuthProvider;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun signInWithOAuth$default (Lio/github/androidpoet/supabase/auth/AuthClient;Lio/github/androidpoet/supabase/auth/models/OAuthProvider;Ljava/lang/String;Ljava/util/List;Ljava/util/Map;ZLio/github/androidpoet/supabase/auth/models/PkceParams;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static synthetic fun signInWithOtp$default (Lio/github/androidpoet/supabase/auth/AuthClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun signInWithOtp$default (Lio/github/androidpoet/supabase/auth/AuthClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun signInWithWeb3$default (Lio/github/androidpoet/supabase/auth/AuthClient;Lio/github/androidpoet/supabase/auth/models/Web3Chain;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun signUpWithEmail$default (Lio/github/androidpoet/supabase/auth/AuthClient;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun signUpWithPhone$default (Lio/github/androidpoet/supabase/auth/AuthClient;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
@@ -133,7 +133,8 @@ public final class io/github/androidpoet/supabase/auth/AuthClientExtKt {
 	public static final fun retrieveSsoUrlForCurrentSession (Lio/github/androidpoet/supabase/auth/AuthClient;Lio/github/androidpoet/supabase/auth/session/SessionManager;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun retrieveSsoUrlForCurrentSession$default (Lio/github/androidpoet/supabase/auth/AuthClient;Lio/github/androidpoet/supabase/auth/session/SessionManager;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun sendOtp (Lio/github/androidpoet/supabase/auth/AuthClient;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static final fun sendPhoneOtp (Lio/github/androidpoet/supabase/auth/AuthClient;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun sendPhoneOtp (Lio/github/androidpoet/supabase/auth/AuthClient;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun sendPhoneOtp$default (Lio/github/androidpoet/supabase/auth/AuthClient;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun signIn (Lio/github/androidpoet/supabase/auth/AuthClient;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun signInAnonymouslyAndSaveSession (Lio/github/androidpoet/supabase/auth/AuthClient;Lio/github/androidpoet/supabase/auth/session/SessionManager;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun signInAnonymouslyAndSaveSession$default (Lio/github/androidpoet/supabase/auth/AuthClient;Lio/github/androidpoet/supabase/auth/session/SessionManager;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
@@ -229,15 +230,17 @@ public final class io/github/androidpoet/supabase/auth/SupabaseClientAuthExtKt {
 public final class io/github/androidpoet/supabase/auth/models/AnonymousSignInRequest {
 	public static final field Companion Lio/github/androidpoet/supabase/auth/models/AnonymousSignInRequest$Companion;
 	public fun <init> ()V
+	public fun <init> (Lkotlinx/serialization/json/JsonObject;Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;)V
+	public synthetic fun <init> (Lkotlinx/serialization/json/JsonObject;Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun <init> (Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;)V
 	public synthetic fun <init> (Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Lkotlinx/serialization/json/JsonObject;
-	public final fun component2 ()Ljava/lang/String;
-	public final fun copy (Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;)Lio/github/androidpoet/supabase/auth/models/AnonymousSignInRequest;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/auth/models/AnonymousSignInRequest;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/auth/models/AnonymousSignInRequest;
+	public final fun component2 ()Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;
+	public final fun copy (Lkotlinx/serialization/json/JsonObject;Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;)Lio/github/androidpoet/supabase/auth/models/AnonymousSignInRequest;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/auth/models/AnonymousSignInRequest;Lkotlinx/serialization/json/JsonObject;Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;ILjava/lang/Object;)Lio/github/androidpoet/supabase/auth/models/AnonymousSignInRequest;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getCaptchaToken ()Ljava/lang/String;
 	public final fun getData ()Lkotlinx/serialization/json/JsonObject;
+	public final fun getGotrueMetaSecurity ()Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -328,19 +331,21 @@ public final class io/github/androidpoet/supabase/auth/models/GotrueMetaSecurity
 
 public final class io/github/androidpoet/supabase/auth/models/IdTokenRequest {
 	public static final field Companion Lio/github/androidpoet/supabase/auth/models/IdTokenRequest$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;Ljava/lang/Boolean;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Ljava/lang/String;
 	public final fun component3 ()Ljava/lang/String;
 	public final fun component4 ()Ljava/lang/String;
-	public final fun component5 ()Ljava/lang/String;
+	public final fun component5 ()Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;
 	public final fun component6 ()Ljava/lang/Boolean;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;)Lio/github/androidpoet/supabase/auth/models/IdTokenRequest;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/auth/models/IdTokenRequest;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;ILjava/lang/Object;)Lio/github/androidpoet/supabase/auth/models/IdTokenRequest;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;Ljava/lang/Boolean;)Lio/github/androidpoet/supabase/auth/models/IdTokenRequest;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/auth/models/IdTokenRequest;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;Ljava/lang/Boolean;ILjava/lang/Object;)Lio/github/androidpoet/supabase/auth/models/IdTokenRequest;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAccessToken ()Ljava/lang/String;
-	public final fun getCaptchaToken ()Ljava/lang/String;
+	public final fun getGotrueMetaSecurity ()Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;
 	public final fun getIdToken ()Ljava/lang/String;
 	public final fun getLinkIdentity ()Ljava/lang/Boolean;
 	public final fun getNonce ()Ljava/lang/String;
@@ -1155,20 +1160,24 @@ public final class io/github/androidpoet/supabase/auth/models/OAuthResponse$Comp
 public final class io/github/androidpoet/supabase/auth/models/OtpRequest {
 	public static final field Companion Lio/github/androidpoet/supabase/auth/models/OtpRequest$Companion;
 	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Ljava/lang/String;
 	public final fun component3 ()Ljava/lang/Boolean;
 	public final fun component4 ()Ljava/lang/String;
-	public final fun component5 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;)Lio/github/androidpoet/supabase/auth/models/OtpRequest;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/auth/models/OtpRequest;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/auth/models/OtpRequest;
+	public final fun component5 ()Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;Ljava/lang/String;)Lio/github/androidpoet/supabase/auth/models/OtpRequest;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/auth/models/OtpRequest;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/auth/models/OtpRequest;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getCaptchaToken ()Ljava/lang/String;
+	public final fun getChannel ()Ljava/lang/String;
 	public final fun getCreateUser ()Ljava/lang/Boolean;
 	public final fun getEmail ()Ljava/lang/String;
 	public final fun getEmailRedirectTo ()Ljava/lang/String;
+	public final fun getGotrueMetaSecurity ()Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;
 	public final fun getPhone ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -1210,19 +1219,21 @@ public final class io/github/androidpoet/supabase/auth/models/OtpType$Companion 
 
 public final class io/github/androidpoet/supabase/auth/models/OtpVerifyRequest {
 	public static final field Companion Lio/github/androidpoet/supabase/auth/models/OtpVerifyRequest$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/models/OtpType;Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/models/OtpType;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lio/github/androidpoet/supabase/auth/models/OtpType;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Lio/github/androidpoet/supabase/auth/models/OtpType;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/models/OtpType;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/models/OtpType;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Ljava/lang/String;
 	public final fun component3 ()Ljava/lang/String;
 	public final fun component4 ()Lio/github/androidpoet/supabase/auth/models/OtpType;
 	public final fun component5 ()Ljava/lang/String;
-	public final fun component6 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/models/OtpType;Ljava/lang/String;Ljava/lang/String;)Lio/github/androidpoet/supabase/auth/models/OtpVerifyRequest;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/auth/models/OtpVerifyRequest;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/models/OtpType;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/auth/models/OtpVerifyRequest;
+	public final fun component6 ()Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/models/OtpType;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;)Lio/github/androidpoet/supabase/auth/models/OtpVerifyRequest;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/auth/models/OtpVerifyRequest;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/models/OtpType;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;ILjava/lang/Object;)Lio/github/androidpoet/supabase/auth/models/OtpVerifyRequest;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getCaptchaToken ()Ljava/lang/String;
 	public final fun getEmail ()Ljava/lang/String;
+	public final fun getGotrueMetaSecurity ()Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;
 	public final fun getPhone ()Ljava/lang/String;
 	public final fun getToken ()Ljava/lang/String;
 	public final fun getTokenHash ()Ljava/lang/String;
@@ -1542,18 +1553,20 @@ public final class io/github/androidpoet/supabase/auth/models/RefreshTokenReques
 
 public final class io/github/androidpoet/supabase/auth/models/ResendOtpRequest {
 	public static final field Companion Lio/github/androidpoet/supabase/auth/models/ResendOtpRequest$Companion;
+	public fun <init> (Lio/github/androidpoet/supabase/auth/models/OtpType;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;Ljava/lang/String;)V
+	public synthetic fun <init> (Lio/github/androidpoet/supabase/auth/models/OtpType;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun <init> (Lio/github/androidpoet/supabase/auth/models/OtpType;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
 	public synthetic fun <init> (Lio/github/androidpoet/supabase/auth/models/OtpType;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Lio/github/androidpoet/supabase/auth/models/OtpType;
 	public final fun component2 ()Ljava/lang/String;
 	public final fun component3 ()Ljava/lang/String;
-	public final fun component4 ()Ljava/lang/String;
+	public final fun component4 ()Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;
 	public final fun component5 ()Ljava/lang/String;
-	public final fun copy (Lio/github/androidpoet/supabase/auth/models/OtpType;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lio/github/androidpoet/supabase/auth/models/ResendOtpRequest;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/auth/models/ResendOtpRequest;Lio/github/androidpoet/supabase/auth/models/OtpType;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/auth/models/ResendOtpRequest;
+	public final fun copy (Lio/github/androidpoet/supabase/auth/models/OtpType;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;Ljava/lang/String;)Lio/github/androidpoet/supabase/auth/models/ResendOtpRequest;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/auth/models/ResendOtpRequest;Lio/github/androidpoet/supabase/auth/models/OtpType;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/auth/models/ResendOtpRequest;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getCaptchaToken ()Ljava/lang/String;
 	public final fun getEmail ()Ljava/lang/String;
+	public final fun getGotrueMetaSecurity ()Lio/github/androidpoet/supabase/auth/models/GotrueMetaSecurity;
 	public final fun getPhone ()Ljava/lang/String;
 	public final fun getRedirectTo ()Ljava/lang/String;
 	public final fun getType ()Lio/github/androidpoet/supabase/auth/models/OtpType;

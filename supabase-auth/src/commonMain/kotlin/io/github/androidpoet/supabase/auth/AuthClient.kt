@@ -87,6 +87,8 @@ public interface AuthClient {
         createUser: Boolean? = null,
         captchaToken: String? = null,
         emailRedirectTo: String? = null,
+        // Phone OTP delivery channel: "sms" (server default) or "whatsapp". Ignored for email OTP.
+        channel: String? = null,
     ): SupabaseResult<Unit>
 
     public suspend fun verifyOtp(

@@ -35,7 +35,8 @@ class AuthClientImplTest {
             assertTrue(client.lastPostBody?.contains("\"provider\":\"google\"") == true)
             assertTrue(client.lastPostBody?.contains("\"access_token\":\"provider-access\"") == true)
             assertTrue(client.lastPostBody?.contains("\"nonce\":\"nonce-1\"") == true)
-            assertTrue(client.lastPostBody?.contains("\"captcha_token\":\"captcha-1\"") == true)
+            // Captcha must be nested under gotrue_meta_security, not sent top-level.
+            assertTrue(client.lastPostBody?.contains("\"gotrue_meta_security\":{\"captcha_token\":\"captcha-1\"}") == true)
         }
 
     @Test
@@ -125,17 +126,20 @@ class AuthClientImplTest {
             val sut = AuthClientImpl(client)
 
             sut.signInWithOtp(
-                email = "a@b.com",
+                phone = "+15555550100",
                 createUser = false,
                 captchaToken = "captcha-otp",
-                emailRedirectTo = "myapp://otp",
+                channel = "whatsapp",
             )
 
             assertEquals("/auth/v1/otp", client.lastPostEndpoint)
-            assertTrue(client.lastPostBody?.contains("\"email\":\"a@b.com\"") == true)
+            assertTrue(client.lastPostBody?.contains("\"phone\":\"+15555550100\"") == true)
             assertTrue(client.lastPostBody?.contains("\"create_user\":false") == true)
-            assertTrue(client.lastPostBody?.contains("\"captcha_token\":\"captcha-otp\"") == true)
-            assertTrue(client.lastPostBody?.contains("\"email_redirect_to\":\"myapp://otp\"") == true)
+            // WhatsApp delivery channel must reach the server.
+            assertTrue(client.lastPostBody?.contains("\"channel\":\"whatsapp\"") == true)
+            // GoTrue only reads the captcha token nested under gotrue_meta_security;
+            // a top-level captcha_token is silently ignored. Guard against regressing.
+            assertTrue(client.lastPostBody?.contains("\"gotrue_meta_security\":{\"captcha_token\":\"captcha-otp\"}") == true)
         }
 
     @Test

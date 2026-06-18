@@ -58,8 +58,11 @@ public suspend fun AuthClient.signInPhone(
 public suspend fun AuthClient.sendOtp(email: String): SupabaseResult<Unit> =
     signInWithOtp(email = email)
 
-public suspend fun AuthClient.sendPhoneOtp(phone: String): SupabaseResult<Unit> =
-    signInWithOtp(phone = phone)
+public suspend fun AuthClient.sendPhoneOtp(
+    phone: String,
+    channel: String? = null,
+): SupabaseResult<Unit> =
+    signInWithOtp(phone = phone, channel = channel)
 
 public suspend fun AuthClient.resendSignUpEmailOtp(
     email: String,

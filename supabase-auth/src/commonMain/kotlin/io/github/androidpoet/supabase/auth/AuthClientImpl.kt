@@ -152,6 +152,7 @@ internal class AuthClientImpl(
         createUser: Boolean?,
         captchaToken: String?,
         emailRedirectTo: String?,
+        channel: String?,
     ): SupabaseResult<Unit> {
         val body =
             defaultJson.encodeToString(
@@ -159,6 +160,7 @@ internal class AuthClientImpl(
                     email = email,
                     phone = phone,
                     createUser = createUser,
+                    channel = channel,
                     captchaToken = captchaToken,
                     emailRedirectTo = emailRedirectTo,
                 ),

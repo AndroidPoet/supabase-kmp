@@ -55,24 +55,64 @@ public data class IdTokenRequest(
     val provider: String,
     @SerialName("access_token") val accessToken: String? = null,
     val nonce: String? = null,
-    @SerialName("captcha_token") val captchaToken: String? = null,
+    @SerialName("gotrue_meta_security") val gotrueMetaSecurity: GotrueMetaSecurity? = null,
     @SerialName("link_identity") val linkIdentity: Boolean? = null,
-)
+) {
+    public constructor(
+        idToken: String,
+        provider: String,
+        accessToken: String? = null,
+        nonce: String? = null,
+        captchaToken: String?,
+    ) : this(
+        idToken = idToken,
+        provider = provider,
+        accessToken = accessToken,
+        nonce = nonce,
+        gotrueMetaSecurity = captchaToken?.let(::GotrueMetaSecurity),
+    )
+}
 
 @Serializable
 public data class AnonymousSignInRequest(
     val data: JsonObject? = null,
-    @SerialName("captcha_token") val captchaToken: String? = null,
-)
+    @SerialName("gotrue_meta_security") val gotrueMetaSecurity: GotrueMetaSecurity? = null,
+) {
+    public constructor(
+        data: JsonObject? = null,
+        captchaToken: String?,
+    ) : this(
+        data = data,
+        gotrueMetaSecurity = captchaToken?.let(::GotrueMetaSecurity),
+    )
+}
 
 @Serializable
 public data class OtpRequest(
     val email: String? = null,
     val phone: String? = null,
     @SerialName("create_user") val createUser: Boolean? = null,
-    @SerialName("captcha_token") val captchaToken: String? = null,
+    // Delivery channel for phone OTP: "sms" (default, server-side) or "whatsapp".
+    val channel: String? = null,
+    @SerialName("gotrue_meta_security") val gotrueMetaSecurity: GotrueMetaSecurity? = null,
     @SerialName("email_redirect_to") val emailRedirectTo: String? = null,
-)
+) {
+    public constructor(
+        email: String? = null,
+        phone: String? = null,
+        createUser: Boolean? = null,
+        channel: String? = null,
+        emailRedirectTo: String? = null,
+        captchaToken: String?,
+    ) : this(
+        email = email,
+        phone = phone,
+        createUser = createUser,
+        channel = channel,
+        gotrueMetaSecurity = captchaToken?.let(::GotrueMetaSecurity),
+        emailRedirectTo = emailRedirectTo,
+    )
+}
 
 @Serializable
 public data class OtpVerifyRequest(
@@ -81,8 +121,24 @@ public data class OtpVerifyRequest(
     val token: String? = null,
     val type: OtpType,
     @SerialName("token_hash") val tokenHash: String? = null,
-    @SerialName("captcha_token") val captchaToken: String? = null,
-)
+    @SerialName("gotrue_meta_security") val gotrueMetaSecurity: GotrueMetaSecurity? = null,
+) {
+    public constructor(
+        type: OtpType,
+        email: String? = null,
+        phone: String? = null,
+        token: String? = null,
+        tokenHash: String? = null,
+        captchaToken: String?,
+    ) : this(
+        email = email,
+        phone = phone,
+        token = token,
+        type = type,
+        tokenHash = tokenHash,
+        gotrueMetaSecurity = captchaToken?.let(::GotrueMetaSecurity),
+    )
+}
 
 public sealed interface OtpVerifyResult {
     public data class Authenticated(
@@ -97,9 +153,23 @@ public data class ResendOtpRequest(
     val type: OtpType,
     val email: String? = null,
     val phone: String? = null,
-    @SerialName("captcha_token") val captchaToken: String? = null,
+    @SerialName("gotrue_meta_security") val gotrueMetaSecurity: GotrueMetaSecurity? = null,
     @SerialName("redirect_to") val redirectTo: String? = null,
-)
+) {
+    public constructor(
+        type: OtpType,
+        email: String? = null,
+        phone: String? = null,
+        redirectTo: String? = null,
+        captchaToken: String?,
+    ) : this(
+        type = type,
+        email = email,
+        phone = phone,
+        gotrueMetaSecurity = captchaToken?.let(::GotrueMetaSecurity),
+        redirectTo = redirectTo,
+    )
+}
 
 @Serializable
 public enum class OtpType {

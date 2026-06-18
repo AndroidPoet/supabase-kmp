@@ -32,8 +32,23 @@
 - **`ExplainFormat.XML` and `ExplainFormat.YAML`** — PostgREST `EXPLAIN` supports
   all four output formats.
 
+### Added
+
+- **Phone OTP delivery channel.** `signInWithOtp(..., channel = "whatsapp")` (and
+  `sendPhoneOtp(phone, channel)`) now sends the GoTrue `channel` field, so WhatsApp
+  OTP delivery is reachable. Defaults to the server's `sms`.
+
 ### Fixed
 
+- **CAPTCHA tokens now reach GoTrue.** `signInWithIdToken`, `signInAnonymously`,
+  `signInWithOtp`, `verifyOtp`/`verifyOtpWithTokenHash`, `resendEmailOtp`/
+  `resendPhoneOtp`, and `resetPasswordForEmail` sent `captcha_token` as a
+  **top-level** body field, which GoTrue ignores — it only reads the token nested
+  under `gotrue_meta_security`. With CAPTCHA protection enabled every one of these
+  calls was rejected. The token is now nested, matching the Web3 and passkey
+  requests that already did this. (Public method signatures are unchanged — they
+  still take `captchaToken: String?`; only the internal request DTOs changed, so
+  the `.api` baseline was updated.)
 - **Auto-refresh no longer leaks refresh coroutines under concurrency.** The
   scheduled `refreshJob` was a `@Volatile var` swapped with a non-atomic
   cancel-then-reassign; `scheduleRefresh` is reachable concurrently from
