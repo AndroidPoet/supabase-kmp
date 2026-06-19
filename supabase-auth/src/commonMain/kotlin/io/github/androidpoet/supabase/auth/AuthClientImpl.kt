@@ -85,11 +85,19 @@ internal class AuthClientImpl(
         data: JsonObject?,
         emailRedirectTo: String?,
         captchaToken: String?,
+        pkceParams: PkceParams?,
     ): SupabaseResult<Session> {
         if (email.isBlank()) return SupabaseResult.Failure(SupabaseError("email must not be blank"))
         val body =
             defaultJson.encodeToString(
-                SignUpRequest(email = email, password = password, data = data, captchaToken = captchaToken),
+                SignUpRequest(
+                    email = email,
+                    password = password,
+                    data = data,
+                    captchaToken = captchaToken,
+                    codeChallenge = pkceParams?.codeChallenge,
+                    codeChallengeMethod = pkceParams?.codeChallengeMethod,
+                ),
             )
         return client.post(signUpEndpoint(emailRedirectTo), body = body).deserialize()
     }
@@ -100,11 +108,19 @@ internal class AuthClientImpl(
         data: JsonObject?,
         redirectTo: String?,
         captchaToken: String?,
+        pkceParams: PkceParams?,
     ): SupabaseResult<Session> {
         if (phone.isBlank()) return SupabaseResult.Failure(SupabaseError("phone must not be blank"))
         val body =
             defaultJson.encodeToString(
-                SignUpRequest(phone = phone, password = password, data = data, captchaToken = captchaToken),
+                SignUpRequest(
+                    phone = phone,
+                    password = password,
+                    data = data,
+                    captchaToken = captchaToken,
+                    codeChallenge = pkceParams?.codeChallenge,
+                    codeChallengeMethod = pkceParams?.codeChallengeMethod,
+                ),
             )
         return client.post(signUpEndpoint(redirectTo), body = body).deserialize()
     }
@@ -215,6 +231,7 @@ internal class AuthClientImpl(
         emailRedirectTo: String?,
         channel: String?,
         data: JsonObject?,
+        pkceParams: PkceParams?,
     ): SupabaseResult<Unit> {
         val body =
             defaultJson.encodeToString(
@@ -225,6 +242,8 @@ internal class AuthClientImpl(
                     channel = channel,
                     data = data,
                     captchaToken = captchaToken,
+                    codeChallenge = pkceParams?.codeChallenge,
+                    codeChallengeMethod = pkceParams?.codeChallengeMethod,
                 ),
             )
         return client.post(otpEndpoint(emailRedirectTo), body = body).map { }
@@ -340,12 +359,15 @@ internal class AuthClientImpl(
         email: String,
         redirectTo: String?,
         captchaToken: String?,
+        pkceParams: PkceParams?,
     ): SupabaseResult<Unit> {
         val body =
             defaultJson.encodeToString(
                 RecoverRequest(
                     email = email,
                     captchaToken = captchaToken,
+                    codeChallenge = pkceParams?.codeChallenge,
+                    codeChallengeMethod = pkceParams?.codeChallengeMethod,
                 ),
             )
         val endpoint =

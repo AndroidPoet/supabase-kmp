@@ -3,6 +3,7 @@ package io.github.androidpoet.supabase.auth
 import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevel
 import io.github.androidpoet.supabase.auth.models.OAuthProvider
 import io.github.androidpoet.supabase.auth.models.OtpVerifyResult
+import io.github.androidpoet.supabase.auth.models.PkceParams
 import io.github.androidpoet.supabase.auth.models.SignOutScope
 import io.github.androidpoet.supabase.auth.models.UserIdentity
 import io.github.androidpoet.supabase.auth.models.Web3Chain
@@ -358,6 +359,61 @@ class AuthClientImplTest {
             sut.signUpWithEmail(email = "user@example.com", password = "pw")
 
             assertEquals("/auth/v1/signup", client.lastPostEndpoint)
+        }
+
+    @Test
+    fun test_signUpWithEmail_pkceParams_emitChallengeInBody() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            sut.signUpWithEmail(
+                email = "user@example.com",
+                password = "pw",
+                pkceParams = PkceParams(codeVerifier = "verifier", codeChallenge = "challenge-123", codeChallengeMethod = "S256"),
+            )
+
+            assertTrue(client.lastPostBody?.contains("\"code_challenge\":\"challenge-123\"") == true)
+            assertTrue(client.lastPostBody?.contains("\"code_challenge_method\":\"S256\"") == true)
+        }
+
+    @Test
+    fun test_signUpWithEmail_withoutPkce_omitsChallengeFromBody() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            sut.signUpWithEmail(email = "user@example.com", password = "pw")
+
+            assertTrue(client.lastPostBody?.contains("code_challenge") == false)
+        }
+
+    @Test
+    fun test_signInWithOtp_pkceParams_emitChallengeInBody() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            sut.signInWithOtp(
+                email = "user@example.com",
+                pkceParams = PkceParams(codeVerifier = "verifier", codeChallenge = "otp-chal", codeChallengeMethod = "S256"),
+            )
+
+            assertTrue(client.lastPostBody?.contains("\"code_challenge\":\"otp-chal\"") == true)
+        }
+
+    @Test
+    fun test_resetPasswordForEmail_pkceParams_emitChallengeInBody() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            sut.resetPasswordForEmail(
+                email = "user@example.com",
+                pkceParams = PkceParams(codeVerifier = "verifier", codeChallenge = "recover-chal", codeChallengeMethod = "S256"),
+            )
+
+            assertTrue(client.lastPostBody?.contains("\"code_challenge\":\"recover-chal\"") == true)
         }
 
     @Test

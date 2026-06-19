@@ -78,6 +78,8 @@ public data class SignUpRequest(
     val password: String,
     val data: JsonObject? = null,
     @SerialName("gotrue_meta_security") val gotrueMetaSecurity: GotrueMetaSecurity? = null,
+    @SerialName("code_challenge") val codeChallenge: String? = null,
+    @SerialName("code_challenge_method") val codeChallengeMethod: String? = null,
 ) {
     public constructor(
         password: String,
@@ -85,12 +87,16 @@ public data class SignUpRequest(
         phone: String? = null,
         data: JsonObject? = null,
         captchaToken: String?,
+        codeChallenge: String? = null,
+        codeChallengeMethod: String? = null,
     ) : this(
         email = email,
         phone = phone,
         password = password,
         data = data,
         gotrueMetaSecurity = captchaToken?.let(::GotrueMetaSecurity),
+        codeChallenge = codeChallenge,
+        codeChallengeMethod = codeChallengeMethod,
     )
 
     // Mask the password so credentials never leak into logs or crash reports.
@@ -188,6 +194,8 @@ public data class OtpRequest(
     val channel: String? = null,
     @SerialName("data") val data: JsonObject? = null,
     @SerialName("gotrue_meta_security") val gotrueMetaSecurity: GotrueMetaSecurity? = null,
+    @SerialName("code_challenge") val codeChallenge: String? = null,
+    @SerialName("code_challenge_method") val codeChallengeMethod: String? = null,
 ) {
     public constructor(
         email: String? = null,
@@ -196,6 +204,8 @@ public data class OtpRequest(
         channel: String? = null,
         data: JsonObject? = null,
         captchaToken: String?,
+        codeChallenge: String? = null,
+        codeChallengeMethod: String? = null,
     ) : this(
         email = email,
         phone = phone,
@@ -203,6 +213,8 @@ public data class OtpRequest(
         channel = channel,
         data = data,
         gotrueMetaSecurity = captchaToken?.let(::GotrueMetaSecurity),
+        codeChallenge = codeChallenge,
+        codeChallengeMethod = codeChallengeMethod,
     )
 }
 
@@ -215,13 +227,19 @@ public data class OtpRequest(
 public data class RecoverRequest(
     val email: String,
     @SerialName("gotrue_meta_security") val gotrueMetaSecurity: GotrueMetaSecurity? = null,
+    @SerialName("code_challenge") val codeChallenge: String? = null,
+    @SerialName("code_challenge_method") val codeChallengeMethod: String? = null,
 ) {
     public constructor(
         email: String,
         captchaToken: String?,
+        codeChallenge: String? = null,
+        codeChallengeMethod: String? = null,
     ) : this(
         email = email,
         gotrueMetaSecurity = captchaToken?.let(::GotrueMetaSecurity),
+        codeChallenge = codeChallenge,
+        codeChallengeMethod = codeChallengeMethod,
     )
 }
 

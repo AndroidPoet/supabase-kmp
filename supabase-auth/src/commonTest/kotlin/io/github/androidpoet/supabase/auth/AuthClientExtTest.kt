@@ -1039,6 +1039,7 @@ private class FakeAuthClient : AuthClient {
         data: JsonObject?,
         emailRedirectTo: String?,
         captchaToken: String?,
+        pkceParams: PkceParams?,
     ): SupabaseResult<Session> {
         lastEmailSignUp = email
         return SupabaseResult.Success(dummySession.copy(accessToken = "sign-up-acc", refreshToken = "sign-up-ref"))
@@ -1050,6 +1051,7 @@ private class FakeAuthClient : AuthClient {
         data: JsonObject?,
         redirectTo: String?,
         captchaToken: String?,
+        pkceParams: PkceParams?,
     ): SupabaseResult<Session> {
         lastPhoneSignUp = phone
         return SupabaseResult.Success(dummySession.copy(accessToken = "phone-sign-up-acc", refreshToken = "phone-sign-up-ref"))
@@ -1096,6 +1098,7 @@ private class FakeAuthClient : AuthClient {
         emailRedirectTo: String?,
         channel: String?,
         data: JsonObject?,
+        pkceParams: PkceParams?,
     ): SupabaseResult<Unit> = SupabaseResult.Failure(SupabaseError("not used"))
 
     override suspend fun verifyOtp(
@@ -1145,7 +1148,12 @@ private class FakeAuthClient : AuthClient {
     override suspend fun resendPhoneOtp(type: OtpType, phone: String, captchaToken: String?): SupabaseResult<Unit> =
         SupabaseResult.Failure(SupabaseError("not used"))
 
-    override suspend fun resetPasswordForEmail(email: String, redirectTo: String?, captchaToken: String?): SupabaseResult<Unit> {
+    override suspend fun resetPasswordForEmail(
+        email: String,
+        redirectTo: String?,
+        captchaToken: String?,
+        pkceParams: PkceParams?,
+    ): SupabaseResult<Unit> {
         lastResetPasswordEmail = email
         return SupabaseResult.Success(Unit)
     }

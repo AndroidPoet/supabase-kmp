@@ -55,6 +55,9 @@ public interface AuthClient {
      * @param emailRedirectTo URL the confirmation email links back to (sent as the
      *   `redirect_to` query param). Fails if [email] is blank.
      * @param captchaToken captcha response when bot protection is enabled.
+     * @param pkceParams PKCE challenge to bind a PKCE-flow sign-up; pair with
+     *   [generatePkceParams] and complete via [exchangeCodeForSession]. Null for the
+     *   implicit flow.
      */
     public suspend fun signUpWithEmail(
         email: String,
@@ -62,6 +65,7 @@ public interface AuthClient {
         data: JsonObject? = null,
         emailRedirectTo: String? = null,
         captchaToken: String? = null,
+        pkceParams: PkceParams? = null,
     ): SupabaseResult<Session>
 
     /**
@@ -73,6 +77,9 @@ public interface AuthClient {
      * @param redirectTo post-confirmation redirect (`redirect_to` query param).
      *   Fails if [phone] is blank.
      * @param captchaToken captcha response when bot protection is enabled.
+     * @param pkceParams PKCE challenge to bind a PKCE-flow sign-up; pair with
+     *   [generatePkceParams] and complete via [exchangeCodeForSession]. Null for the
+     *   implicit flow.
      */
     public suspend fun signUpWithPhone(
         phone: String,
@@ -80,6 +87,7 @@ public interface AuthClient {
         data: JsonObject? = null,
         redirectTo: String? = null,
         captchaToken: String? = null,
+        pkceParams: PkceParams? = null,
     ): SupabaseResult<Session>
 
     /**
@@ -185,6 +193,9 @@ public interface AuthClient {
      * @param channel phone delivery channel: `"sms"` (server default) or
      *   `"whatsapp"`; ignored for email.
      * @param data optional `user_metadata` stored when the user is auto-created.
+     * @param pkceParams PKCE challenge to bind a PKCE-flow magic link; pair with
+     *   [generatePkceParams] and complete via [exchangeCodeForSession]. Null for the
+     *   implicit flow.
      */
     public suspend fun signInWithOtp(
         email: String? = null,
@@ -195,6 +206,7 @@ public interface AuthClient {
         // Phone OTP delivery channel: "sms" (server default) or "whatsapp". Ignored for email OTP.
         channel: String? = null,
         data: JsonObject? = null,
+        pkceParams: PkceParams? = null,
     ): SupabaseResult<Unit>
 
     /**
@@ -286,11 +298,15 @@ public interface AuthClient {
      *
      * @param redirectTo where the recovery link returns the user (`redirect_to` query param).
      * @param captchaToken captcha response when bot protection is enabled.
+     * @param pkceParams PKCE challenge to bind a PKCE-flow recovery; pair with
+     *   [generatePkceParams] and complete via [exchangeCodeForSession]. Null for the
+     *   implicit flow.
      */
     public suspend fun resetPasswordForEmail(
         email: String,
         redirectTo: String? = null,
         captchaToken: String? = null,
+        pkceParams: PkceParams? = null,
     ): SupabaseResult<Unit>
 
     /**
