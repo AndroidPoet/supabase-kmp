@@ -333,10 +333,19 @@ internal class AuthClientImpl(
                     type = type,
                     email = email,
                     captchaToken = captchaToken,
-                    redirectTo = redirectTo,
                 ),
             )
-        return client.post(AuthPaths.RESEND, body = body).map { }
+        // redirect_to is a query param (read from the request referrer), not a body
+        // field — the /resend body has no redirect_to, so sending it there is a no-op.
+        val endpoint =
+            buildString {
+                append(AuthPaths.RESEND)
+                if (redirectTo != null) {
+                    append("?redirect_to=")
+                    append(urlEncode(redirectTo))
+                }
+            }
+        return client.post(endpoint, body = body).map { }
     }
 
     override suspend fun resendPhoneOtp(
