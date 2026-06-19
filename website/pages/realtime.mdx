@@ -43,6 +43,7 @@ val realtime = createRealtimeClient(client)
 public fun createRealtimeClient(
     supabaseClient: SupabaseClient,
     config: RealtimeConfig = RealtimeConfig(),
+    engineFactory: HttpClientEngineFactory<*> = platformEngine(),
 ): RealtimeClient
 ```
 
