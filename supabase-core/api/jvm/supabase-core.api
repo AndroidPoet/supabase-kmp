@@ -392,6 +392,12 @@ public final class io/github/androidpoet/supabase/core/result/SupabaseException 
 	public final fun getError ()Lio/github/androidpoet/supabase/core/result/SupabaseError;
 }
 
+public final class io/github/androidpoet/supabase/core/result/SupabaseFlowKt {
+	public static final fun asFlow (Lio/github/androidpoet/supabase/core/result/SupabaseResult;)Lkotlinx/coroutines/flow/Flow;
+	public static final fun dataFlow (Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/Flow;
+	public static final fun supabaseFlow (Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/Flow;
+}
+
 public abstract interface class io/github/androidpoet/supabase/core/result/SupabaseResult {
 	public static final field Companion Lio/github/androidpoet/supabase/core/result/SupabaseResult$Companion;
 	public fun errorOrNull ()Lio/github/androidpoet/supabase/core/result/SupabaseError;
