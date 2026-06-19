@@ -44,13 +44,13 @@ public class PasskeysKmpAuthenticator(
 ) : PasskeyAuthenticator {
     override suspend fun createCredential(options: JsonObject): SupabaseResult<JsonObject> =
         when (val result = client.create(options.toString())) {
-            is PasskeyResult.Success -> SupabaseResult.Success(parseJsonObject(result.value.rawJson))
+            is PasskeyResult.Success -> parseCeremonyJson(result.value.rawJson)
             is PasskeyResult.Failure -> ceremonyFailure(result.error)
         }
 
     override suspend fun getCredential(options: JsonObject): SupabaseResult<JsonObject> =
         when (val result = client.authenticate(options.toString())) {
-            is PasskeyResult.Success -> SupabaseResult.Success(parseJsonObject(result.value.rawJson))
+            is PasskeyResult.Success -> parseCeremonyJson(result.value.rawJson)
             is PasskeyResult.Failure -> ceremonyFailure(result.error)
         }
 
@@ -74,6 +74,18 @@ public class PasskeysKmpAuthenticator(
         const val PASSKEY_CEREMONY_FAILED = "passkey_ceremony_failed"
         val json = Json { ignoreUnknownKeys = true }
 
-        fun parseJsonObject(raw: String): JsonObject = json.parseToJsonElement(raw).jsonObject
+        // The authenticator's rawJson should be W3C WebAuthn JSON, but a
+        // misbehaving platform could return malformed/non-object JSON. parsing
+        // must not throw out of this Result-first API — both
+        // Json.parseToJsonElement (SerializationException) and JsonElement.jsonObject
+        // (IllegalArgumentException) throw subclasses of IllegalArgumentException.
+        fun parseCeremonyJson(raw: String): SupabaseResult<JsonObject> =
+            try {
+                SupabaseResult.Success(json.parseToJsonElement(raw).jsonObject)
+            } catch (e: IllegalArgumentException) {
+                SupabaseResult.Failure(
+                    SupabaseError(message = "Malformed passkey ceremony response: ${e.message}", code = PASSKEY_CEREMONY_FAILED),
+                )
+            }
     }
 }

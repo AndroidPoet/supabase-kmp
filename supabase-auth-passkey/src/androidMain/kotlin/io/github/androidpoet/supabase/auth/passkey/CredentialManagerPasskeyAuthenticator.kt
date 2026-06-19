@@ -51,7 +51,7 @@ public class CredentialManagerPasskeyAuthenticator(
                         "Credential Manager returned an unexpected response type for passkey creation: " +
                             (response::class.simpleName ?: "unknown"),
                     )
-            SupabaseResult.Success(parseJsonObject(publicKeyResponse.registrationResponseJson))
+            parseCeremonyJson(publicKeyResponse.registrationResponseJson)
         } catch (e: CreateCredentialException) {
             ceremonyFailure(e)
         }
@@ -70,7 +70,7 @@ public class CredentialManagerPasskeyAuthenticator(
                         "Credential Manager returned an unexpected credential type for passkey assertion: " +
                             (response.credential::class.simpleName ?: "unknown"),
                     )
-            SupabaseResult.Success(parseJsonObject(publicKeyCredential.authenticationResponseJson))
+            parseCeremonyJson(publicKeyCredential.authenticationResponseJson)
         } catch (e: GetCredentialException) {
             ceremonyFailure(e)
         }
@@ -102,6 +102,17 @@ public class CredentialManagerPasskeyAuthenticator(
         const val PASSKEY_CEREMONY_FAILED = "passkey_ceremony_failed"
         val json = Json { ignoreUnknownKeys = true }
 
-        fun parseJsonObject(raw: String): JsonObject = json.parseToJsonElement(raw).jsonObject
+        // Parsing must not throw out of this Result-first API: a malformed response
+        // JSON would otherwise raise an IllegalArgumentException (or its
+        // SerializationException subclass) that the Credential-Manager-typed catch
+        // above does not cover. Map it to a Failure instead.
+        fun parseCeremonyJson(raw: String): SupabaseResult<JsonObject> =
+            try {
+                SupabaseResult.Success(json.parseToJsonElement(raw).jsonObject)
+            } catch (e: IllegalArgumentException) {
+                SupabaseResult.Failure(
+                    SupabaseError(message = "Malformed passkey ceremony response: ${e.message}", code = PASSKEY_CEREMONY_FAILED),
+                )
+            }
     }
 }

@@ -7,7 +7,9 @@ import androidx.credentials.CredentialManagerCallback
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
+import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import io.github.androidpoet.supabase.auth.models.OAuthProvider
@@ -72,8 +74,19 @@ private class AndroidGoogleAuthProvider(
 
                     override fun onError(e: GetCredentialException) {
                         if (continuation.isActive) {
+                            // Map cancellation / no-credential to stable, branchable codes so a
+                            // caller can treat a user-dismissed sheet as a clean no-op rather
+                            // than a hard error (mirrors the passkey authenticator's codes).
+                            val code =
+                                when (e) {
+                                    is GetCredentialCancellationException -> GOOGLE_SIGN_IN_CANCELLED
+                                    is NoCredentialException -> GOOGLE_NO_CREDENTIALS
+                                    else -> GOOGLE_SIGN_IN_FAILED
+                                }
                             continuation.resume(
-                                SupabaseResult.Failure(SupabaseError(message = "Google sign-in failed: ${e.message}")),
+                                SupabaseResult.Failure(
+                                    SupabaseError(message = "Google sign-in failed: ${e.message}", code = code),
+                                ),
                             )
                         }
                     }
@@ -90,16 +103,28 @@ private class AndroidGoogleAuthProvider(
         if (!isGoogleIdToken) {
             return SupabaseResult.Failure(SupabaseError(message = "Unexpected credential type: ${credential.type}"))
         }
-        val googleIdToken = GoogleIdTokenCredential.createFrom((credential as CustomCredential).data)
-        return SupabaseResult.Success(
-            NativeAuthCredential(
-                provider = OAuthProvider.GOOGLE,
-                idToken = googleIdToken.idToken,
-                nonce = config.nonce,
-            ),
-        )
+        // createFrom throws GoogleIdTokenParsingException on a malformed credential.
+        // This runs on the Credential Manager callback executor, so an escaping throw
+        // would never reach the continuation (the sign-in would hang); map it to a
+        // Failure to honour the Result-first contract.
+        return try {
+            val googleIdToken = GoogleIdTokenCredential.createFrom(credential.data)
+            SupabaseResult.Success(
+                NativeAuthCredential(
+                    provider = OAuthProvider.GOOGLE,
+                    idToken = googleIdToken.idToken,
+                    nonce = config.nonce,
+                ),
+            )
+        } catch (e: Exception) {
+            SupabaseResult.Failure(SupabaseError(message = "Google sign-in failed: ${e.message}", code = GOOGLE_SIGN_IN_FAILED))
+        }
     }
 }
+
+private const val GOOGLE_SIGN_IN_CANCELLED = "google_sign_in_cancelled"
+private const val GOOGLE_NO_CREDENTIALS = "google_no_credentials"
+private const val GOOGLE_SIGN_IN_FAILED = "google_sign_in_failed"
 
 private fun sha256Hex(input: String): String =
     MessageDigest
