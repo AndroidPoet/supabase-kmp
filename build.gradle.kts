@@ -29,6 +29,7 @@ val publishedModules =
         "supabase-storage",
         "supabase-realtime",
         "supabase-functions",
+        "supabase-e2ee",
     )
 
 // Validate the binary (ABI) compatibility of every published module so an

@@ -9,6 +9,7 @@ export default {
   realtime: 'Realtime',
   functions: 'Edge Functions',
   paging: 'Pagination',
+  encryption: 'End-to-End Encryption',
   'vector-search': 'Vector Search',
   platforms: 'Platforms',
   github_link: {

@@ -1,0 +1,24 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, linuxX64, macosArm64, macosX64, mingwX64, tvosArm64, tvosSimulatorArm64, tvosX64, wasmJs, watchosArm64, watchosSimulatorArm64, watchosX64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <supabase-kmp:supabase-e2ee>
+final class io.github.androidpoet.supabase.e2ee/E2eeKeyPair { // io.github.androidpoet.supabase.e2ee/E2eeKeyPair|null[0]
+    final val publicKey // io.github.androidpoet.supabase.e2ee/E2eeKeyPair.publicKey|{}publicKey[0]
+        final fun <get-publicKey>(): kotlin/ByteArray // io.github.androidpoet.supabase.e2ee/E2eeKeyPair.publicKey.<get-publicKey>|<get-publicKey>(){}[0]
+}
+
+final class io.github.androidpoet.supabase.e2ee/E2eeSession { // io.github.androidpoet.supabase.e2ee/E2eeSession|null[0]
+    final suspend fun decrypt(kotlin/ByteArray): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/ByteArray> // io.github.androidpoet.supabase.e2ee/E2eeSession.decrypt|decrypt(kotlin.ByteArray){}[0]
+    final suspend fun decryptToString(kotlin/ByteArray): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/String> // io.github.androidpoet.supabase.e2ee/E2eeSession.decryptToString|decryptToString(kotlin.ByteArray){}[0]
+    final suspend fun encrypt(kotlin/ByteArray): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/ByteArray> // io.github.androidpoet.supabase.e2ee/E2eeSession.encrypt|encrypt(kotlin.ByteArray){}[0]
+    final suspend fun encrypt(kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/ByteArray> // io.github.androidpoet.supabase.e2ee/E2eeSession.encrypt|encrypt(kotlin.String){}[0]
+}
+
+final suspend fun (io.github.androidpoet.supabase.e2ee/E2eeKeyPair).io.github.androidpoet.supabase.e2ee/deriveSession(kotlin/ByteArray): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.e2ee/E2eeSession> // io.github.androidpoet.supabase.e2ee/deriveSession|deriveSession@io.github.androidpoet.supabase.e2ee.E2eeKeyPair(kotlin.ByteArray){}[0]
+final suspend fun io.github.androidpoet.supabase.e2ee/generateE2eeKeyPair(): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.e2ee/E2eeKeyPair> // io.github.androidpoet.supabase.e2ee/generateE2eeKeyPair|generateE2eeKeyPair(){}[0]
+final suspend inline fun <#A: reified kotlin/Any?> (io.github.androidpoet.supabase.e2ee/E2eeSession).io.github.androidpoet.supabase.e2ee/decryptValue(kotlin/ByteArray, kotlinx.serialization.json/Json = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<#A> // io.github.androidpoet.supabase.e2ee/decryptValue|decryptValue@io.github.androidpoet.supabase.e2ee.E2eeSession(kotlin.ByteArray;kotlinx.serialization.json.Json){0§<kotlin.Any?>}[0]
+final suspend inline fun <#A: reified kotlin/Any?> (io.github.androidpoet.supabase.e2ee/E2eeSession).io.github.androidpoet.supabase.e2ee/encryptValue(#A, kotlinx.serialization.json/Json = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/ByteArray> // io.github.androidpoet.supabase.e2ee/encryptValue|encryptValue@io.github.androidpoet.supabase.e2ee.E2eeSession(0:0;kotlinx.serialization.json.Json){0§<kotlin.Any?>}[0]

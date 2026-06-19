@@ -1,0 +1,16 @@
+public final class io/github/androidpoet/supabase/e2ee/E2eeKeyPair {
+	public final fun getPublicKey ()[B
+}
+
+public final class io/github/androidpoet/supabase/e2ee/E2eeKt {
+	public static final fun deriveSession (Lio/github/androidpoet/supabase/e2ee/E2eeKeyPair;[BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun generateE2eeKeyPair (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/github/androidpoet/supabase/e2ee/E2eeSession {
+	public final fun decrypt ([BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun decryptToString ([BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun encrypt (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun encrypt ([BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+

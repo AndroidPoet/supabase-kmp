@@ -28,6 +28,7 @@ Full guides for [Authentication](https://androidpoet.github.io/supabase-kmp/auth
 - **Session management** — Single-flight auto-refresh, pluggable persistence (`SessionStorage`), `SessionState` via `StateFlow`
 - **Realtime WebSocket** — Phoenix protocol with auto-reconnection, exponential backoff, presence, offline send buffering
 - **Secure by default** — Credential headers redacted from logs, smart retries (`429`/`5xx` + `Retry-After`)
+- **End-to-end encryption** — Optional `supabase-e2ee`: derive a shared AES-256-GCM key on-device (ECDH → HKDF) so Supabase only ever stores ciphertext
 - **16 platform targets** — Android, iOS, macOS, tvOS, watchOS, JVM, Linux, Windows, and WasmJs
 
 ## Setup
@@ -62,7 +63,7 @@ kotlin {
 }
 ```
 
-> Only depend on what you use — each module is published independently. Optional add-ons: `supabase-auth-google`, `supabase-auth-apple`, `supabase-auth-passkey` (native sign-in) and `supabase-auth-admin` (service-role; server-side only).
+> Only depend on what you use — each module is published independently. Optional add-ons: `supabase-auth-google`, `supabase-auth-apple`, `supabase-auth-passkey` (native sign-in), `supabase-auth-admin` (service-role; server-side only) and `supabase-e2ee` (client-side end-to-end encryption).
 
 ## Quick start
 
@@ -121,6 +122,7 @@ Errors carry a `category` (`Conflict`, `NotFound`, `Unauthorized`, `RateLimited`
 | **supabase-storage** | `io.github.androidpoet:supabase-storage` | Bucket CRUD, file upload/download, signed & public URLs |
 | **supabase-realtime** | `io.github.androidpoet:supabase-realtime` | WebSocket (Phoenix protocol), auto-reconnect, broadcast, presence |
 | **supabase-functions** | `io.github.androidpoet:supabase-functions` | Edge function invocation with typed responses |
+| **supabase-e2ee** | `io.github.androidpoet:supabase-e2ee` | Optional client-side E2E encryption (ECDH → HKDF → AES-256-GCM) |
 
 ## Targets
 

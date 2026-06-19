@@ -1,0 +1,156 @@
+---
+title: End-to-End Encryption
+description: Opt-in client-side end-to-end encryption for Kotlin Multiplatform — derive a shared AES-256-GCM key with ECDH, encrypt any data so Supabase only ever stores ciphertext.
+---
+
+import { Callout } from 'nextra/components'
+
+# End-to-End Encryption
+
+Supabase encrypts your data in transit (TLS) and at rest, but the server still
+sees your rows in plaintext — it has to, to filter and index them. For a chat app,
+a notes app, or anything where *only the two ends* should ever read the content,
+that isn't enough. **End-to-end encryption (E2EE)** means the data is encrypted on
+the sender's device and decrypted on the receiver's device, and the key never
+leaves either device. Supabase becomes a blind courier: it stores and relays
+ciphertext it cannot read.
+
+The optional `supabase-e2ee` module gives you exactly that — a small, no-magic
+helper that encrypts **any data** with keys derived on-device.
+
+<Callout type="warning">
+  This is a building block, not a full secure-messaging protocol. It gives you a
+  shared symmetric key and authenticated encryption. It does **not** implement
+  forward secrecy (key ratcheting), multi-device key sync, or identity
+  verification — for those you build on top. See [Threat model](#threat-model).
+</Callout>
+
+## Install
+
+```toml
+[libraries]
+supabase-e2ee = { module = "io.github.androidpoet:supabase-e2ee", version.ref = "supabase-kmp" }
+```
+
+```kotlin
+commonMain.dependencies {
+    implementation(libs.supabase.e2ee)
+}
+```
+
+It's a standalone module — it depends only on `supabase-core` (for
+`SupabaseResult`) and a multiplatform crypto backend, so it works on every target
+the SDK supports, including WebAssembly.
+
+## What is "the key"?
+
+This is the part people get wrong. The key is **never** stored on the server, and
+neither side ever transmits it. Each side derives the *same* key locally:
+
+1. Each device generates an **ECDH key pair** (curve P-256). The **public** key is
+   safe to share — publish it in a Supabase table. The **private** key stays on
+   the device.
+2. To talk to a peer, you fetch *their* public key and combine it with *your*
+   private key. Elliptic-curve Diffie-Hellman (ECDH) has a magic property: your
+   `(yourPrivate, theirPublic)` produces the **exact same shared secret** as their
+   `(theirPrivate, yourPublic)`. Both sides arrive at the same bytes without that
+   secret ever crossing the wire.
+3. That raw shared secret is **not** used as the key directly (that would be
+   insecure). It's run through **HKDF-SHA256** to derive a clean, uniformly random
+   **AES-256-GCM** key. That AES key is what encrypts your messages.
+
+So "the key" is a 256-bit AES-GCM key that exists only in the RAM of the two
+devices. The server stores public keys and ciphertext — never the key, never the
+plaintext.
+
+## Encrypt and decrypt
+
+Generate a key pair once per device, publish the public key, and derive a session
+when you want to talk to someone:
+
+```kotlin
+// On each device, once. Save the private key in secure storage; publish publicKey.
+val mine = generateE2eeKeyPair().getOrThrow()
+// e.g. database.insert("device_keys", mapOf("user_id" to me, "public_key" to mine.publicKey.toBase64()))
+
+// Fetch the peer's published public key, then derive the shared session.
+val session = mine.deriveSession(peerPublicKey).getOrThrow()
+
+// Encrypt — the result is ciphertext you can store/send as-is (the nonce is embedded).
+val ciphertext = session.encrypt("hello, this is private").getOrThrow()
+
+// On the other device (which derived the same session from your public key):
+val text = session.decryptToString(ciphertext).getOrThrow()   // "hello, this is private"
+```
+
+Every call returns a `SupabaseResult` — a wrong key, tampered ciphertext, or a
+backend error comes back as `Failure`, never an uncaught exception.
+
+## Works with any data
+
+The session encrypts raw bytes, strings, or any `@Serializable` value:
+
+```kotlin
+@Serializable
+data class ChatMessage(val from: String, val body: String, val sentAt: Long)
+
+val msg = ChatMessage("alice", "see you at 6", 1_700_000_000)
+
+// Serializes to JSON, then encrypts.
+val blob = session.encryptValue(msg).getOrThrow()
+
+// Decrypts, then deserializes back into your type.
+val restored = session.decryptValue<ChatMessage>(blob).getOrThrow()
+```
+
+| You have | Encrypt with | Decrypt with |
+| --- | --- | --- |
+| `ByteArray` | `encrypt(bytes)` | `decrypt(ciphertext)` |
+| `String` | `encrypt(text)` | `decryptToString(ciphertext)` |
+| `@Serializable` value | `encryptValue(value)` | `decryptValue<T>(ciphertext)` |
+
+Store the resulting `ByteArray` (or its Base64) in any column, file, or realtime
+broadcast — Supabase never needs to understand it.
+
+## How it fits a Supabase chat app
+
+```
+┌── Device A ──┐                Supabase                ┌── Device B ──┐
+│ keypair A    │  publish pubA  ┌──────────────┐ pubB   │ keypair B    │
+│ derive(pubB) │ ─────────────► │ device_keys  │ ◄───── │ derive(pubA) │
+│   = key K    │                │ messages     │        │   = key K    │
+│ encrypt(K)──────ciphertext───►│ (ciphertext) │───────►│ decrypt(K)   │
+└──────────────┘                └──────────────┘        └──────────────┘
+        both sides independently arrive at the SAME key K
+```
+
+- Store each user's **public** key in a table; everyone can read it.
+- Keep each device's **private** key in platform secure storage — the module is
+  deliberately BYO-storage and won't persist keys for you.
+- Send `encryptValue(message)` output through a normal table insert or a realtime
+  broadcast. The server, your logs, and any DB admin only ever see ciphertext.
+
+## Threat model
+
+What this **does** protect against:
+
+- A compromised or curious server / database operator reading message content.
+- Content leaking through logs, backups, or replication — it's all ciphertext.
+- Tampering: AES-GCM is authenticated, so altered ciphertext fails to decrypt.
+
+What it does **not** do (build these on top if you need them):
+
+- **Forward secrecy** — one long-lived key pair per device means a leaked private
+  key can decrypt past messages. Rotate keys, or layer a ratchet on top.
+- **Identity verification (MITM)** — fetching a public key from the server trusts
+  the server to hand you the *right* one. For sensitive use, verify keys
+  out-of-band (QR code, safety number).
+- **Key storage** — you choose where the private key lives; choose platform secure
+  storage, not plaintext.
+
+<Callout type="info">
+  The construction — ECDH key agreement → HKDF-SHA256 → AES-256-GCM, never using
+  the raw shared secret as a key — follows standard authenticated-messaging
+  practice. P-256 is used (over X25519) because it's supported by every platform
+  backend, including WebCrypto on Wasm.
+</Callout>

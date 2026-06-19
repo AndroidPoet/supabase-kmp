@@ -15,6 +15,12 @@
   `listOrThrow`, `listUsersOrThrow`.
 - **Flow bridges** — `SupabaseResult.asFlow()`, `supabaseFlow { }` (keeps the
   Result) and `dataFlow { }` (plain values, throws) in `supabase-core`.
+- **End-to-end encryption** — new optional `supabase-e2ee` module. Derive a shared
+  AES-256-GCM session on-device via ECDH (P-256) → HKDF-SHA256 — the key never
+  leaves the device and Supabase only stores ciphertext. Encrypts `ByteArray`,
+  `String` or any `@Serializable` value (`generateE2eeKeyPair`, `deriveSession`,
+  `encrypt`/`decrypt`, `encryptValue`/`decryptValue`). Result-first, all targets
+  incl. Wasm. See the new **End-to-End Encryption** docs page.
 
 ## 0.7.0 — 2026-06-19
 

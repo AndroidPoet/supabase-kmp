@@ -27,7 +27,13 @@ include(":supabase-database")
 include(":supabase-storage")
 include(":supabase-realtime")
 include(":supabase-functions")
+include(":supabase-e2ee")
 include(":e2e-tests")
 include(":samples:chat-compose")
-include(":samples:desktop-demo")
 include(":samples:passkey-web")
+
+// Local-only JVM desktop demo: gitignored and not pushed to GitHub. Only
+// include it when the module is present on disk so a fresh clone still builds.
+if (rootDir.resolve("samples/desktop-demo/build.gradle.kts").exists()) {
+    include(":samples:desktop-demo")
+}
