@@ -1,0 +1,212 @@
+---
+title: Pagination
+description: Load long lists a page at a time from Kotlin — a built-in demand-driven Paginator for Database, Storage and Admin, plus a recipe for androidx Paging 3 with Compose.
+---
+
+import { Callout } from 'nextra/components'
+
+# Pagination
+
+Most lists are too long to load at once — a table of orders, a bucket of files,
+your whole user base. **Pagination** means fetching them in small chunks ("pages")
+and asking for the next chunk only when you actually need it (when the user
+scrolls near the bottom). This page shows two ways to do that:
+
+1. A **built-in `Paginator`** — works everywhere, no extra dependencies. Reach for
+   this first.
+2. An **androidx Paging 3** recipe — for Compose apps that already use Paging 3
+   and want `LazyColumn` integration, prefetch and placeholders.
+
+Both are built on the same idea: a function that, given an `offset` and a `limit`,
+returns one page of rows.
+
+## Plain reads vs. results
+
+Every read in the library returns a `SupabaseResult` by default, so you handle
+success and failure explicitly. For pagination that wrapper just gets in the way —
+a page fetcher wants to *return the rows* and let errors travel separately. So the
+paginated endpoints each have a **plain variant** that returns the list directly
+and throws on failure:
+
+| Default (returns `SupabaseResult`) | Plain (returns the list, throws) |
+| --- | --- |
+| `database.selectTyped<T>(…)` | `database.selectTypedOrThrow<T>(…)` |
+| `storage.list(…)` | `storage.listOrThrow(…)` |
+| `admin.listUsers(…)` | `admin.listUsersOrThrow(…)` |
+
+You rarely call these yourself — the `Paginator` factories below use them under the
+hood — but they're there when you want raw data and prefer `try`/`catch`.
+
+## The built-in `Paginator`
+
+A `Paginator` is **demand-driven**: nothing loads until you call `loadNext()`, and
+each call appends one more page. It exposes everything a list screen needs as
+`StateFlow`s you can observe:
+
+- `items` — the rows loaded so far (grows with each page)
+- `isLoading` — whether a page is in flight
+- `endReached` — `true` once there are no more rows
+- `error` — the last failure, or `null`
+
+Plus `loadNext()` to fetch the next page and `refresh()` to start over (for
+pull-to-refresh).
+
+### Database
+
+```kotlin
+val pager = database.paginator<Todo>(table = "todos", pageSize = 20) {
+    order("created_at", ascending = false)   // always sort by a stable column
+}
+
+pager.loadNext()        // load the first page
+pager.items             // StateFlow<List<Todo>> — observe this in your UI
+```
+
+<Callout type="warning">
+  Always `order(...)` by a stable column. Without a fixed sort, the database can
+  return rows in a different order between requests, so later pages may repeat or
+  skip rows. It's the one thing you must remember.
+</Callout>
+
+### Storage
+
+```kotlin
+val pager = storage.listPaginator(bucket = "avatars", prefix = "2026/", pageSize = 100)
+pager.loadNext()
+pager.items   // StateFlow<List<FileObject>>
+```
+
+### Admin (users)
+
+GoTrue's admin list is page-based; the paginator converts offsets for you.
+
+```kotlin
+val pager = admin.usersPaginator(perPage = 50)
+pager.loadNext()
+pager.items   // StateFlow<List<User>>
+```
+
+### Driving it from Compose
+
+Observe `items` as state, and call `loadNext()` when the last row appears:
+
+```kotlin
+@Composable
+fun TodoList(pager: Paginator<Todo>) {
+    val todos by pager.items.collectAsState()
+    val isLoading by pager.isLoading.collectAsState()
+
+    LazyColumn {
+        itemsIndexed(todos) { index, todo ->
+            TodoRow(todo)
+            // near the end? ask for more
+            if (index >= todos.lastIndex - 3) {
+                LaunchedEffect(index) { pager.loadNext() }
+            }
+        }
+        if (isLoading) item { LoadingRow() }
+    }
+}
+```
+
+That's the whole feature: build a paginator, observe `items`, call `loadNext()`.
+
+## Using androidx Paging 3
+
+If your Compose app already uses Paging 3, you can plug Supabase into it. The
+library deliberately does **not** depend on `androidx.paging` (it's Android/Compose
+opinionated and would force the dependency on every consumer), so the small
+`PagingSource` lives in *your* app — where you already have the dependency. Write
+it once and reuse it for any table.
+
+<Callout type="info">
+  Your app adds the dependency: `androidx.paging:paging-common` (and
+  `androidx.paging:paging-compose` for the UI). The library stays dependency-free.
+</Callout>
+
+```kotlin
+// Write once in your app — generic, not tied to any table.
+class OffsetPagingSource<T : Any>(
+    private val fetch: suspend (offset: Int, limit: Int) -> List<T>,
+) : PagingSource<Int, T>() {
+    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, T> {
+        val offset = params.key ?: 0
+        return try {
+            val rows = fetch(offset, params.loadSize)
+            LoadResult.Page(
+                data = rows,
+                prevKey = if (offset == 0) null else maxOf(0, offset - params.loadSize),
+                nextKey = if (rows.size < params.loadSize) null else offset + rows.size,
+            )
+        } catch (t: Throwable) {
+            LoadResult.Error(t)
+        }
+    }
+
+    override fun getRefreshKey(state: PagingState<Int, T>): Int? =
+        state.anchorPosition?.let { state.closestPageToPosition(it)?.nextKey?.minus(state.config.pageSize) }
+}
+```
+
+Wire Supabase in with a plain read — the only Supabase-specific line:
+
+```kotlin
+class TodosViewModel(private val database: DatabaseClient) : ViewModel() {
+    val todos = Pager(PagingConfig(pageSize = 20)) {
+        OffsetPagingSource { offset, limit ->
+            database.selectTypedOrThrow<Todo>("todos") {
+                order("created_at", ascending = false)
+                limit(limit)
+                offset(offset)
+            }
+        }
+    }.flow.cachedIn(viewModelScope)
+}
+```
+
+```kotlin
+@Composable
+fun TodoScreen(viewModel: TodosViewModel) {
+    val todos = viewModel.todos.collectAsLazyPagingItems()
+    LazyColumn {
+        items(todos.itemCount, key = todos.itemKey { it.id }) { i ->
+            todos[i]?.let { TodoRow(it) }
+        }
+    }
+}
+```
+
+You get Paging 3's prefetch, placeholders and `LoadState` retry; the library stays
+thin.
+
+## Which one should I use?
+
+| | Built-in `Paginator` | androidx Paging 3 |
+| --- | --- | --- |
+| Setup | nothing — included | app adds `androidx.paging` + one `PagingSource` class |
+| Targets | all 16 | the ~12 Paging 3 publishes |
+| You get | `items`/`isLoading`/`endReached`/`error` + `loadNext` | + auto-prefetch, placeholders, `LazyColumn` binding |
+| Best for | most apps, all platforms | Compose apps already on Paging 3 |
+
+## Large or live tables: keyset paging
+
+Offset paging (`limit`/`offset`) is simple but slows down deep in big tables, and
+rows inserted while you scroll can shift the windows. For large or
+frequently-changing data, prefer **keyset** (a.k.a. seek) paging: order by an
+indexed column and ask for rows *after* the last one you saw. Build a `Paginator`
+directly and carry the cursor in the closure, ignoring `offset`:
+
+```kotlin
+var lastCreatedAt: String? = null
+
+val pager = Paginator<Todo>(pageSize = 20) { _, limit ->
+    database.selectTypedOrThrow<Todo>("todos") {
+        order("created_at", ascending = false)
+        lastCreatedAt?.let { lt("created_at", it) }   // rows older than the last seen
+        limit(limit)
+    }.also { page -> lastCreatedAt = page.lastOrNull()?.createdAt ?: lastCreatedAt }
+}
+```
+
+This stays fast no matter how deep you scroll, and won't duplicate or skip rows
+when the table changes underneath you.

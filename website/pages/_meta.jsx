@@ -8,6 +8,7 @@ export default {
   storage: 'Storage',
   realtime: 'Realtime',
   functions: 'Edge Functions',
+  paging: 'Pagination',
   'vector-search': 'Vector Search',
   platforms: 'Platforms',
   github_link: {

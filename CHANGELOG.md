@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **Pagination** — a demand-driven `Paginator<T>` in `supabase-core` (exposes
+  `items`/`isLoading`/`endReached`/`error` as `StateFlow`s, with `loadNext()` and
+  `refresh()`), plus in-module factories: `DatabaseClient.paginator()`,
+  `StorageClient.listPaginator()` and `AuthAdminClient.usersPaginator()`. No new
+  dependencies; works on all targets. See the new **Pagination** docs page
+  (includes an androidx Paging 3 recipe).
+- **Plain reads** — no-`SupabaseResult` variants for the paginated endpoints that
+  return the list directly and throw on failure: `selectTypedOrThrow`,
+  `listOrThrow`, `listUsersOrThrow`.
+- **Flow bridges** — `SupabaseResult.asFlow()`, `supabaseFlow { }` (keeps the
+  Result) and `dataFlow { }` (plain values, throws) in `supabase-core`.
+
 ## 0.7.0 — 2026-06-19
 
 Hardening release driven by a full audit of `supabase-auth`/`supabase-auth-admin`
