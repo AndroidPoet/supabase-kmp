@@ -24,6 +24,7 @@ Full guides for [Authentication](https://androidpoet.github.io/supabase-kmp/auth
 - **Value class IDs** — `UserId`, `BucketId`, `SessionId`, `ChannelId` prevent mixups at compile time
 - **PostgREST filter DSL** — `eq`, `neq`, `gt`, `like`, `ilike`, `in`, `is`, `textSearch`, `contains`, and more
 - **OAuth (17 providers) + MFA** — TOTP and phone-based multi-factor auth with CSPRNG-backed PKCE
+- **Native passkeys** — cross-platform WebAuthn ceremony (Android, iOS, macOS, JVM, Wasm) behind a pluggable authenticator, or bring your own
 - **Session management** — Single-flight auto-refresh, pluggable persistence (`SessionStorage`), `SessionState` via `StateFlow`
 - **Realtime WebSocket** — Phoenix protocol with auto-reconnection, exponential backoff, presence, offline send buffering
 - **Secure by default** — Credential headers redacted from logs, smart retries (`429`/`5xx` + `Retry-After`)
@@ -114,7 +115,7 @@ Errors carry a `category` (`Conflict`, `NotFound`, `Unauthorized`, `RateLimited`
 | **supabase-auth** | `io.github.androidpoet:supabase-auth` | Email, phone, OTP, OAuth (17 providers), MFA, PKCE, session management, passkeys |
 | **supabase-auth-google** | `io.github.androidpoet:supabase-auth-google` | Native Google sign-in (Android Credential Manager) |
 | **supabase-auth-apple** | `io.github.androidpoet:supabase-auth-apple` | Native Sign in with Apple (AuthenticationServices) |
-| **supabase-auth-passkey** | `io.github.androidpoet:supabase-auth-passkey` | Passkey/WebAuthn ceremony driver (Android Credential Manager) |
+| **supabase-auth-passkey** | `io.github.androidpoet:supabase-auth-passkey` | Passkey/WebAuthn ceremony driver — native on Android, iOS, macOS, JVM & Wasm (or bring your own) |
 | **supabase-auth-admin** | `io.github.androidpoet:supabase-auth-admin` | Service-role admin APIs (server-side only) |
 | **supabase-database** | `io.github.androidpoet:supabase-database` | PostgREST CRUD, RPC, typed filter extensions |
 | **supabase-storage** | `io.github.androidpoet:supabase-storage` | Bucket CRUD, file upload/download, signed & public URLs |
