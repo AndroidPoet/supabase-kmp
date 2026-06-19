@@ -1,5 +1,42 @@
 # Changelog
 
+## 0.7.0 — 2026-06-19
+
+Hardening release driven by a full audit of `supabase-auth`/`supabase-auth-admin`
+against the official Auth (GoTrue) OpenAPI spec, now pinned into the repo. Every
+change is additive — no breaking changes.
+
+### Added
+
+- **Auth** — `channel` (`sms`/`whatsapp`) on `signUpWithPhone` and phone-change
+  `updateUser`; `clientId`/`issuer` on `signInWithIdToken` (required to verify
+  custom OIDC issuers); `inviteToken` on `signInWithOAuth`/`getOAuthSignInUrl`;
+  `redirectTo` on `verifyOtp`; PKCE on `linkIdentity` and `retrieveSsoUrl`, plus
+  `captchaToken` and a defaulted `skip_http_redirect=true` on SSO so the URL call
+  returns JSON instead of a 303 redirect; `webauthn` verification on `mfaVerify`
+  (new `MfaWebauthnVerification` model).
+- **Auth Admin** — `auditLogEvents(page, perPage)` returning `AuditLogEntry`;
+  `updateFactor(userId, factorId, friendlyName)` returning the full `MfaFactor`.
+
+### Fixed
+
+- **Realtime** — channels now rejoin on `phx_error`; hardened the
+  connect/disconnect/reconnect lifecycle against races (mutex-guarded, intentional
+  disconnect re-checked, URL api-key encoded).
+- **Auth** — PKCE is now emitted on sign-up, magic-link and password-recovery
+  flows; `resend` sends `redirect_to` as a query param (not a dead body field) and
+  rejects OTP types `/resend` doesn't accept.
+- **Core/Database** — error responses now carry the HTTP status into error
+  categorization and parse leniently; corrected the PostgREST `EXPLAIN` plan media
+  type.
+
+### Tooling
+
+- Pinned the official Auth OpenAPI spec (`contracts/auth.openapi.yaml`) with a
+  full coverage matrix, a machine-readable coverage manifest, and a `spec-drift`
+  CI workflow (coverage gate + weekly `oasdiff` upstream diff) so endpoint
+  coverage can no longer drift silently.
+
 ## 0.6.0 — 2026-06-19
 
 ### Changed (breaking)
