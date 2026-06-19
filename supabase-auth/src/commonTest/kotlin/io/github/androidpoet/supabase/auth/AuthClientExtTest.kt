@@ -377,6 +377,19 @@ class AuthClientExtTest {
     }
 
     @Test
+    fun test_parseJwtClaims_rejectsNonThreeSegmentTokens() {
+        val header = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0"
+        val payload = "eyJzdWIiOiJ1c2VyLTEifQ"
+
+        // A 2-segment unsigned token and a 5-segment JWE-shaped token are not the
+        // JWS the SDK reads; both must fail rather than decode the wrong segment.
+        assertTrue(parseJwtClaims("$header.$payload") is SupabaseResult.Failure)
+        assertTrue(parseJwtClaims("$header.$payload.iv.ct.tag") is SupabaseResult.Failure)
+        // The canonical 3-segment form (empty signature allowed) still parses.
+        assertTrue(parseJwtClaims("$header.$payload.") is SupabaseResult.Success)
+    }
+
+    @Test
     fun test_parseCurrentSessionJwtClaims_usesSessionAccessToken() =
         runTest {
             val header = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0"

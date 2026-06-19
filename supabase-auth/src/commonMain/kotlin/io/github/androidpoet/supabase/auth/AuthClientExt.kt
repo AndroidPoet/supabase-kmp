@@ -851,7 +851,10 @@ private fun decodeQueryComponent(input: String): String {
  */
 public fun parseJwtClaims(jwt: String): SupabaseResult<JsonObject> {
     val parts = jwt.split('.')
-    if (parts.size < 2) {
+    // A JWS is exactly three dot-separated segments (the signature may be empty
+    // for an unverified token, e.g. "header.payload."). Reject anything else —
+    // notably a 5-segment JWE, whose parts[1] is the encrypted key, not claims.
+    if (parts.size != JWT_PART_COUNT) {
         return SupabaseResult.Failure(SupabaseError(message = "Invalid JWT format"))
     }
     val payload =
@@ -901,7 +904,7 @@ internal fun accessTokenExpiryEpochSeconds(accessToken: String): Long? =
 
 private fun decodeJwt(jwt: String): SupabaseResult<JwtClaimsResult> {
     val parts = jwt.split('.')
-    if (parts.size < 2) {
+    if (parts.size != JWT_PART_COUNT) {
         return SupabaseResult.Failure(SupabaseError(message = "Invalid JWT format"))
     }
     val header =
@@ -1096,7 +1099,7 @@ private suspend fun AuthClient.buildEs256Material(
 ): Es256Material? {
     val parts = jwt.split('.')
     val kid = header.keyId
-    if (header.algorithm != ES256_ALG || kid == null || parts.size < JWT_PART_COUNT) return null
+    if (header.algorithm != ES256_ALG || kid == null || parts.size != JWT_PART_COUNT) return null
     val publicKey = resolveJwk(kid)?.let(::ecPublicKeyBytes) ?: return null
     val signature = decodeBase64UrlBytes(parts[2]) ?: return null
     return Es256Material(
