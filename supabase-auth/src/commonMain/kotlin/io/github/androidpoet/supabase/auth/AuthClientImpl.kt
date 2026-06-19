@@ -21,6 +21,7 @@ import io.github.androidpoet.supabase.auth.models.MfaListFactorsResponse
 import io.github.androidpoet.supabase.auth.models.MfaUnenrollResponse
 import io.github.androidpoet.supabase.auth.models.MfaVerifyRequest
 import io.github.androidpoet.supabase.auth.models.MfaVerifyResponse
+import io.github.androidpoet.supabase.auth.models.MfaWebauthnVerification
 import io.github.androidpoet.supabase.auth.models.OAuthAuthorizationDetails
 import io.github.androidpoet.supabase.auth.models.OAuthConsentRequest
 import io.github.androidpoet.supabase.auth.models.OAuthGrant
@@ -109,6 +110,7 @@ internal class AuthClientImpl(
         redirectTo: String?,
         captchaToken: String?,
         pkceParams: PkceParams?,
+        channel: String?,
     ): SupabaseResult<Session> {
         if (phone.isBlank()) return SupabaseResult.Failure(SupabaseError("phone must not be blank"))
         val body =
@@ -120,6 +122,7 @@ internal class AuthClientImpl(
                     captchaToken = captchaToken,
                     codeChallenge = pkceParams?.codeChallenge,
                     codeChallengeMethod = pkceParams?.codeChallengeMethod,
+                    channel = channel,
                 ),
             )
         return client.post(signUpEndpoint(redirectTo), body = body).deserialize()
@@ -191,6 +194,8 @@ internal class AuthClientImpl(
         accessToken: String?,
         nonce: String?,
         captchaToken: String?,
+        clientId: String?,
+        issuer: String?,
     ): SupabaseResult<Session> {
         val body =
             defaultJson.encodeToString(
@@ -200,6 +205,8 @@ internal class AuthClientImpl(
                     accessToken = accessToken,
                     nonce = nonce,
                     captchaToken = captchaToken,
+                    clientId = clientId,
+                    issuer = issuer,
                 ),
             )
         return client.post("${AuthPaths.TOKEN}?grant_type=id_token", body = body).deserialize()
@@ -255,6 +262,7 @@ internal class AuthClientImpl(
         token: String,
         type: OtpType,
         captchaToken: String?,
+        redirectTo: String?,
     ): SupabaseResult<Session> {
         val body =
             defaultJson.encodeToString(
@@ -264,6 +272,7 @@ internal class AuthClientImpl(
                     token = token,
                     type = type,
                     captchaToken = captchaToken,
+                    redirectTo = redirectTo,
                 ),
             )
         return verifyOtpSessionFromRawResponse(client.post(AuthPaths.VERIFY, body = body))
@@ -291,6 +300,7 @@ internal class AuthClientImpl(
         token: String,
         type: OtpType,
         captchaToken: String?,
+        redirectTo: String?,
     ): SupabaseResult<OtpVerifyResult> {
         val body =
             defaultJson.encodeToString(
@@ -300,6 +310,7 @@ internal class AuthClientImpl(
                     token = token,
                     type = type,
                     captchaToken = captchaToken,
+                    redirectTo = redirectTo,
                 ),
             )
         return verifyOtpResultFromRawResponse(client.post(AuthPaths.VERIFY, body = body))
@@ -327,6 +338,7 @@ internal class AuthClientImpl(
         captchaToken: String?,
         redirectTo: String?,
     ): SupabaseResult<Unit> {
+        resendTypeGuard(type)?.let { return it }
         val body =
             defaultJson.encodeToString(
                 ResendOtpRequest(
@@ -353,6 +365,7 @@ internal class AuthClientImpl(
         phone: String,
         captchaToken: String?,
     ): SupabaseResult<Unit> {
+        resendTypeGuard(type)?.let { return it }
         val body =
             defaultJson.encodeToString(
                 ResendOtpRequest(
@@ -488,6 +501,7 @@ internal class AuthClientImpl(
         redirectTo: String?,
         scopes: List<String>,
         queryParams: Map<String, String>,
+        pkceParams: PkceParams?,
     ): SupabaseResult<LinkIdentityResponse> {
         val endpoint =
             buildString {
@@ -500,6 +514,13 @@ internal class AuthClientImpl(
                 if (scopes.isNotEmpty()) {
                     append("&scopes=")
                     append(urlEncode(scopes.joinToString(" ")))
+                }
+                // Mirror getOAuthSignInUrl: emit the PKCE challenge into the authorize URL.
+                if (pkceParams != null) {
+                    append("&code_challenge=")
+                    append(urlEncode(pkceParams.codeChallenge))
+                    append("&code_challenge_method=")
+                    append(pkceParams.codeChallengeMethod)
                 }
                 for ((key, value) in queryParams) {
                     append("&")
@@ -551,6 +572,8 @@ internal class AuthClientImpl(
         domain: String?,
         providerId: String?,
         redirectTo: String?,
+        pkceParams: PkceParams?,
+        captchaToken: String?,
     ): SupabaseResult<SsoResponse> {
         val hasDomain = !domain.isNullOrBlank()
         val hasProviderId = !providerId.isNullOrBlank()
@@ -566,6 +589,12 @@ internal class AuthClientImpl(
                     domain = domain,
                     providerId = providerId,
                     redirectTo = redirectTo,
+                    // Default to true so the server returns the JSON {url} body this call decodes
+                    // rather than issuing a 303 redirect the SDK can't follow.
+                    skipHttpRedirect = true,
+                    codeChallenge = pkceParams?.codeChallenge,
+                    codeChallengeMethod = pkceParams?.codeChallengeMethod,
+                    captchaToken = captchaToken,
                 ),
             )
         return client
@@ -583,6 +612,7 @@ internal class AuthClientImpl(
         queryParams: Map<String, String>,
         skipBrowserRedirect: Boolean,
         pkceParams: PkceParams?,
+        inviteToken: String?,
     ): String =
         buildString {
             append(client.projectUrl)
@@ -595,6 +625,10 @@ internal class AuthClientImpl(
             if (scopes.isNotEmpty()) {
                 append("&scopes=")
                 append(urlEncode(scopes.joinToString(" ")))
+            }
+            if (inviteToken != null) {
+                append("&invite_token=")
+                append(urlEncode(inviteToken))
             }
             if (pkceParams != null) {
                 append("&code_challenge=")
@@ -620,6 +654,7 @@ internal class AuthClientImpl(
         queryParams: Map<String, String>,
         skipBrowserRedirect: Boolean,
         pkceParams: PkceParams?,
+        inviteToken: String?,
     ): SupabaseResult<OAuthResponse> =
         SupabaseResult.Success(
             OAuthResponse(
@@ -632,6 +667,7 @@ internal class AuthClientImpl(
                         queryParams = queryParams,
                         skipBrowserRedirect = skipBrowserRedirect,
                         pkceParams = pkceParams,
+                        inviteToken = inviteToken,
                     ),
             ),
         )
@@ -722,6 +758,7 @@ internal class AuthClientImpl(
         challengeId: String,
         code: String,
         accessToken: String,
+        webauthn: MfaWebauthnVerification?,
     ): SupabaseResult<MfaVerifyResponse> {
         val body =
             defaultJson.encodeToString(
@@ -729,6 +766,7 @@ internal class AuthClientImpl(
                     factorId = factorId,
                     challengeId = challengeId,
                     code = code,
+                    webauthn = webauthn,
                 ),
             )
         return client
@@ -980,6 +1018,22 @@ internal class AuthClientImpl(
 
     private fun bearerHeaders(token: String): Map<String, String> =
         mapOf("Authorization" to "Bearer $token")
+
+    // POST /resend only accepts signup / email_change / sms / phone_change. The public methods take the
+    // full OtpType (kept for API compatibility), so guard out-of-range types with a clear failure rather
+    // than letting the server reject the call with a less specific error. Returns null when [type] is
+    // allowed.
+    private fun resendTypeGuard(type: OtpType): SupabaseResult<Unit>? =
+        when (type) {
+            OtpType.SIGNUP, OtpType.EMAIL_CHANGE, OtpType.SMS, OtpType.PHONE_CHANGE -> null
+            else ->
+                SupabaseResult.Failure(
+                    SupabaseError(
+                        message =
+                            "resend only supports signup, email_change, sms or phone_change; got $type",
+                    ),
+                )
+        }
 
     // The plain verifyOtp variants promise a Session, but some confirmations (e.g. email_change /
     // phone_change) verify without minting one, so the body has no access_token. Detect that and

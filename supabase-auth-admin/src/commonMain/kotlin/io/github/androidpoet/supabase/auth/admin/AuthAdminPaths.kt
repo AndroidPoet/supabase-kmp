@@ -19,6 +19,7 @@ internal object AuthAdminPaths {
     const val LOGOUT: String = BASE + "/logout"
 
     const val ADMIN: String = BASE + "/admin"
+    const val ADMIN_AUDIT: String = ADMIN + "/audit"
     const val ADMIN_USERS: String = ADMIN + "/users"
     const val ADMIN_CUSTOM_PROVIDERS: String = ADMIN + "/custom-providers"
     const val ADMIN_GENERATE_LINK: String = ADMIN + "/generate_link"

@@ -715,6 +715,302 @@ class AuthClientImplTest {
             assertEquals("Bearer token-oauth", client.lastDeleteHeaders["Authorization"])
             assertTrue(revoke is SupabaseResult.Success)
         }
+
+    // ---- A1: POST /sso additive fields ----
+
+    @Test
+    fun test_retrieveSsoUrl_defaultsSkipHttpRedirectTrue() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            val result = sut.retrieveSsoUrl(domain = "example.com")
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals("/auth/v1/sso", client.lastPostEndpoint)
+            // Without skip_http_redirect=true the server 303-redirects instead of returning {url}.
+            assertTrue(client.lastPostBody?.contains("\"skip_http_redirect\":true") == true)
+        }
+
+    @Test
+    fun test_retrieveSsoUrl_emitsPkceAndCaptcha() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            sut.retrieveSsoUrl(
+                domain = "example.com",
+                pkceParams = PkceParams(codeVerifier = "v", codeChallenge = "sso-chal", codeChallengeMethod = "S256"),
+                captchaToken = "captcha-sso",
+            )
+
+            assertTrue(client.lastPostBody?.contains("\"code_challenge\":\"sso-chal\"") == true)
+            assertTrue(client.lastPostBody?.contains("\"code_challenge_method\":\"S256\"") == true)
+            assertTrue(client.lastPostBody?.contains("\"gotrue_meta_security\":{\"captcha_token\":\"captcha-sso\"}") == true)
+        }
+
+    // ---- A2: POST /signup channel ----
+
+    @Test
+    fun test_signUpWithPhone_withChannel_sendsChannelBody() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            sut.signUpWithPhone(phone = "+15555550100", password = "pw", channel = "whatsapp")
+
+            assertEquals("/auth/v1/signup", client.lastPostEndpoint)
+            assertTrue(client.lastPostBody?.contains("\"channel\":\"whatsapp\"") == true)
+        }
+
+    @Test
+    fun test_signUpWithPhone_withoutChannel_omitsChannelFromBody() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            sut.signUpWithPhone(phone = "+15555550100", password = "pw")
+
+            assertTrue(client.lastPostBody?.contains("channel") == false)
+        }
+
+    // ---- A3: PUT /user channel ----
+
+    @Test
+    fun test_updateUser_withChannel_sendsChannelBody() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            sut.updateUser(
+                accessToken = "tok",
+                updates =
+                    io.github.androidpoet.supabase.auth.models.UserUpdateRequest(
+                        phone = "+15555550100",
+                        channel = "whatsapp",
+                    ),
+            )
+
+            assertEquals("/auth/v1/user", client.lastPutEndpoint)
+            assertTrue(client.lastPutBody?.contains("\"channel\":\"whatsapp\"") == true)
+        }
+
+    // ---- A4: POST /token id_token grant client_id + issuer ----
+
+    @Test
+    fun test_signInWithIdToken_emitsClientIdAndIssuer() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            sut.signInWithIdToken(
+                provider = OAuthProvider.AZURE,
+                idToken = "id-token-1",
+                clientId = "client-xyz",
+                issuer = "https://login.microsoftonline.com/tenant/v2.0",
+            )
+
+            assertEquals("/auth/v1/token?grant_type=id_token", client.lastPostEndpoint)
+            assertTrue(client.lastPostBody?.contains("\"client_id\":\"client-xyz\"") == true)
+            assertTrue(
+                client.lastPostBody?.contains("\"issuer\":\"https://login.microsoftonline.com/tenant/v2.0\"") == true,
+            )
+        }
+
+    // ---- A5: GET /user/identities/authorize PKCE ----
+
+    @Test
+    fun test_linkIdentity_pkceParams_emitChallengeInAuthorizeUrl() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            sut.linkIdentity(
+                accessToken = "tok",
+                provider = OAuthProvider.GITHUB,
+                pkceParams = PkceParams(codeVerifier = "v", codeChallenge = "link-chal", codeChallengeMethod = "S256"),
+            )
+
+            assertTrue(client.lastGetEndpoint?.contains("code_challenge=link-chal") == true)
+            assertTrue(client.lastGetEndpoint?.contains("code_challenge_method=S256") == true)
+        }
+
+    @Test
+    fun test_linkIdentity_withoutPkce_omitsChallengeFromAuthorizeUrl() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            sut.linkIdentity(accessToken = "tok", provider = OAuthProvider.GITHUB)
+
+            assertTrue(client.lastGetEndpoint?.contains("code_challenge") == false)
+        }
+
+    // ---- A6: POST /verify redirect_to (body) ----
+
+    @Test
+    fun test_verifyOtp_withRedirectTo_sendsRedirectToInBody() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            sut.verifyOtp(
+                email = "a@b.com",
+                token = "123456",
+                type = io.github.androidpoet.supabase.auth.models.OtpType.EMAIL,
+                redirectTo = "myapp://done",
+            )
+
+            assertEquals("/auth/v1/verify", client.lastPostEndpoint)
+            assertTrue(client.lastPostBody?.contains("\"redirect_to\":\"myapp://done\"") == true)
+        }
+
+    @Test
+    fun test_verifyOtp_withoutRedirectTo_omitsRedirectToFromBody() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            sut.verifyOtp(
+                email = "a@b.com",
+                token = "123456",
+                type = io.github.androidpoet.supabase.auth.models.OtpType.EMAIL,
+            )
+
+            assertTrue(client.lastPostBody?.contains("redirect_to") == false)
+        }
+
+    // ---- A7: POST /factors/{id}/verify webauthn ----
+
+    @Test
+    fun test_mfaVerify_withWebauthn_sendsWebauthnBody() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            sut.mfaVerify(
+                factorId = "factor-1",
+                challengeId = "challenge-1",
+                code = "",
+                accessToken = "tok",
+                webauthn =
+                    io.github.androidpoet.supabase.auth.models.MfaWebauthnVerification(
+                        type = "request",
+                        credentialResponse = buildJsonObject { put("id", "cred-1") },
+                    ),
+            )
+
+            assertEquals("/auth/v1/factors/factor-1/verify", client.lastPostEndpoint)
+            assertTrue(client.lastPostBody?.contains("\"webauthn\":{") == true)
+            assertTrue(client.lastPostBody?.contains("\"type\":\"request\"") == true)
+            assertTrue(client.lastPostBody?.contains("\"credential_response\":{\"id\":\"cred-1\"}") == true)
+        }
+
+    @Test
+    fun test_mfaVerify_withoutWebauthn_omitsWebauthnFromBody() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            sut.mfaVerify(factorId = "factor-1", challengeId = "challenge-1", code = "123456", accessToken = "tok")
+
+            assertTrue(client.lastPostBody?.contains("webauthn") == false)
+        }
+
+    // ---- A10: POST /resend type guard ----
+
+    @Test
+    fun test_resendEmailOtp_rejectsOutOfRangeType() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            // recovery is not a valid /resend type — must fail without hitting the server.
+            val result =
+                sut.resendEmailOtp(
+                    type = io.github.androidpoet.supabase.auth.models.OtpType.RECOVERY,
+                    email = "a@b.com",
+                )
+
+            assertTrue(result is SupabaseResult.Failure)
+            assertEquals(null, client.lastPostEndpoint)
+        }
+
+    @Test
+    fun test_resendEmailOtp_allowsSignupType() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            val result =
+                sut.resendEmailOtp(
+                    type = io.github.androidpoet.supabase.auth.models.OtpType.SIGNUP,
+                    email = "a@b.com",
+                )
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals("/auth/v1/resend", client.lastPostEndpoint)
+        }
+
+    @Test
+    fun test_resendPhoneOtp_rejectsOutOfRangeType() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            val result =
+                sut.resendPhoneOtp(
+                    type = io.github.androidpoet.supabase.auth.models.OtpType.MAGIC_LINK,
+                    phone = "+15555550100",
+                )
+
+            assertTrue(result is SupabaseResult.Failure)
+            assertEquals(null, client.lastPostEndpoint)
+        }
+
+    // ---- A11: GET /authorize invite_token ----
+
+    @Test
+    fun test_getOAuthSignInUrl_withInviteToken_emitsInviteTokenParam() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            val url =
+                sut.getOAuthSignInUrl(
+                    provider = OAuthProvider.GITHUB,
+                    inviteToken = "invite-123",
+                )
+
+            assertTrue(url.contains("invite_token=invite-123"))
+        }
+
+    @Test
+    fun test_signInWithOAuth_withInviteToken_emitsInviteTokenParam() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            val result =
+                sut.signInWithOAuth(
+                    provider = OAuthProvider.GITHUB,
+                    inviteToken = "invite-456",
+                )
+
+            assertTrue(result is SupabaseResult.Success)
+            assertTrue(result.value.url.contains("invite_token=invite-456"))
+        }
+
+    @Test
+    fun test_getOAuthSignInUrl_withoutInviteToken_omitsInviteTokenParam() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = AuthClientImpl(client)
+
+            val url = sut.getOAuthSignInUrl(provider = OAuthProvider.GITHUB)
+
+            assertTrue(!url.contains("invite_token"))
+        }
 }
 
 // Builds a syntactically valid JWT (header.payload.signature) whose payload is [claimsJson]. Only

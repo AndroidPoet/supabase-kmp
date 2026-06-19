@@ -1052,6 +1052,7 @@ private class FakeAuthClient : AuthClient {
         redirectTo: String?,
         captchaToken: String?,
         pkceParams: PkceParams?,
+        channel: String?,
     ): SupabaseResult<Session> {
         lastPhoneSignUp = phone
         return SupabaseResult.Success(dummySession.copy(accessToken = "phone-sign-up-acc", refreshToken = "phone-sign-up-ref"))
@@ -1074,6 +1075,8 @@ private class FakeAuthClient : AuthClient {
         accessToken: String?,
         nonce: String?,
         captchaToken: String?,
+        clientId: String?,
+        issuer: String?,
     ): SupabaseResult<Session> {
         lastIdTokenProvider = provider
         lastIdToken = idToken
@@ -1107,6 +1110,7 @@ private class FakeAuthClient : AuthClient {
         token: String,
         type: OtpType,
         captchaToken: String?,
+        redirectTo: String?,
     ): SupabaseResult<Session> =
         SupabaseResult.Success(dummySession.copy(accessToken = "verify-acc", refreshToken = "verify-ref")).also {
             lastVerifyOtpType = type
@@ -1125,6 +1129,7 @@ private class FakeAuthClient : AuthClient {
         token: String,
         type: OtpType,
         captchaToken: String?,
+        redirectTo: String?,
     ): SupabaseResult<OtpVerifyResult> =
         SupabaseResult.Success(verifyWithResultValue).also {
             lastVerifyOtpWithResultType = type
@@ -1216,7 +1221,7 @@ private class FakeAuthClient : AuthClient {
             lastSignOutAccessToken = accessToken
         }
 
-    override suspend fun linkIdentity(accessToken: String, provider: OAuthProvider, redirectTo: String?, scopes: List<String>, queryParams: Map<String, String>): SupabaseResult<LinkIdentityResponse> =
+    override suspend fun linkIdentity(accessToken: String, provider: OAuthProvider, redirectTo: String?, scopes: List<String>, queryParams: Map<String, String>, pkceParams: PkceParams?): SupabaseResult<LinkIdentityResponse> =
         SupabaseResult.Success(LinkIdentityResponse(url = "https://example.com/link", provider = provider.value)).also {
             lastLinkIdentityAccessToken = accessToken
             lastLinkIdentityProvider = provider
@@ -1243,7 +1248,7 @@ private class FakeAuthClient : AuthClient {
             lastUnlinkIdentityId = identityId
         }
 
-    override suspend fun retrieveSsoUrl(accessToken: String?, domain: String?, providerId: String?, redirectTo: String?): SupabaseResult<SsoResponse> =
+    override suspend fun retrieveSsoUrl(accessToken: String?, domain: String?, providerId: String?, redirectTo: String?, pkceParams: PkceParams?, captchaToken: String?): SupabaseResult<SsoResponse> =
         SupabaseResult.Success(SsoResponse(url = "https://example.com/sso")).also {
             lastRetrieveSsoAccessToken = accessToken
         }
@@ -1255,10 +1260,11 @@ private class FakeAuthClient : AuthClient {
         queryParams: Map<String, String>,
         skipBrowserRedirect: Boolean,
         pkceParams: PkceParams?,
+        inviteToken: String?,
     ): SupabaseResult<OAuthResponse> =
         SupabaseResult.Success(OAuthResponse(provider = provider.value, url = "https://example.com/oauth"))
 
-    override fun getOAuthSignInUrl(provider: OAuthProvider, redirectTo: String?, scopes: List<String>, queryParams: Map<String, String>, skipBrowserRedirect: Boolean, pkceParams: PkceParams?): String =
+    override fun getOAuthSignInUrl(provider: OAuthProvider, redirectTo: String?, scopes: List<String>, queryParams: Map<String, String>, skipBrowserRedirect: Boolean, pkceParams: PkceParams?, inviteToken: String?): String =
         "https://example.com/oauth"
 
     override fun generatePkceParams(sha256: ((ByteArray) -> ByteArray)?): PkceParams =
@@ -1285,7 +1291,13 @@ private class FakeAuthClient : AuthClient {
             lastMfaChallengeFactorId = factorId
         }
 
-    override suspend fun mfaVerify(factorId: String, challengeId: String, code: String, accessToken: String): SupabaseResult<MfaVerifyResponse> =
+    override suspend fun mfaVerify(
+        factorId: String,
+        challengeId: String,
+        code: String,
+        accessToken: String,
+        webauthn: io.github.androidpoet.supabase.auth.models.MfaWebauthnVerification?,
+    ): SupabaseResult<MfaVerifyResponse> =
         SupabaseResult
             .Success(
                 MfaVerifyResponse(

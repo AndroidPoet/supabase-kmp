@@ -1,6 +1,7 @@
 package io.github.androidpoet.supabase.auth.admin
 
 import io.github.androidpoet.supabase.auth.admin.models.AdminUserAttributes
+import io.github.androidpoet.supabase.auth.admin.models.AuditLogEntry
 import io.github.androidpoet.supabase.auth.admin.models.CustomProvider
 import io.github.androidpoet.supabase.auth.admin.models.CustomProviderCreateRequest
 import io.github.androidpoet.supabase.auth.admin.models.CustomProviderListResponse
@@ -19,6 +20,7 @@ import io.github.androidpoet.supabase.auth.admin.models.Passkey
 import io.github.androidpoet.supabase.auth.admin.models.SsoProvider
 import io.github.androidpoet.supabase.auth.admin.models.SsoProviderCreateRequest
 import io.github.androidpoet.supabase.auth.admin.models.SsoProviderUpdateRequest
+import io.github.androidpoet.supabase.auth.models.MfaFactor
 import io.github.androidpoet.supabase.auth.models.SignOutScope
 import io.github.androidpoet.supabase.auth.models.User
 import io.github.androidpoet.supabase.core.result.SupabaseResult
@@ -63,6 +65,18 @@ public interface AuthAdminClient {
         userId: String,
         factorId: String,
     ): SupabaseResult<MfaAdminDeleteFactorResponse>
+
+    /**
+     * Updates a user's MFA factor, currently its `friendly_name`.
+     *
+     * Requires the service-role key. PUTs to `/admin/users/{userId}/factors/{factorId}` and returns
+     * the full updated [MfaFactor].
+     */
+    public suspend fun updateFactor(
+        userId: String,
+        factorId: String,
+        friendlyName: String? = null,
+    ): SupabaseResult<MfaFactor>
 
     public suspend fun listOAuthClients(
         page: Int? = null,
@@ -132,6 +146,17 @@ public interface AuthAdminClient {
      * Requires the service-role key.
      */
     public suspend fun deleteSsoProvider(id: String): SupabaseResult<SsoProvider>
+
+    /**
+     * Fetches audit-log events.
+     *
+     * Requires the service-role key. The endpoint returns a bare JSON array of [AuditLogEntry].
+     * [page] and [perPage] are sent as `page` / `per_page` query params only when non-null.
+     */
+    public suspend fun auditLogEvents(
+        page: Int? = null,
+        perPage: Int? = null,
+    ): SupabaseResult<List<AuditLogEntry>>
 
     public suspend fun listPasskeys(userId: String): SupabaseResult<List<Passkey>>
 

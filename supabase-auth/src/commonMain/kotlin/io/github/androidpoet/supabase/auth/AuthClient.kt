@@ -11,6 +11,7 @@ import io.github.androidpoet.supabase.auth.models.MfaFactorType
 import io.github.androidpoet.supabase.auth.models.MfaListFactorsResponse
 import io.github.androidpoet.supabase.auth.models.MfaUnenrollResponse
 import io.github.androidpoet.supabase.auth.models.MfaVerifyResponse
+import io.github.androidpoet.supabase.auth.models.MfaWebauthnVerification
 import io.github.androidpoet.supabase.auth.models.OAuthAuthorizationDetails
 import io.github.androidpoet.supabase.auth.models.OAuthGrant
 import io.github.androidpoet.supabase.auth.models.OAuthProvider
@@ -80,6 +81,7 @@ public interface AuthClient {
      * @param pkceParams PKCE challenge to bind a PKCE-flow sign-up; pair with
      *   [generatePkceParams] and complete via [exchangeCodeForSession]. Null for the
      *   implicit flow.
+     * @param channel phone delivery channel: `"sms"` (server default) or `"whatsapp"`.
      */
     public suspend fun signUpWithPhone(
         phone: String,
@@ -88,6 +90,7 @@ public interface AuthClient {
         redirectTo: String? = null,
         captchaToken: String? = null,
         pkceParams: PkceParams? = null,
+        channel: String? = null,
     ): SupabaseResult<Session>
 
     /**
@@ -134,6 +137,9 @@ public interface AuthClient {
      * @param accessToken the provider's access token, when it also issues one.
      * @param nonce the nonce that was bound into the ID token, for replay protection.
      * @param captchaToken captcha response when bot protection is enabled.
+     * @param clientId the OIDC client id, when the provider requires it to be sent explicitly.
+     * @param issuer the OIDC issuer to verify against — required for custom OIDC providers
+     *   (e.g. an Azure tenant issuer).
      */
     public suspend fun signInWithIdToken(
         provider: OAuthProvider,
@@ -141,6 +147,8 @@ public interface AuthClient {
         accessToken: String? = null,
         nonce: String? = null,
         captchaToken: String? = null,
+        clientId: String? = null,
+        issuer: String? = null,
     ): SupabaseResult<Session>
 
     /**
@@ -156,6 +164,8 @@ public interface AuthClient {
      * @param skipBrowserRedirect adds `skip_http_redirect=true` so the endpoint
      *   returns JSON instead of a 302.
      * @param pkceParams PKCE challenge to bind the request; pair with [generatePkceParams].
+     * @param inviteToken a prior invitation token to complete on a successful OAuth sign-in
+     *   (emitted as `invite_token`).
      */
     public suspend fun signInWithOAuth(
         provider: OAuthProvider,
@@ -164,6 +174,7 @@ public interface AuthClient {
         queryParams: Map<String, String> = emptyMap(),
         skipBrowserRedirect: Boolean = false,
         pkceParams: PkceParams? = null,
+        inviteToken: String? = null,
     ): SupabaseResult<OAuthResponse>
 
     /**
@@ -220,6 +231,7 @@ public interface AuthClient {
      *
      * @param type which OTP flow the [token] belongs to (signup, recovery, …).
      * @param captchaToken captcha response when bot protection is enabled.
+     * @param redirectTo post-verification redirect (`redirect_to`), used by link-style flows.
      */
     public suspend fun verifyOtp(
         email: String? = null,
@@ -227,6 +239,7 @@ public interface AuthClient {
         token: String,
         type: OtpType,
         captchaToken: String? = null,
+        redirectTo: String? = null,
     ): SupabaseResult<Session>
 
     /**
@@ -249,6 +262,7 @@ public interface AuthClient {
      * for email-change confirmations that don't mint a new session.
      *
      * @param captchaToken captcha response when bot protection is enabled.
+     * @param redirectTo post-verification redirect (`redirect_to`), used by link-style flows.
      */
     public suspend fun verifyOtpWithResult(
         email: String? = null,
@@ -256,6 +270,7 @@ public interface AuthClient {
         token: String,
         type: OtpType,
         captchaToken: String? = null,
+        redirectTo: String? = null,
     ): SupabaseResult<OtpVerifyResult>
 
     /** Token-hash counterpart to [verifyOtpWithResult]; see [verifyOtpWithTokenHash]. */
@@ -395,6 +410,8 @@ public interface AuthClient {
      * @param redirectTo where the provider returns the user after consent.
      * @param scopes provider scopes to request.
      * @param queryParams extra authorize-URL params.
+     * @param pkceParams PKCE challenge to bind the link; emits `code_challenge`/
+     *   `code_challenge_method` into the authorize URL (mirrors [getOAuthSignInUrl]).
      */
     public suspend fun linkIdentity(
         accessToken: String,
@@ -402,6 +419,7 @@ public interface AuthClient {
         redirectTo: String? = null,
         scopes: List<String> = emptyList(),
         queryParams: Map<String, String> = emptyMap(),
+        pkceParams: PkceParams? = null,
     ): SupabaseResult<LinkIdentityResponse>
 
     /**
@@ -440,12 +458,17 @@ public interface AuthClient {
      * @param accessToken optional bearer token (some SSO setups require an
      *   authenticated caller).
      * @param redirectTo where the IdP returns the user after authentication.
+     * @param pkceParams PKCE challenge to bind a PKCE-flow SSO; emits `code_challenge`/
+     *   `code_challenge_method` in the body.
+     * @param captchaToken captcha response when bot protection is enabled.
      */
     public suspend fun retrieveSsoUrl(
         accessToken: String? = null,
         domain: String? = null,
         providerId: String? = null,
         redirectTo: String? = null,
+        pkceParams: PkceParams? = null,
+        captchaToken: String? = null,
     ): SupabaseResult<SsoResponse>
 
     /**
@@ -459,6 +482,8 @@ public interface AuthClient {
      * @param queryParams extra authorize-URL params (e.g. a CSRF `state`).
      * @param skipBrowserRedirect adds `skip_http_redirect=true`.
      * @param pkceParams PKCE challenge to bind into the URL.
+     * @param inviteToken a prior invitation token to complete on a successful sign-in
+     *   (emitted as `invite_token`).
      */
     public fun getOAuthSignInUrl(
         provider: OAuthProvider,
@@ -467,6 +492,7 @@ public interface AuthClient {
         queryParams: Map<String, String> = emptyMap(),
         skipBrowserRedirect: Boolean = false,
         pkceParams: PkceParams? = null,
+        inviteToken: String? = null,
     ): String
 
     /**
@@ -537,12 +563,14 @@ public interface AuthClient {
      * AAL2 session that upgrades the caller's assurance level.
      *
      * @param challengeId the `id` returned by [mfaChallenge].
+     * @param webauthn for a WebAuthn factor, the device's credential response (stands in for [code]).
      */
     public suspend fun mfaVerify(
         factorId: String,
         challengeId: String,
         code: String,
         accessToken: String,
+        webauthn: MfaWebauthnVerification? = null,
     ): SupabaseResult<MfaVerifyResponse>
 
     /** Removes an enrolled factor by [factorId] (`DELETE /factors/{id}`). */

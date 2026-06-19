@@ -80,6 +80,8 @@ public data class SignUpRequest(
     @SerialName("gotrue_meta_security") val gotrueMetaSecurity: GotrueMetaSecurity? = null,
     @SerialName("code_challenge") val codeChallenge: String? = null,
     @SerialName("code_challenge_method") val codeChallengeMethod: String? = null,
+    // Delivery channel for phone signup OTP: "sms" (default, server-side) or "whatsapp".
+    @SerialName("channel") val channel: String? = null,
 ) {
     public constructor(
         password: String,
@@ -89,6 +91,7 @@ public data class SignUpRequest(
         captchaToken: String?,
         codeChallenge: String? = null,
         codeChallengeMethod: String? = null,
+        channel: String? = null,
     ) : this(
         email = email,
         phone = phone,
@@ -97,12 +100,13 @@ public data class SignUpRequest(
         gotrueMetaSecurity = captchaToken?.let(::GotrueMetaSecurity),
         codeChallenge = codeChallenge,
         codeChallengeMethod = codeChallengeMethod,
+        channel = channel,
     )
 
     // Mask the password so credentials never leak into logs or crash reports.
     override fun toString(): String =
         "SignUpRequest(email=$email, phone=$phone, password=***, data=$data, " +
-            "gotrueMetaSecurity=$gotrueMetaSecurity)"
+            "gotrueMetaSecurity=$gotrueMetaSecurity, channel=$channel)"
 }
 
 /** Request body for the password grant (email or phone + password); the captcha constructor nests the token under `gotrue_meta_security`. */
@@ -143,6 +147,8 @@ public data class IdTokenRequest(
     val nonce: String? = null,
     @SerialName("gotrue_meta_security") val gotrueMetaSecurity: GotrueMetaSecurity? = null,
     @SerialName("link_identity") val linkIdentity: Boolean? = null,
+    @SerialName("client_id") val clientId: String? = null,
+    @SerialName("issuer") val issuer: String? = null,
 ) {
     public constructor(
         idToken: String,
@@ -150,19 +156,24 @@ public data class IdTokenRequest(
         accessToken: String? = null,
         nonce: String? = null,
         captchaToken: String?,
+        clientId: String? = null,
+        issuer: String? = null,
     ) : this(
         idToken = idToken,
         provider = provider,
         accessToken = accessToken,
         nonce = nonce,
         gotrueMetaSecurity = captchaToken?.let(::GotrueMetaSecurity),
+        clientId = clientId,
+        issuer = issuer,
     )
 
     // Mask the ID/access tokens so provider credentials never leak into logs or crash reports.
     override fun toString(): String =
         "IdTokenRequest(idToken=***, provider=$provider, " +
             "accessToken=${if (accessToken == null) "null" else "***"}, nonce=$nonce, " +
-            "gotrueMetaSecurity=$gotrueMetaSecurity, linkIdentity=$linkIdentity)"
+            "gotrueMetaSecurity=$gotrueMetaSecurity, linkIdentity=$linkIdentity, " +
+            "clientId=$clientId, issuer=$issuer)"
 }
 
 /** Request body for anonymous sign-up; the captcha constructor nests the token under `gotrue_meta_security`. */
@@ -252,6 +263,7 @@ public data class OtpVerifyRequest(
     val type: OtpType,
     @SerialName("token_hash") val tokenHash: String? = null,
     @SerialName("gotrue_meta_security") val gotrueMetaSecurity: GotrueMetaSecurity? = null,
+    @SerialName("redirect_to") val redirectTo: String? = null,
 ) {
     public constructor(
         type: OtpType,
@@ -260,6 +272,7 @@ public data class OtpVerifyRequest(
         token: String? = null,
         tokenHash: String? = null,
         captchaToken: String?,
+        redirectTo: String? = null,
     ) : this(
         email = email,
         phone = phone,
@@ -267,6 +280,7 @@ public data class OtpVerifyRequest(
         type = type,
         tokenHash = tokenHash,
         gotrueMetaSecurity = captchaToken?.let(::GotrueMetaSecurity),
+        redirectTo = redirectTo,
     )
 }
 
@@ -361,13 +375,15 @@ public data class UserUpdateRequest(
     @SerialName("current_password") val currentPassword: String? = null,
     val data: JsonObject? = null,
     val nonce: String? = null,
+    // Delivery channel for a phone-change OTP: "sms" (default, server-side) or "whatsapp".
+    @SerialName("channel") val channel: String? = null,
 ) {
     // Mask the password fields so credentials never leak into logs or crash reports.
     override fun toString(): String =
         "UserUpdateRequest(email=$email, phone=$phone, " +
             "password=${if (password == null) "null" else "***"}, " +
             "currentPassword=${if (currentPassword == null) "null" else "***"}, " +
-            "data=$data, nonce=$nonce)"
+            "data=$data, nonce=$nonce, channel=$channel)"
 }
 
 /** How widely a sign-out revokes sessions: just this one, all of them, or all others. */
@@ -390,13 +406,41 @@ public data class LinkIdentityResponse(
     @SerialName("provider") public val provider: String? = null,
 )
 
-/** Request body for `POST /sso`; supply exactly one of [domain] or [providerId]. */
+/**
+ * Request body for `POST /sso`; supply exactly one of [domain] or [providerId].
+ *
+ * Set [skipHttpRedirect] to `true` so the server returns the JSON `{url}` body the SDK decodes
+ * instead of issuing a 303 redirect. The captcha constructor nests the token under
+ * `gotrue_meta_security`.
+ */
 @Serializable
 public data class SsoRequest(
     @SerialName("domain") public val domain: String? = null,
     @SerialName("provider_id") public val providerId: String? = null,
     @SerialName("redirect_to") public val redirectTo: String? = null,
-)
+    @SerialName("skip_http_redirect") public val skipHttpRedirect: Boolean? = null,
+    @SerialName("code_challenge") public val codeChallenge: String? = null,
+    @SerialName("code_challenge_method") public val codeChallengeMethod: String? = null,
+    @SerialName("gotrue_meta_security") public val gotrueMetaSecurity: GotrueMetaSecurity? = null,
+) {
+    public constructor(
+        domain: String? = null,
+        providerId: String? = null,
+        redirectTo: String? = null,
+        skipHttpRedirect: Boolean? = null,
+        codeChallenge: String? = null,
+        codeChallengeMethod: String? = null,
+        captchaToken: String?,
+    ) : this(
+        domain = domain,
+        providerId = providerId,
+        redirectTo = redirectTo,
+        skipHttpRedirect = skipHttpRedirect,
+        codeChallenge = codeChallenge,
+        codeChallengeMethod = codeChallengeMethod,
+        gotrueMetaSecurity = captchaToken?.let(::GotrueMetaSecurity),
+    )
+}
 
 /** Response from `POST /sso`: the IdP [url] to open to begin SSO. */
 @Serializable
@@ -550,12 +594,27 @@ public data class MfaChallengeResponse(
     @SerialName("expires_at") public val expiresAt: Long? = null,
 )
 
-/** Request body for `POST /factors/{id}/verify`: the challenge id plus the user-entered [code]. */
+/**
+ * Request body for `POST /factors/{id}/verify`: the challenge id plus the user-entered [code].
+ * For a WebAuthn factor the [webauthn] credential response stands in for [code].
+ */
 @Serializable
 public data class MfaVerifyRequest(
     @SerialName("factor_id") public val factorId: String,
     @SerialName("challenge_id") public val challengeId: String,
     @SerialName("code") public val code: String,
+    @SerialName("webauthn") public val webauthn: MfaWebauthnVerification? = null,
+)
+
+/**
+ * WebAuthn credential payload for a `POST /factors/{id}/verify` of a WebAuthn factor: the operation
+ * [type] (`"create"` for registration, `"request"` for authentication) and the device's raw
+ * [credentialResponse].
+ */
+@Serializable
+public data class MfaWebauthnVerification(
+    @SerialName("type") public val type: String? = null,
+    @SerialName("credential_response") public val credentialResponse: JsonObject? = null,
 )
 
 /** New AAL2 session minted by a successful MFA verification — same token shape as a [Session]. */

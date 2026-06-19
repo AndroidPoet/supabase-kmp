@@ -155,6 +155,49 @@ class AuthAdminClientImplTest {
         }
 
     @Test
+    fun test_updateFactor_sendsPutWithFriendlyNameAndDecodesFactor() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = client.authAdmin(serviceRoleKey = "service-role")
+
+            val result = sut.updateFactor(userId = "u1", factorId = "factor1", friendlyName = "Renamed Key")
+
+            val success = assertIs<SupabaseResult.Success<*>>(result)
+            assertEquals("/auth/v1/admin/users/u1/factors/factor1", client.lastPutEndpoint)
+            assertEquals("Bearer service-role", client.lastPutHeaders["Authorization"])
+            val body = json.parseToJsonElement(client.lastPutBody ?: error("missing body")).jsonObject
+            assertEquals("Renamed Key", body["friendly_name"]?.jsonPrimitive?.content)
+            val value = success.value as io.github.androidpoet.supabase.auth.models.MfaFactor
+            assertEquals("factor1", value.id)
+            assertEquals("Renamed Key", value.friendlyName)
+        }
+
+    @Test
+    fun test_auditLogEvents_parsesBareArrayAndSendsQueryParams() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = client.authAdmin(serviceRoleKey = "service-role")
+
+            val result = sut.auditLogEvents(page = 2, perPage = 50)
+
+            val success = assertIs<SupabaseResult.Success<*>>(result)
+            assertEquals("/auth/v1/admin/audit", client.lastGetEndpoint)
+            assertEquals(listOf("page" to "2", "per_page" to "50"), client.lastGetQueryParams)
+            assertEquals("Bearer service-role", client.lastGetHeaders["Authorization"])
+            val value = success.value as List<*>
+            val entry = value.first() as io.github.androidpoet.supabase.auth.admin.models.AuditLogEntry
+            assertEquals("audit1", entry.id)
+            assertEquals("203.0.113.7", entry.ipAddress)
+            assertEquals(
+                "login",
+                entry.payload
+                    ?.get("action")
+                    ?.jsonPrimitive
+                    ?.content,
+            )
+        }
+
+    @Test
     fun test_listPasskeys_decodesAdminPasskeyArray() =
         runTest {
             val client = FakeSupabaseClient()
@@ -505,6 +548,19 @@ private class FakeSupabaseClient : SupabaseClient {
                     """{"items":[${ssoProviderJson()}]}""",
                 )
             endpoint.startsWith("/auth/v1/admin/sso/providers/") -> SupabaseResult.Success(ssoProviderJson())
+            endpoint == "/auth/v1/admin/audit" ->
+                SupabaseResult.Success(
+                    """
+                    [
+                      {
+                        "id": "audit1",
+                        "payload": {"action": "login", "actor_id": "u1"},
+                        "created_at": "2026-01-01T00:00:00Z",
+                        "ip_address": "203.0.113.7"
+                      }
+                    ]
+                    """.trimIndent(),
+                )
             endpoint == "/auth/v1/admin/users" ->
                 SupabaseResult.Success(
                     """{"users":[{"id":"u1","email":"user@example.com"}],"aud":"authenticated"}""",
@@ -609,6 +665,17 @@ private class FakeSupabaseClient : SupabaseClient {
             endpoint.startsWith("/auth/v1/admin/oauth/clients/") -> SupabaseResult.Success(oauthClientJson())
             endpoint.startsWith("/auth/v1/admin/custom-providers/") -> SupabaseResult.Success(customProviderJson(name = "Acme Updated"))
             endpoint.startsWith("/auth/v1/admin/sso/providers/") -> SupabaseResult.Success(ssoProviderJson())
+            endpoint.contains("/factors/") ->
+                SupabaseResult.Success(
+                    """
+                    {
+                      "id": "factor1",
+                      "friendly_name": "Renamed Key",
+                      "factor_type": "totp",
+                      "status": "verified"
+                    }
+                    """.trimIndent(),
+                )
             // updateUserById: deliberately the {"user":…} wrapper shape so tolerance for it stays covered.
             else -> SupabaseResult.Success("""{"user":{"id":"u1","phone":"+15555550100"}}""")
         }

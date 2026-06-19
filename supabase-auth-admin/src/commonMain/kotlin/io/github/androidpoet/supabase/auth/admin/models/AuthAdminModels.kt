@@ -389,6 +389,25 @@ public data class Passkey(
     @SerialName("last_used_at") public val lastUsedAt: String? = null,
 )
 
+/**
+ * A single audit-log entry returned by `GET /admin/audit`.
+ *
+ * The [payload] is a free-form object whose shape depends on the recorded [payload]'s `action`,
+ * so it is kept as a raw [JsonObject] rather than a strongly typed model.
+ */
+@Serializable
+public data class AuditLogEntry(
+    public val id: String,
+    public val payload: JsonObject? = null,
+    @SerialName("created_at") public val createdAt: String? = null,
+    @SerialName("ip_address") public val ipAddress: String? = null,
+)
+
+@Serializable
+internal data class UpdateFactorRequest(
+    @SerialName("friendly_name") val friendlyName: String? = null,
+)
+
 @Serializable
 internal data class InviteUserRequest(
     val email: String,

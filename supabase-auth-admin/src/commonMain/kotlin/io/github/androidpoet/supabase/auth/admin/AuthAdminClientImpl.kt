@@ -1,6 +1,7 @@
 package io.github.androidpoet.supabase.auth.admin
 
 import io.github.androidpoet.supabase.auth.admin.models.AdminUserAttributes
+import io.github.androidpoet.supabase.auth.admin.models.AuditLogEntry
 import io.github.androidpoet.supabase.auth.admin.models.CustomProvider
 import io.github.androidpoet.supabase.auth.admin.models.CustomProviderCreateRequest
 import io.github.androidpoet.supabase.auth.admin.models.CustomProviderListResponse
@@ -21,7 +22,9 @@ import io.github.androidpoet.supabase.auth.admin.models.SsoProvider
 import io.github.androidpoet.supabase.auth.admin.models.SsoProviderCreateRequest
 import io.github.androidpoet.supabase.auth.admin.models.SsoProviderListResponse
 import io.github.androidpoet.supabase.auth.admin.models.SsoProviderUpdateRequest
+import io.github.androidpoet.supabase.auth.admin.models.UpdateFactorRequest
 import io.github.androidpoet.supabase.auth.admin.models.UserDeleteRequest
+import io.github.androidpoet.supabase.auth.models.MfaFactor
 import io.github.androidpoet.supabase.auth.models.SignOutScope
 import io.github.androidpoet.supabase.auth.models.User
 import io.github.androidpoet.supabase.client.SupabaseClient
@@ -152,6 +155,37 @@ internal class AuthAdminClientImpl(
                 endpoint = "${AuthAdminPaths.ADMIN_USERS}/$userId/factors/$factorId",
                 headers = adminHeaders,
             ).deserialize()
+
+    override suspend fun updateFactor(
+        userId: String,
+        factorId: String,
+        friendlyName: String?,
+    ): SupabaseResult<MfaFactor> {
+        val body = defaultJson.encodeToString(UpdateFactorRequest(friendlyName = friendlyName))
+        return client
+            .put(
+                endpoint = "${AuthAdminPaths.ADMIN_USERS}/$userId/factors/$factorId",
+                body = body,
+                headers = adminHeaders,
+            ).deserialize()
+    }
+
+    override suspend fun auditLogEvents(
+        page: Int?,
+        perPage: Int?,
+    ): SupabaseResult<List<AuditLogEntry>> {
+        val queryParams =
+            buildList {
+                if (page != null) add("page" to page.toString())
+                if (perPage != null) add("per_page" to perPage.toString())
+            }
+        return client
+            .get(
+                endpoint = AuthAdminPaths.ADMIN_AUDIT,
+                queryParams = queryParams,
+                headers = adminHeaders,
+            ).deserialize()
+    }
 
     override suspend fun listOAuthClients(
         page: Int?,
