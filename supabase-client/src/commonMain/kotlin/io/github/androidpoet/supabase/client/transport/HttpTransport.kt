@@ -513,10 +513,13 @@ internal class HttpTransport(
 
     // A Retry-After header wins over the configured exponential backoff. The
     // header may be delta-seconds or an HTTP-date (RFC 7231); both are honored.
+    // A non-positive hint (a literal `0` or an HTTP-date already in the past)
+    // would otherwise mean "retry instantly" and hammer the server, so we fall
+    // back to the exponential backoff in that case.
     private fun io.ktor.client.statement.HttpResponse.retryDelayMillis(attempt: Int): Long {
         val retryAfterSeconds = parseRetryAfterSeconds(headers["Retry-After"], Clock.System.now().epochSeconds)
-        return if (retryAfterSeconds != null) {
-            retryAfterSeconds.coerceAtLeast(0) * 1_000
+        return if (retryAfterSeconds != null && retryAfterSeconds > 0) {
+            retryAfterSeconds * 1_000
         } else {
             retry.backoffMillis(attempt)
         }

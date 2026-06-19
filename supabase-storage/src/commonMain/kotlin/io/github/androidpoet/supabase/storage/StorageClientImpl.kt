@@ -515,7 +515,10 @@ internal class StorageClientImpl(
         return client.putRaw(
             url = "${StoragePaths.OBJECT_UPLOAD_SIGN}/${objectRef(bucket, path)}?token=${encodeQueryComponent(token)}",
             body = data,
-            contentType = contentType,
+            // Infer the MIME type from the path extension when the caller didn't
+            // set one, mirroring upload()/update() so signed-URL uploads don't
+            // silently land as application/octet-stream.
+            contentType = resolveContentType(path, contentType),
             headers = headers,
         )
     }
@@ -937,9 +940,10 @@ internal class StorageClientImpl(
     // The storage server reads user-supplied object metadata from the `x-metadata`
     // request header on raw upload/update/upload-to-signed-url calls. The value is
     // the Base64 of the metadata JSON object's textual form. Returns null when no
-    // metadata was supplied so the header is omitted entirely.
+    // metadata (or an empty object) was supplied so the header is omitted entirely,
+    // matching the resumable-upload path and avoiding a stray `x-metadata: e30=`.
     private fun metadataHeader(metadata: JsonObject?): String? =
-        metadata?.let { encodeMetadataValue(it) }
+        metadata?.takeIf { it.isNotEmpty() }?.let { encodeMetadataValue(it) }
 
     // Combines a transform query (resize/format/quality) with the optional
     // download query for the render-image endpoints, mirroring the URL builders.

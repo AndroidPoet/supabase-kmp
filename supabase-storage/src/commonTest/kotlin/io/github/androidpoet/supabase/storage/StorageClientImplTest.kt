@@ -1131,6 +1131,42 @@ class StorageClientImplTest {
         }
 
     @Test
+    fun test_uploadToSignedUrl_infersContentTypeFromPathExtension() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = StorageClientImpl(client)
+
+            // No explicit contentType: it must be inferred from the .png extension,
+            // matching upload()/update(), not left as the octet-stream default.
+            sut.uploadToSignedUrl(
+                bucket = "avatars",
+                path = "a.png",
+                token = "abc",
+                data = byteArrayOf(1, 2, 3),
+            )
+
+            assertEquals("image/png", client.lastPutRawContentType)
+        }
+
+    @Test
+    fun test_upload_withEmptyMetadata_omitsMetadataHeader() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = StorageClientImpl(client)
+
+            // An empty object must NOT surface as `x-metadata: e30=` (base64 of "{}");
+            // it is omitted entirely, matching the resumable-upload path.
+            sut.upload(
+                bucket = "avatars",
+                path = "a.png",
+                data = byteArrayOf(1),
+                metadata = buildJsonObject { },
+            )
+
+            assertTrue(!client.lastPostRawHeaders.containsKey("x-metadata"))
+        }
+
+    @Test
     fun test_createUploadSignedUrlWithPath_returnsServerPath() =
         runTest {
             val client = FakeSupabaseClient()
@@ -1213,9 +1249,11 @@ private class FakeSupabaseClient : SupabaseClient {
     var lastGetQueryParams: List<Pair<String, String>> = emptyList()
     var lastPostRawUrl: String? = null
     var lastPostRawHeaders: Map<String, String> = emptyMap()
+    var lastPostRawContentType: String? = null
     var lastDeleteEndpoint: String? = null
     var lastPutRawUrl: String? = null
     var lastPutRawHeaders: Map<String, String> = emptyMap()
+    var lastPutRawContentType: String? = null
     var lastRawRequestUrl: String? = null
 
     // Resumable (TUS) upload simulation state.
@@ -1375,6 +1413,7 @@ private class FakeSupabaseClient : SupabaseClient {
     ): SupabaseResult<String> {
         lastPostRawUrl = url
         lastPostRawHeaders = headers
+        lastPostRawContentType = contentType
         return SupabaseResult.Success("ok")
     }
 
@@ -1386,6 +1425,7 @@ private class FakeSupabaseClient : SupabaseClient {
     ): SupabaseResult<String> {
         lastPutRawUrl = url
         lastPutRawHeaders = headers
+        lastPutRawContentType = contentType
         return SupabaseResult.Success("ok")
     }
 

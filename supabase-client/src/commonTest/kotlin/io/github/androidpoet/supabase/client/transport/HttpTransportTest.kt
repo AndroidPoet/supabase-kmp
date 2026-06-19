@@ -102,6 +102,102 @@ class HttpTransportTest {
         }
 
     @Test
+    fun test_get_retryAfterZeroFallsBackToBackoff() =
+        runTest {
+            var calls = 0
+            val transport =
+                HttpTransport(
+                    config =
+                        SupabaseConfig(
+                            logging = false,
+                            logLevel = io.ktor.client.plugins.logging.LogLevel.NONE,
+                            headers = emptyMap(),
+                            retry =
+                                io.github.androidpoet.supabase.client
+                                    .RetryConfig(jitter = false),
+                        ),
+                    engineFactory =
+                        TestMockEngineFactory {
+                            calls++
+                            if (calls == 1) {
+                                respond(
+                                    content = "{}",
+                                    status = HttpStatusCode.TooManyRequests,
+                                    headers = headersOf("Retry-After", "0"),
+                                )
+                            } else {
+                                respond(
+                                    content = "{}",
+                                    status = HttpStatusCode.OK,
+                                    headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                                )
+                            }
+                        },
+                    projectUrl = "https://example.supabase.co",
+                    apiKey = "anon",
+                )
+
+            val start = testScheduler.currentTime
+            val result =
+                transport.get(
+                    url = "https://example.supabase.co/rest/v1/messages",
+                    headers = mapOf("X-Supabase-Kmp-Retry" to "true"),
+                )
+
+            assertEquals(2, calls)
+            assertEquals(null, result.errorOrNull())
+            // A Retry-After of 0 must NOT retry instantly; it falls back to the
+            // exponential backoff (1s base, jitter off) instead of hammering the server.
+            assertEquals(1_000, testScheduler.currentTime - start)
+        }
+
+    @Test
+    fun test_get_positiveRetryAfterIsHonoredOverBackoff() =
+        runTest {
+            var calls = 0
+            val transport =
+                HttpTransport(
+                    config =
+                        SupabaseConfig(
+                            logging = false,
+                            logLevel = io.ktor.client.plugins.logging.LogLevel.NONE,
+                            headers = emptyMap(),
+                            retry =
+                                io.github.androidpoet.supabase.client
+                                    .RetryConfig(jitter = false),
+                        ),
+                    engineFactory =
+                        TestMockEngineFactory {
+                            calls++
+                            if (calls == 1) {
+                                respond(
+                                    content = "{}",
+                                    status = HttpStatusCode.TooManyRequests,
+                                    headers = headersOf("Retry-After", "2"),
+                                )
+                            } else {
+                                respond(
+                                    content = "{}",
+                                    status = HttpStatusCode.OK,
+                                    headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                                )
+                            }
+                        },
+                    projectUrl = "https://example.supabase.co",
+                    apiKey = "anon",
+                )
+
+            val start = testScheduler.currentTime
+            transport.get(
+                url = "https://example.supabase.co/rest/v1/messages",
+                headers = mapOf("X-Supabase-Kmp-Retry" to "true"),
+            )
+
+            // Retry-After: 2s wins over the 1s backoff base, proving the header path.
+            assertEquals(2_000, testScheduler.currentTime - start)
+        }
+
+    @Test
     fun test_get_propagatesCoroutineCancellation() =
         runTest {
             val transport =
