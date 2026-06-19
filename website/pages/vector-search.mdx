@@ -1,0 +1,185 @@
+---
+title: Vector Search & Embeddings
+description: Generate text embeddings with Supabase's built-in AI model in an Edge Function, then store and similarity-search them from Kotlin with pgvector or S3-Vectors.
+---
+
+import { Callout } from 'nextra/components'
+
+# Vector Search & Embeddings
+
+A vector search turns text (or images, audio…) into a list of numbers — an
+*embedding* — so you can find records by *meaning* rather than exact keywords.
+"Find documents similar to this question" becomes "find the stored vectors
+closest to this query vector."
+
+There are two halves to it: **generating** the embedding, and **storing and
+searching** it. This library covers both, but the split matters for where the
+work runs.
+
+<Callout type="info">
+Supabase generates embeddings **server-side**, inside an Edge Function, using its
+built-in `gte-small` model — there is no external API and no per-token cost. That
+means there is no client REST endpoint for "make an embedding" to wrap, so this
+library deliberately ships **no** dedicated AI/embeddings class. Instead you call
+your Edge Function with [`supabase-functions`](/functions) and store the result
+with [`supabase-database`](/database) or [`supabase-storage`](/storage) — the
+primitives you already have.
+</Callout>
+
+## Step 1 — Generate the embedding (Edge Function)
+
+The model runs in the Deno edge runtime via the `Supabase.ai` API. A minimal
+`generate-embedding` function:
+
+```ts
+// supabase/functions/generate-embedding/index.ts
+const model = new Supabase.ai.Session('gte-small')
+
+Deno.serve(async (req) => {
+  const { input } = await req.json()
+  // gte-small produces a 384-dimension vector.
+  const embedding = await model.run(input, { mean_pool: true, normalize: true })
+  return Response.json({ embedding })
+})
+```
+
+Call it from Kotlin with a typed invoke. You send your text, you get the vector
+back as a `List<Double>`:
+
+```kotlin
+@Serializable data class EmbedRequest(val input: String)
+@Serializable data class EmbedResponse(val embedding: List<Double>)
+
+val functions = createFunctionsClient(client)
+
+val embedding: SupabaseResult<List<Double>> =
+    functions
+        .invokeTyped<EmbedRequest, EmbedResponse>(
+            functionName = "generate-embedding",
+            request = EmbedRequest(input = "Kotlin Multiplatform for Supabase"),
+        ).map { it.embedding }
+```
+
+Everything is a `SupabaseResult`, so you branch on success/failure exactly like
+the rest of the library — see [Results & Errors](/results-and-errors).
+
+## Step 2 — Store & search
+
+Pick one of two backends. Use **pgvector** when the data already lives in your
+Postgres tables and you want it covered by RLS, joins and SQL. Use **S3-Vectors**
+when you want a standalone vector store that scales independently of the database.
+
+### Option A — pgvector (Postgres)
+
+Store embeddings in a `vector` column and search with a SQL function. The schema
+and matching function (run once, in the SQL editor):
+
+```sql
+create table documents (
+  id bigint primary key generated always as identity,
+  content text not null,
+  embedding vector(384)
+);
+
+create index on documents using hnsw (embedding vector_cosine_ops);
+
+create or replace function query_embeddings(embedding vector(384), match_threshold float)
+returns setof documents
+language sql stable
+as $$
+  select *
+  from documents
+  where documents.embedding <=> embedding < 1 - match_threshold
+  order by documents.embedding <=> embedding asc;
+$$;
+```
+
+From Kotlin, insert the vector as ordinary row data, then call the function with
+`rpc`. The query vector is just the `List<Double>` from Step 1:
+
+```kotlin
+val db = createDatabaseClient(client)
+
+// Insert: the embedding is sent as a normal column value.
+@Serializable data class NewDoc(val content: String, val embedding: List<Double>)
+db.insertTyped("documents", NewDoc(content = "…", embedding = embedding.getOrThrow()))
+
+// Search: call the SQL function and decode the matching rows.
+@Serializable data class MatchArgs(
+    val embedding: List<Double>,
+    @SerialName("match_threshold") val matchThreshold: Double,
+)
+@Serializable data class Doc(val id: Long, val content: String)
+
+val matches: SupabaseResult<List<Doc>> =
+    db.rpcTyped<MatchArgs, List<Doc>>(
+        function = "query_embeddings",
+        params = MatchArgs(embedding = embedding.getOrThrow(), matchThreshold = 0.8),
+    )
+```
+
+### Option B — S3-Vectors (storage)
+
+This library has a dedicated, fully typed S3-Vectors client: a bucket holds one or
+more indexes, each index has a fixed dimension and distance metric, and you put
+and query vectors directly.
+
+```kotlin
+val storage = createStorageClient(client)
+
+// One-time setup.
+storage.createVectorBucket("docs")
+storage.createVectorIndex(
+    vectorBucketName = "docs",
+    indexName = "embeddings",
+    dataType = VectorDataType.FLOAT32,
+    dimension = 384,
+    distanceMetric = VectorDistanceMetric.COSINE,
+)
+
+// Store vectors (1..500 per batch). Attach metadata for filtering/retrieval.
+storage.putVectors(
+    vectorBucketName = "docs",
+    indexName = "embeddings",
+    vectors = listOf(
+        VectorObject(
+            key = "doc-1",
+            data = VectorData(float32 = embedding.getOrThrow()),
+            metadata = buildJsonObject { put("content", "…") },
+        ),
+    ),
+)
+
+// Nearest-neighbour search.
+val results =
+    storage.queryVectors(
+        vectorBucketName = "docs",
+        indexName = "embeddings",
+        queryVector = VectorData(float32 = embedding.getOrThrow()),
+        topK = 5,
+        returnMetadata = true,
+    )
+
+results.onSuccess { response ->
+    response.vectors.forEach { match ->
+        println("${match.key} — distance ${match.distance}")
+    }
+}
+```
+
+The full surface — `listVectorBuckets`, `getVectorIndex`, `listVectorIndexes`,
+`getVectors`, `listVectors`, `deleteVectors`, `deleteVectorIndex`,
+`deleteVectorBucket` — is on the [Storage](/storage) client.
+
+## End to end
+
+The whole pipeline is three existing clients working together:
+
+1. **`functions.invokeTyped(...)`** → your Edge Function runs `gte-small` and
+   returns the embedding.
+2. **`db.insertTyped(...)` / `storage.putVectors(...)`** → store it.
+3. **`db.rpcTyped("query_embeddings", …)` / `storage.queryVectors(...)`** →
+   search it.
+
+No special "AI" API, no magic — the same Result-first, thin-over-REST building
+blocks used everywhere else.
