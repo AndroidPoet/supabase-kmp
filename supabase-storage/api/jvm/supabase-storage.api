@@ -315,6 +315,11 @@ public final class io/github/androidpoet/supabase/storage/StorageFactoryKt {
 	public static final fun createStorageClient (Lio/github/androidpoet/supabase/client/SupabaseClient;)Lio/github/androidpoet/supabase/storage/StorageClient;
 }
 
+public final class io/github/androidpoet/supabase/storage/StoragePagingKt {
+	public static final fun listPaginator (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Lio/github/androidpoet/supabase/storage/SortOrder;Ljava/lang/String;)Lio/github/androidpoet/supabase/core/paging/Paginator;
+	public static synthetic fun listPaginator$default (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Lio/github/androidpoet/supabase/storage/SortOrder;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/core/paging/Paginator;
+}
+
 public final class io/github/androidpoet/supabase/storage/UploadSignedUrl {
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V

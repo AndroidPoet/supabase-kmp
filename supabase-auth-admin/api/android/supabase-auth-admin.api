@@ -1,3 +1,8 @@
+public final class io/github/androidpoet/supabase/auth/admin/AdminPagingKt {
+	public static final fun usersPaginator (Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;I)Lio/github/androidpoet/supabase/core/paging/Paginator;
+	public static synthetic fun usersPaginator$default (Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;IILjava/lang/Object;)Lio/github/androidpoet/supabase/core/paging/Paginator;
+}
+
 public abstract interface class io/github/androidpoet/supabase/auth/admin/AuthAdminClient {
 	public abstract fun auditLogEvents (Ljava/lang/Integer;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun auditLogEvents$default (Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;Ljava/lang/Integer;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
