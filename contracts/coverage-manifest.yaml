@@ -1,0 +1,84 @@
+# Machine-readable coverage manifest for the pinned Auth (GoTrue) OpenAPI spec.
+#
+# Every operation (method + path) defined in contracts/auth.openapi.yaml MUST
+# appear here with a status. `check_coverage.py` (run in CI by spec-drift.yml)
+# fails if:
+#   * the pinned spec gains an operation that is not classified here
+#     (forces a human to audit + classify it when the spec is bumped), or
+#   * this manifest lists an operation the pinned spec no longer defines (stale).
+#
+# This is the human-curated companion to COVERAGE-auth.md — that doc explains the
+# *why* per endpoint; this file is the enforceable contract.
+#
+# status:
+#   covered      SDK implements this operation.
+#   out-of-scope intentionally absent for a thin client SDK (browser/IdP/server-role).
+#   on-demand    deliberately deferred; add only on real demand (experimental/gated).
+#
+# note: optional. References a row in COVERAGE-auth.md (e.g. B1) for endpoints
+#       where the SDK intentionally diverges from the spec because the spec lags
+#       the running server — DO NOT "fix" these to match the spec without an e2e check.
+
+endpoints:
+  # --- Admin (supabase-auth-admin) ---
+  - { method: GET,    path: "/admin/audit",                                    status: covered }
+  - { method: GET,    path: "/admin/custom-providers",                         status: covered }
+  - { method: POST,   path: "/admin/custom-providers",                         status: covered }
+  - { method: DELETE, path: "/admin/custom-providers/{identifier}",            status: covered }
+  - { method: GET,    path: "/admin/custom-providers/{identifier}",            status: covered }
+  - { method: PUT,    path: "/admin/custom-providers/{identifier}",            status: covered }
+  - { method: POST,   path: "/admin/generate_link",                            status: covered, note: "B4: decodes nested {properties,user}; verify on spec bump" }
+  - { method: GET,    path: "/admin/oauth/clients",                            status: covered }
+  - { method: POST,   path: "/admin/oauth/clients",                            status: covered }
+  - { method: DELETE, path: "/admin/oauth/clients/{client_id}",                status: covered }
+  - { method: GET,    path: "/admin/oauth/clients/{client_id}",                status: covered }
+  - { method: PUT,    path: "/admin/oauth/clients/{client_id}",                status: covered }
+  - { method: POST,   path: "/admin/oauth/clients/{client_id}/regenerate_secret", status: covered }
+  - { method: GET,    path: "/admin/sso/providers",                            status: covered }
+  - { method: POST,   path: "/admin/sso/providers",                            status: covered }
+  - { method: DELETE, path: "/admin/sso/providers/{ssoProviderId}",            status: covered }
+  - { method: GET,    path: "/admin/sso/providers/{ssoProviderId}",            status: covered }
+  - { method: PUT,    path: "/admin/sso/providers/{ssoProviderId}",            status: covered }
+  - { method: GET,    path: "/admin/users",                                    status: covered }
+  - { method: DELETE, path: "/admin/users/{userId}",                           status: covered, note: "B3: sends {should_soft_delete}; real GoTrue feature absent from spec" }
+  - { method: GET,    path: "/admin/users/{userId}",                           status: covered }
+  - { method: PUT,    path: "/admin/users/{userId}",                           status: covered }
+  - { method: GET,    path: "/admin/users/{userId}/factors",                   status: covered, note: "B5: decodes {factors:[...]}; verify wrapping on spec bump" }
+  - { method: DELETE, path: "/admin/users/{userId}/factors/{factorId}",        status: covered }
+  - { method: PUT,    path: "/admin/users/{userId}/factors/{factorId}",        status: covered }
+
+  # --- Core user flows (supabase-auth) ---
+  - { method: GET,    path: "/authorize",                                      status: covered, note: "B6: scopes omitted when empty (optional in practice)" }
+  - { method: GET,    path: "/callback",                                       status: out-of-scope, note: "C: browser redirect target" }
+  - { method: POST,   path: "/callback",                                       status: out-of-scope, note: "C: browser redirect target" }
+  - { method: POST,   path: "/factors",                                        status: covered }
+  - { method: DELETE, path: "/factors/{factorId}",                             status: covered }
+  - { method: POST,   path: "/factors/{factorId}/challenge",                   status: covered }
+  - { method: POST,   path: "/factors/{factorId}/verify",                      status: covered }
+  - { method: GET,    path: "/health",                                         status: covered }
+  - { method: POST,   path: "/invite",                                         status: covered, note: "B2: sends ?redirect_to= query; spec under-documents" }
+  - { method: POST,   path: "/logout",                                         status: covered }
+  - { method: POST,   path: "/magiclink",                                      status: out-of-scope, note: "C: legacy; POST /otp with email is the modern equivalent" }
+  - { method: GET,    path: "/oauth/authorizations/{authorization_id}",        status: covered }
+  - { method: POST,   path: "/oauth/authorizations/{authorization_id}/consent", status: covered }
+  - { method: GET,    path: "/oauth/authorize",                                status: out-of-scope, note: "C: server/provider role, not the embedding app" }
+  - { method: POST,   path: "/oauth/clients/register",                         status: on-demand, note: "C: Dynamic Client Registration, gated behind a server flag" }
+  - { method: POST,   path: "/oauth/token",                                    status: out-of-scope, note: "C: server/provider role, not the embedding app" }
+  - { method: POST,   path: "/otp",                                            status: covered }
+  - { method: POST,   path: "/reauthenticate",                                 status: covered, note: "B1: spec says POST but live route is GET; SDK uses GET (correct) — do not change" }
+  - { method: POST,   path: "/recover",                                        status: covered }
+  - { method: POST,   path: "/resend",                                         status: covered }
+  - { method: POST,   path: "/saml/acs",                                       status: out-of-scope, note: "C: IdP redirect target" }
+  - { method: GET,    path: "/saml/metadata",                                  status: out-of-scope, note: "C: IdP metadata endpoint" }
+  - { method: GET,    path: "/settings",                                       status: covered }
+  - { method: POST,   path: "/signup",                                         status: covered }
+  - { method: POST,   path: "/sso",                                            status: covered }
+  - { method: POST,   path: "/token",                                          status: covered }
+  - { method: GET,    path: "/user",                                           status: covered }
+  - { method: PUT,    path: "/user",                                           status: covered }
+  - { method: GET,    path: "/user/identities/authorize",                      status: covered, note: "B6: scopes omitted when empty (optional in practice)" }
+  - { method: DELETE, path: "/user/identities/{identityId}",                   status: covered }
+  - { method: DELETE, path: "/user/oauth/grants",                              status: covered }
+  - { method: GET,    path: "/user/oauth/grants",                              status: covered }
+  - { method: GET,    path: "/verify",                                         status: covered }
+  - { method: POST,   path: "/verify",                                         status: covered }

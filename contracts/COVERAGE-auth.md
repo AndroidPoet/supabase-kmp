@@ -5,6 +5,13 @@ Auth REST OpenAPI spec (`info.version: latest`), pinned into this repo.
 
 **SDK audited:** `supabase-auth` + `supabase-auth-admin` (`commonMain`).
 
+**Enforcement:** [`coverage-manifest.yaml`](./coverage-manifest.yaml) is the machine-readable
+companion to this doc — it classifies every operation in the pinned spec. CI
+([`spec-drift.yml`](../.github/workflows/spec-drift.yml)) runs
+[`check_coverage.py`](./check_coverage.py) on every contract/auth change (fails if the spec
+gains an unclassified operation) and weekly diffs the pinned spec against upstream with
+`oasdiff`. Bump the pinned spec → the coverage job forces you to re-classify any new endpoints.
+
 **Method:** every endpoint's parameters were checked for **placement** (path / query /
 header / body) and **wire name** against the spec, then mapped to the SDK call that emits
 them. Status legend:
@@ -38,10 +45,11 @@ is the small gap list below.
 
 ---
 
-## A. Safe additive gaps (spec-backed, backward-compatible to add)
+## A. Safe additive gaps — ✅ all implemented (backward-compatible)
 
-These are real spec fields/endpoints the SDK doesn't emit. All can be added as **optional
-params / new methods** without breaking the public API.
+These were real spec fields/endpoints the SDK didn't emit. **A1–A11 have all landed** as
+optional params / new methods (no public API broken; API baselines regenerated additively).
+Kept here as the audit record.
 
 | # | Endpoint | Gap | Fix |
 |---|---|---|---|

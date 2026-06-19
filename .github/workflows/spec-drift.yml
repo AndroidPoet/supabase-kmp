@@ -1,0 +1,92 @@
+name: Spec drift
+
+# Keeps the SDK honest against the official Auth (GoTrue) OpenAPI spec.
+#
+#  coverage  — fails if the pinned spec has an operation that
+#              contracts/coverage-manifest.yaml does not classify (or vice-versa).
+#              Runs on every PR that touches the contract or the auth modules, so
+#              a spec bump can't silently leave endpoints unaudited.
+#
+#  upstream  — diffs the pinned spec against the latest upstream spec and reports
+#              what changed. Informational on a weekly schedule (and on demand):
+#              when it flags changes, re-pin the spec, re-audit, and update the
+#              manifest + COVERAGE-auth.md. It does NOT auto-bump anything.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'contracts/**'
+      - 'supabase-auth/**'
+      - 'supabase-auth-admin/**'
+      - '.github/workflows/spec-drift.yml'
+  schedule:
+    # Weekly, Monday 05:00 UTC — surface upstream spec changes without a PR.
+    - cron: "0 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: spec-drift-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  coverage:
+    name: Coverage manifest in sync with pinned spec
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install PyYAML
+        run: pip install --quiet pyyaml
+
+      - name: Check every spec operation is classified
+        run: python3 contracts/check_coverage.py
+
+  upstream:
+    name: Pinned spec vs upstream (informational)
+    runs-on: ubuntu-latest
+    # Don't fail the PR build for upstream drift; this is a signal, not a gate.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install oasdiff
+        run: |
+          go install github.com/oasdiff/oasdiff@latest
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: Fetch latest upstream Auth spec
+        run: |
+          curl -sSL -o /tmp/upstream-auth.openapi.yaml \
+            https://raw.githubusercontent.com/supabase/auth/master/openapi.yaml
+
+      - name: Diff pinned spec against upstream
+        id: diff
+        run: |
+          {
+            echo '## Auth OpenAPI: pinned vs upstream'
+            echo
+            if oasdiff diff contracts/auth.openapi.yaml /tmp/upstream-auth.openapi.yaml \
+                 --format text > /tmp/specdiff.txt 2>&1 && [ ! -s /tmp/specdiff.txt ]; then
+              echo '✅ No differences — the pinned spec matches upstream.'
+            else
+              echo '⚠️ Upstream spec has changed. Re-pin `contracts/auth.openapi.yaml`, re-audit,'
+              echo 'and update `coverage-manifest.yaml` + `COVERAGE-auth.md`.'
+              echo
+              echo '```'
+              cat /tmp/specdiff.txt
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Breaking-changes summary
+        run: |
+          oasdiff breaking contracts/auth.openapi.yaml /tmp/upstream-auth.openapi.yaml \
+            --format text || true
