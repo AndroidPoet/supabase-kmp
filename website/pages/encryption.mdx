@@ -130,6 +130,120 @@ broadcast — Supabase never needs to understand it.
 - Send `encryptValue(message)` output through a normal table insert or a realtime
   broadcast. The server, your logs, and any DB admin only ever see ciphertext.
 
+## Worked example: encrypted chat with the Database module
+
+This is the full loop with `supabase-database` — create keys, **encrypt the data as
+you generate it**, store only ciphertext, then read it back and decrypt. Start with
+two tables:
+
+```sql
+-- Each device publishes its PUBLIC key here (safe to share).
+create table device_keys (
+  user_id    uuid primary key references auth.users (id),
+  public_key text not null
+);
+
+-- Messages hold ONLY ciphertext — the server never sees plaintext.
+create table messages (
+  id         bigint generated always as identity primary key,
+  room       text   not null,
+  sender     uuid   not null,
+  ciphertext text   not null,   -- Base64 of encrypted bytes
+  created_at timestamptz not null default now()
+);
+```
+
+Ciphertext is raw bytes, so we Base64-encode it for a `text` column:
+
+```kotlin
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
+
+@Serializable data class DeviceKey(val user_id: String, val public_key: String)
+@Serializable data class ChatRow(val room: String, val sender: String, val ciphertext: String)
+```
+
+**1. Once per device** — generate a key pair, publish the public key, keep the
+private key in secure storage:
+
+```kotlin
+@OptIn(ExperimentalEncodingApi::class)
+suspend fun registerDevice(database: DatabaseClient, userId: String): E2eeKeyPair {
+    val keyPair = generateE2eeKeyPair().getOrThrow()
+    database.insertTyped(
+        table = "device_keys",
+        value = DeviceKey(userId, Base64.encode(keyPair.publicKey)),
+        upsert = true,
+    ).getOrThrow()
+    // Persist keyPair.privateKey in Keychain / Keystore — NOT in a column.
+    return keyPair
+}
+```
+
+**2. Send a message** — fetch the peer's public key, derive the session, and
+**encrypt the data before it ever leaves the device**:
+
+```kotlin
+@OptIn(ExperimentalEncodingApi::class)
+suspend fun send(
+    database: DatabaseClient,
+    mine: E2eeKeyPair,
+    myUserId: String,
+    peerUserId: String,
+    room: String,
+    text: String,
+) {
+    val peer = database.selectTyped<DeviceKey>("device_keys") {
+        eq("user_id", peerUserId)
+    }.getOrThrow().first()
+
+    val session = mine.deriveSession(Base64.decode(peer.public_key)).getOrThrow()
+    val ciphertext = session.encrypt(text).getOrThrow()   // encrypt, THEN insert
+
+    database.insertTyped(
+        table = "messages",
+        value = ChatRow(room, myUserId, Base64.encode(ciphertext)),
+    ).getOrThrow()
+}
+```
+
+**3. Read messages** — derive the same session and decrypt each row:
+
+```kotlin
+@OptIn(ExperimentalEncodingApi::class)
+suspend fun history(
+    database: DatabaseClient,
+    mine: E2eeKeyPair,
+    peerUserId: String,
+    room: String,
+): List<String> {
+    val peer = database.selectTyped<DeviceKey>("device_keys") {
+        eq("user_id", peerUserId)
+    }.getOrThrow().first()
+
+    val session = mine.deriveSession(Base64.decode(peer.public_key)).getOrThrow()
+
+    return database.selectTyped<ChatRow>("messages") {
+        eq("room", room)
+        order("created_at", ascending = true)
+    }.getOrThrow().map { row ->
+        session.decryptToString(Base64.decode(row.ciphertext)).getOrThrow()
+    }
+}
+```
+
+That's the whole pattern: **derive the session once, encrypt right before any
+`insert`, decrypt right after any `select`.** The `messages` table — and anyone who
+can read it — only ever holds Base64 ciphertext. To send structured payloads
+instead of plain strings, swap `encrypt`/`decryptToString` for
+`encryptValue`/`decryptValue<T>`.
+
+<Callout type="info">
+  The same pattern works over Realtime: broadcast `Base64.encode(ciphertext)`
+  instead of inserting it, and decrypt on the receiving end. The relay never sees
+  plaintext.
+</Callout>
+
 ## Threat model
 
 What this **does** protect against:
