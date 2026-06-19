@@ -66,6 +66,7 @@ private class FakeFunctionsClient : FunctionsClient {
     override suspend fun invoke(
         functionName: String,
         body: String?,
+        method: FunctionMethod,
         headers: Map<String, String>,
         region: FunctionRegion?,
     ): SupabaseResult<String> {
@@ -81,6 +82,7 @@ private class FakeFunctionsClient : FunctionsClient {
         functionName: String,
         body: ByteArray,
         contentType: String,
+        method: FunctionMethod,
         headers: Map<String, String>,
         region: FunctionRegion?,
     ): SupabaseResult<String> =

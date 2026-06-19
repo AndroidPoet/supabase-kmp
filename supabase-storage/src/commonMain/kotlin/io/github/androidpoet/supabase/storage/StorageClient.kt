@@ -360,6 +360,16 @@ public interface StorageClient {
      * [ResumableUpload.await] is called. Pass [uploadUrl] (a previously captured
      * [ResumableUpload.uploadUrl]) to resume an interrupted upload instead of
      * starting a new one.
+     *
+     * [chunkSize] must be positive (a non-positive value throws
+     * [IllegalArgumentException] eagerly, before any request is made). The TUS
+     * server additionally requires every chunk except the last to be a multiple of
+     * [RESUMABLE_DEFAULT_CHUNK_SIZE] (6 MB); keep the default unless you have a
+     * reason to change it, as a non-conforming size is rejected server-side.
+     *
+     * When [metadata] is provided, it is Base64-encoded and sent as the `metadata`
+     * entry of the TUS `Upload-Metadata` header so the server stores it as the
+     * object's user metadata (the same encoding as the non-resumable [upload]).
      */
     public fun createResumableUpload(
         bucket: String,
@@ -370,6 +380,7 @@ public interface StorageClient {
         cacheControl: Int? = null,
         chunkSize: Int = RESUMABLE_DEFAULT_CHUNK_SIZE,
         uploadUrl: String? = null,
+        metadata: JsonObject? = null,
     ): ResumableUpload
 
     /**
@@ -685,8 +696,9 @@ public interface StorageClient {
 
     /**
      * Builds the authenticated URL (`/object/authenticated`) for [path] locally. The URL still
-     * requires valid credentials when fetched; this only composes the address. See [getPublicUrl]
-     * for public buckets.
+     * requires valid credentials when fetched; this only composes the address. Pass [transform] to
+     * target the render endpoint with a server-side image transform. See [getPublicUrl] for public
+     * buckets.
      */
     public fun getAuthenticatedUrl(
         bucket: String,

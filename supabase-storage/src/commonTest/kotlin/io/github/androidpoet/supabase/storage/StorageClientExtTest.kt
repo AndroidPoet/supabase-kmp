@@ -457,6 +457,7 @@ private class FakeStorageClient : StorageClient {
         cacheControl: Int?,
         chunkSize: Int,
         uploadUrl: String?,
+        metadata: JsonObject?,
     ): ResumableUpload = error("not used")
 
     override suspend fun update(

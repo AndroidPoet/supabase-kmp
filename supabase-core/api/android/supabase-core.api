@@ -34,7 +34,8 @@ public final class io/github/androidpoet/supabase/core/models/ErrorResponse$Comp
 
 public final class io/github/androidpoet/supabase/core/models/FilterBuilder {
 	public fun <init> ()V
-	public final fun and (Lkotlin/jvm/functions/Function1;)V
+	public final fun and (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun and$default (Lio/github/androidpoet/supabase/core/models/FilterBuilder;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 	public final fun build ()Ljava/util/List;
 	public final fun containedBy (Ljava/lang/String;Ljava/lang/String;)V
 	public final fun containedBy (Ljava/lang/String;Ljava/util/List;)V
@@ -57,6 +58,9 @@ public final class io/github/androidpoet/supabase/core/models/FilterBuilder {
 	public final fun inNumbers (Ljava/lang/String;Ljava/util/List;)V
 	public final fun is (Ljava/lang/String;Ljava/lang/Boolean;)V
 	public final fun is (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun isDistinct (Ljava/lang/String;Ljava/lang/Boolean;)V
+	public final fun isDistinct (Ljava/lang/String;Ljava/lang/Number;)V
+	public final fun isDistinct (Ljava/lang/String;Ljava/lang/String;)V
 	public final fun like (Ljava/lang/String;Ljava/lang/String;)V
 	public final fun likeAllOf (Ljava/lang/String;Ljava/util/List;)V
 	public final fun likeAnyOf (Ljava/lang/String;Ljava/util/List;)V
@@ -75,7 +79,10 @@ public final class io/github/androidpoet/supabase/core/models/FilterBuilder {
 	public final fun not (Lkotlin/jvm/functions/Function1;)V
 	public final fun notExtendLeft (Ljava/lang/String;Ljava/lang/String;)V
 	public final fun notExtendRight (Ljava/lang/String;Ljava/lang/String;)V
-	public final fun or (Lkotlin/jvm/functions/Function1;)V
+	public final fun offset (ILjava/lang/String;)V
+	public static synthetic fun offset$default (Lio/github/androidpoet/supabase/core/models/FilterBuilder;ILjava/lang/String;ILjava/lang/Object;)V
+	public final fun or (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun or$default (Lio/github/androidpoet/supabase/core/models/FilterBuilder;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 	public final fun order (Ljava/lang/String;Lio/github/androidpoet/supabase/core/models/OrderDirection;Lio/github/androidpoet/supabase/core/models/NullsPlacement;Ljava/lang/String;)V
 	public final fun order (Ljava/lang/String;ZLjava/lang/Boolean;Ljava/lang/String;)V
 	public static synthetic fun order$default (Lio/github/androidpoet/supabase/core/models/FilterBuilder;Ljava/lang/String;Lio/github/androidpoet/supabase/core/models/OrderDirection;Lio/github/androidpoet/supabase/core/models/NullsPlacement;Ljava/lang/String;ILjava/lang/Object;)V
@@ -151,6 +158,7 @@ public final class io/github/androidpoet/supabase/core/models/PostgrestResponse$
 public final class io/github/androidpoet/supabase/core/models/TextSearchType : java/lang/Enum {
 	public static final field Phrase Lio/github/androidpoet/supabase/core/models/TextSearchType;
 	public static final field Plain Lio/github/androidpoet/supabase/core/models/TextSearchType;
+	public static final field Raw Lio/github/androidpoet/supabase/core/models/TextSearchType;
 	public static final field Websearch Lio/github/androidpoet/supabase/core/models/TextSearchType;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/core/models/TextSearchType;
@@ -373,11 +381,13 @@ public final class io/github/androidpoet/supabase/core/result/SupabaseErrorKt {
 	public static final fun isRetryable (Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;)Z
 	public static final fun isUniquenessViolation (Lio/github/androidpoet/supabase/core/result/SupabaseError;)Z
 	public static final fun isUserAlreadyExists (Lio/github/androidpoet/supabase/core/result/SupabaseError;)Z
-	public static final fun toException (Lio/github/androidpoet/supabase/core/result/SupabaseError;)Lio/github/androidpoet/supabase/core/result/SupabaseException;
+	public static final fun toException (Lio/github/androidpoet/supabase/core/result/SupabaseError;Ljava/lang/Throwable;)Lio/github/androidpoet/supabase/core/result/SupabaseException;
+	public static synthetic fun toException$default (Lio/github/androidpoet/supabase/core/result/SupabaseError;Ljava/lang/Throwable;ILjava/lang/Object;)Lio/github/androidpoet/supabase/core/result/SupabaseException;
 }
 
 public final class io/github/androidpoet/supabase/core/result/SupabaseException : java/lang/Exception {
-	public fun <init> (Lio/github/androidpoet/supabase/core/result/SupabaseError;)V
+	public fun <init> (Lio/github/androidpoet/supabase/core/result/SupabaseError;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Lio/github/androidpoet/supabase/core/result/SupabaseError;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getError ()Lio/github/androidpoet/supabase/core/result/SupabaseError;
 }
 

@@ -1,4 +1,6 @@
 package io.github.androidpoet.supabase.auth
+import io.github.androidpoet.supabase.auth.models.AuthHealthStatus
+import io.github.androidpoet.supabase.auth.models.AuthSettings
 import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevel
 import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevels
 import io.github.androidpoet.supabase.auth.models.Jwk
@@ -52,12 +54,14 @@ public interface AuthClient {
      * @param data optional `user_metadata` stored on the new user.
      * @param emailRedirectTo URL the confirmation email links back to (sent as the
      *   `redirect_to` query param). Fails if [email] is blank.
+     * @param captchaToken captcha response when bot protection is enabled.
      */
     public suspend fun signUpWithEmail(
         email: String,
         password: String,
         data: JsonObject? = null,
         emailRedirectTo: String? = null,
+        captchaToken: String? = null,
     ): SupabaseResult<Session>
 
     /**
@@ -68,18 +72,25 @@ public interface AuthClient {
      * @param data optional `user_metadata` stored on the new user.
      * @param redirectTo post-confirmation redirect (`redirect_to` query param).
      *   Fails if [phone] is blank.
+     * @param captchaToken captcha response when bot protection is enabled.
      */
     public suspend fun signUpWithPhone(
         phone: String,
         password: String,
         data: JsonObject? = null,
         redirectTo: String? = null,
+        captchaToken: String? = null,
     ): SupabaseResult<Session>
 
-    /** Signs in with email + password via the `password` grant (`POST /token?grant_type=password`). */
+    /**
+     * Signs in with email + password via the `password` grant (`POST /token?grant_type=password`).
+     *
+     * @param captchaToken captcha response when bot protection is enabled.
+     */
     public suspend fun signInWithEmail(
         email: String,
         password: String,
+        captchaToken: String? = null,
     ): SupabaseResult<Session>
 
     /**
@@ -95,10 +106,15 @@ public interface AuthClient {
         captchaToken: String? = null,
     ): SupabaseResult<Session>
 
-    /** Signs in with phone + password via the `password` grant (`POST /token?grant_type=password`). */
+    /**
+     * Signs in with phone + password via the `password` grant (`POST /token?grant_type=password`).
+     *
+     * @param captchaToken captcha response when bot protection is enabled.
+     */
     public suspend fun signInWithPhone(
         phone: String,
         password: String,
+        captchaToken: String? = null,
     ): SupabaseResult<Session>
 
     /**
@@ -168,6 +184,7 @@ public interface AuthClient {
      * @param emailRedirectTo magic-link redirect for the email channel.
      * @param channel phone delivery channel: `"sms"` (server default) or
      *   `"whatsapp"`; ignored for email.
+     * @param data optional `user_metadata` stored when the user is auto-created.
      */
     public suspend fun signInWithOtp(
         email: String? = null,
@@ -177,6 +194,7 @@ public interface AuthClient {
         emailRedirectTo: String? = null,
         // Phone OTP delivery channel: "sms" (server default) or "whatsapp". Ignored for email OTP.
         channel: String? = null,
+        data: JsonObject? = null,
     ): SupabaseResult<Unit>
 
     /**
@@ -302,6 +320,18 @@ public interface AuthClient {
      * [getClaims] to verify asymmetric token signatures locally without an Auth server round-trip.
      */
     public suspend fun fetchJwks(): SupabaseResult<String>
+
+    /**
+     * Fetches the Auth server's public settings (`GET /auth/v1/settings`) — which providers and flows
+     * are enabled. Requires only the project `apikey`; no user authentication is needed.
+     */
+    public suspend fun getSettings(): SupabaseResult<AuthSettings>
+
+    /**
+     * Fetches the Auth server's health status (`GET /auth/v1/health`), reporting its name and version.
+     * Requires only the project `apikey`; no user authentication is needed.
+     */
+    public suspend fun getHealth(): SupabaseResult<AuthHealthStatus>
 
     /**
      * Resolves the signing key for [kid] from the project JWKS, backed by an in-memory cache so

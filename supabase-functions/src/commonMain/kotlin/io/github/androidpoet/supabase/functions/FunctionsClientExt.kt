@@ -14,10 +14,11 @@ import io.github.androidpoet.supabase.core.result.SupabaseResult
 public suspend inline fun <reified T> FunctionsClient.invokeTyped(
     functionName: String,
     body: String? = null,
+    method: FunctionMethod = FunctionMethod.POST,
     headers: Map<String, String> = emptyMap(),
     region: FunctionRegion? = null,
 ): SupabaseResult<T> =
-    when (val result = invoke(functionName, body, headers, region)) {
+    when (val result = invoke(functionName, body, method, headers, region)) {
         is SupabaseResult.Success ->
             SupabaseResult.catching {
                 defaultJson.decodeFromString<T>(result.value)
@@ -36,12 +37,14 @@ public suspend inline fun <reified T> FunctionsClient.invokeTyped(
 public suspend inline fun <reified Request : Any, reified Response> FunctionsClient.invokeTyped(
     functionName: String,
     request: Request,
+    method: FunctionMethod = FunctionMethod.POST,
     headers: Map<String, String> = emptyMap(),
     region: FunctionRegion? = null,
 ): SupabaseResult<Response> =
     invokeTyped(
         functionName = functionName,
         body = defaultJson.encodeToString(request),
+        method = method,
         headers = headers,
         region = region,
     )
@@ -55,10 +58,11 @@ public suspend inline fun <reified Request : Any, reified Response> FunctionsCli
 public suspend fun FunctionsClient.invokeUnit(
     functionName: String,
     body: String? = null,
+    method: FunctionMethod = FunctionMethod.POST,
     headers: Map<String, String> = emptyMap(),
     region: FunctionRegion? = null,
 ): SupabaseResult<Unit> =
-    when (val result = invoke(functionName, body, headers, region)) {
+    when (val result = invoke(functionName, body, method, headers, region)) {
         is SupabaseResult.Success -> SupabaseResult.Success(Unit)
         is SupabaseResult.Failure -> result
     }
@@ -75,6 +79,7 @@ public suspend inline fun <reified T> FunctionsClient.invokeWithBodyTyped(
     functionName: String,
     body: ByteArray,
     contentType: String = "application/octet-stream",
+    method: FunctionMethod = FunctionMethod.POST,
     headers: Map<String, String> = emptyMap(),
     region: FunctionRegion? = null,
 ): SupabaseResult<T> =
@@ -84,6 +89,7 @@ public suspend inline fun <reified T> FunctionsClient.invokeWithBodyTyped(
                 functionName = functionName,
                 body = body,
                 contentType = contentType,
+                method = method,
                 headers = headers,
                 region = region,
             )
@@ -106,6 +112,7 @@ public suspend fun FunctionsClient.invokeWithBodyUnit(
     functionName: String,
     body: ByteArray,
     contentType: String = "application/octet-stream",
+    method: FunctionMethod = FunctionMethod.POST,
     headers: Map<String, String> = emptyMap(),
     region: FunctionRegion? = null,
 ): SupabaseResult<Unit> =
@@ -115,6 +122,7 @@ public suspend fun FunctionsClient.invokeWithBodyUnit(
                 functionName = functionName,
                 body = body,
                 contentType = contentType,
+                method = method,
                 headers = headers,
                 region = region,
             )

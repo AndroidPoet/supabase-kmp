@@ -39,14 +39,21 @@ public data class SupabaseError(
 /**
  * The throwable form of a [SupabaseError], thrown by [SupabaseResult.getOrThrow]
  * and caught by [SupabaseResult.catching]. Carries the original [error] so callers
- * can still inspect its [SupabaseError.code]/[SupabaseError.category].
+ * can still inspect its [SupabaseError.code]/[SupabaseError.category], and an
+ * optional [cause] so an underlying throwable (e.g. a serialization or I/O fault
+ * that produced this error) stays in the stack trace.
  */
 public class SupabaseException(
     public val error: SupabaseError,
-) : Exception(error.message)
+    cause: Throwable? = null,
+) : Exception(error.message, cause)
 
-/** Wraps this [SupabaseError] in a [SupabaseException] for throw-based call sites. */
-public fun SupabaseError.toException(): SupabaseException = SupabaseException(this)
+/**
+ * Wraps this [SupabaseError] in a [SupabaseException] for throw-based call sites,
+ * optionally chaining the [cause] throwable that produced it.
+ */
+public fun SupabaseError.toException(cause: Throwable? = null): SupabaseException =
+    SupabaseException(this, cause)
 
 /**
  * Coarse classification of a [SupabaseError], derived via [SupabaseError.category],
@@ -210,7 +217,9 @@ private fun categorizeByStatus(status: Int?): SupabaseErrorCategory =
         401, 403 -> SupabaseErrorCategory.Unauthorized
         404 -> SupabaseErrorCategory.NotFound
         409 -> SupabaseErrorCategory.Conflict
-        400, 422 -> SupabaseErrorCategory.Validation
+        // 406 Not Acceptable (Accept/cardinality unsatisfiable) and 416 Range Not
+        // Satisfiable are request-shape problems, so they map to Validation too.
+        400, 406, 416, 422 -> SupabaseErrorCategory.Validation
         429 -> SupabaseErrorCategory.RateLimited
         in 500..599 -> SupabaseErrorCategory.Internal
         else -> SupabaseErrorCategory.Unknown

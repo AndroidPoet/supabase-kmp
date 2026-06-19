@@ -123,6 +123,14 @@ private class FakeSubscription : RealtimeSubscription {
 
     override suspend fun broadcast(event: String, payload: kotlinx.serialization.json.JsonObject) = Unit
 
+    override suspend fun broadcastWithAck(
+        event: String,
+        payload: kotlinx.serialization.json.JsonObject,
+        timeoutMillis: Long,
+    ): io.github.androidpoet.supabase.core.result.SupabaseResult<Unit> =
+        io.github.androidpoet.supabase.core.result.SupabaseResult
+            .Success(Unit)
+
     override suspend fun track(state: kotlinx.serialization.json.JsonObject) = Unit
 
     override suspend fun untrack() = Unit

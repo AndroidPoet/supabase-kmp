@@ -24,6 +24,8 @@ internal object AuthPaths {
     const val SSO: String = BASE + "/sso"
     const val AUTHORIZE: String = BASE + "/authorize"
     const val JWKS: String = BASE + "/.well-known/jwks.json"
+    const val SETTINGS: String = BASE + "/settings"
+    const val HEALTH: String = BASE + "/health"
 
     const val USER: String = BASE + "/user"
     const val USER_IDENTITIES: String = USER + "/identities"

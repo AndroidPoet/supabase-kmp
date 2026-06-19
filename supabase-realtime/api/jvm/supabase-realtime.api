@@ -124,8 +124,8 @@ public final class io/github/androidpoet/supabase/realtime/RealtimeClientExtKt {
 
 public final class io/github/androidpoet/supabase/realtime/RealtimeConfig {
 	public fun <init> ()V
-	public fun <init> (ZJJDZIJJ)V
-	public synthetic fun <init> (ZJJDZIJJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (ZJJDZIJJLjava/lang/String;)V
+	public synthetic fun <init> (ZJJDZIJJLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Z
 	public final fun component2 ()J
 	public final fun component3 ()J
@@ -134,14 +134,16 @@ public final class io/github/androidpoet/supabase/realtime/RealtimeConfig {
 	public final fun component6 ()I
 	public final fun component7 ()J
 	public final fun component8 ()J
-	public final fun copy (ZJJDZIJJ)Lio/github/androidpoet/supabase/realtime/RealtimeConfig;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/realtime/RealtimeConfig;ZJJDZIJJILjava/lang/Object;)Lio/github/androidpoet/supabase/realtime/RealtimeConfig;
+	public final fun component9 ()Ljava/lang/String;
+	public final fun copy (ZJJDZIJJLjava/lang/String;)Lio/github/androidpoet/supabase/realtime/RealtimeConfig;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/realtime/RealtimeConfig;ZJJDZIJJLjava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/realtime/RealtimeConfig;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAutoReconnect ()Z
 	public final fun getBackoffMultiplier ()D
 	public final fun getConnectionTimeoutMs ()J
 	public final fun getHeartbeatIntervalMs ()J
 	public final fun getInitialReconnectDelayMs ()J
+	public final fun getLogLevel ()Ljava/lang/String;
 	public final fun getMaxReconnectAttempts ()I
 	public final fun getMaxReconnectDelayMs ()J
 	public final fun getReconnectJitter ()Z
@@ -251,53 +253,75 @@ public abstract interface class io/github/androidpoet/supabase/realtime/Realtime
 }
 
 public final class io/github/androidpoet/supabase/realtime/RealtimeEvent$Broadcast : io/github/androidpoet/supabase/realtime/RealtimeEvent {
-	public fun <init> (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;)V
+	public fun <init> (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Lkotlinx/serialization/json/JsonObject;
-	public final fun copy (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;)Lio/github/androidpoet/supabase/realtime/RealtimeEvent$Broadcast;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/realtime/RealtimeEvent$Broadcast;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;ILjava/lang/Object;)Lio/github/androidpoet/supabase/realtime/RealtimeEvent$Broadcast;
+	public final fun component3 ()Z
+	public final fun copy (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Z)Lio/github/androidpoet/supabase/realtime/RealtimeEvent$Broadcast;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/realtime/RealtimeEvent$Broadcast;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;ZILjava/lang/Object;)Lio/github/androidpoet/supabase/realtime/RealtimeEvent$Broadcast;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getEvent ()Ljava/lang/String;
 	public final fun getPayload ()Lkotlinx/serialization/json/JsonObject;
+	public final fun getReplayed ()Z
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
 
 public final class io/github/androidpoet/supabase/realtime/RealtimeEvent$PostgresDelete : io/github/androidpoet/supabase/realtime/RealtimeEvent {
-	public fun <init> (Lkotlinx/serialization/json/JsonObject;)V
+	public fun <init> (Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Lkotlinx/serialization/json/JsonObject;
-	public final fun copy (Lkotlinx/serialization/json/JsonObject;)Lio/github/androidpoet/supabase/realtime/RealtimeEvent$PostgresDelete;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/realtime/RealtimeEvent$PostgresDelete;Lkotlinx/serialization/json/JsonObject;ILjava/lang/Object;)Lio/github/androidpoet/supabase/realtime/RealtimeEvent$PostgresDelete;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lio/github/androidpoet/supabase/realtime/RealtimeEvent$PostgresDelete;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/realtime/RealtimeEvent$PostgresDelete;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/realtime/RealtimeEvent$PostgresDelete;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCommitTimestamp ()Ljava/lang/String;
 	public final fun getOldRecord ()Lkotlinx/serialization/json/JsonObject;
+	public final fun getSchema ()Ljava/lang/String;
+	public final fun getTable ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
 
 public final class io/github/androidpoet/supabase/realtime/RealtimeEvent$PostgresInsert : io/github/androidpoet/supabase/realtime/RealtimeEvent {
-	public fun <init> (Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;)V
-	public synthetic fun <init> (Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Lkotlinx/serialization/json/JsonObject;
 	public final fun component2 ()Lkotlinx/serialization/json/JsonObject;
-	public final fun copy (Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;)Lio/github/androidpoet/supabase/realtime/RealtimeEvent$PostgresInsert;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/realtime/RealtimeEvent$PostgresInsert;Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;ILjava/lang/Object;)Lio/github/androidpoet/supabase/realtime/RealtimeEvent$PostgresInsert;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lio/github/androidpoet/supabase/realtime/RealtimeEvent$PostgresInsert;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/realtime/RealtimeEvent$PostgresInsert;Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/realtime/RealtimeEvent$PostgresInsert;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCommitTimestamp ()Ljava/lang/String;
 	public final fun getOldRecord ()Lkotlinx/serialization/json/JsonObject;
 	public final fun getRecord ()Lkotlinx/serialization/json/JsonObject;
+	public final fun getSchema ()Ljava/lang/String;
+	public final fun getTable ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
 
 public final class io/github/androidpoet/supabase/realtime/RealtimeEvent$PostgresUpdate : io/github/androidpoet/supabase/realtime/RealtimeEvent {
-	public fun <init> (Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;)V
-	public synthetic fun <init> (Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Lkotlinx/serialization/json/JsonObject;
 	public final fun component2 ()Lkotlinx/serialization/json/JsonObject;
-	public final fun copy (Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;)Lio/github/androidpoet/supabase/realtime/RealtimeEvent$PostgresUpdate;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/realtime/RealtimeEvent$PostgresUpdate;Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;ILjava/lang/Object;)Lio/github/androidpoet/supabase/realtime/RealtimeEvent$PostgresUpdate;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lio/github/androidpoet/supabase/realtime/RealtimeEvent$PostgresUpdate;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/realtime/RealtimeEvent$PostgresUpdate;Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/realtime/RealtimeEvent$PostgresUpdate;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCommitTimestamp ()Ljava/lang/String;
 	public final fun getOldRecord ()Lkotlinx/serialization/json/JsonObject;
 	public final fun getRecord ()Lkotlinx/serialization/json/JsonObject;
+	public final fun getSchema ()Ljava/lang/String;
+	public final fun getTable ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -402,6 +426,8 @@ public final class io/github/androidpoet/supabase/realtime/RealtimeFilterKt {
 public abstract interface class io/github/androidpoet/supabase/realtime/RealtimeSubscription {
 	public abstract fun asFlow ()Lkotlinx/coroutines/flow/Flow;
 	public abstract fun broadcast (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun broadcastWithAck (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun broadcastWithAck$default (Lio/github/androidpoet/supabase/realtime/RealtimeSubscription;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun getChannel ()Ljava/lang/String;
 	public abstract fun getStatus ()Lkotlinx/coroutines/flow/StateFlow;
 	public abstract fun presenceState ()Ljava/util/Map;
@@ -413,6 +439,7 @@ public abstract interface class io/github/androidpoet/supabase/realtime/Realtime
 }
 
 public final class io/github/androidpoet/supabase/realtime/RealtimeSubscription$DefaultImpls {
+	public static synthetic fun broadcastWithAck$default (Lio/github/androidpoet/supabase/realtime/RealtimeSubscription;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun send$default (Lio/github/androidpoet/supabase/realtime/RealtimeSubscription;Lio/github/androidpoet/supabase/realtime/RealtimeSubscription$SendType;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 }
 

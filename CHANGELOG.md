@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.6.0 — 2026-06-18
+## 0.6.0 — 2026-06-19
 
 ### Changed (breaking)
 
@@ -29,11 +29,63 @@
   `requestTimeoutMillis` (Ktor `HttpTimeout`, installed only when set so streams
   aren't capped); an explicit `httpClientConfig` raw-Ktor escape hatch; a suspend
   `accessTokenProvider` for third-party-auth JWTs.
+- **Auth** — `captchaToken` on `signUpWithEmail`/`signUpWithPhone`/`signInWithEmail`/
+  `signInWithPhone` (sent under `gotrue_meta_security`), so these flows work when
+  bot/CAPTCHA protection is enabled; previously there was no way to pass the token.
+- **Auth** — `signInWithOtp(data = …)` attaches `user_metadata` at magic-link/OTP
+  signup time, matching the other sign-up entry points.
+- **Postgrest** — `or`/`and` accept a `referencedTable` to scope a logical group to
+  an embedded resource (e.g. `authors.or=(…)`), mirroring `order`/`limit`/`range`.
 - **Realtime** — `InboundEventDropped` debug event (see backpressure fix below).
 - **Passkeys** — the opt-in `supabase-auth-passkey` module now drives the native
   WebAuthn ceremony on all platforms; a dedicated docs page documents it.
+- **Auth** — `getSettings()` (`GET /auth/v1/settings`, reports which providers and
+  flags the project has enabled) and `getHealth()` (`GET /auth/v1/health`); both
+  decode tolerantly so unknown/missing keys don't break the response.
+- **Postgrest** — `TextSearchType.Raw` exposes the bare `fts` operator
+  (`to_tsquery`); a standalone `offset()`; `ReturnOption.HEADERS_ONLY`
+  (`Prefer: return=headers-only`, an empty body that keeps headers like
+  `Location`); and `replace()` — `PUT`-based single-row upsert by primary key.
+- **Realtime** — postgres-change events now carry `commitTimestamp`, `schema`, and
+  `table`; broadcast events expose `replayed` (set when the server replays a
+  message); and `RealtimeConfig.logLevel` forwards a `log_level` to the server.
+- **Realtime** — `RealtimeSubscription.broadcastWithAck(event, payload, timeoutMillis)`
+  sends a broadcast and suspends until the server acknowledges it. Result-first:
+  returns `SupabaseResult.Failure` if the channel is not subscribed, the server
+  rejects the push, the connection drops before the ack, or the ack does not arrive
+  within `timeoutMillis`. The fire-and-forget `broadcast`/`send` path is unchanged.
+- **Postgrest** — `insert`/`rpc` accept a `contentType` so callers can send non-JSON
+  bodies (e.g. `text/csv` bulk inserts, scalar-typed RPC args); the default stays
+  JSON. The raw `rpc` also accepts a `filters` block to filter/order/paginate the
+  rows a set-returning function returns.
+- **Core** — `SupabaseException` now carries an optional `cause`, so an underlying
+  throwable that produced an error stays in the stack trace; `toException(cause)`
+  threads it through.
+- **Auth admin** — SAML SSO identity-provider management: `createSsoProvider`,
+  `listSsoProvider`s, `getSsoProvider`, `updateSsoProvider`, `deleteSsoProvider`
+  (the `/admin/sso/providers` family).
+- **Functions** — `invoke`/`invokeWithBody` accept a `FunctionMethod`
+  (`GET`/`POST`/`PUT`/`PATCH`/`DELETE`) for REST-style Edge Functions that branch on
+  the request verb; the default stays `POST` and `GET` is sent without a body.
+- **Storage** — `createResumableUpload`/`uploadResumable` accept object `metadata`,
+  emitted as the TUS `Upload-Metadata` `metadata` entry with the same Base64-JSON
+  encoding as the non-resumable `x-metadata` path (previously metadata was dropped
+  on the resumable path).
+- **Postgrest** — `isDistinct` filter operator (`IS DISTINCT FROM`, a null-aware
+  inequality), completing the operator set.
 
 ### Fixed
+
+- **Auth `updateUser`** — fixed a test that still asserted the old `PATCH` verb
+  after the endpoint moved to `PUT`, so the change is now actually covered.
+- **Client `Retry-After`** — the header is now parsed in both RFC 7231 forms
+  (delta-seconds *and* HTTP-date); previously a date-form value was dropped and the
+  server's backoff hint was lost.
+- **Errors** — HTTP `406` (Not Acceptable) and `416` (Range Not Satisfiable) now map
+  to the `Validation` category instead of falling through to `Unknown`.
+- **Realtime** — channel-level `phx_close` and `system` close frames now move the
+  channel to `UNSUBSCRIBED`/`ERROR` and surface a `SystemEvent`; previously they
+  were silently ignored.
 
 - **Storage signed-URL TTL** — the request body now sends camelCase `expiresIn`;
   it was `expires_in`, which the server ignored, so signed URLs silently used the
@@ -57,6 +109,54 @@
   `Failure` instead of throwing `ClassCastException`; the Apple provider can no
   longer double-resume its continuation; the Google provider propagates coroutine
   cancellation to the in-flight Credential Manager request.
+- **Auth `updateUser`** — now sends `PUT /user` instead of `PATCH`; the server
+  only registers `PUT` for that route, so profile/password/metadata updates did
+  not reach the handler.
+- **Auth magic-link redirect** — `signInWithOtp(emailRedirectTo = …)` now sends
+  the redirect as the `redirect_to` query parameter; it was a request-body field
+  the server ignores, so the magic link used the project default redirect.
+- **Auth response decoding** — `Session.tokenType`/`MfaVerifyResponse.tokenType`
+  default to `bearer`, so a response omitting `token_type` still decodes. Secret
+  fields (access/refresh/provider tokens, TOTP secret, native credential tokens)
+  are now redacted from `toString()` to keep credentials out of logs.
+- **Postgrest logical groups** — nested `and`/`or` inside a group now render as
+  `and(…)`/`or(…)` (no spurious dot) and a negated group renders as
+  `not.and=(…)`/`not.or=(…)` (prefix on the key); both forms were malformed and
+  rejected by the server. `range(from, to)` now requires `to >= from`.
+- **Storage image transforms** — `getPublicUrl`/`getAuthenticatedUrl` with a
+  `transform` now target the `/render/image/...` route; on the `/object/...`
+  route the server ignores transform params and returns the original image.
+  `download = true` without a filename now emits `download=` (empty value).
+- **Functions region** — `FunctionRegion.ANY` no longer sends a literal
+  `x-region: any` header (the header is omitted, letting the platform route).
+- **Client transport** — a caller-supplied `Authorization` header is matched
+  case-insensitively (no more duplicate header from a lowercased key); a throwing
+  `accessTokenProvider` is returned as a `SupabaseResult.Failure` rather than
+  thrown; a trailing slash on the project URL is trimmed (no `//` in paths).
+- **Realtime** — a single malformed inbound frame is now dropped in isolation
+  instead of tearing down the socket and forcing every channel to rejoin; a
+  heartbeat reply only clears the liveness watchdog when its `ref` matches the
+  outstanding heartbeat.
+- **Auth admin** — `createUser`/`getUserById`/`updateUserById`/`inviteUserByEmail`
+  now decode the bare `User` the server returns (a `{"user":…}` wrapper is still
+  accepted). They previously required the wrapper and so failed on every valid
+  `200`; the unit tests had masked this by mocking the wrapper shape.
+- **Auth** — `resetPasswordForEmail` no longer sends a `create_user` field the
+  `/recover` endpoint doesn't define; `verifyOtp` returns a clear failure on a
+  no-session confirmation (e.g. email change) instead of an opaque decode error;
+  `generateLink` no longer sends `redirect_to` in both the body and the query.
+- **Enums from server responses** — MFA factor type/status, the admin OAuth-client
+  enums, and the Storage vector data-type/distance-metric enums now tolerate an
+  unknown server value (coerced to `UNKNOWN`) instead of failing the whole
+  response decode, so a new server-side value can't break e.g. `listFactors()`.
+- **Postgrest** — a `null` argument to a GET-based RPC is now omitted from the
+  query string instead of being sent as the literal text `"null"`.
+- **Realtime** — a handshake that times out during `connect()` no longer leaks the
+  connection scope or rethrows a raw cancellation; it routes through the normal
+  reconnect/`Failed` path.
+- **Secret redaction** — `toString()` now masks secrets on the auth request bodies
+  (passwords, id/refresh tokens) and on the admin client-secret/password carriers,
+  extending the redaction already applied to `Session` and the MFA/native types.
 
 ### Added (supabase-kt parity audit)
 

@@ -45,6 +45,13 @@ class FiltersTest {
         assertEquals(listOf("verified" to "is.true"), result)
     }
 
+    @Test
+    fun test_isDistinct_producesCorrectParam() {
+        assertEquals(listOf("status" to "isdistinct.active"), filters { isDistinct("status", "active") })
+        assertEquals(listOf("count" to "isdistinct.5"), filters { isDistinct("count", 5) })
+        assertEquals(listOf("deleted_at" to "isdistinct.null"), filters { isDistinct("deleted_at", null) })
+    }
+
     // --- Value quoting / injection safety -------------------------------------
     // PostgREST treats comma, parentheses and double-quote as structural in a
     // filter value; an unquoted value containing one would change the query's
@@ -101,7 +108,19 @@ class FiltersTest {
                     }
                 }
             }
-        assertEquals(listOf("or" to "(status.eq.active,and.(age.gte.18,age.lt.65))"), result)
+        assertEquals(listOf("or" to "(status.eq.active,and(age.gte.18,age.lt.65))"), result)
+    }
+
+    @Test
+    fun test_or_withReferencedTable_scopesKeyToEmbeddedResource() {
+        val result = filters { or(referencedTable = "authors") { eq("active", true) } }
+        assertEquals(listOf("authors.or" to "(active.eq.true)"), result)
+    }
+
+    @Test
+    fun test_and_withReferencedTable_scopesKeyToEmbeddedResource() {
+        val result = filters { and(referencedTable = "authors") { eq("active", true) } }
+        assertEquals(listOf("authors.and" to "(active.eq.true)"), result)
     }
 
     @Test
@@ -200,6 +219,34 @@ class FiltersTest {
     }
 
     @Test
+    fun test_not_negatesNestedAndGroup_prefixesKey() {
+        val result =
+            filters {
+                not {
+                    and {
+                        gte("age", "18")
+                        lt("age", "65")
+                    }
+                }
+            }
+        assertEquals(listOf("not.and" to "(age.gte.18,age.lt.65)"), result)
+    }
+
+    @Test
+    fun test_not_negatesNestedOrGroup_prefixesKey() {
+        val result =
+            filters {
+                not {
+                    or {
+                        eq("status", "active")
+                        eq("status", "pending")
+                    }
+                }
+            }
+        assertEquals(listOf("not.or" to "(status.eq.active,status.eq.pending)"), result)
+    }
+
+    @Test
     fun test_order_ascending() {
         val result = filters { order("created_at") }
         assertEquals(listOf("order" to "created_at.asc"), result)
@@ -233,6 +280,18 @@ class FiltersTest {
     fun test_limit_withReferencedTable() {
         val result = filters { limit(5, referencedTable = "profiles") }
         assertEquals(listOf("profiles.limit" to "5"), result)
+    }
+
+    @Test
+    fun test_offset_producesCorrectParam() {
+        val result = filters { offset(10) }
+        assertEquals(listOf("offset" to "10"), result)
+    }
+
+    @Test
+    fun test_offset_withReferencedTable() {
+        val result = filters { offset(5, referencedTable = "authors") }
+        assertEquals(listOf("authors.offset" to "5"), result)
     }
 
     @Test

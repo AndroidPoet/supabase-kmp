@@ -26,13 +26,15 @@ public enum class CountOption(
  *
  * [REPRESENTATION] makes PostgREST echo the affected rows back in the body (so
  * the typed helpers can decode them); [MINIMAL] returns an empty body, which the
- * `*Unit` helpers use when the result is not needed.
+ * `*Unit` helpers use when the result is not needed; [HEADERS_ONLY] also returns
+ * an empty body but keeps response headers such as `Location` populated.
  */
 public enum class ReturnOption(
     internal val headerValue: String,
 ) {
     MINIMAL("minimal"),
     REPRESENTATION("representation"),
+    HEADERS_ONLY("headers-only"),
 }
 
 /**
@@ -212,6 +214,8 @@ public interface DatabaseClient {
      * @param columns explicit column list (`columns=`); when null it is derived for bulk inserts.
      * @param count adds a `count=` preference, surfacing the affected total in `Content-Range`.
      * @param rollback when true sends `tx=rollback` so the write is validated but not committed.
+     * @param contentType the request body's `Content-Type`; defaults to JSON, but lets callers send
+     *   e.g. a `text/csv` bulk insert instead of a JSON array. Only the header changes — [body] is sent verbatim.
      * @return the response body (representation rows, or empty for [ReturnOption.MINIMAL]).
      */
     public suspend fun insert(
@@ -227,6 +231,7 @@ public interface DatabaseClient {
         count: CountOption? = null,
         stripNulls: Boolean = false,
         rollback: Boolean = false,
+        contentType: String = "application/json",
         headers: Map<String, String> = emptyMap(),
     ): SupabaseResult<String>
 
@@ -256,6 +261,29 @@ public interface DatabaseClient {
         maxAffected: Int? = null,
         explain: ExplainOptions? = null,
         headers: Map<String, String> = emptyMap(),
+        filters: FilterBuilder.() -> Unit = {},
+    ): SupabaseResult<String>
+
+    /**
+     * Replaces (or inserts) a single row of [table] via `PUT /rest/v1/{table}`,
+     * the PostgREST replace-by-primary-key write.
+     *
+     * Unlike [update]'s partial `PATCH`, this is a full-row replace: [body] must be
+     * a JSON object carrying **every** column (including the primary key), and
+     * [filters] must select **exactly** that primary key (e.g. `eq("id", 7)` for a
+     * row whose body has `"id": 7`). PostgREST replaces the matching row, or inserts
+     * the row when none matches. [returning] shapes the echoed body as in [update];
+     * [columns] becomes the `select=` projection of any returned representation.
+     *
+     * @param returning whether the affected row is echoed back ([ReturnOption.REPRESENTATION]) or the body is empty.
+     * @param columns the `select=` projection applied to the returned representation.
+     * @return the response body (the replaced row, or empty for non-representation returns).
+     */
+    public suspend fun replace(
+        table: String,
+        body: String,
+        returning: ReturnOption = ReturnOption.REPRESENTATION,
+        columns: String = "*",
         filters: FilterBuilder.() -> Unit = {},
     ): SupabaseResult<String>
 
@@ -301,6 +329,10 @@ public interface DatabaseClient {
      * @param count adds a `count=` preference, surfacing the total in `Content-Range`.
      * @param rollback when true sends `tx=rollback` so any writes are rolled back.
      * @param maxAffected must be greater than 0 when set; caps rows the function may modify.
+     * @param contentType the request body's `Content-Type`; defaults to JSON, but lets callers send a
+     *   scalar-typed body (e.g. `text/plain`, `application/octet-stream`) to a single-parameter function. [params] is sent verbatim.
+     * @param filters PostgREST filters/ordering/pagination applied to the rows a set-returning
+     *   function returns, threaded into the query string exactly as for [select]/[update].
      */
     public suspend fun rpc(
         function: String,
@@ -314,7 +346,9 @@ public interface DatabaseClient {
         rollback: Boolean = false,
         maxAffected: Int? = null,
         explain: ExplainOptions? = null,
+        contentType: String = "application/json",
         headers: Map<String, String> = emptyMap(),
+        filters: FilterBuilder.() -> Unit = {},
     ): SupabaseResult<String>
 
     /**

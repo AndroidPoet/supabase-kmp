@@ -12,29 +12,47 @@ import kotlinx.serialization.json.JsonObject
  */
 public sealed interface RealtimeEvent {
     /** A row was inserted; [record] is the new row ([oldRecord] is normally
-     * absent for INSERT). */
+     * absent for INSERT). [commitTimestamp] is the server commit time
+     * (ISO-8601), [schema] and [table] identify the changed relation; all three
+     * are `null` if the server omits them. */
     public data class PostgresInsert(
         public val record: JsonObject,
         public val oldRecord: JsonObject? = null,
+        public val commitTimestamp: String? = null,
+        public val schema: String? = null,
+        public val table: String? = null,
     ) : RealtimeEvent
 
     /** A row was updated; [record] is the new row and [oldRecord] the previous one
-     * when the table's replica identity provides it. */
+     * when the table's replica identity provides it. [commitTimestamp] is the
+     * server commit time (ISO-8601), [schema] and [table] identify the changed
+     * relation; all three are `null` if the server omits them. */
     public data class PostgresUpdate(
         public val record: JsonObject,
         public val oldRecord: JsonObject? = null,
+        public val commitTimestamp: String? = null,
+        public val schema: String? = null,
+        public val table: String? = null,
     ) : RealtimeEvent
 
     /** A row was deleted; [oldRecord] is the removed row (may be partial,
-     * depending on replica identity). */
+     * depending on replica identity). [commitTimestamp] is the server commit time
+     * (ISO-8601), [schema] and [table] identify the changed relation; all three
+     * are `null` if the server omits them. */
     public data class PostgresDelete(
         public val oldRecord: JsonObject,
+        public val commitTimestamp: String? = null,
+        public val schema: String? = null,
+        public val table: String? = null,
     ) : RealtimeEvent
 
-    /** A broadcast message named [event] carrying [payload]. */
+    /** A broadcast message named [event] carrying [payload]. [replayed] is `true`
+     * when the server is replaying a retained broadcast to a late joiner (from the
+     * message's `meta.replayed` flag); `false` for live messages. */
     public data class Broadcast(
         public val event: String,
         public val payload: JsonObject,
+        public val replayed: Boolean = false,
     ) : RealtimeEvent
 
     /** A presence sync: [state] is the full cumulative membership after a

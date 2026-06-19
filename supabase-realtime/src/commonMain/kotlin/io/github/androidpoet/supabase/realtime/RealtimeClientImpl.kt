@@ -3,6 +3,7 @@ import io.github.androidpoet.supabase.client.SupabaseClient
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.core.result.map
+import io.github.androidpoet.supabase.core.util.urlEncode
 import io.github.androidpoet.supabase.realtime.models.PostgresChangeEvent
 import io.github.androidpoet.supabase.realtime.models.PresenceState
 import io.github.androidpoet.supabase.realtime.models.RealtimeChannel
@@ -20,10 +21,12 @@ import kotlinx.atomicfu.locks.SynchronizedObject
 import kotlinx.atomicfu.locks.synchronized
 import kotlinx.atomicfu.update
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
@@ -44,6 +47,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -241,7 +245,11 @@ internal class RealtimeClientImpl(
                 reconnectAttempt.value = 0
                 _connectionState.value = ConnectionState.Connected
             } catch (e: Throwable) {
-                if (e is CancellationException) throw e
+                // A handshake timeout arrives as a TimeoutCancellationException (a
+                // CancellationException), but it is a connection failure — route it
+                // through the reconnect/Failed path. Only genuine structured
+                // cancellation (not a timeout) is rethrown.
+                if (e is CancellationException && e !is TimeoutCancellationException) throw e
                 session = null
                 if (config.autoReconnect && !intentionalDisconnect) {
                     scheduleReconnect()
@@ -432,23 +440,40 @@ internal class RealtimeClientImpl(
                 .removePrefix("http://")
                 .trimEnd('/')
         val wsScheme = if (isHttps) "wss" else "ws"
-        val url = "$wsScheme://$host/realtime/v1/websocket?apikey=${supabaseClient.apiKey}&vsn=1.0.0"
+        // Append &log_level=<level> only when configured; null leaves the param off
+        // so the server keeps its default verbosity.
+        val logLevelParam = config.logLevel?.let { "&log_level=${urlEncode(it)}" } ?: ""
+        val url = "$wsScheme://$host/realtime/v1/websocket?apikey=${supabaseClient.apiKey}&vsn=1.0.0$logLevelParam"
         val newScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-        scope = newScope
-        pendingHeartbeatRef.value = null
         // Bound the handshake so a stalled connect surfaces as a timeout (and
         // triggers reconnect/Failed) instead of hanging on the platform default.
-        val ws = withTimeout(config.connectionTimeoutMs) { httpClient.webSocketSession(url) }
+        // The scope is left unassigned until the session is obtained: a handshake
+        // timeout must cancel newScope here, otherwise it would be orphaned (the
+        // TimeoutCancellationException propagates past connect()'s catch).
+        val ws =
+            try {
+                withTimeout(config.connectionTimeoutMs) { httpClient.webSocketSession(url) }
+            } catch (e: Throwable) {
+                newScope.cancel()
+                throw e
+            }
+        scope = newScope
+        pendingHeartbeatRef.value = null
         session = ws
         newScope.launch {
             try {
                 for (frame in ws.incoming) {
-                    if (frame is Frame.Text) {
-                        val text = frame.readText()
-                        val message = json.decodeFromString<RealtimeMessage>(text)
-                        recordInboundMessage(message)
-                        dispatchToSubscription(message)
-                    }
+                    if (frame !is Frame.Text) continue
+                    val message =
+                        try {
+                            json.decodeFromString<RealtimeMessage>(frame.readText())
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (_: Throwable) {
+                            continue
+                        }
+                    recordInboundMessage(message)
+                    dispatchToSubscription(message)
                 }
             } catch (e: Throwable) {
                 if (e is CancellationException) throw e
@@ -514,8 +539,8 @@ internal class RealtimeClientImpl(
             )
         }
         _debugEvents.tryEmit(RealtimeDebugEvent.InboundMessage(message))
-        if (message.isHeartbeatReply()) {
-            pendingHeartbeatRef.value = null
+        if (message.isHeartbeatReply() && message.ref != null) {
+            pendingHeartbeatRef.compareAndSet(message.ref, null)
             _debugEvents.tryEmit(RealtimeDebugEvent.HeartbeatReceived(message.ref))
         }
     }
@@ -531,11 +556,28 @@ internal class RealtimeClientImpl(
 
     private fun handleUnexpectedDisconnect() {
         if (!config.autoReconnect || intentionalDisconnect) return
+        // The socket dropped: any acked broadcast still awaiting its phx_reply will
+        // never be answered (a rejoin mints a fresh joinRef and the push is not
+        // replayed), so fail those callers instead of letting them hang to timeout.
+        // Run on the long-lived reconnectScope since the read-loop scope is being
+        // cancelled right below.
+        failAllPendingAcksOnReconnectScope("Connection lost before broadcast was acknowledged")
         heartbeatJob?.cancel()
         heartbeatJob = null
         scope?.cancel()
         scope = null
         scheduleReconnect()
+    }
+
+    // Fails the pending acked broadcasts of every active subscription off the
+    // long-lived reconnectScope. Used from non-suspend teardown paths (the read-loop
+    // finally) where the per-connection scope is being cancelled.
+    private fun failAllPendingAcksOnReconnectScope(reason: String) {
+        val subscriptions = synchronized(subscriptionsLock) { activeSubscriptions.values.toList() }
+        if (subscriptions.isEmpty()) return
+        reconnectScope.launch {
+            subscriptions.forEach { it.failPendingAcks(reason) }
+        }
     }
 
     private fun scheduleReconnect() {
@@ -746,6 +788,15 @@ internal class ChannelSubscriptionImpl(
     // change events by their `ids` so two filters on the same table that differ
     // only by `filter` don't both fire. Mutated only on the single inbound loop.
     private val serverBindingsById = mutableMapOf<Long, PostgresCallbackConfig>()
+
+    // Outstanding acked-broadcast pushes, keyed by the Phoenix message ref we minted
+    // for each. broadcastWithAck() registers a deferred here, the inbound phx_reply
+    // handler completes it, and a disconnect/close fails the survivors so callers
+    // don't hang. Both sides (caller coroutine, single inbound loop, teardown) mutate
+    // the map, so it is a compound operation guarded by a Mutex per the project's
+    // concurrency rules (a bare @Volatile would not make put/remove atomic).
+    private val pendingAcks = mutableMapOf<String, CompletableDeferred<SupabaseResult<Unit>>>()
+    private val pendingAcksLock = Mutex()
     internal var joinRef: String? = null
     internal val hasPresenceTracking: Boolean = presenceCallback != null
     override val status: StateFlow<RealtimeSubscription.Status> = _status.asStateFlow()
@@ -806,11 +857,20 @@ internal class ChannelSubscriptionImpl(
 
     override suspend fun unsubscribe() {
         _status.value = RealtimeSubscription.Status.UNSUBSCRIBING
+        failPendingAcks("Channel '$channel' left before broadcast was acknowledged")
         client.leaveChannel(topic)
         _status.value = RealtimeSubscription.Status.UNSUBSCRIBED
     }
 
     override suspend fun send(type: RealtimeSubscription.SendType, event: String, payload: JsonObject?) {
+        send(type, event, payload, ref = client.nextRef())
+    }
+
+    // Internal overload that sends a push carrying an explicit [ref] instead of
+    // minting a fresh one. Used by broadcastWithAck so it can register a pending-ack
+    // deferred under the same ref it puts on the wire and correlate the reply. The
+    // public send()/broadcast() path is unchanged (fire-and-forget with a fresh ref).
+    private suspend fun send(type: RealtimeSubscription.SendType, event: String, payload: JsonObject?, ref: String) {
         client.sendMessage(
             RealtimeMessage(
                 topic = topic,
@@ -824,13 +884,69 @@ internal class ChannelSubscriptionImpl(
                         }
                     },
                 joinRef = joinRef,
-                ref = client.nextRef(),
+                ref = ref,
             ),
         )
     }
 
     override suspend fun broadcast(event: String, payload: JsonObject) {
         send(RealtimeSubscription.SendType.BROADCAST, event, payload)
+    }
+
+    override suspend fun broadcastWithAck(
+        event: String,
+        payload: JsonObject,
+        timeoutMillis: Long,
+    ): SupabaseResult<Unit> {
+        if (_status.value != RealtimeSubscription.Status.SUBSCRIBED) {
+            return SupabaseResult.Failure(
+                SupabaseError(message = "Channel '$channel' is not subscribed; cannot await broadcast ack"),
+            )
+        }
+        val ref = client.nextRef()
+        val deferred = CompletableDeferred<SupabaseResult<Unit>>()
+        pendingAcksLock.withLock { pendingAcks[ref] = deferred }
+        return try {
+            send(RealtimeSubscription.SendType.BROADCAST, event, payload, ref = ref)
+            // Await the server's phx_reply (resolved by completePendingAck) or a
+            // teardown-driven failure. withTimeoutOrNull only cancels the await, not
+            // the caller, so genuine caller cancellation still propagates as usual.
+            withTimeoutOrNull(timeoutMillis) { deferred.await() }
+                ?: SupabaseResult.Failure(
+                    SupabaseError(message = "Broadcast not acknowledged within ${timeoutMillis}ms"),
+                )
+        } finally {
+            pendingAcksLock.withLock { pendingAcks.remove(ref) }
+        }
+    }
+
+    // Completes the pending-ack deferred (if any) registered under [ref] when the
+    // matching phx_reply arrives, mapping the server status to a SupabaseResult.
+    // Called from the single inbound dispatch loop. A no-op if [ref] is not ours
+    // (e.g. a join/leave/presence reply).
+    private suspend fun completePendingAck(ref: String, status: String, response: JsonElement?) {
+        val deferred = pendingAcksLock.withLock { pendingAcks[ref] } ?: return
+        val result =
+            if (status == "ok") {
+                SupabaseResult.Success(Unit)
+            } else {
+                SupabaseResult.Failure(
+                    SupabaseError(message = "Broadcast rejected by server: ${response?.toString() ?: status}"),
+                )
+            }
+        deferred.complete(result)
+    }
+
+    // Fails every still-outstanding acked broadcast with [reason] so callers blocked
+    // in broadcastWithAck unblock instead of hanging past a disconnect/close/leave.
+    // Completing (not cancelling) makes broadcastWithAck return Failure without
+    // touching the caller's own coroutine cancellation. Each caller still removes its
+    // own ref in its finally block.
+    internal suspend fun failPendingAcks(reason: String) {
+        val outstanding = pendingAcksLock.withLock { pendingAcks.values.toList() }
+        if (outstanding.isEmpty()) return
+        val failure = SupabaseResult.Failure(SupabaseError(message = reason))
+        outstanding.forEach { it.complete(failure) }
     }
 
     override suspend fun track(state: JsonObject) {
@@ -850,6 +966,7 @@ internal class ChannelSubscriptionImpl(
             "phx_reply" -> handleSystemReply(message.payload, message.ref)
             "phx_error" -> {
                 _status.value = RealtimeSubscription.Status.ERROR
+                failPendingAcks("Channel '$channel' errored before broadcast was acknowledged")
                 val event =
                     RealtimeEvent.SystemEvent(
                         status = "error",
@@ -857,8 +974,46 @@ internal class ChannelSubscriptionImpl(
                     )
                 publish(event)
             }
+            "phx_close" -> handleChannelClose(message.payload)
+            "system" -> handleSystemEvent(message.payload)
             else -> { }
         }
+    }
+
+    // A channel-level `phx_close`: the server closed this channel (e.g. after a
+    // leave or a server-side teardown). Move to UNSUBSCRIBED and surface it; this
+    // is the channel closing, not the socket, so the socket teardown/reconnect
+    // path is left untouched.
+    private suspend fun handleChannelClose(payload: JsonObject) {
+        _status.value = RealtimeSubscription.Status.UNSUBSCRIBED
+        failPendingAcks("Channel '$channel' closed before broadcast was acknowledged")
+        publish(
+            RealtimeEvent.SystemEvent(
+                status = "closed",
+                message = payload.toString(),
+            ),
+        )
+    }
+
+    // A channel-level `system` message. Phoenix uses these for extension status
+    // (e.g. postgres bindings) but also to report channel errors such as an
+    // expired token. Treat an "error" status or an error-flavored message as a
+    // failure (status -> ERROR); otherwise surface it informationally without
+    // disturbing the subscription status.
+    private suspend fun handleSystemEvent(payload: JsonObject) {
+        val status = payload["status"]?.jsonPrimitive?.content
+        val systemMessage = payload["message"]?.jsonPrimitive?.content
+        val isError = status == "error" || systemMessage?.contains("Token has expired") == true
+        if (isError) {
+            _status.value = RealtimeSubscription.Status.ERROR
+            failPendingAcks("Channel '$channel' errored before broadcast was acknowledged")
+        }
+        publish(
+            RealtimeEvent.SystemEvent(
+                status = if (isError) "error" else (status ?: "system"),
+                message = systemMessage ?: payload.toString(),
+            ),
+        )
     }
 
     private suspend fun handlePostgresChange(payload: JsonObject) {
@@ -866,7 +1021,10 @@ internal class ChannelSubscriptionImpl(
         val type = data["type"]?.jsonPrimitive?.content ?: return
         val record = data["record"]?.jsonObject
         val oldRecord = data["old_record"]?.jsonObject
-        val event = buildPostgresEvent(type, record, oldRecord) ?: return
+        val commitTimestamp = data["commit_timestamp"]?.jsonPrimitive?.content
+        val schema = data["schema"]?.jsonPrimitive?.content
+        val table = data["table"]?.jsonPrimitive?.content
+        val event = buildPostgresEvent(type, record, oldRecord, commitTimestamp, schema, table) ?: return
         publish(event)
         val callbackPayload = record ?: oldRecord ?: return
         for (config in resolvePostgresConfigs(payload, type)) {
@@ -874,11 +1032,44 @@ internal class ChannelSubscriptionImpl(
         }
     }
 
-    private fun buildPostgresEvent(type: String, record: JsonObject?, oldRecord: JsonObject?): RealtimeEvent? =
+    private fun buildPostgresEvent(
+        type: String,
+        record: JsonObject?,
+        oldRecord: JsonObject?,
+        commitTimestamp: String?,
+        schema: String?,
+        table: String?,
+    ): RealtimeEvent? =
         when (type) {
-            "INSERT" -> record?.let { RealtimeEvent.PostgresInsert(record = it, oldRecord = oldRecord) }
-            "UPDATE" -> record?.let { RealtimeEvent.PostgresUpdate(record = it, oldRecord = oldRecord) }
-            "DELETE" -> oldRecord?.let { RealtimeEvent.PostgresDelete(oldRecord = it) }
+            "INSERT" ->
+                record?.let {
+                    RealtimeEvent.PostgresInsert(
+                        record = it,
+                        oldRecord = oldRecord,
+                        commitTimestamp = commitTimestamp,
+                        schema = schema,
+                        table = table,
+                    )
+                }
+            "UPDATE" ->
+                record?.let {
+                    RealtimeEvent.PostgresUpdate(
+                        record = it,
+                        oldRecord = oldRecord,
+                        commitTimestamp = commitTimestamp,
+                        schema = schema,
+                        table = table,
+                    )
+                }
+            "DELETE" ->
+                oldRecord?.let {
+                    RealtimeEvent.PostgresDelete(
+                        oldRecord = it,
+                        commitTimestamp = commitTimestamp,
+                        schema = schema,
+                        table = table,
+                    )
+                }
             else -> null
         }
 
@@ -916,7 +1107,16 @@ internal class ChannelSubscriptionImpl(
     private suspend fun handleBroadcast(payload: JsonObject) {
         val eventName = payload["event"]?.jsonPrimitive?.content ?: return
         val broadcastPayload = payload["payload"]?.jsonObject ?: buildJsonObject {}
-        val event = RealtimeEvent.Broadcast(event = eventName, payload = broadcastPayload)
+        // Replayed broadcasts (delivered to a late joiner that requested replay)
+        // carry a `meta.replayed` flag; live messages omit it, so default to false.
+        val replayed =
+            payload["meta"]
+                ?.jsonObject
+                ?.get("replayed")
+                ?.jsonPrimitive
+                ?.content
+                ?.toBoolean() ?: false
+        val event = RealtimeEvent.Broadcast(event = eventName, payload = broadcastPayload, replayed = replayed)
         publish(event)
         broadcastCallbacks[eventName]?.invoke(broadcastPayload)
     }
@@ -967,6 +1167,12 @@ internal class ChannelSubscriptionImpl(
             if (status == "ok" && response is JsonObject) {
                 captureServerBindings(response)
             }
+        } else if (ref != null) {
+            // Not the join reply: it may be the ack for a broadcastWithAck push we
+            // sent under this ref. Complete that pending deferred (success on "ok",
+            // failure otherwise). A no-op if the ref isn't a tracked broadcast ack,
+            // so this never disturbs the joinRef/leave/presence reply handling above.
+            completePendingAck(ref, status, response)
         }
         val event =
             RealtimeEvent.SystemEvent(

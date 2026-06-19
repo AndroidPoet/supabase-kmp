@@ -19,7 +19,7 @@ import kotlinx.serialization.json.JsonObject
 public data class Bucket(
     val id: String,
     val name: String,
-    val public: Boolean,
+    val public: Boolean = false,
     @SerialName("created_at") val createdAt: String? = null,
     @SerialName("updated_at") val updatedAt: String? = null,
     @SerialName("file_size_limit") val fileSizeLimit: Long? = null,
@@ -200,9 +200,10 @@ public data class ObjectListV2Object(
     val name: String,
     val key: String? = null,
     val id: String,
-    @SerialName("updated_at") val updatedAt: String,
-    @SerialName("created_at") val createdAt: String,
-    @SerialName("last_accessed_at") val lastAccessedAt: String,
+    // Timestamps tolerate omission (mirrors FileObject), defaulting to null when not reported.
+    @SerialName("updated_at") val updatedAt: String? = null,
+    @SerialName("created_at") val createdAt: String? = null,
+    @SerialName("last_accessed_at") val lastAccessedAt: String? = null,
     val metadata: JsonObject? = null,
 )
 
@@ -459,6 +460,10 @@ public enum class VectorDataType {
     /** 32-bit IEEE float components. */
     @SerialName("float32")
     FLOAT32,
+
+    /** Fallback for a data type this client does not recognize (e.g. added server-side later). */
+    @SerialName("unknown")
+    UNKNOWN,
 }
 
 /** Similarity metric a vector index uses to rank query matches. */
@@ -475,6 +480,10 @@ public enum class VectorDistanceMetric {
     /** Dot-product (inner product) similarity. */
     @SerialName("dotproduct")
     DOTPRODUCT,
+
+    /** Fallback for a metric this client does not recognize (e.g. added server-side later). */
+    @SerialName("unknown")
+    UNKNOWN,
 }
 
 /** Declares which metadata keys are non-filterable for an index, so queries cannot filter on them. */
@@ -516,9 +525,9 @@ public data class VectorIndexRequest(
 public data class VectorIndex(
     val indexName: String,
     val vectorBucketName: String,
-    val dataType: VectorDataType,
+    val dataType: VectorDataType = VectorDataType.UNKNOWN,
     val dimension: Int,
-    val distanceMetric: VectorDistanceMetric,
+    val distanceMetric: VectorDistanceMetric = VectorDistanceMetric.UNKNOWN,
     val metadataConfiguration: VectorMetadataConfiguration? = null,
     val creationTime: Long? = null,
 )
@@ -652,5 +661,5 @@ public data class VectorQueryRequest(
 @Serializable
 public data class VectorQueryResponse(
     val vectors: List<VectorMatch>,
-    val distanceMetric: VectorDistanceMetric? = null,
+    val distanceMetric: VectorDistanceMetric? = VectorDistanceMetric.UNKNOWN,
 )

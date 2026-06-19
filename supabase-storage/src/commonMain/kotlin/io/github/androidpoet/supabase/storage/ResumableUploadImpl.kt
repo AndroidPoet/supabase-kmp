@@ -7,6 +7,7 @@ import io.github.androidpoet.supabase.core.result.SupabaseResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.serialization.json.JsonObject
 import kotlin.concurrent.Volatile
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -21,6 +22,7 @@ internal class ResumableUploadImpl(
     private val cacheControl: Int?,
     private val chunkSize: Int,
     initialUploadUrl: String?,
+    private val metadata: JsonObject? = null,
 ) : ResumableUpload {
     @Volatile
     private var resumableUrl: String? = initialUploadUrl
@@ -154,15 +156,19 @@ internal class ResumableUploadImpl(
 
     @OptIn(ExperimentalEncodingApi::class)
     private fun uploadMetadata(): String {
+        // TUS `Upload-Metadata` format is `key base64value` pairs joined by commas.
+        // For the descriptive fields the raw value is Base64-encoded inline; user
+        // metadata instead carries the already-Base64-encoded JSON the server expects
+        // (the same wire form as the non-resumable `x-metadata` header), so it is
+        // appended verbatim rather than encoded a second time.
         val entries =
             buildList {
-                add("bucketName" to bucket)
-                add("objectName" to path)
-                add("contentType" to contentType)
-                cacheControl?.let { add("cacheControl" to it.toString()) }
+                add("bucketName" to Base64.encode(bucket.encodeToByteArray()))
+                add("objectName" to Base64.encode(path.encodeToByteArray()))
+                add("contentType" to Base64.encode(contentType.encodeToByteArray()))
+                cacheControl?.let { add("cacheControl" to Base64.encode(it.toString().encodeToByteArray())) }
+                metadata?.takeIf { it.isNotEmpty() }?.let { add("metadata" to encodeMetadataValue(it)) }
             }
-        return entries.joinToString(",") { (key, value) ->
-            "$key ${Base64.encode(value.encodeToByteArray())}"
-        }
+        return entries.joinToString(",") { (key, value) -> "$key $value" }
     }
 }

@@ -199,8 +199,15 @@ internal class StorageClientImpl(
         cacheControl: Int?,
         chunkSize: Int,
         uploadUrl: String?,
-    ): ResumableUpload =
-        ResumableUploadImpl(
+        metadata: JsonObject?,
+    ): ResumableUpload {
+        // chunkSize must advance the upload; a non-positive value would never make
+        // progress. The TUS server additionally requires every chunk except the last
+        // to be a 6 MB multiple (see [RESUMABLE_DEFAULT_CHUNK_SIZE] and the KDoc on
+        // createResumableUpload) — that constraint is documented rather than enforced
+        // here so callers stay free to tune the size within the server's rules.
+        require(chunkSize > 0) { "chunkSize must be positive; got $chunkSize" }
+        return ResumableUploadImpl(
             client = client,
             bucket = bucket,
             path = path,
@@ -210,7 +217,9 @@ internal class StorageClientImpl(
             cacheControl = cacheControl,
             chunkSize = chunkSize,
             initialUploadUrl = uploadUrl,
+            metadata = metadata,
         )
+    }
 
     override suspend fun download(bucket: String, path: String): SupabaseResult<String> =
         client.get("${StoragePaths.OBJECT_AUTHENTICATED}/${objectRef(bucket, path)}")
@@ -556,7 +565,10 @@ internal class StorageClientImpl(
         fileName: String?,
         transform: ImageTransformOptions?,
     ): String {
-        val base = "${client.projectUrl}${StoragePaths.OBJECT_PUBLIC}/${objectRef(bucket, path)}"
+        // A transform is only honoured on the render route; the object route serves the
+        // original bytes and silently ignores transform params, so switch routes accordingly.
+        val basePath = if (transform != null) StoragePaths.RENDER_IMAGE_PUBLIC else StoragePaths.OBJECT_PUBLIC
+        val base = "${client.projectUrl}$basePath/${objectRef(bucket, path)}"
         val queryParts = mutableListOf<String>()
         val transformQuery = transform?.toQueryString()
         if (!transformQuery.isNullOrBlank()) {
@@ -576,7 +588,10 @@ internal class StorageClientImpl(
         fileName: String?,
         transform: ImageTransformOptions?,
     ): String {
-        val base = "${client.projectUrl}${StoragePaths.OBJECT_AUTHENTICATED}/${objectRef(bucket, path)}"
+        // A transform is only honoured on the render route; the object route serves the
+        // original bytes and silently ignores transform params, so switch routes accordingly.
+        val basePath = if (transform != null) StoragePaths.RENDER_IMAGE_AUTHENTICATED else StoragePaths.OBJECT_AUTHENTICATED
+        val base = "${client.projectUrl}$basePath/${objectRef(bucket, path)}"
         val queryParts = mutableListOf<String>()
         val transformQuery = transform?.toQueryString()
         if (!transformQuery.isNullOrBlank()) {
@@ -910,7 +925,7 @@ internal class StorageClientImpl(
 
     private fun buildDownloadQuery(download: Boolean, fileName: String?): String {
         if (!download) return ""
-        if (fileName == null) return "?download"
+        if (fileName == null) return "?download="
         return "?download=${encodeQueryComponent(fileName)}"
     }
 
@@ -923,9 +938,8 @@ internal class StorageClientImpl(
     // request header on raw upload/update/upload-to-signed-url calls. The value is
     // the Base64 of the metadata JSON object's textual form. Returns null when no
     // metadata was supplied so the header is omitted entirely.
-    @OptIn(ExperimentalEncodingApi::class)
     private fun metadataHeader(metadata: JsonObject?): String? =
-        metadata?.let { Base64.encode(it.toString().encodeToByteArray()) }
+        metadata?.let { encodeMetadataValue(it) }
 
     // Combines a transform query (resize/format/quality) with the optional
     // download query for the render-image endpoints, mirroring the URL builders.
@@ -961,7 +975,7 @@ internal class StorageClientImpl(
     private fun appendDownloadQuery(url: String, download: Boolean, fileName: String?): String {
         if (!download) return url
         val separator = if (url.contains("?")) "&" else "?"
-        if (fileName == null) return "$url${separator}download"
+        if (fileName == null) return "$url${separator}download="
         return "$url${separator}download=${encodeQueryComponent(fileName)}"
     }
 }
@@ -1349,6 +1363,14 @@ private const val DEFAULT_CONTENT_TYPE = "application/octet-stream"
 // Request header the storage server reads for user-supplied object metadata
 // (Base64-encoded JSON) on raw upload/update/upload-to-signed-url calls.
 private const val METADATA_HEADER = "x-metadata"
+
+// Encodes user-supplied object metadata into the wire form the storage server
+// expects: the Base64 of the metadata JSON object's textual form. Shared by the
+// raw `x-metadata` header (upload/update/upload-to-signed-url) and the resumable
+// `metadata` entry of the TUS `Upload-Metadata` header so both paths are identical.
+@OptIn(ExperimentalEncodingApi::class)
+internal fun encodeMetadataValue(metadata: JsonObject): String =
+    Base64.encode(metadata.toString().encodeToByteArray())
 
 // Minimal, dependency-free extension -> MIME map covering the common upload
 // types. Returns null for unknown/missing extensions so the caller can fall

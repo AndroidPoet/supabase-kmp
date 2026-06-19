@@ -9,6 +9,8 @@ import io.github.androidpoet.supabase.auth.admin.models.GenerateLinkType
 import io.github.androidpoet.supabase.auth.admin.models.OAuthClientCreateRequest
 import io.github.androidpoet.supabase.auth.admin.models.OAuthClientTokenEndpointAuthMethod
 import io.github.androidpoet.supabase.auth.admin.models.OAuthClientUpdateRequest
+import io.github.androidpoet.supabase.auth.admin.models.SsoProviderCreateRequest
+import io.github.androidpoet.supabase.auth.admin.models.SsoProviderUpdateRequest
 import io.github.androidpoet.supabase.auth.models.SignOutScope
 import io.github.androidpoet.supabase.client.SupabaseClient
 import io.github.androidpoet.supabase.core.result.SupabaseError
@@ -226,10 +228,12 @@ class AuthAdminClientImplTest {
                 )
 
             val success = assertIs<SupabaseResult.Success<*>>(result)
-            assertEquals("/auth/v1/admin/generate_link?redirect_to=app%3A%2F%2Fcallback", client.lastPostEndpoint)
+            // redirect_to travels in the body for this endpoint, not as a query param.
+            assertEquals("/auth/v1/admin/generate_link", client.lastPostEndpoint)
             val body = json.parseToJsonElement(client.lastPostBody ?: error("missing body")).jsonObject
             assertEquals("email_change_new", body["type"]?.jsonPrimitive?.content)
             assertEquals("new@example.com", body["new_email"]?.jsonPrimitive?.content)
+            assertEquals("app://callback", body["redirect_to"]?.jsonPrimitive?.content)
             val value = success.value as io.github.androidpoet.supabase.auth.admin.models.GenerateLinkResponse
             assertEquals("https://example.com/action", value.properties.actionLink)
             assertEquals("magiclink", value.properties.verificationType)
@@ -389,6 +393,74 @@ class AuthAdminClientImplTest {
             assertEquals("Acme Updated", body["name"]?.jsonPrimitive?.content)
             assertEquals(false, body["enabled"]?.jsonPrimitive?.boolean)
         }
+
+    @Test
+    fun test_listSsoProviders_unwrapsItemsWrapper() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = client.authAdmin(serviceRoleKey = "service-role")
+
+            val result = sut.listSsoProviders()
+
+            val success = assertIs<SupabaseResult.Success<*>>(result)
+            assertEquals("/auth/v1/admin/sso/providers", client.lastGetEndpoint)
+            assertEquals("Bearer service-role", client.lastGetHeaders["Authorization"])
+            val value = success.value as List<*>
+            val provider = value.first() as io.github.androidpoet.supabase.auth.admin.models.SsoProvider
+            assertEquals("sso-provider-1", provider.id)
+            assertEquals("saml", provider.type)
+            assertEquals("https://idp.example/metadata", provider.saml?.metadataUrl)
+            assertEquals("acme.example", provider.domains.first().domain)
+        }
+
+    @Test
+    fun test_createSsoProvider_sendsSamlPayload() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = client.authAdmin(serviceRoleKey = "service-role")
+
+            val result =
+                sut.createSsoProvider(
+                    SsoProviderCreateRequest(
+                        metadataUrl = "https://idp.example/metadata",
+                        domains = listOf("acme.example"),
+                    ),
+                )
+
+            val success = assertIs<SupabaseResult.Success<*>>(result)
+            assertEquals("/auth/v1/admin/sso/providers", client.lastPostEndpoint)
+            val body = json.parseToJsonElement(client.lastPostBody ?: error("missing body")).jsonObject
+            assertEquals("saml", body["type"]?.jsonPrimitive?.content)
+            assertEquals("https://idp.example/metadata", body["metadata_url"]?.jsonPrimitive?.content)
+            val value = success.value as io.github.androidpoet.supabase.auth.admin.models.SsoProvider
+            assertEquals("sso-provider-1", value.id)
+        }
+
+    @Test
+    fun test_getUpdateAndDeleteSsoProvider_useExpectedEndpoints() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = client.authAdmin(serviceRoleKey = "service-role")
+
+            val getResult = sut.getSsoProvider("sso-provider-1")
+            val updateResult =
+                sut.updateSsoProvider(
+                    id = "sso-provider-1",
+                    request = SsoProviderUpdateRequest(metadataUrl = "https://idp.example/new"),
+                )
+            val deleteResult = sut.deleteSsoProvider("sso-provider-1")
+
+            assertIs<SupabaseResult.Success<*>>(getResult)
+            assertIs<SupabaseResult.Success<*>>(updateResult)
+            val deleteSuccess = assertIs<SupabaseResult.Success<*>>(deleteResult)
+            assertEquals("/auth/v1/admin/sso/providers/sso-provider-1", client.lastGetEndpoint)
+            assertEquals("/auth/v1/admin/sso/providers/sso-provider-1", client.lastPutEndpoint)
+            assertEquals("/auth/v1/admin/sso/providers/sso-provider-1", client.lastDeleteEndpoint)
+            val body = json.parseToJsonElement(client.lastPutBody ?: error("missing body")).jsonObject
+            assertEquals("https://idp.example/new", body["metadata_url"]?.jsonPrimitive?.content)
+            val deleted = deleteSuccess.value as io.github.androidpoet.supabase.auth.admin.models.SsoProvider
+            assertEquals("sso-provider-1", deleted.id)
+        }
 }
 
 private class FakeSupabaseClient : SupabaseClient {
@@ -428,6 +500,11 @@ private class FakeSupabaseClient : SupabaseClient {
                     """{"providers":[${customProviderJson()}]}""",
                 )
             endpoint.startsWith("/auth/v1/admin/custom-providers/") -> SupabaseResult.Success(customProviderJson())
+            endpoint == "/auth/v1/admin/sso/providers" ->
+                SupabaseResult.Success(
+                    """{"items":[${ssoProviderJson()}]}""",
+                )
+            endpoint.startsWith("/auth/v1/admin/sso/providers/") -> SupabaseResult.Success(ssoProviderJson())
             endpoint == "/auth/v1/admin/users" ->
                 SupabaseResult.Success(
                     """{"users":[{"id":"u1","email":"user@example.com"}],"aud":"authenticated"}""",
@@ -466,9 +543,10 @@ private class FakeSupabaseClient : SupabaseClient {
                     ]
                     """.trimIndent(),
                 )
+            // GoTrue returns a bare User from this endpoint (no {"user":…} wrapper).
             endpoint.startsWith("/auth/v1/admin/users/") ->
                 SupabaseResult.Success(
-                    """{"user":{"id":"u1","email":"user@example.com"}}""",
+                    """{"id":"u1","email":"user@example.com"}""",
                 )
             else -> SupabaseResult.Failure(SupabaseError("unexpected GET $endpoint"))
         }
@@ -490,13 +568,15 @@ private class FakeSupabaseClient : SupabaseClient {
                     oauthClientJson(clientSecret = "new-secret"),
                 )
             endpoint == "/auth/v1/admin/custom-providers" -> SupabaseResult.Success(customProviderJson())
+            endpoint == "/auth/v1/admin/sso/providers" -> SupabaseResult.Success(ssoProviderJson())
+            // GoTrue returns a bare User from create/invite (no {"user":…} wrapper).
             endpoint == "/auth/v1/admin/users" ->
                 SupabaseResult.Success(
-                    """{"user":{"id":"u1","email":"user@example.com"}}""",
+                    """{"id":"u1","email":"user@example.com"}""",
                 )
             endpoint.startsWith("/auth/v1/invite") ->
                 SupabaseResult.Success(
-                    """{"user":{"id":"u1","email":"invite@example.com"}}""",
+                    """{"id":"u1","email":"invite@example.com"}""",
                 )
             endpoint.startsWith("/auth/v1/admin/generate_link") ->
                 SupabaseResult.Success(
@@ -528,6 +608,8 @@ private class FakeSupabaseClient : SupabaseClient {
         return when {
             endpoint.startsWith("/auth/v1/admin/oauth/clients/") -> SupabaseResult.Success(oauthClientJson())
             endpoint.startsWith("/auth/v1/admin/custom-providers/") -> SupabaseResult.Success(customProviderJson(name = "Acme Updated"))
+            endpoint.startsWith("/auth/v1/admin/sso/providers/") -> SupabaseResult.Success(ssoProviderJson())
+            // updateUserById: deliberately the {"user":…} wrapper shape so tolerance for it stays covered.
             else -> SupabaseResult.Success("""{"user":{"id":"u1","phone":"+15555550100"}}""")
         }
     }
@@ -548,6 +630,7 @@ private class FakeSupabaseClient : SupabaseClient {
         lastDeleteHeaders = headers
         return when {
             endpoint.contains("/factors/") -> SupabaseResult.Success("""{"id":"factor1"}""")
+            endpoint.startsWith("/auth/v1/admin/sso/providers/") -> SupabaseResult.Success(ssoProviderJson())
             else -> SupabaseResult.Success("{}")
         }
     }
@@ -620,6 +703,26 @@ private class FakeSupabaseClient : SupabaseClient {
             "token_endpoint": "https://issuer.example/token",
             "jwks_uri": "https://issuer.example/jwks"
           }
+        }
+        """.trimIndent()
+
+    private fun ssoProviderJson(): String =
+        """
+        {
+          "id": "sso-provider-1",
+          "type": "saml",
+          "resource_id": null,
+          "disabled": false,
+          "saml": {
+            "entity_id": "https://idp.example/entity",
+            "metadata_url": "https://idp.example/metadata",
+            "attribute_mapping": {"keys": {}}
+          },
+          "domains": [
+            {"id": "domain-1", "domain": "acme.example"}
+          ],
+          "created_at": "2026-01-01T00:00:00Z",
+          "updated_at": "2026-01-02T00:00:00Z"
         }
         """.trimIndent()
 }

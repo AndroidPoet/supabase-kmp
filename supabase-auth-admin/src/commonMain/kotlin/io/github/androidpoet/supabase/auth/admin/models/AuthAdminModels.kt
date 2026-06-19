@@ -1,7 +1,11 @@
+@file:OptIn(ExperimentalSerializationApi::class)
+
 package io.github.androidpoet.supabase.auth.admin.models
 
 import io.github.androidpoet.supabase.auth.models.MfaFactor
 import io.github.androidpoet.supabase.auth.models.User
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -18,7 +22,14 @@ public data class AdminUserAttributes(
     @SerialName("phone_confirm") public val phoneConfirm: Boolean? = null,
     @SerialName("ban_duration") public val banDuration: String? = null,
     public val role: String? = null,
-)
+) {
+    // Mask the password so it never leaks into logs or crash reports.
+    override fun toString(): String =
+        "AdminUserAttributes(email=$email, phone=$phone, " +
+            "password=${if (password == null) "null" else "***"}, nonce=$nonce, " +
+            "userMetadata=$userMetadata, appMetadata=$appMetadata, emailConfirm=$emailConfirm, " +
+            "phoneConfirm=$phoneConfirm, banDuration=$banDuration, role=$role)"
+}
 
 @Serializable
 public enum class GenerateLinkType {
@@ -91,6 +102,10 @@ public enum class OAuthClientType(
 
     @SerialName("confidential")
     CONFIDENTIAL("confidential"),
+
+    /** A client type the server returned that this version does not recognise. */
+    @SerialName("unknown")
+    UNKNOWN("unknown"),
 }
 
 @Serializable
@@ -102,6 +117,10 @@ public enum class OAuthClientRegistrationType(
 
     @SerialName("manual")
     MANUAL("manual"),
+
+    /** A registration type the server returned that this version does not recognise. */
+    @SerialName("unknown")
+    UNKNOWN("unknown"),
 }
 
 @Serializable
@@ -116,6 +135,10 @@ public enum class OAuthClientTokenEndpointAuthMethod(
 
     @SerialName("client_secret_post")
     CLIENT_SECRET_POST("client_secret_post"),
+
+    /** An auth method the server returned that this version does not recognise. */
+    @SerialName("unknown")
+    UNKNOWN("unknown"),
 }
 
 @Serializable
@@ -123,9 +146,11 @@ public data class OAuthClient(
     @SerialName("client_id") public val clientId: String,
     @SerialName("client_name") public val clientName: String,
     @SerialName("client_secret") public val clientSecret: String? = null,
-    @SerialName("client_type") public val clientType: OAuthClientType,
-    @SerialName("token_endpoint_auth_method") public val tokenEndpointAuthMethod: OAuthClientTokenEndpointAuthMethod,
-    @SerialName("registration_type") public val registrationType: OAuthClientRegistrationType,
+    @SerialName("client_type") public val clientType: OAuthClientType = OAuthClientType.UNKNOWN,
+    @SerialName("token_endpoint_auth_method")
+    public val tokenEndpointAuthMethod: OAuthClientTokenEndpointAuthMethod = OAuthClientTokenEndpointAuthMethod.UNKNOWN,
+    @SerialName("registration_type")
+    public val registrationType: OAuthClientRegistrationType = OAuthClientRegistrationType.UNKNOWN,
     @SerialName("client_uri") public val clientUri: String? = null,
     @SerialName("logo_uri") public val logoUri: String? = null,
     @SerialName("redirect_uris") public val redirectUris: List<String>,
@@ -134,7 +159,16 @@ public data class OAuthClient(
     public val scope: String? = null,
     @SerialName("created_at") public val createdAt: String? = null,
     @SerialName("updated_at") public val updatedAt: String? = null,
-)
+) {
+    // Mask the client secret so it never leaks into logs or crash reports.
+    override fun toString(): String =
+        "OAuthClient(clientId=$clientId, clientName=$clientName, " +
+            "clientSecret=${if (clientSecret == null) "null" else "***"}, clientType=$clientType, " +
+            "tokenEndpointAuthMethod=$tokenEndpointAuthMethod, registrationType=$registrationType, " +
+            "clientUri=$clientUri, logoUri=$logoUri, redirectUris=$redirectUris, " +
+            "grantTypes=$grantTypes, responseTypes=$responseTypes, scope=$scope, " +
+            "createdAt=$createdAt, updatedAt=$updatedAt)"
+}
 
 @Serializable
 public data class OAuthClientCreateRequest(
@@ -172,6 +206,10 @@ public enum class CustomProviderType(
 
     @SerialName("oidc")
     OIDC("oidc"),
+
+    /** A provider type the server returned that this version does not recognise. */
+    @SerialName("unknown")
+    UNKNOWN("unknown"),
 }
 
 @Serializable
@@ -191,7 +229,7 @@ public data class OidcDiscoveryDocument(
 @Serializable
 public data class CustomProvider(
     public val id: String,
-    @SerialName("provider_type") public val providerType: CustomProviderType,
+    @SerialName("provider_type") public val providerType: CustomProviderType = CustomProviderType.UNKNOWN,
     public val identifier: String,
     public val name: String,
     @SerialName("client_id") public val clientId: String,
@@ -235,7 +273,17 @@ public data class CustomProviderCreateRequest(
     @SerialName("token_url") public val tokenUrl: String? = null,
     @SerialName("userinfo_url") public val userinfoUrl: String? = null,
     @SerialName("jwks_uri") public val jwksUri: String? = null,
-)
+) {
+    // Mask the client secret so it never leaks into logs or crash reports.
+    override fun toString(): String =
+        "CustomProviderCreateRequest(providerType=$providerType, identifier=$identifier, name=$name, " +
+            "clientId=$clientId, clientSecret=***, acceptableClientIds=$acceptableClientIds, " +
+            "scopes=$scopes, pkceEnabled=$pkceEnabled, attributeMapping=$attributeMapping, " +
+            "authorizationParams=$authorizationParams, enabled=$enabled, emailOptional=$emailOptional, " +
+            "issuer=$issuer, discoveryUrl=$discoveryUrl, skipNonceCheck=$skipNonceCheck, " +
+            "authorizationUrl=$authorizationUrl, tokenUrl=$tokenUrl, userinfoUrl=$userinfoUrl, " +
+            "jwksUri=$jwksUri)"
+}
 
 @Serializable
 public data class CustomProviderUpdateRequest(
@@ -256,11 +304,81 @@ public data class CustomProviderUpdateRequest(
     @SerialName("token_url") public val tokenUrl: String? = null,
     @SerialName("userinfo_url") public val userinfoUrl: String? = null,
     @SerialName("jwks_uri") public val jwksUri: String? = null,
-)
+) {
+    // Mask the client secret so it never leaks into logs or crash reports.
+    override fun toString(): String =
+        "CustomProviderUpdateRequest(name=$name, clientId=$clientId, " +
+            "clientSecret=${if (clientSecret == null) "null" else "***"}, " +
+            "acceptableClientIds=$acceptableClientIds, scopes=$scopes, pkceEnabled=$pkceEnabled, " +
+            "attributeMapping=$attributeMapping, authorizationParams=$authorizationParams, " +
+            "enabled=$enabled, emailOptional=$emailOptional, issuer=$issuer, " +
+            "discoveryUrl=$discoveryUrl, skipNonceCheck=$skipNonceCheck, " +
+            "authorizationUrl=$authorizationUrl, tokenUrl=$tokenUrl, userinfoUrl=$userinfoUrl, " +
+            "jwksUri=$jwksUri)"
+}
 
 @Serializable
 public data class CustomProviderListResponse(
     public val providers: List<CustomProvider> = emptyList(),
+)
+
+@Serializable
+public data class SsoProviderSaml(
+    @SerialName("entity_id") public val entityId: String? = null,
+    @SerialName("metadata_url") public val metadataUrl: String? = null,
+    @SerialName("metadata_xml") public val metadataXml: String? = null,
+    @SerialName("attribute_mapping") public val attributeMapping: JsonObject? = null,
+    @SerialName("name_id_format") public val nameIdFormat: String? = null,
+)
+
+@Serializable
+public data class SsoDomain(
+    public val id: String? = null,
+    public val domain: String? = null,
+    @SerialName("created_at") public val createdAt: String? = null,
+    @SerialName("updated_at") public val updatedAt: String? = null,
+)
+
+@Serializable
+public data class SsoProvider(
+    public val id: String,
+    public val type: String? = null,
+    @SerialName("resource_id") public val resourceId: String? = null,
+    public val disabled: Boolean? = null,
+    public val saml: SsoProviderSaml? = null,
+    public val domains: List<SsoDomain> = emptyList(),
+    @SerialName("created_at") public val createdAt: String? = null,
+    @SerialName("updated_at") public val updatedAt: String? = null,
+)
+
+@Serializable
+public data class SsoProviderCreateRequest(
+    // The server requires `type` on the wire; force it even though it has a default.
+    @EncodeDefault(EncodeDefault.Mode.ALWAYS) public val type: String = "saml",
+    @SerialName("metadata_url") public val metadataUrl: String? = null,
+    @SerialName("metadata_xml") public val metadataXml: String? = null,
+    public val domains: List<String>? = null,
+    @SerialName("attribute_mapping") public val attributeMapping: JsonObject? = null,
+    @SerialName("name_id_format") public val nameIdFormat: String? = null,
+    @SerialName("resource_id") public val resourceId: String? = null,
+    public val disabled: Boolean? = null,
+)
+
+@Serializable
+public data class SsoProviderUpdateRequest(
+    @EncodeDefault(EncodeDefault.Mode.ALWAYS) public val type: String = "saml",
+    @SerialName("metadata_url") public val metadataUrl: String? = null,
+    @SerialName("metadata_xml") public val metadataXml: String? = null,
+    public val domains: List<String>? = null,
+    @SerialName("attribute_mapping") public val attributeMapping: JsonObject? = null,
+    @SerialName("name_id_format") public val nameIdFormat: String? = null,
+    @SerialName("resource_id") public val resourceId: String? = null,
+    public val disabled: Boolean? = null,
+)
+
+@Serializable
+public data class SsoProviderListResponse(
+    public val items: List<SsoProvider> = emptyList(),
 )
 
 @Serializable
@@ -280,9 +398,4 @@ internal data class InviteUserRequest(
 @Serializable
 internal data class UserDeleteRequest(
     @SerialName("should_soft_delete") val shouldSoftDelete: Boolean,
-)
-
-@Serializable
-internal data class UserResponse(
-    val user: User? = null,
 )

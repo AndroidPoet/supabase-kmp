@@ -497,6 +497,41 @@ class DatabaseClientImplTest {
 
             assertEquals("application/vnd.pgrst.object+json;nulls=stripped", client.lastGetHeaders["Accept"])
         }
+
+    @Test
+    fun test_insert_contentTypeOverridesJsonHeader() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = DatabaseClientImpl(client)
+
+            runSuspend {
+                sut.insert(
+                    table = "messages",
+                    body = "id,name\n1,a",
+                    contentType = "text/csv",
+                )
+            }
+
+            assertEquals("text/csv", client.lastPostHeaders["Content-Type"])
+        }
+
+    @Test
+    fun test_rpc_filtersAreAppendedToEndpoint() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = DatabaseClientImpl(client)
+
+            runSuspend {
+                sut.rpc(function = "list_messages") {
+                    eq("status", "active")
+                    limit(5)
+                }
+            }
+
+            val endpoint = client.lastPostEndpoint.orEmpty()
+            assertTrue(endpoint.contains("status=eq.active"), endpoint)
+            assertTrue(endpoint.contains("limit=5"), endpoint)
+        }
 }
 
 private class FakeSupabaseClient(

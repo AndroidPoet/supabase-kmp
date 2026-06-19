@@ -15,12 +15,18 @@ public annotation class FilterDsl
  * Full-text search mode for [FilterBuilder.textSearch], selecting how [query] is
  * parsed into a `tsquery`.
  *
- * Each constant maps to a PostgREST operator prefix: `plfts` ([Plain]),
- * `phfts` ([Phrase]) or `wfts` ([Websearch]) — see the wire forms below.
+ * Each constant maps to a PostgREST operator prefix: `fts` ([Raw]), `plfts`
+ * ([Plain]), `phfts` ([Phrase]) or `wfts` ([Websearch]) — see the wire forms below.
  */
 public enum class TextSearchType(
     internal val postgrestName: String,
 ) {
+    /**
+     * Passes [query] straight to `to_tsquery` (the bare `fts` operator). Carries no
+     * prefix, so it emits `fts.<query>` (or `fts(english).<query>` with a config).
+     */
+    Raw(""),
+
     /** Treats [query] as space-separated lexemes (`plfts`, `to_tsquery`'s plain form). */
     Plain("pl"),
 
@@ -245,6 +251,28 @@ public class FilterBuilder {
     }
 
     /**
+     * Matches rows where [column] is distinct from [value] — a null-aware inequality
+     * (SQL `IS DISTINCT FROM`): true when the values differ OR when [column] is null,
+     * unlike [neq] which is null-unknown. Emits `column=isdistinct.<value>`.
+     */
+    public fun isDistinct(column: String, value: String) {
+        params += column to "isdistinct.${encodeValue(value)}"
+    }
+
+    /** Null-aware inequality against the number [value] (SQL `IS DISTINCT FROM`). Emits `column=isdistinct.<value>`. */
+    public fun isDistinct(column: String, value: Number) {
+        params += column to "isdistinct.$value"
+    }
+
+    /**
+     * Null-aware inequality against `null`/`true`/`false` (SQL `IS DISTINCT FROM`);
+     * pass `null` to match rows where [column] is non-null. Emits `column=isdistinct.<value>`.
+     */
+    public fun isDistinct(column: String, value: Boolean?) {
+        params += column to "isdistinct.${value ?: "null"}"
+    }
+
+    /**
      * Matches rows where [column] equals one of [values] (SQL `IN`). Each member is
      * quoted/escaped if it contains a structural character. Emits `column=in.(a,b,c)`.
      */
@@ -393,15 +421,20 @@ public class FilterBuilder {
     /**
      * Negates every filter declared inside [block] (SQL `NOT`). Each inner pair is
      * re-emitted with a `not.` prefix, e.g. an inner `eq` becomes
-     * `column=not.eq.<value>`. Use the [not] (column, operator, value) overload for
-     * a single negated operator.
+     * `column=not.eq.<value>`. A negated nested logical group prefixes the KEY
+     * instead, e.g. `not { and { … } }` renders as `not.and=(…)`. Use the
+     * [not] (column, operator, value) overload for a single negated operator.
      *
      * @param block a nested DSL block whose filters are individually negated.
      */
     public fun not(block: FilterBuilder.() -> Unit) {
         val inner = FilterBuilder().apply(block).build()
         for ((key, value) in inner) {
-            params += key to "not.$value"
+            if (isLogicalKey(key)) {
+                params += "not.$key" to value
+            } else {
+                params += key to "not.$value"
+            }
         }
     }
 
@@ -419,28 +452,55 @@ public class FilterBuilder {
     /**
      * Combines the filters declared inside [block] with logical OR (SQL `OR`). The
      * inner filters are flattened into PostgREST's grouped form, e.g.
-     * `or { eq("a", 1); eq("b", 2) }` → `or=(a.eq.1,b.eq.2)`.
+     * `or { eq("a", 1); eq("b", 2) }` → `or=(a.eq.1,b.eq.2)`. When
+     * [referencedTable] is set the key is scoped to that embedded/joined resource,
+     * e.g. `or(referencedTable = "authors") { … }` → `authors.or=(…)`.
      *
      * @param block a nested DSL block whose filters are OR-ed together.
+     * @param referencedTable scope the OR group to an embedded/joined resource when set.
      */
-    public fun or(block: FilterBuilder.() -> Unit) {
+    public fun or(referencedTable: String? = null, block: FilterBuilder.() -> Unit) {
         val inner = FilterBuilder().apply(block).build()
-        val combined = inner.joinToString(",") { (k, v) -> "$k.$v" }
-        params += "or" to "($combined)"
+        val combined = flattenLogical(inner)
+        val key = if (referencedTable == null) "or" else "$referencedTable.or"
+        params += key to "($combined)"
     }
 
     /**
      * Combines the filters declared inside [block] with logical AND (SQL `AND`) as
      * an explicit group — useful nested inside [or]. Emits the grouped form, e.g.
-     * `and { gte("a", 1); lt("a", 9) }` → `and=(a.gte.1,a.lt.9)`.
+     * `and { gte("a", 1); lt("a", 9) }` → `and=(a.gte.1,a.lt.9)`. When
+     * [referencedTable] is set the key is scoped to that embedded/joined resource,
+     * e.g. `and(referencedTable = "authors") { … }` → `authors.and=(…)`.
      *
      * @param block a nested DSL block whose filters are AND-ed together.
+     * @param referencedTable scope the AND group to an embedded/joined resource when set.
      */
-    public fun and(block: FilterBuilder.() -> Unit) {
+    public fun and(referencedTable: String? = null, block: FilterBuilder.() -> Unit) {
         val inner = FilterBuilder().apply(block).build()
-        val combined = inner.joinToString(",") { (k, v) -> "$k.$v" }
-        params += "and" to "($combined)"
+        val combined = flattenLogical(inner)
+        val key = if (referencedTable == null) "and" else "$referencedTable.and"
+        params += key to "($combined)"
     }
+
+    /**
+     * Returns `true` when [key] denotes a nested logical group (`and`/`or`),
+     * optionally qualified by a referenced table (e.g. `tbl.and`/`tbl.or`).
+     * Such entries carry a value already wrapped in `(…)` and must NOT have a
+     * dot inserted between key and value when flattened.
+     */
+    private fun isLogicalKey(key: String): Boolean =
+        key == "and" || key == "or" || key.endsWith(".and") || key.endsWith(".or")
+
+    /**
+     * Flattens the inner pairs of a logical group into PostgREST's comma-joined
+     * form. Normal entries render as `key.value`; nested logical-group entries
+     * (whose value already begins with `(`) render as `keyvalue` with no dot.
+     */
+    private fun flattenLogical(inner: List<Pair<String, String>>): String =
+        inner.joinToString(",") { (k, v) ->
+            if (isLogicalKey(k)) "$k$v" else "$k.$v"
+        }
 
     /**
      * Full-text search on [column] against [query], using the parse mode [type]
@@ -531,6 +591,17 @@ public class FilterBuilder {
     }
 
     /**
+     * Skips the first [count] rows. Emits `offset=<count>` (or
+     * `<referencedTable>.offset=<count>` for an embedded resource).
+     *
+     * @param referencedTable offset an embedded/joined resource when set.
+     */
+    public fun offset(count: Int, referencedTable: String? = null) {
+        val key = if (referencedTable == null) "offset" else "$referencedTable.offset"
+        params += key to count.toString()
+    }
+
+    /**
      * Selects the inclusive, zero-based row window `[from, to]` by emitting both an
      * `offset` and a derived `limit` (`to - from + 1`), e.g. `range(0, 9)` →
      * `offset=0` + `limit=10`. Prefixed with [referencedTable] for embedded
@@ -541,6 +612,7 @@ public class FilterBuilder {
      * @param referencedTable page an embedded/joined resource when set.
      */
     public fun range(from: Int, to: Int, referencedTable: String? = null) {
+        require(to >= from) { "range 'to' ($to) must be >= 'from' ($from)" }
         val offsetKey = if (referencedTable == null) "offset" else "$referencedTable.offset"
         val limitKey = if (referencedTable == null) "limit" else "$referencedTable.limit"
         params += offsetKey to from.toString()

@@ -123,8 +123,8 @@ public abstract interface class io/github/androidpoet/supabase/storage/StorageCl
 	public abstract fun createAnalyticsBucket (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun createBucket (Ljava/lang/String;Ljava/lang/String;ZLjava/lang/Long;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun createBucket$default (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;ZLjava/lang/Long;Ljava/util/List;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public abstract fun createResumableUpload (Ljava/lang/String;Ljava/lang/String;[BLjava/lang/String;ZLjava/lang/Integer;ILjava/lang/String;)Lio/github/androidpoet/supabase/storage/ResumableUpload;
-	public static synthetic fun createResumableUpload$default (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;[BLjava/lang/String;ZLjava/lang/Integer;ILjava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/ResumableUpload;
+	public abstract fun createResumableUpload (Ljava/lang/String;Ljava/lang/String;[BLjava/lang/String;ZLjava/lang/Integer;ILjava/lang/String;Lkotlinx/serialization/json/JsonObject;)Lio/github/androidpoet/supabase/storage/ResumableUpload;
+	public static synthetic fun createResumableUpload$default (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;[BLjava/lang/String;ZLjava/lang/Integer;ILjava/lang/String;Lkotlinx/serialization/json/JsonObject;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/ResumableUpload;
 	public abstract fun createSignedUrl (Ljava/lang/String;Ljava/lang/String;JZLjava/lang/String;Lio/github/androidpoet/supabase/storage/ImageTransformOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun createSignedUrl$default (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;JZLjava/lang/String;Lio/github/androidpoet/supabase/storage/ImageTransformOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun createSignedUrls (Ljava/lang/String;Ljava/util/List;JZLjava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -214,7 +214,7 @@ public abstract interface class io/github/androidpoet/supabase/storage/StorageCl
 public final class io/github/androidpoet/supabase/storage/StorageClient$DefaultImpls {
 	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun createBucket$default (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;ZLjava/lang/Long;Ljava/util/List;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static synthetic fun createResumableUpload$default (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;[BLjava/lang/String;ZLjava/lang/Integer;ILjava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/ResumableUpload;
+	public static synthetic fun createResumableUpload$default (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;[BLjava/lang/String;ZLjava/lang/Integer;ILjava/lang/String;Lkotlinx/serialization/json/JsonObject;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/ResumableUpload;
 	public static synthetic fun createSignedUrl$default (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;JZLjava/lang/String;Lio/github/androidpoet/supabase/storage/ImageTransformOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun createSignedUrls$default (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/util/List;JZLjava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun createUploadSignedUrl$default (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
@@ -305,8 +305,8 @@ public final class io/github/androidpoet/supabase/storage/StorageClientExtKt {
 	public static synthetic fun getPublicUrlsByPath$default (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;ZLjava/lang/String;Lio/github/androidpoet/supabase/storage/ImageTransformOptions;[Ljava/lang/String;ILjava/lang/Object;)Ljava/util/Map;
 	public static final fun remove (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;[Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun removeWithResult (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;[Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static final fun uploadResumable (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;[BLjava/lang/String;ZLjava/lang/Integer;ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun uploadResumable$default (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;[BLjava/lang/String;ZLjava/lang/Integer;ILkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun uploadResumable (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;[BLjava/lang/String;ZLjava/lang/Integer;ILkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun uploadResumable$default (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;[BLjava/lang/String;ZLjava/lang/Integer;ILkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun withCacheNonce (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public static synthetic fun withCacheNonce$default (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Ljava/lang/String;
 }
@@ -1658,6 +1658,7 @@ public final class io/github/androidpoet/supabase/storage/models/VectorData$Comp
 public final class io/github/androidpoet/supabase/storage/models/VectorDataType : java/lang/Enum {
 	public static final field Companion Lio/github/androidpoet/supabase/storage/models/VectorDataType$Companion;
 	public static final field FLOAT32 Lio/github/androidpoet/supabase/storage/models/VectorDataType;
+	public static final field UNKNOWN Lio/github/androidpoet/supabase/storage/models/VectorDataType;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/storage/models/VectorDataType;
 	public static fun values ()[Lio/github/androidpoet/supabase/storage/models/VectorDataType;
@@ -1703,6 +1704,7 @@ public final class io/github/androidpoet/supabase/storage/models/VectorDistanceM
 	public static final field Companion Lio/github/androidpoet/supabase/storage/models/VectorDistanceMetric$Companion;
 	public static final field DOTPRODUCT Lio/github/androidpoet/supabase/storage/models/VectorDistanceMetric;
 	public static final field EUCLIDEAN Lio/github/androidpoet/supabase/storage/models/VectorDistanceMetric;
+	public static final field UNKNOWN Lio/github/androidpoet/supabase/storage/models/VectorDistanceMetric;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/storage/models/VectorDistanceMetric;
 	public static fun values ()[Lio/github/androidpoet/supabase/storage/models/VectorDistanceMetric;

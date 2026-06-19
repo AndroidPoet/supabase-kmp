@@ -35,6 +35,7 @@ final enum class io.github.androidpoet.supabase.core.models/OrderDirection : kot
 final enum class io.github.androidpoet.supabase.core.models/TextSearchType : kotlin/Enum<io.github.androidpoet.supabase.core.models/TextSearchType> { // io.github.androidpoet.supabase.core.models/TextSearchType|null[0]
     enum entry Phrase // io.github.androidpoet.supabase.core.models/TextSearchType.Phrase|null[0]
     enum entry Plain // io.github.androidpoet.supabase.core.models/TextSearchType.Plain|null[0]
+    enum entry Raw // io.github.androidpoet.supabase.core.models/TextSearchType.Raw|null[0]
     enum entry Websearch // io.github.androidpoet.supabase.core.models/TextSearchType.Websearch|null[0]
 
     final val entries // io.github.androidpoet.supabase.core.models/TextSearchType.entries|#static{}entries[0]
@@ -178,7 +179,7 @@ final class io.github.androidpoet.supabase.core.models/ErrorResponse { // io.git
 final class io.github.androidpoet.supabase.core.models/FilterBuilder { // io.github.androidpoet.supabase.core.models/FilterBuilder|null[0]
     constructor <init>() // io.github.androidpoet.supabase.core.models/FilterBuilder.<init>|<init>(){}[0]
 
-    final fun and(kotlin/Function1<io.github.androidpoet.supabase.core.models/FilterBuilder, kotlin/Unit>) // io.github.androidpoet.supabase.core.models/FilterBuilder.and|and(kotlin.Function1<io.github.androidpoet.supabase.core.models.FilterBuilder,kotlin.Unit>){}[0]
+    final fun and(kotlin/String? = ..., kotlin/Function1<io.github.androidpoet.supabase.core.models/FilterBuilder, kotlin/Unit>) // io.github.androidpoet.supabase.core.models/FilterBuilder.and|and(kotlin.String?;kotlin.Function1<io.github.androidpoet.supabase.core.models.FilterBuilder,kotlin.Unit>){}[0]
     final fun build(): kotlin.collections/List<kotlin/Pair<kotlin/String, kotlin/String>> // io.github.androidpoet.supabase.core.models/FilterBuilder.build|build(){}[0]
     final fun containedBy(kotlin/String, kotlin.collections/List<kotlin/Any>) // io.github.androidpoet.supabase.core.models/FilterBuilder.containedBy|containedBy(kotlin.String;kotlin.collections.List<kotlin.Any>){}[0]
     final fun containedBy(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.core.models/FilterBuilder.containedBy|containedBy(kotlin.String;kotlin.String){}[0]
@@ -201,6 +202,9 @@ final class io.github.androidpoet.supabase.core.models/FilterBuilder { // io.git
     final fun in(kotlin/String, kotlin.collections/List<kotlin/String>) // io.github.androidpoet.supabase.core.models/FilterBuilder.in|in(kotlin.String;kotlin.collections.List<kotlin.String>){}[0]
     final fun is(kotlin/String, kotlin/Boolean?) // io.github.androidpoet.supabase.core.models/FilterBuilder.is|is(kotlin.String;kotlin.Boolean?){}[0]
     final fun is(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.core.models/FilterBuilder.is|is(kotlin.String;kotlin.String){}[0]
+    final fun isDistinct(kotlin/String, kotlin/Boolean?) // io.github.androidpoet.supabase.core.models/FilterBuilder.isDistinct|isDistinct(kotlin.String;kotlin.Boolean?){}[0]
+    final fun isDistinct(kotlin/String, kotlin/Number) // io.github.androidpoet.supabase.core.models/FilterBuilder.isDistinct|isDistinct(kotlin.String;kotlin.Number){}[0]
+    final fun isDistinct(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.core.models/FilterBuilder.isDistinct|isDistinct(kotlin.String;kotlin.String){}[0]
     final fun like(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.core.models/FilterBuilder.like|like(kotlin.String;kotlin.String){}[0]
     final fun likeAllOf(kotlin/String, kotlin.collections/List<kotlin/String>) // io.github.androidpoet.supabase.core.models/FilterBuilder.likeAllOf|likeAllOf(kotlin.String;kotlin.collections.List<kotlin.String>){}[0]
     final fun likeAnyOf(kotlin/String, kotlin.collections/List<kotlin/String>) // io.github.androidpoet.supabase.core.models/FilterBuilder.likeAnyOf|likeAnyOf(kotlin.String;kotlin.collections.List<kotlin.String>){}[0]
@@ -218,7 +222,8 @@ final class io.github.androidpoet.supabase.core.models/FilterBuilder { // io.git
     final fun not(kotlin/String, kotlin/String, kotlin/String) // io.github.androidpoet.supabase.core.models/FilterBuilder.not|not(kotlin.String;kotlin.String;kotlin.String){}[0]
     final fun notExtendLeft(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.core.models/FilterBuilder.notExtendLeft|notExtendLeft(kotlin.String;kotlin.String){}[0]
     final fun notExtendRight(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.core.models/FilterBuilder.notExtendRight|notExtendRight(kotlin.String;kotlin.String){}[0]
-    final fun or(kotlin/Function1<io.github.androidpoet.supabase.core.models/FilterBuilder, kotlin/Unit>) // io.github.androidpoet.supabase.core.models/FilterBuilder.or|or(kotlin.Function1<io.github.androidpoet.supabase.core.models.FilterBuilder,kotlin.Unit>){}[0]
+    final fun offset(kotlin/Int, kotlin/String? = ...) // io.github.androidpoet.supabase.core.models/FilterBuilder.offset|offset(kotlin.Int;kotlin.String?){}[0]
+    final fun or(kotlin/String? = ..., kotlin/Function1<io.github.androidpoet.supabase.core.models/FilterBuilder, kotlin/Unit>) // io.github.androidpoet.supabase.core.models/FilterBuilder.or|or(kotlin.String?;kotlin.Function1<io.github.androidpoet.supabase.core.models.FilterBuilder,kotlin.Unit>){}[0]
     final fun order(kotlin/String, io.github.androidpoet.supabase.core.models/OrderDirection, io.github.androidpoet.supabase.core.models/NullsPlacement? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.core.models/FilterBuilder.order|order(kotlin.String;io.github.androidpoet.supabase.core.models.OrderDirection;io.github.androidpoet.supabase.core.models.NullsPlacement?;kotlin.String?){}[0]
     final fun order(kotlin/String, kotlin/Boolean = ..., kotlin/Boolean? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.core.models/FilterBuilder.order|order(kotlin.String;kotlin.Boolean;kotlin.Boolean?;kotlin.String?){}[0]
     final fun overlaps(kotlin/String, kotlin.collections/List<kotlin/Any>) // io.github.androidpoet.supabase.core.models/FilterBuilder.overlaps|overlaps(kotlin.String;kotlin.collections.List<kotlin.Any>){}[0]
@@ -276,7 +281,7 @@ final class io.github.androidpoet.supabase.core.result/SupabaseError { // io.git
 }
 
 final class io.github.androidpoet.supabase.core.result/SupabaseException : kotlin/Exception { // io.github.androidpoet.supabase.core.result/SupabaseException|null[0]
-    constructor <init>(io.github.androidpoet.supabase.core.result/SupabaseError) // io.github.androidpoet.supabase.core.result/SupabaseException.<init>|<init>(io.github.androidpoet.supabase.core.result.SupabaseError){}[0]
+    constructor <init>(io.github.androidpoet.supabase.core.result/SupabaseError, kotlin/Throwable? = ...) // io.github.androidpoet.supabase.core.result/SupabaseException.<init>|<init>(io.github.androidpoet.supabase.core.result.SupabaseError;kotlin.Throwable?){}[0]
 
     final val error // io.github.androidpoet.supabase.core.result/SupabaseException.error|{}error[0]
         final fun <get-error>(): io.github.androidpoet.supabase.core.result/SupabaseError // io.github.androidpoet.supabase.core.result/SupabaseException.error.<get-error>|<get-error>(){}[0]
@@ -692,7 +697,7 @@ final fun (io.github.androidpoet.supabase.core.result/SupabaseError).io.github.a
 final fun (io.github.androidpoet.supabase.core.result/SupabaseError).io.github.androidpoet.supabase.core.result/isNetworkError(): kotlin/Boolean // io.github.androidpoet.supabase.core.result/isNetworkError|isNetworkError@io.github.androidpoet.supabase.core.result.SupabaseError(){}[0]
 final fun (io.github.androidpoet.supabase.core.result/SupabaseError).io.github.androidpoet.supabase.core.result/isUniquenessViolation(): kotlin/Boolean // io.github.androidpoet.supabase.core.result/isUniquenessViolation|isUniquenessViolation@io.github.androidpoet.supabase.core.result.SupabaseError(){}[0]
 final fun (io.github.androidpoet.supabase.core.result/SupabaseError).io.github.androidpoet.supabase.core.result/isUserAlreadyExists(): kotlin/Boolean // io.github.androidpoet.supabase.core.result/isUserAlreadyExists|isUserAlreadyExists@io.github.androidpoet.supabase.core.result.SupabaseError(){}[0]
-final fun (io.github.androidpoet.supabase.core.result/SupabaseError).io.github.androidpoet.supabase.core.result/toException(): io.github.androidpoet.supabase.core.result/SupabaseException // io.github.androidpoet.supabase.core.result/toException|toException@io.github.androidpoet.supabase.core.result.SupabaseError(){}[0]
+final fun (io.github.androidpoet.supabase.core.result/SupabaseError).io.github.androidpoet.supabase.core.result/toException(kotlin/Throwable? = ...): io.github.androidpoet.supabase.core.result/SupabaseException // io.github.androidpoet.supabase.core.result/toException|toException@io.github.androidpoet.supabase.core.result.SupabaseError(kotlin.Throwable?){}[0]
 final fun <#A: kotlin/Any?> (io.github.androidpoet.supabase.core.result/SupabaseResult<#A>).io.github.androidpoet.supabase.core.result/getOrDefault(#A): #A // io.github.androidpoet.supabase.core.result/getOrDefault|getOrDefault@io.github.androidpoet.supabase.core.result.SupabaseResult<0:0>(0:0){0§<kotlin.Any?>}[0]
 final fun <#A: kotlin/Any?> (io.github.androidpoet.supabase.core.result/SupabaseResult<#A>).io.github.androidpoet.supabase.core.result/toFlow(): kotlinx.coroutines.flow/Flow<#A> // io.github.androidpoet.supabase.core.result/toFlow|toFlow@io.github.androidpoet.supabase.core.result.SupabaseResult<0:0>(){0§<kotlin.Any?>}[0]
 final fun <#A: kotlin/Any?> (io.github.androidpoet.supabase.core.result/SupabaseResult<#A>).io.github.androidpoet.supabase.core.result/toKotlinResult(): kotlin/Result<#A> // io.github.androidpoet.supabase.core.result/toKotlinResult|toKotlinResult@io.github.androidpoet.supabase.core.result.SupabaseResult<0:0>(){0§<kotlin.Any?>}[0]

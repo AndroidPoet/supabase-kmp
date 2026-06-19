@@ -7,6 +7,11 @@ public val defaultJson: Json =
         ignoreUnknownKeys = true
         isLenient = true
         explicitNulls = false
+        // Coerce an unknown enum value (or a null for a non-null field that has a
+        // default) to that property's default instead of failing the whole decode.
+        // Server-decoded enums declare an UNKNOWN member + default for this reason,
+        // so one new server-side value can't break an entire response.
+        coerceInputValues = true
     }
 
 public suspend inline fun <reified T> SupabaseClient.getTyped(
