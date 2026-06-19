@@ -404,7 +404,12 @@ public interface AuthClient {
         nonce: String? = null,
     ): SupabaseResult<Session>
 
-    /** Removes a linked identity by its [identityId] from the signed-in user (`DELETE /user/identities/{id}`). */
+    /**
+     * Removes a linked identity from the signed-in user (`DELETE /user/identities/{id}`).
+     *
+     * @param identityId the identity's primary key — pass [UserIdentity.id], **not**
+     *   [UserIdentity.identityId]; the server matches the path against the identity's `id`.
+     */
     public suspend fun unlinkIdentity(
         accessToken: String,
         identityId: String,

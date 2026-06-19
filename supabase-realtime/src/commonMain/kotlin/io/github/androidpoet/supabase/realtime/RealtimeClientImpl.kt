@@ -105,7 +105,7 @@ internal class RealtimeClientImpl(
     // Phoenix refs must be unique; nextRef() can run from concurrent suspend
     // calls, so use an atomic counter (kotlinx-atomicfu — the stdlib
     // kotlin.concurrent.atomics is only available from Kotlin 2.1.20).
-    private val refCounter = atomic(0)
+    private val refCounter = atomic(0L)
 
     // Reset from connect()/disconnect() (caller coroutine) AND incremented in the reconnect loop,
     // so a plain @Volatile var would race on the ++ (a read-modify-write). Use an atomic counter,
@@ -443,7 +443,7 @@ internal class RealtimeClientImpl(
         // Append &log_level=<level> only when configured; null leaves the param off
         // so the server keeps its default verbosity.
         val logLevelParam = config.logLevel?.let { "&log_level=${urlEncode(it)}" } ?: ""
-        val url = "$wsScheme://$host/realtime/v1/websocket?apikey=${supabaseClient.apiKey}&vsn=1.0.0$logLevelParam"
+        val url = "$wsScheme://$host/realtime/v1/websocket?apikey=${urlEncode(supabaseClient.apiKey)}&vsn=1.0.0$logLevelParam"
         val newScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         // Bound the handshake so a stalled connect surfaces as a timeout (and
         // triggers reconnect/Failed) instead of hanging on the platform default.
@@ -850,9 +850,10 @@ internal class ChannelSubscriptionImpl(
     override fun presenceState(): PresenceState = presenceSnapshot
 
     internal fun markJoinTimedOut() {
-        if (_status.value == RealtimeSubscription.Status.SUBSCRIBING) {
-            _status.value = RealtimeSubscription.Status.ERROR
-        }
+        // CAS, not check-then-set: the join phx_reply handler may flip SUBSCRIBING
+        // -> SUBSCRIBED concurrently, and a plain read-then-write here could clobber
+        // that success with ERROR, reporting a working subscription as failed.
+        _status.update { if (it == RealtimeSubscription.Status.SUBSCRIBING) RealtimeSubscription.Status.ERROR else it }
     }
 
     override suspend fun unsubscribe() {

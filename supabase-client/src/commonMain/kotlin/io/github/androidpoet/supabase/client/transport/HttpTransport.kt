@@ -84,7 +84,14 @@ internal class HttpTransport(
     // per-method guard checks for that before calling here).
     private suspend fun resolveBearerToken(): String? = config.accessTokenProvider?.invoke() ?: bearerTokenOrNull()
 
-    private val errorJson = Json { ignoreUnknownKeys = true }
+    private val errorJson =
+        Json {
+            ignoreUnknownKeys = true
+            // Error bodies are decoded best-effort: be lenient so a slightly
+            // malformed (but recoverable) body still yields the structured
+            // code/hint/details instead of collapsing to a generic message.
+            isLenient = true
+        }
     private val retry = config.retry
     internal val httpClient: HttpClient =
         HttpClient(engineFactory) {

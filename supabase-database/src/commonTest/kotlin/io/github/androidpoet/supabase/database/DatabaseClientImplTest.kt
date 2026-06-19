@@ -25,6 +25,24 @@ class DatabaseClientImplTest {
         }
 
     @Test
+    fun test_select_headIssuesHttpHeadNotGet() =
+        runTest {
+            val ok =
+                io.github.androidpoet.supabase.client
+                    .SupabaseHttpResponse(200, mapOf("Content-Range" to "*/42"), ByteArray(0))
+            val client = FakeSupabaseClient(rawResult = SupabaseResult.Success(ok))
+            val sut = DatabaseClientImpl(client)
+
+            val result = runSuspend { sut.select(table = "messages", columns = "*", head = true, count = null) {} }
+
+            assertTrue(result is SupabaseResult.Success)
+            assertEquals(io.github.androidpoet.supabase.client.SupabaseHttpMethod.HEAD, client.lastRawMethod)
+            // A HEAD must not transfer the body (it went through rawRequest, not get()).
+            assertEquals(null, client.lastGetEndpoint)
+            assertTrue(client.lastRawUrl?.contains("/messages") == true)
+        }
+
+    @Test
     fun test_insert_onConflictIsUrlEncodedInEndpoint() =
         runTest {
             val client = FakeSupabaseClient()
@@ -171,7 +189,7 @@ class DatabaseClientImplTest {
             }
 
             assertEquals(
-                """application/vnd.pgrst.plan+json; for="application/json"; options=analyze|verbose;""",
+                """application/vnd.pgrst.plan+json; for="application/json"; options=analyze|verbose""",
                 client.lastGetHeaders["Accept"],
             )
         }
@@ -318,7 +336,7 @@ class DatabaseClientImplTest {
             }
 
             assertEquals(
-                """application/vnd.pgrst.plan+text; for="application/vnd.pgrst.array+json;nulls=stripped"; options=buffers;""",
+                """application/vnd.pgrst.plan; for="application/vnd.pgrst.array+json;nulls=stripped"; options=buffers""",
                 client.lastDeleteHeaders["Accept"],
             )
         }
@@ -536,6 +554,7 @@ class DatabaseClientImplTest {
 
 private class FakeSupabaseClient(
     private val getResult: SupabaseResult<String> = SupabaseResult.Success("[]"),
+    private val rawResult: SupabaseResult<io.github.androidpoet.supabase.client.SupabaseHttpResponse>? = null,
 ) : SupabaseClient {
     override val projectUrl: String = "https://example.supabase.co"
     override val apiKey: String = "anon"
@@ -547,6 +566,9 @@ private class FakeSupabaseClient(
     var lastPostHeaders: Map<String, String> = emptyMap()
     var lastPatchHeaders: Map<String, String> = emptyMap()
     var lastDeleteHeaders: Map<String, String> = emptyMap()
+    var lastRawMethod: io.github.androidpoet.supabase.client.SupabaseHttpMethod? = null
+    var lastRawUrl: String? = null
+    var lastRawHeaders: Map<String, String> = emptyMap()
 
     override suspend fun get(
         endpoint: String,
@@ -612,11 +634,16 @@ private class FakeSupabaseClient(
         body: ByteArray?,
         contentType: String?,
         headers: Map<String, String>,
-    ): SupabaseResult<io.github.androidpoet.supabase.client.SupabaseHttpResponse> =
-        SupabaseResult.Failure(
-            io.github.androidpoet.supabase.core.result
-                .SupabaseError("rawRequest not supported in test fake"),
-        )
+    ): SupabaseResult<io.github.androidpoet.supabase.client.SupabaseHttpResponse> {
+        lastRawMethod = method
+        lastRawUrl = url
+        lastRawHeaders = headers
+        return rawResult
+            ?: SupabaseResult.Failure(
+                io.github.androidpoet.supabase.core.result
+                    .SupabaseError("rawRequest not supported in test fake"),
+            )
+    }
 
     override fun setAccessToken(token: String) = Unit
 

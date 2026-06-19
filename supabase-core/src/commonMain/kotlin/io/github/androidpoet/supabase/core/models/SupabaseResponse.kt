@@ -26,7 +26,7 @@ public data class PostgrestResponse<T>(
  */
 @Serializable
 public data class ErrorResponse(
-    public val message: String,
+    public val message: String = "",
     public val code: String? = null,
     public val details: String? = null,
     public val hint: String? = null,

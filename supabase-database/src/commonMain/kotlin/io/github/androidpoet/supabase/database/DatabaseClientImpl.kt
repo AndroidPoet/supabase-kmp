@@ -47,11 +47,15 @@ internal class DatabaseClientImpl(
                 } + retryHeader(retry)
         val headersWithSchema = addSchemaHeaders(requestHeaders, safeSchema, isReadRequest = true)
         if (head) {
+            // A head request must not transfer (and then discard) the whole result
+            // set: issue a real HTTP HEAD so the server computes count/headers
+            // without serializing rows, mirroring selectCount.
+            val acceptHead = headersWithSchema + ("Accept" to acceptHeader(single, csv, stripNulls, explain, geojson))
             val result =
-                client.get(
-                    endpoint = "${DatabasePaths.BASE}/$safeTable",
-                    queryParams = queryParams,
-                    headers = headersWithSchema + ("Accept" to acceptHeader(single, csv, stripNulls, explain, geojson)),
+                client.rawRequest(
+                    method = SupabaseHttpMethod.HEAD,
+                    url = buildEndpoint("${DatabasePaths.BASE}/$safeTable", queryParams),
+                    headers = acceptHead,
                 )
             return when (result) {
                 is SupabaseResult.Success -> SupabaseResult.Success("")
@@ -485,7 +489,13 @@ internal class DatabaseClientImpl(
                 if (buffers) add("buffers")
                 if (wal) add("wal")
             }.joinToString("|")
-        return "application/vnd.pgrst.plan+${format.headerValue}; for=\"$baseMediaType\"; options=$options;"
+        // The plan is emitted in `text` by default, which carries NO media-type
+        // suffix; only the non-text formats append `+<format>`. And `options=` is
+        // included only when at least one flag is set — an empty `options=` (or a
+        // trailing `;`) is malformed and rejected by the server.
+        val suffix = if (format == ExplainFormat.TEXT) "" else "+${format.headerValue}"
+        val optionsPart = if (options.isEmpty()) "" else "; options=$options"
+        return "application/vnd.pgrst.plan$suffix; for=\"$baseMediaType\"$optionsPart"
     }
 
     private fun addSchemaHeaders(

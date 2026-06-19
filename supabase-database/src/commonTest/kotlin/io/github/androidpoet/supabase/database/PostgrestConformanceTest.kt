@@ -158,7 +158,23 @@ class PostgrestConformanceTest {
                 explain = ExplainOptions(analyze = true, verbose = true, format = ExplainFormat.TEXT),
             ) {}
             assertEquals(
-                "application/vnd.pgrst.plan+text; for=\"application/json\"; options=analyze|verbose;",
+                "application/vnd.pgrst.plan; for=\"application/json\"; options=analyze|verbose",
+                client.getHeaders["Accept"],
+            )
+        }
+
+    @Test
+    fun test_select_explain_textNoOptions_emitsBareMediaType() =
+        runTest {
+            val client = RecordingClient()
+            DatabaseClientImpl(client).select(
+                table = "todos",
+                explain = ExplainOptions(format = ExplainFormat.TEXT),
+            ) {}
+            // Default text plan: no `+text` suffix and no `options=` part (an empty
+            // `options=` or a trailing `;` is malformed and the server rejects it).
+            assertEquals(
+                "application/vnd.pgrst.plan; for=\"application/json\"",
                 client.getHeaders["Accept"],
             )
         }

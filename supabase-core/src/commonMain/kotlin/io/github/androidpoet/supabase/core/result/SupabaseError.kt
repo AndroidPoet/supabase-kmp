@@ -205,7 +205,10 @@ public val SupabaseError.category: SupabaseErrorCategory
             code in rateLimitedCodes -> SupabaseErrorCategory.RateLimited
             code in validationCodes -> SupabaseErrorCategory.Validation
             code in internalCodes -> SupabaseErrorCategory.Internal
-            else -> categorizeByStatus(httpStatus ?: code?.toIntOrNull())
+            // Fall back to httpStatus; only treat a numeric textual `code` as a
+            // status when it's in the HTTP range, so a numeric service code (e.g. a
+            // 5-digit SQLSTATE) is never misread as an HTTP status.
+            else -> categorizeByStatus(httpStatus ?: code?.toIntOrNull()?.takeIf { it in 100..599 })
         }
 
 // HTTP-status fallback. Uses [SupabaseError.httpStatus] first (always captured

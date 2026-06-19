@@ -1,5 +1,6 @@
 public final class io/github/androidpoet/supabase/core/models/ErrorResponse {
 	public static final field Companion Lio/github/androidpoet/supabase/core/models/ErrorResponse$Companion;
+	public fun <init> ()V
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;

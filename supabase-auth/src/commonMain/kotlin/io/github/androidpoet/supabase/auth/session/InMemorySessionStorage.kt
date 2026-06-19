@@ -1,5 +1,6 @@
 package io.github.androidpoet.supabase.auth.session
 import io.github.androidpoet.supabase.auth.models.Session
+import kotlin.concurrent.Volatile
 
 /**
  * A [SessionStorage] that keeps the session only in memory. **It is lost when the
@@ -9,6 +10,10 @@ import io.github.androidpoet.supabase.auth.models.Session
  * persistence) so sign-in survives restarts.
  */
 public class InMemorySessionStorage : SessionStorage {
+    // save()/load() may run on different threads of the default dispatcher; @Volatile
+    // gives a save() on one thread visibility from a load() on another. Each access is
+    // a single read or write (no compound update), so visibility is all that's needed.
+    @Volatile
     private var stored: Session? = null
 
     override suspend fun save(session: Session) {

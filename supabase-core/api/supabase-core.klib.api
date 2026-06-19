@@ -142,7 +142,7 @@ final class <#A: kotlin/Any?> io.github.androidpoet.supabase.core.models/Postgre
 }
 
 final class io.github.androidpoet.supabase.core.models/ErrorResponse { // io.github.androidpoet.supabase.core.models/ErrorResponse|null[0]
-    constructor <init>(kotlin/String, kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.core.models/ErrorResponse.<init>|<init>(kotlin.String;kotlin.String?;kotlin.String?;kotlin.String?){}[0]
+    constructor <init>(kotlin/String = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.core.models/ErrorResponse.<init>|<init>(kotlin.String;kotlin.String?;kotlin.String?;kotlin.String?){}[0]
 
     final val code // io.github.androidpoet.supabase.core.models/ErrorResponse.code|{}code[0]
         final fun <get-code>(): kotlin/String? // io.github.androidpoet.supabase.core.models/ErrorResponse.code.<get-code>|<get-code>(){}[0]
