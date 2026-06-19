@@ -316,6 +316,8 @@ public final class io/github/androidpoet/supabase/storage/StorageFactoryKt {
 }
 
 public final class io/github/androidpoet/supabase/storage/StoragePagingKt {
+	public static final fun listOrThrow (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;IILjava/lang/String;Lio/github/androidpoet/supabase/storage/SortOrder;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun listOrThrow$default (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;IILjava/lang/String;Lio/github/androidpoet/supabase/storage/SortOrder;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun listPaginator (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Lio/github/androidpoet/supabase/storage/SortOrder;Ljava/lang/String;)Lio/github/androidpoet/supabase/core/paging/Paginator;
 	public static synthetic fun listPaginator$default (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Lio/github/androidpoet/supabase/storage/SortOrder;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/core/paging/Paginator;
 }

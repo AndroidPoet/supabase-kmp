@@ -33,6 +33,20 @@ public suspend inline fun <reified T> DatabaseClient.selectTyped(
 }
 
 /**
+ * The plain (no-[SupabaseResult]) form of [selectTyped]: returns the decoded
+ * `List<T>` directly and **throws** ([io.github.androidpoet.supabase.core.result.SupabaseException])
+ * on failure. For callers who prefer exceptions to branching — and the natural fit
+ * for a paging `fetch` lambda, which already reports errors via its own channel.
+ */
+public suspend inline fun <reified T> DatabaseClient.selectTypedOrThrow(
+    table: String,
+    schema: String? = null,
+    columns: String = "*",
+    single: Boolean = false,
+    noinline filters: FilterBuilder.() -> Unit = {},
+): List<T> = selectTyped<T>(table = table, schema = schema, columns = columns, single = single, filters = filters).getOrThrow()
+
+/**
  * Selects rows and decodes them into a [PostgrestPage] carrying the total
  * [PostgrestPage.count] reported by PostgREST's `Content-Range` header. Combine
  * with `limit`/`range` filters for count-aware pagination.

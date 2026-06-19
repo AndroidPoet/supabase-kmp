@@ -35,8 +35,9 @@ public inline fun <reified T> DatabaseClient.paginator(
     crossinline filters: FilterBuilder.() -> Unit = {},
 ): Paginator<T> =
     Paginator(pageSize) { offset, limit ->
-        selectTyped<T>(table = table, schema = schema, columns = columns) {
+        selectTypedOrThrow<T>(table = table, schema = schema, columns = columns) {
             filters()
-            range(offset, offset + limit - 1)
-        }.getOrThrow()
+            limit(limit)
+            offset(offset)
+        }
     }

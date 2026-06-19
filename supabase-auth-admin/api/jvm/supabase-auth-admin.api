@@ -1,4 +1,6 @@
 public final class io/github/androidpoet/supabase/auth/admin/AdminPagingKt {
+	public static final fun listUsersOrThrow (Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;Ljava/lang/Integer;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun listUsersOrThrow$default (Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;Ljava/lang/Integer;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun usersPaginator (Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;I)Lio/github/androidpoet/supabase/core/paging/Paginator;
 	public static synthetic fun usersPaginator$default (Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;IILjava/lang/Object;)Lio/github/androidpoet/supabase/core/paging/Paginator;
 }

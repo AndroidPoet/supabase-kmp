@@ -4,6 +4,16 @@ import io.github.androidpoet.supabase.auth.models.User
 import io.github.androidpoet.supabase.core.paging.Paginator
 
 /**
+ * The plain (no-[io.github.androidpoet.supabase.core.result.SupabaseResult]) form
+ * of [AuthAdminClient.listUsers]: returns the `List<User>` directly and **throws**
+ * on failure. Service-role only.
+ */
+public suspend fun AuthAdminClient.listUsersOrThrow(
+    page: Int? = null,
+    perPage: Int? = null,
+): List<User> = listUsers(page = page, perPage = perPage).getOrThrow().users
+
+/**
  * Builds a demand-driven [Paginator] over all users, fetching one page per
  * [Paginator.loadNext] via [AuthAdminClient.listUsers].
  *
@@ -17,6 +27,5 @@ import io.github.androidpoet.supabase.core.paging.Paginator
  */
 public fun AuthAdminClient.usersPaginator(perPage: Int = 50): Paginator<User> =
     Paginator(perPage) { offset, limit ->
-        val page = offset / limit + 1
-        listUsers(page = page, perPage = limit).getOrThrow().users
+        listUsersOrThrow(page = offset / limit + 1, perPage = limit)
     }
