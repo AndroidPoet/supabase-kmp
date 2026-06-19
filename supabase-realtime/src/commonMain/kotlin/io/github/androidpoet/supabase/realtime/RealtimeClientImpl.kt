@@ -3,6 +3,8 @@ import io.github.androidpoet.supabase.client.SupabaseClient
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.core.result.map
+import io.github.androidpoet.supabase.core.result.onFailureSuspend
+import io.github.androidpoet.supabase.core.result.onSuccessSuspend
 import io.github.androidpoet.supabase.core.util.urlEncode
 import io.github.androidpoet.supabase.realtime.models.PostgresChangeEvent
 import io.github.androidpoet.supabase.realtime.models.PresenceState
@@ -242,6 +244,14 @@ internal class RealtimeClientImpl(
             _connectionState.value = ConnectionState.Connecting
             try {
                 establishConnection()
+                // A disconnect() that landed while we were mid-handshake set
+                // intentionalDisconnect; honor it instead of publishing Connected over
+                // a socket the caller already asked to tear down (it waits on
+                // connectMutex to finish the teardown after we release).
+                if (intentionalDisconnect) {
+                    closeSocketAndScope()
+                    return
+                }
                 reconnectAttempt.value = 0
                 _connectionState.value = ConnectionState.Connected
             } catch (e: Throwable) {
@@ -295,25 +305,31 @@ internal class RealtimeClientImpl(
     }
 
     override suspend fun disconnect() {
+        // Set the intent and stop any pending reconnect immediately (cheap, outside the
+        // lock) so a backoff timer can't fire while we tear down.
         intentionalDisconnect = true
-        _connectionState.value = ConnectionState.Disconnecting
         reconnectJob?.cancel()
         reconnectJob = null
         reconnectAttempt.value = 0
-        val toUnsubscribe =
-            synchronized(subscriptionsLock) {
-                val snapshot = activeSubscriptions.values.toList()
-                activeSubscriptions.clear()
-                snapshot
-            }
-        toUnsubscribe.forEach { it.unsubscribe() }
-        heartbeatJob?.cancel()
-        heartbeatJob = null
-        session?.close()
-        session = null
-        scope?.cancel()
-        scope = null
-        _connectionState.value = ConnectionState.Disconnected
+        // Serialize the teardown with connect()/attemptReconnect() through connectMutex:
+        // otherwise a disconnect could interleave mid-handshake and either leave the
+        // freshly-established socket/scope alive (a zombie connection) or race the
+        // session/scope writes. Both connect paths re-check intentionalDisconnect after
+        // their handshake, so once we hold the lock the connection is fully settled.
+        connectMutex.withLock {
+            _connectionState.value = ConnectionState.Disconnecting
+            val toUnsubscribe =
+                synchronized(subscriptionsLock) {
+                    val snapshot = activeSubscriptions.values.toList()
+                    activeSubscriptions.clear()
+                    snapshot
+                }
+            toUnsubscribe.forEach { it.unsubscribe() }
+            heartbeatJob?.cancel()
+            heartbeatJob = null
+            closeSocketAndScope()
+            _connectionState.value = ConnectionState.Disconnected
+        }
     }
 
     override suspend fun close() {
@@ -430,6 +446,16 @@ internal class RealtimeClientImpl(
                 return
             }
         }
+    }
+
+    // Single teardown path for the live socket and its read-loop/heartbeat scope, so
+    // every lifecycle branch (disconnect, mid-handshake bail, reconnect failure) tears
+    // down identically. Null-safe and safe to call when already torn down.
+    private suspend fun closeSocketAndScope() {
+        session?.close()
+        session = null
+        scope?.cancel()
+        scope = null
     }
 
     private suspend fun establishConnection() {
@@ -615,20 +641,53 @@ internal class RealtimeClientImpl(
             }
     }
 
+    // Rejoin a single channel that received a phx_error (server-side channel crash on
+    // a live socket). Bounded by the same backoff/attempt cap as the socket reconnect.
+    internal fun rejoinErroredChannel(subscription: ChannelSubscriptionImpl) {
+        val currentScope = scope ?: return
+        val attempt = subscription.nextRejoinAttempt()
+        val maxAttempts = config.maxReconnectAttempts
+        if (maxAttempts > 0 && attempt >= maxAttempts) return
+        currentScope.launch {
+            delay(calculateBackoffDelay(attempt))
+            val stillActive =
+                synchronized(subscriptionsLock) { activeSubscriptions[subscription.topic] === subscription }
+            // Only rejoin if still wanted, still errored (a socket-level reconnect may
+            // have already rejoined it), and the socket is up.
+            if (stillActive && subscription.status.value == RealtimeSubscription.Status.ERROR && session != null) {
+                subscription.prepareRejoin()
+                sendJoinMessage(subscription)
+            }
+        }
+    }
+
     private suspend fun attemptReconnect() {
-        _connectionState.value = ConnectionState.Connecting
-        try {
-            establishConnection()
-            reconnectAttempt.value = 0
-            _connectionState.value = ConnectionState.Connected
-            rejoinActiveChannels()
-            flushOutboundBuffer()
-        } catch (e: Throwable) {
-            if (e is CancellationException) throw e
-            session = null
-            scope?.cancel()
-            scope = null
-            scheduleReconnect()
+        // Share connectMutex with connect()/disconnect() so a reconnect handshake and a
+        // disconnect teardown can't interleave on session/scope. attemptReconnect only
+        // ever runs on reconnectScope (never inside connect()'s lock), so there is no
+        // reentrant acquisition.
+        connectMutex.withLock {
+            if (intentionalDisconnect) return
+            _connectionState.value = ConnectionState.Connecting
+            // suspendCatching rethrows CancellationException (so a teardown-driven
+            // cancellation propagates) and routes any other failure to the reconnect
+            // path — no hand-rolled `if (e is CancellationException) throw e`.
+            SupabaseResult
+                .suspendCatching { establishConnection() }
+                .onSuccessSuspend {
+                    if (intentionalDisconnect) {
+                        // A disconnect landed mid-handshake; honor it, don't go Connected.
+                        closeSocketAndScope()
+                    } else {
+                        reconnectAttempt.value = 0
+                        _connectionState.value = ConnectionState.Connected
+                        rejoinActiveChannels()
+                        flushOutboundBuffer()
+                    }
+                }.onFailureSuspend {
+                    closeSocketAndScope()
+                    scheduleReconnect()
+                }
         }
     }
 
@@ -849,6 +908,22 @@ internal class ChannelSubscriptionImpl(
 
     override fun presenceState(): PresenceState = presenceSnapshot
 
+    // Per-channel rejoin backoff counter for phx_error recovery. Reset whenever the
+    // channel successfully (re)subscribes, so a later error starts fresh.
+    private val rejoinAttempts = atomic(0)
+
+    internal fun nextRejoinAttempt(): Int = rejoinAttempts.getAndIncrement()
+
+    private fun resetRejoinAttempts() {
+        rejoinAttempts.value = 0
+    }
+
+    // Reset status to SUBSCRIBING ahead of a rejoin so the join watchdog and the
+    // join phx_reply handling behave as on a first subscribe.
+    internal fun prepareRejoin() {
+        _status.value = RealtimeSubscription.Status.SUBSCRIBING
+    }
+
     internal fun markJoinTimedOut() {
         // CAS, not check-then-set: the join phx_reply handler may flip SUBSCRIBING
         // -> SUBSCRIBED concurrently, and a plain read-then-write here could clobber
@@ -974,6 +1049,10 @@ internal class ChannelSubscriptionImpl(
                         message = message.payload.toString(),
                     )
                 publish(event)
+                // A phx_error is a channel-level crash on a still-live socket: the
+                // socket reconnect won't fire, so rejoin just this channel or it stays
+                // dead. Bounded backoff lives on the client.
+                client.rejoinErroredChannel(this)
             }
             "phx_close" -> handleChannelClose(message.payload)
             "system" -> handleSystemEvent(message.payload)
@@ -1165,8 +1244,13 @@ internal class ChannelSubscriptionImpl(
                 } else {
                     RealtimeSubscription.Status.ERROR
                 }
-            if (status == "ok" && response is JsonObject) {
-                captureServerBindings(response)
+            if (status == "ok") {
+                // Fresh (re)subscribe succeeded: clear the phx_error rejoin backoff so a
+                // later error retries from the start of the schedule.
+                resetRejoinAttempts()
+                if (response is JsonObject) {
+                    captureServerBindings(response)
+                }
             }
         } else if (ref != null) {
             // Not the join reply: it may be the ack for a broadcastWithAck push we

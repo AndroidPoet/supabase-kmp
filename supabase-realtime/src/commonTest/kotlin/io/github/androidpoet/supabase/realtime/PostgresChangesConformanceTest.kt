@@ -69,6 +69,24 @@ class PostgresChangesConformanceTest {
         }
 
     @Test
+    fun test_phxError_marksChannelErroredAndDoesNotThrow() =
+        runTest {
+            val subscription = realtime().channel("room-1").subscribe() as ChannelSubscriptionImpl
+
+            // A channel-level phx_error must move the subscription to ERROR. The rejoin
+            // it schedules is a no-op here (no live socket), so the handler returns cleanly.
+            subscription.handleMessage(
+                io.github.androidpoet.supabase.realtime.models.RealtimeMessage(
+                    topic = "realtime:room-1",
+                    event = "phx_error",
+                    payload = kotlinx.serialization.json.buildJsonObject {},
+                ),
+            )
+
+            assertEquals(RealtimeSubscription.Status.ERROR, subscription.status.value)
+        }
+
+    @Test
     fun test_realtimeFilter_inOperator_usesParenList() {
         assertEquals("status=in.(open,pending)", realtimeFilter { isIn("status", listOf("open", "pending")) })
     }
