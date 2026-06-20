@@ -2,6 +2,29 @@
 
 ## Unreleased
 
+### Fixed
+
+- **`selectMaybeSingleTyped` / `rpcMaybeSingleTyped` / `rpcGetMaybeSingleTyped` now
+  return `Success(null)` for a missing row against a real server.** The no-row case
+  was detected with `error.code == "406"`, but the transport reports PostgREST's
+  single-object miss as `httpStatus = 406` / `code = "PGRST116"` / category
+  `Validation` — so the check never matched and every "maybe" lookup of an absent
+  row failed. Detection now keys on the real shape and distinguishes 0 rows (→
+  `null`) from >1 rows (still a failure, per the `…Single` contract). The unit
+  fakes were emitting a `code = "406"` a live server never sends; they now mirror
+  the real error and a >1-rows regression test was added.
+- **`SupabaseClient.postRaw` / `putRaw` no longer double-prefix an absolute URL.**
+  They unconditionally prepended the project URL while their docs said the argument
+  was absolute, so a full `https://…` (e.g. a signed upload URL) became
+  `https://proj.supabase.cohttps://…`. They now share `rawRequest`'s path-vs-URL
+  resolution: a path is prefixed, an `http(s)://` URL is used verbatim. Docs
+  corrected; tests added.
+- **Realtime `subscribe()` now opens the socket (documented lazy-connect).**
+  Subscribing without a prior `connect()` sent a `phx_join` that — being a
+  non-buffered control frame — was dropped on the dead socket, leaving the channel
+  stuck in `SUBSCRIBING` until it timed out to `ERROR`. `subscribe()` now connects
+  first when there is no live session, matching the KDoc.
+
 ### Docs
 
 - **Versioning guide** — document the release policy in `CONTRIBUTING.md`: the

@@ -111,9 +111,11 @@ public interface SupabaseClient : AutoCloseable {
     ): SupabaseResult<String>
 
     /**
-     * POSTs a binary [body] to an absolute [url] with the given [contentType] —
-     * the raw-bytes counterpart to [post], used for uploads (e.g. Storage object
-     * writes) where the payload is not JSON.
+     * POSTs a binary [body] with the given [contentType] — the raw-bytes
+     * counterpart to [post], used for uploads (e.g. Storage object writes) where
+     * the payload is not JSON. [url] may be an endpoint path (prefixed with the
+     * project URL) or an already-absolute `http(s)://…` URL; an absolute URL is
+     * used verbatim and never re-prefixed.
      */
     public suspend fun postRaw(
         url: String,
@@ -122,7 +124,7 @@ public interface SupabaseClient : AutoCloseable {
         headers: Map<String, String> = emptyMap(),
     ): SupabaseResult<String>
 
-    /** PUTs a binary [body] to an absolute [url] with the given [contentType]. See [postRaw]. */
+    /** PUTs a binary [body] with the given [contentType]; [url] is a path or absolute URL. See [postRaw]. */
     public suspend fun putRaw(
         url: String,
         body: ByteArray,

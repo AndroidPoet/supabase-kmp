@@ -5,9 +5,30 @@ import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+
+// The shape the REAL transport produces for PostgREST single-object mode with no
+// match: HTTP 406, body code PGRST116, row count in `details`. (The earlier fake
+// used `code = "406"`, which a live server never emits — that mismatch hid the
+// maybe-single bug.) Use this so the fakes match reality.
+private fun noRows406() =
+    SupabaseError(
+        message = "Cannot coerce the result to a single JSON object",
+        code = "PGRST116",
+        httpStatus = 406,
+        details = JsonPrimitive("The result contains 0 rows"),
+    )
+
+private fun multipleRows406() =
+    SupabaseError(
+        message = "Cannot coerce the result to a single JSON object",
+        code = "PGRST116",
+        httpStatus = 406,
+        details = JsonPrimitive("The result contains 2 rows"),
+    )
 
 class DatabaseClientExtTest {
     @Test
@@ -42,13 +63,28 @@ class DatabaseClientExtTest {
         runTest {
             val client =
                 FakeDatabaseClient(
-                    selectResult = SupabaseResult.Failure(SupabaseError(message = "no rows", code = "406")),
+                    selectResult = SupabaseResult.Failure(noRows406()),
                 )
 
             val result = client.selectMaybeSingleTyped<TestItem>(table = "items")
 
             assertTrue(result is SupabaseResult.Success)
             assertEquals(null, result.value)
+        }
+
+    @Test
+    fun test_selectMaybeSingleTyped_failsOnMultipleRows() =
+        runTest {
+            // PGRST116 also fires for >1 rows; maybe-single must still FAIL there
+            // (only the 0-row case is "absent"), so it isn't mapped to null.
+            val client =
+                FakeDatabaseClient(
+                    selectResult = SupabaseResult.Failure(multipleRows406()),
+                )
+
+            val result = client.selectMaybeSingleTyped<TestItem>(table = "items")
+
+            assertTrue(result is SupabaseResult.Failure)
         }
 
     @Test
@@ -481,7 +517,7 @@ class DatabaseClientExtTest {
             val client =
                 FakeDatabaseClient(
                     selectResult = SupabaseResult.Success("""{"id":1}"""),
-                    rpcResult = SupabaseResult.Failure(SupabaseError(message = "no rows", code = "406")),
+                    rpcResult = SupabaseResult.Failure(noRows406()),
                 )
 
             val result = client.rpcMaybeSingleTyped<TestItem>(function = "get_item")
@@ -496,7 +532,7 @@ class DatabaseClientExtTest {
             val client =
                 FakeDatabaseClient(
                     selectResult = SupabaseResult.Success("""{"id":1}"""),
-                    rpcGetResult = SupabaseResult.Failure(SupabaseError(message = "no rows", code = "406")),
+                    rpcGetResult = SupabaseResult.Failure(noRows406()),
                 )
 
             val result = client.rpcGetMaybeSingleTyped<TestItem>(function = "get_item")

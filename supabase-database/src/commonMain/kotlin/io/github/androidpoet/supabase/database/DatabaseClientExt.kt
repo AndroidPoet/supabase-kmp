@@ -2,7 +2,9 @@ package io.github.androidpoet.supabase.database
 import io.github.androidpoet.supabase.client.defaultJson
 import io.github.androidpoet.supabase.client.deserialize
 import io.github.androidpoet.supabase.core.models.FilterBuilder
+import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseErrorCategory
+import io.github.androidpoet.supabase.core.result.SupabaseErrorCodes
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.core.result.category
 import io.github.androidpoet.supabase.core.result.map
@@ -10,6 +12,21 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+
+// PostgREST single-object mode (`vnd.pgrst.object+json`) answers BOTH "no row" and
+// ">1 rows" with HTTP 406 / PGRST116 — but only the former is a maybe-single
+// "absent" result. The real transport reports this as `httpStatus = 406`, `code =
+// "PGRST116"`, `category = Validation` (NOT the literal `code == "406"` the earlier
+// check looked for, which never matched a live server). The row count lives in
+// `details` ("The result contains 0 rows"), so we branch on it: 0 rows ->
+// Success(null); a >1 match stays a Failure, honoring the `…Single` contract.
+@PublishedApi
+internal fun SupabaseError.isSingleObjectNoRows(): Boolean {
+    val singular = httpStatus == 406 || code == SupabaseErrorCodes.Database.SINGULAR_RESPONSE_VIOLATION
+    val zeroRows = (details as? JsonPrimitive)?.content?.contains("0 rows") == true
+    return (singular && zeroRows) || category == SupabaseErrorCategory.NotFound
+}
 
 /**
  * Reads rows from [table] and decodes them into a `List<T>` — the type-safe
@@ -130,7 +147,7 @@ public suspend inline fun <reified T> DatabaseClient.selectMaybeSingleTyped(
     return when (result) {
         is SupabaseResult.Success -> result.deserialize<T>().map { it as T? }
         is SupabaseResult.Failure ->
-            if (result.error.code == "406" || result.error.category == SupabaseErrorCategory.NotFound) {
+            if (result.error.isSingleObjectNoRows()) {
                 SupabaseResult.Success(null)
             } else {
                 result
@@ -583,7 +600,7 @@ public suspend inline fun <reified T> DatabaseClient.rpcMaybeSingleTyped(
     return when (result) {
         is SupabaseResult.Success -> result.deserialize<T>().map { it as T? }
         is SupabaseResult.Failure ->
-            if (result.error.code == "406" || result.error.category == SupabaseErrorCategory.NotFound) {
+            if (result.error.isSingleObjectNoRows()) {
                 SupabaseResult.Success(null)
             } else {
                 result
@@ -612,7 +629,7 @@ public suspend inline fun <reified Request : Any, reified Response> DatabaseClie
     ) {
         is SupabaseResult.Success -> result.deserialize<Response>().map { it as Response? }
         is SupabaseResult.Failure ->
-            if (result.error.code == "406" || result.error.category == SupabaseErrorCategory.NotFound) {
+            if (result.error.isSingleObjectNoRows()) {
                 SupabaseResult.Success(null)
             } else {
                 result
@@ -877,7 +894,7 @@ public suspend inline fun <reified T> DatabaseClient.rpcGetMaybeSingleTyped(
     return when (result) {
         is SupabaseResult.Success -> result.deserialize<T>().map { it as T? }
         is SupabaseResult.Failure ->
-            if (result.error.code == "406" || result.error.category == SupabaseErrorCategory.NotFound) {
+            if (result.error.isSingleObjectNoRows()) {
                 SupabaseResult.Success(null)
             } else {
                 result

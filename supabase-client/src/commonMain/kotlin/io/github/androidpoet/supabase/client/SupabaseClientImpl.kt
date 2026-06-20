@@ -52,7 +52,7 @@ internal class SupabaseClientImpl(
         contentType: String,
         headers: Map<String, String>,
     ): SupabaseResult<String> =
-        transport.postRaw(url = "$projectUrl$url", body = body, contentType = contentType, headers = headers)
+        transport.postRaw(url = resolveUrl(url), body = body, contentType = contentType, headers = headers)
 
     override suspend fun putRaw(
         url: String,
@@ -60,7 +60,7 @@ internal class SupabaseClientImpl(
         contentType: String,
         headers: Map<String, String>,
     ): SupabaseResult<String> =
-        transport.putRaw(url = "$projectUrl$url", body = body, contentType = contentType, headers = headers)
+        transport.putRaw(url = resolveUrl(url), body = body, contentType = contentType, headers = headers)
 
     override suspend fun rawRequest(
         method: SupabaseHttpMethod,
@@ -68,27 +68,29 @@ internal class SupabaseClientImpl(
         body: ByteArray?,
         contentType: String?,
         headers: Map<String, String>,
-    ): SupabaseResult<SupabaseHttpResponse> {
-        val fullUrl = if (url.startsWith("http://") || url.startsWith("https://")) url else "$projectUrl$url"
-        return transport.rawRequest(
+    ): SupabaseResult<SupabaseHttpResponse> =
+        transport.rawRequest(
             method = method.name,
-            url = fullUrl,
+            url = resolveUrl(url),
             body = body,
             contentType = contentType,
             requestHeaders = headers,
         )
-    }
 
     override fun streamLines(
         endpoint: String,
         body: String?,
         contentType: String?,
         headers: Map<String, String>,
-    ): Flow<String> {
-        val fullUrl =
-            if (endpoint.startsWith("http://") || endpoint.startsWith("https://")) endpoint else "$projectUrl$endpoint"
-        return transport.streamLines(url = fullUrl, body = body, contentType = contentType, headers = headers)
-    }
+    ): Flow<String> =
+        transport.streamLines(url = resolveUrl(endpoint), body = body, contentType = contentType, headers = headers)
+
+    // An already-absolute `http(s)://` URL is used as-is; anything else is treated
+    // as an endpoint path and prefixed with the project URL. Shared by every raw
+    // verb (postRaw/putRaw/rawRequest/streamLines) so passing a full URL is always
+    // safe and never double-prefixed into `https://proj.supabase.cohttps://…`.
+    private fun resolveUrl(url: String): String =
+        if (url.startsWith("http://") || url.startsWith("https://")) url else "$projectUrl$url"
 
     override fun setAccessToken(token: String) {
         transport.setAccessToken(token)

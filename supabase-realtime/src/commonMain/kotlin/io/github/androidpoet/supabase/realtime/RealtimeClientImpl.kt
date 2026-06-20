@@ -359,6 +359,13 @@ internal class RealtimeClientImpl(
                 replayLimit = builder.replayLimit,
             )
         synchronized(subscriptionsLock) { activeSubscriptions[topic] = subscription }
+        // Honor the documented lazy-connect ("the socket connects on the first
+        // subscribe"): without a live socket the phx_join is a NON_BUFFERED_EVENTS
+        // control frame and sendMessage drops it, leaving the channel stuck in
+        // SUBSCRIBING until it times out to ERROR. connect() is single-flight and a
+        // no-op once connected; on failure it schedules a reconnect whose
+        // rejoinActiveChannels() replays this now-registered join.
+        if (session == null && !intentionalDisconnect) connect()
         sendJoinMessage(subscription)
         return subscription
     }
