@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.9.1 — 2026-06-21
 
 ### Added
 
@@ -77,8 +77,6 @@
 - **JVM 17 requirement** — README Setup now states that consuming modules must build
   with `jvmTarget = 17` (the published Android/JVM artifacts ship inline functions
   compiled for Java 17); building lower fails with an inline-bytecode error.
-
-_Docs-only; ships with the next release that carries a code change._
 
 ## 0.9.0 — 2026-06-20
 
