@@ -175,7 +175,8 @@ suspend fun registerDevice(database: DatabaseClient, userId: String): E2eeKeyPai
         value = DeviceKey(userId, Base64.encode(keyPair.publicKey)),
         upsert = true,
     ).getOrThrow()
-    // Persist keyPair.privateKey in Keychain / Keystore — NOT in a column.
+    // Persist the private key — keyPair.exportPrivateKey() — in Keychain / Keystore,
+    // NOT in a column. See "Encrypt your own data" below for the round-trip.
     return keyPair
 }
 ```
@@ -242,6 +243,49 @@ instead of plain strings, swap `encrypt`/`decryptToString` for
   The same pattern works over Realtime: broadcast `Base64.encode(ciphertext)`
   instead of inserting it, and decrypt on the receiving end. The relay never sees
   plaintext.
+</Callout>
+
+## Encrypt your own data (at rest)
+
+E2EE isn't only for talking to *someone else*. The same primitives let you encrypt
+**your own** data — notes, files, a local cache — so that even though it lives in a
+Supabase row, only your device can read it. There's no peer here, so instead of
+`deriveSession(peerPublicKey)` you derive a **self-session**: a key the pair makes
+against its own public key. The same pair always yields the same key.
+
+The catch: a self-key is only useful if the *same key pair* comes back after the
+app restarts. A freshly generated pair can't read yesterday's ciphertext. So you
+**export the private key once, persist it, and re-import it on the next launch**:
+
+```kotlin
+import io.github.androidpoet.supabase.e2ee.exportPrivateKey
+import io.github.androidpoet.supabase.e2ee.importE2eeKeyPair
+import io.github.androidpoet.supabase.e2ee.deriveSelfSession
+
+// First run: generate the pair once, then persist it.
+val pair = generateE2eeKeyPair().getOrThrow()
+val privateDer = pair.exportPrivateKey().getOrThrow()   // PKCS#8 DER bytes
+// Store privateDer in Keychain / Keystore (BYO secure storage); keep pair.publicKey
+// alongside it. Never upload the private key.
+
+// Next launch: restore the SAME pair, then derive the SAME self-key.
+val restored = importE2eeKeyPair(privateDer, savedPublicKey).getOrThrow()
+val session = restored.deriveSelfSession().getOrThrow()
+
+val blob = session.encrypt("my private note").getOrThrow()       // store the ciphertext
+val text = session.decryptToString(blob).getOrThrow()            // reads across restarts
+```
+
+Because `deriveSelfSession()` keys against the pair's own public key, the AES key is
+**deterministic** for a given pair — persist the pair and your ciphertext stays
+readable forever. The exported DER is interoperable: it round-trips across the
+JDK, Apple, OpenSSL and WebCrypto backends, so a note encrypted on Android decrypts
+on the same user's iOS device once the private key is synced there (by you).
+
+<Callout type="warning">
+  The exported private key is the whole secret — anyone who has it can read every
+  value you encrypted. Keep it in platform secure storage, and never put it in a
+  column, a log, or a backup you don't control.
 </Callout>
 
 ## Threat model

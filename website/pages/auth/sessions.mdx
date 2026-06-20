@@ -35,6 +35,16 @@ sessionManager.sessionState.collect { state ->
 }
 ```
 
+<Callout type="info">
+  A failed refresh does **not** automatically mean `Expired`. If the refresh fails
+  for a transient reason — no connectivity, a `5xx`, or a `429` rate limit — the
+  refresh token is still valid, so the session stays `Authenticated` and the manager
+  retries shortly. It only flips to `Expired` on a genuine invalidation (an expired
+  or already-used refresh token). So `Expired` means "sign in again," not "the
+  network hiccupped" — you don't need to bounce users to the login screen on a flaky
+  connection.
+</Callout>
+
 ## Persisting across restarts
 
 By default the session lives only in memory (`InMemorySessionStorage`), so it's

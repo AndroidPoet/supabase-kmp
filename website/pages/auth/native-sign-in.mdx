@@ -31,6 +31,24 @@ supabase-auth-google = { module = "io.github.androidpoet:supabase-auth-google", 
 supabase-auth-apple = { module = "io.github.androidpoet:supabase-auth-apple", version.ref = "supabase-kmp" }
 ```
 
+## The nonce
+
+Both providers take a **nonce** — a fresh random value, unique per sign-in, that
+binds the issued ID token to *this* request so a captured token can't be replayed.
+Don't hand-roll it from `kotlin.random.Random`; use the SDK's `generateNonce()`,
+which draws from the same cryptographically secure RNG as the PKCE verifiers and is
+URL-safe:
+
+```kotlin
+import io.github.androidpoet.supabase.auth.native.generateNonce
+
+val rawNonce = generateNonce()   // fresh per sign-in; pass the raw value to the config
+```
+
+Pass the **raw** nonce to the provider config below. The provider hashes it for the
+platform and returns the raw value on the `NativeAuthCredential`, so Supabase can
+validate the token's hashed `nonce` claim.
+
 ## Google (Android)
 
 Backed by Android's Credential Manager + Google Identity Services. Construct the
@@ -58,6 +76,18 @@ val session = auth.signInWith(
     appleAuthProvider(AppleSignInConfig(nonce = rawNonce)),
 )
 ```
+
+<Callout type="info">
+  Apple returns the user's **full name and email only on the very first
+  authorization** for your app, and never inside the ID token. The provider carries
+  them through on `NativeAuthCredential.fullName` / `.email` so you can capture them
+  then — read and store them on first sign-in, because subsequent sign-ins won't
+  include them.
+</Callout>
+
+A cancelled Apple dialog is reported distinctly: the failure carries
+`code = "apple_sign_in_cancelled"` (vs. `"apple_sign_in_failed"` for a real error),
+so you can quietly ignore a deliberate dismiss instead of showing an error.
 
 ## Bring your own
 
