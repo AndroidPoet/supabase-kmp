@@ -37,7 +37,7 @@ Add the modules you need to your version catalog:
 
 ```toml
 [versions]
-supabase-kmp = "0.9.0"
+supabase-kmp = "0.9.1"
 
 [libraries]
 supabase-client = { module = "io.github.androidpoet:supabase-client", version.ref = "supabase-kmp" }

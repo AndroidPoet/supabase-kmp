@@ -73,8 +73,34 @@ platform, not just the JVM.
 - Update `CHANGELOG.md` under an "Unreleased" heading.
 - Public API additions need KDoc — Dokka builds the reference site from it.
 
+## Versioning
+
+The library is in its **`0.9.x` series** and stays there for now — every release
+bumps the **patch** number (`0.9.1`, `0.9.2`, `0.9.3`, …). We are **not** moving to
+`1.0.0` yet; treat `0.9.x` as the rolling pre-stable line.
+
+What that means in practice:
+
+- **Patch only.** New features and fixes both ship as a patch bump within `0.9.x`.
+  Don't bump the major (`1.x`) or minor (`0.10.x`) without an explicit decision to
+  change this policy.
+- **Stay additive.** Because there's no major-version bump to absorb breaking
+  changes, keep every change backward-compatible: append optional parameters with
+  defaults, add new declarations rather than changing existing signatures, and run
+  `./gradlew apiCheck` (regenerate with `apiDump` for intentional additions).
+- **One version, all modules.** Every published module shares the single `VERSION`
+  constant and is released together at the same number.
+
+When we're confident the API is stable, we'll revisit and cut `1.0.0` deliberately —
+until then, the next release is always the next `0.9.x` patch.
+
 ## Releasing (maintainers)
 
-1. Bump `VERSION` in `buildSrc/src/main/kotlin/io/github/androidpoet/supabase/Configuration.kt`.
-2. Update `CHANGELOG.md`.
-3. Publish a GitHub Release — the `Publish` workflow pushes to Maven Central.
+1. Bump `VERSION` in `buildSrc/src/main/kotlin/io/github/androidpoet/supabase/Configuration.kt`
+   to the next `0.9.x` patch (see [Versioning](#versioning)).
+2. Update `CHANGELOG.md` (add a dated section for the new version) and the version
+   in the `README.md` setup snippet.
+3. Run the release gates locally: `./gradlew apiCheck detekt jvmTest`.
+4. Publish a GitHub Release tagged `vX.Y.Z` — the `Publish` workflow pushes all
+   modules to Maven Central. Let one release finish before tagging the next so two
+   publishes don't run at once.

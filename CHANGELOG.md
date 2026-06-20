@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.1 — 2026-06-20
+
+### Docs
+
+- **Versioning guide** — document the release policy in `CONTRIBUTING.md`: the
+  library stays in the `0.9.x` line with patch-only bumps (`0.9.1`, `0.9.2`, …) and
+  does not move to `1.0.0` yet, so every change stays backward-compatible.
+
 ## 0.9.0 — 2026-06-20
 
 ### Added
