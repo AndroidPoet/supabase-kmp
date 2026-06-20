@@ -78,6 +78,49 @@ public suspend fun generateE2eeKeyPair(): SupabaseResult<E2eeKeyPair> =
     }
 
 /**
+ * Exports this pair's **private** key as PKCS#8 DER bytes so a device can persist
+ * its identity across launches (store these in your platform's secure storage —
+ * Keychain/Keystore/etc.). Restore later with [importE2eeKeyPair], pairing them
+ * with [E2eeKeyPair.publicKey]. DER (PKCS#8) is the format that round-trips across
+ * JDK / Apple / OpenSSL / WebCrypto, so it works on every target including
+ * `wasmJs`. These bytes are secret — never log or upload them; only [publicKey]
+ * is safe to publish.
+ */
+public suspend fun E2eeKeyPair.exportPrivateKey(): SupabaseResult<ByteArray> =
+    cryptoResult("export") { privateKey.encodeToByteArray(EC.PrivateKey.Format.DER) }
+
+/**
+ * Restores an [E2eeKeyPair] from a [privateKeyDer] (PKCS#8 DER produced by
+ * [exportPrivateKey]) and its matching raw [publicKey] (as published / from
+ * [E2eeKeyPair.publicKey]). This is the missing half of **at-rest, single-user**
+ * encryption: a device generates a pair once, persists it, and re-imports it on
+ * the next launch to re-derive the same session and decrypt its own history.
+ */
+public suspend fun importE2eeKeyPair(
+    privateKeyDer: ByteArray,
+    publicKey: ByteArray,
+): SupabaseResult<E2eeKeyPair> =
+    cryptoResult("import") {
+        val priv =
+            provider
+                .get(ECDH)
+                .privateKeyDecoder(EC.Curve.P256)
+                .decodeFromByteArray(EC.PrivateKey.Format.DER, privateKeyDer)
+        E2eeKeyPair(publicKey = publicKey, privateKey = priv)
+    }
+
+/**
+ * Derives a session keyed to **this device's own pair** — ECDH against its own
+ * public key, a stable deterministic self-key for single-user at-rest encryption
+ * (encrypt your own notes/files; the server only ever sees ciphertext). Persist
+ * the pair with [exportPrivateKey]/[importE2eeKeyPair] so the same key returns on
+ * the next launch. For peer-to-peer messaging, use [deriveSession] with the
+ * peer's public key instead.
+ */
+public suspend fun E2eeKeyPair.deriveSelfSession(): SupabaseResult<E2eeSession> =
+    deriveSession(publicKey)
+
+/**
  * Derives a shared [E2eeSession] from this key pair and a peer's raw public key,
  * following the cryptography-kotlin secure-messaging recipe: ECDH → HKDF-SHA256 →
  * AES-256-GCM (the raw shared secret is never used as a key directly). Both sides
@@ -87,16 +130,19 @@ public suspend fun generateE2eeKeyPair(): SupabaseResult<E2eeKeyPair> =
 public suspend fun E2eeKeyPair.deriveSession(peerPublicKey: ByteArray): SupabaseResult<E2eeSession> =
     cryptoResult("derive") {
         val peer =
-            provider.get(ECDH)
+            provider
+                .get(ECDH)
                 .publicKeyDecoder(EC.Curve.P256)
                 .decodeFromByteArray(EC.PublicKey.Format.RAW, peerPublicKey)
         val shared = privateKey.sharedSecretGenerator().generateSharedSecretToByteArray(peer)
         val keyBytes =
-            provider.get(HKDF)
+            provider
+                .get(HKDF)
                 .secretDerivation(SHA256, AES_KEY_BITS.bits, ByteArray(0), DERIVE_INFO.encodeToByteArray())
                 .deriveSecretToByteArray(shared)
         val aesKey =
-            provider.get(AES.GCM)
+            provider
+                .get(AES.GCM)
                 .keyDecoder()
                 .decodeFromByteArray(AES.Key.Format.RAW, keyBytes)
         E2eeSession(aesKey)

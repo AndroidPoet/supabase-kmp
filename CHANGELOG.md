@@ -2,7 +2,31 @@
 
 ## Unreleased
 
+### Added
+
+- **`supabase-e2ee` key persistence** — `E2eeKeyPair.exportPrivateKey()` (PKCS#8
+  DER) and `importE2eeKeyPair(privateKeyDer, publicKey)` let a device persist its
+  identity across launches, the missing half of at-rest single-user encryption.
+  Plus `E2eeKeyPair.deriveSelfSession()` — a deterministic self-key (ECDH against
+  the pair's own public key) for encrypting your own data, where the server only
+  ever sees ciphertext. DER round-trips across JDK / Apple / OpenSSL / WebCrypto.
+
+### Changed
+
+- **BREAKING (`supabase-auth-admin`): `SupabaseClient.authAdmin(serviceRoleKey)` no
+  longer defaults the key to the anon `apiKey`.** The default meant `authAdmin()`
+  silently built a non-functional admin client (every call 401s) and nudged
+  developers toward embedding the real service-role key to "fix" it — a full RLS
+  bypass if shipped in a client app. The key is now a required argument; pass the
+  service-role key explicitly from a secret, server-side only.
+
 ### Fixed
+
+- **`supabase-auth-apple` reports user-cancellation distinctly.** A cancelled Apple
+  sign-in (`ASAuthorizationError.canceled`) now returns `SupabaseError(code =
+  "apple_sign_in_cancelled")` instead of a generic, code-less failure, so apps can
+  suppress error UI on a deliberate dismiss — matching the Google provider's
+  `*_cancelled` / `*_failed` vocabulary.
 
 - **`selectMaybeSingleTyped` / `rpcMaybeSingleTyped` / `rpcGetMaybeSingleTyped` now
   return `Success(null)` for a missing row against a real server.** The no-row case
@@ -32,6 +56,9 @@
   does not move to `1.0.0` yet, so every change stays backward-compatible.
 - **README** — add copy-pasteable version-catalog coordinates for the optional
   add-on modules.
+- **JVM 17 requirement** — README Setup now states that consuming modules must build
+  with `jvmTarget = 17` (the published Android/JVM artifacts ship inline functions
+  compiled for Java 17); building lower fails with an inline-bytecode error.
 
 _Docs-only; ships with the next release that carries a code change._
 

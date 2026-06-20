@@ -9,7 +9,11 @@ import kotlin.test.assertTrue
 
 class E2eeTest {
     @Serializable
-    private data class Message(val from: String, val body: String, val ts: Long)
+    private data class Message(
+        val from: String,
+        val body: String,
+        val ts: Long,
+    )
 
     private fun <T> SupabaseResult<T>.value(): T = (this as SupabaseResult.Success<T>).value
 
@@ -39,6 +43,32 @@ class E2eeTest {
             val msg = Message(from = "alice", body = "hello bob", ts = 1_700_000_000)
             val encMsg = aliceSession.encryptValue(msg).value()
             assertEquals(msg, bobSession.decryptValue<Message>(encMsg).value())
+        }
+
+    @Test
+    fun test_exportImport_roundTrips_andSelfSessionDecryptsAcrossRestart() =
+        runTest {
+            // Generate once, persist (export), then restore (import) — the "device
+            // restart" path for at-rest single-user encryption.
+            val original = generateE2eeKeyPair().value()
+            val privateDer = original.exportPrivateKey().value()
+            val restored = importE2eeKeyPair(privateDer, original.publicKey).value()
+
+            // Both derive the SAME deterministic self-session key, so ciphertext
+            // written before the restart decrypts after re-import.
+            val cipher =
+                original
+                    .deriveSelfSession()
+                    .value()
+                    .encryptValue(Message("me", "secret note", 1))
+                    .value()
+            val plain =
+                restored
+                    .deriveSelfSession()
+                    .value()
+                    .decryptValue<Message>(cipher)
+                    .value()
+            assertEquals(Message("me", "secret note", 1), plain)
         }
 
     @Test

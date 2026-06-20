@@ -3,8 +3,11 @@ public final class io/github/androidpoet/supabase/e2ee/E2eeKeyPair {
 }
 
 public final class io/github/androidpoet/supabase/e2ee/E2eeKt {
+	public static final fun deriveSelfSession (Lio/github/androidpoet/supabase/e2ee/E2eeKeyPair;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun deriveSession (Lio/github/androidpoet/supabase/e2ee/E2eeKeyPair;[BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun exportPrivateKey (Lio/github/androidpoet/supabase/e2ee/E2eeKeyPair;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun generateE2eeKeyPair (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun importE2eeKeyPair ([B[BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class io/github/androidpoet/supabase/e2ee/E2eeSession {

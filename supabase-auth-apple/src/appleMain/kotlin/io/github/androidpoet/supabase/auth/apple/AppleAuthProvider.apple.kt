@@ -111,7 +111,11 @@ private class AppleAuthDelegate(
         val tokenData = credential?.identityToken
         val token = tokenData?.let { NSString.create(it, NSUTF8StringEncoding)?.toString() }
         if (token.isNullOrEmpty()) {
-            deliver(SupabaseResult.Failure(SupabaseError(message = "Apple sign-in returned no identity token")))
+            deliver(
+                SupabaseResult.Failure(
+                    SupabaseError(message = "Apple sign-in returned no identity token", code = APPLE_SIGN_IN_FAILED),
+                ),
+            )
         } else {
             deliver(
                 SupabaseResult.Success(
@@ -125,12 +129,30 @@ private class AppleAuthDelegate(
         controller: ASAuthorizationController,
         didCompleteWithError: NSError,
     ) {
-        deliver(SupabaseResult.Failure(SupabaseError(message = "Apple sign-in failed: ${didCompleteWithError.localizedDescription}")))
+        // ASAuthorizationError.canceled (1001) is a deliberate user dismissal, not a
+        // failure. Tag it with a stable code so callers can suppress error UI on
+        // cancel — matching the Google provider's `*_cancelled`/`*_failed` codes.
+        val code = if (didCompleteWithError.code == ASAUTHORIZATION_ERROR_CANCELED) APPLE_SIGN_IN_CANCELLED else APPLE_SIGN_IN_FAILED
+        deliver(
+            SupabaseResult.Failure(
+                SupabaseError(message = "Apple sign-in failed: ${didCompleteWithError.localizedDescription}", code = code),
+            ),
+        )
     }
 
     override fun presentationAnchorForAuthorizationController(controller: ASAuthorizationController): ASPresentationAnchor =
         keyPresentationAnchor()
 }
+
+// Branchable error codes, mirroring supabase-auth-google's vocabulary so apps can
+// handle cancellation uniformly across providers.
+private const val APPLE_SIGN_IN_CANCELLED = "apple_sign_in_cancelled"
+private const val APPLE_SIGN_IN_FAILED = "apple_sign_in_failed"
+
+// ASAuthorizationError.Code.canceled — a deliberate user dismissal.
+// (Hard-coded rather than referencing the platform enum to avoid an extra import;
+// the AuthenticationServices error codes are stable ABI.)
+private const val ASAUTHORIZATION_ERROR_CANCELED: Long = 1001
 
 private fun sha256Hex(input: String): String {
     // Hashing a short nonce is pure CPU work, so use the synchronous hashBlocking variant rather

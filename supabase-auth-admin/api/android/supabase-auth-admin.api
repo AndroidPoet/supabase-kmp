@@ -59,7 +59,6 @@ public final class io/github/androidpoet/supabase/auth/admin/AuthAdminClient$Def
 
 public final class io/github/androidpoet/supabase/auth/admin/AuthAdminClientExtKt {
 	public static final fun authAdmin (Lio/github/androidpoet/supabase/client/SupabaseClient;Ljava/lang/String;)Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;
-	public static synthetic fun authAdmin$default (Lio/github/androidpoet/supabase/client/SupabaseClient;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;
 }
 
 public final class io/github/androidpoet/supabase/auth/admin/models/AdminUserAttributes {
