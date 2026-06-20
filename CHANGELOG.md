@@ -1,12 +1,16 @@
 # Changelog
 
-## 0.9.1 — 2026-06-20
+## Unreleased
 
 ### Docs
 
 - **Versioning guide** — document the release policy in `CONTRIBUTING.md`: the
   library stays in the `0.9.x` line with patch-only bumps (`0.9.1`, `0.9.2`, …) and
   does not move to `1.0.0` yet, so every change stays backward-compatible.
+- **README** — add copy-pasteable version-catalog coordinates for the optional
+  add-on modules.
+
+_Docs-only; ships with the next release that carries a code change._
 
 ## 0.9.0 — 2026-06-20
 
