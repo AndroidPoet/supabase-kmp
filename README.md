@@ -139,7 +139,7 @@ Errors carry a `category` (`Conflict`, `NotFound`, `Unauthorized`, `RateLimited`
 
 ## Targets
 
-Android · JVM · iOS · macOS · tvOS · watchOS · Linux · Windows · WasmJs — 16 targets in total, on OkHttp (Android/JVM), Darwin (Apple), CIO (Linux/Windows) and Js (Web) Ktor engines.
+Android · JVM · iOS · macOS · tvOS · watchOS · Linux · Windows · WasmJs — 16 targets in total, on OkHttp (Android/JVM), Darwin (Apple), CIO (Linux/Windows) and the JS Ktor engine for the browser (`wasmJs`). The browser target ships only as Kotlin/Wasm via `wasmJs` — there is no separate Kotlin/JS (`js()`) artifact.
 
 ## Documentation
 
