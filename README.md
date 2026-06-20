@@ -26,7 +26,7 @@ Full guides for [Authentication](https://androidpoet.github.io/supabase-kmp/auth
 - **OAuth (17 providers) + MFA** — TOTP and phone-based multi-factor auth with CSPRNG-backed PKCE
 - **Native passkeys** — cross-platform WebAuthn ceremony (Android, iOS, macOS, JVM, Wasm) behind a pluggable authenticator, or bring your own
 - **Session management** — Single-flight auto-refresh, pluggable persistence (`SessionStorage`), `SessionState` via `StateFlow`
-- **Realtime WebSocket** — Phoenix protocol with auto-reconnection, exponential backoff, presence, offline send buffering
+- **Realtime WebSocket** — Phoenix protocol with auto-reconnection, exponential backoff, presence, offline send buffering, binary broadcast (raw `ByteArray`)
 - **Secure by default** — Credential headers redacted from logs, smart retries (`429`/`5xx` + `Retry-After`)
 - **End-to-end encryption** — Optional `supabase-e2ee`: derive a shared AES-256-GCM key on-device (ECDH → HKDF) so Supabase only ever stores ciphertext
 - **16 platform targets** — Android, iOS, macOS, tvOS, watchOS, JVM, Linux, Windows, and WasmJs
@@ -37,7 +37,7 @@ Add the modules you need to your version catalog:
 
 ```toml
 [versions]
-supabase-kmp = "0.8.0"
+supabase-kmp = "0.9.0"
 
 [libraries]
 supabase-client = { module = "io.github.androidpoet:supabase-client", version.ref = "supabase-kmp" }

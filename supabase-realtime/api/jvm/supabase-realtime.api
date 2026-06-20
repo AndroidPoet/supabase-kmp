@@ -252,6 +252,17 @@ public final class io/github/androidpoet/supabase/realtime/RealtimeDebugState {
 public abstract interface class io/github/androidpoet/supabase/realtime/RealtimeEvent {
 }
 
+public final class io/github/androidpoet/supabase/realtime/RealtimeEvent$BinaryBroadcast : io/github/androidpoet/supabase/realtime/RealtimeEvent {
+	public fun <init> (Ljava/lang/String;[BZ)V
+	public synthetic fun <init> (Ljava/lang/String;[BZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEvent ()Ljava/lang/String;
+	public final fun getPayload ()[B
+	public final fun getReplayed ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class io/github/androidpoet/supabase/realtime/RealtimeEvent$Broadcast : io/github/androidpoet/supabase/realtime/RealtimeEvent {
 	public fun <init> (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Z)V
 	public synthetic fun <init> (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -382,6 +393,8 @@ public final class io/github/androidpoet/supabase/realtime/RealtimeExtKt {
 	public static synthetic fun awaitSubscribed$default (Lio/github/androidpoet/supabase/realtime/RealtimeSubscription;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun awaitUnsubscribed (Lio/github/androidpoet/supabase/realtime/RealtimeSubscription;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun awaitUnsubscribed$default (Lio/github/androidpoet/supabase/realtime/RealtimeSubscription;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun binaryBroadcastFlow (Lio/github/androidpoet/supabase/realtime/RealtimeSubscription;Ljava/lang/String;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun binaryBroadcastFlow$default (Lio/github/androidpoet/supabase/realtime/RealtimeSubscription;Ljava/lang/String;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
 	public static final fun broadcastFlow (Lio/github/androidpoet/supabase/realtime/RealtimeSubscription;Ljava/lang/String;)Lkotlinx/coroutines/flow/Flow;
 	public static synthetic fun broadcastFlow$default (Lio/github/androidpoet/supabase/realtime/RealtimeSubscription;Ljava/lang/String;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
 	public static final fun postgresDeletesFlow (Lio/github/androidpoet/supabase/realtime/RealtimeSubscription;)Lkotlinx/coroutines/flow/Flow;
@@ -426,6 +439,7 @@ public final class io/github/androidpoet/supabase/realtime/RealtimeFilterKt {
 public abstract interface class io/github/androidpoet/supabase/realtime/RealtimeSubscription {
 	public abstract fun asFlow ()Lkotlinx/coroutines/flow/Flow;
 	public abstract fun broadcast (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun broadcastBinary (Ljava/lang/String;[BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun broadcastWithAck (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun broadcastWithAck$default (Lio/github/androidpoet/supabase/realtime/RealtimeSubscription;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun getChannel ()Ljava/lang/String;

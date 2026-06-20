@@ -185,6 +185,40 @@ sub.broadcast(event = "cursor", payload = buildJsonObject {
 (`acknowledgeBroadcasts`). Then `onBroadcast` listens for a named event, and
 `broadcast` sends one.
 
+### Binary broadcast
+
+For data that is numeric, densely packed or simply not text — sensor and telemetry
+streams, image/screen frames, or **encrypted bytes** — send it raw with
+`broadcastBinary` instead of base64-encoding it into a JSON `broadcast`. The payload
+travels as a WebSocket *binary* frame, skipping the JSON/base64 overhead.
+
+```kotlin
+val sub = realtime.channel("room:telemetry")
+    .configureBroadcast(receiveOwnBroadcasts = false)
+    .subscribe()
+
+// Send raw bytes — e.g. a packed sensor reading, a JPEG frame, or ciphertext.
+sub.broadcastBinary(event = "frame", payload = bytes)
+
+// Receive them as a typed Flow<ByteArray>.
+launch {
+    sub.binaryBroadcastFlow(event = "frame").collect { frame ->
+        render(frame)
+    }
+}
+```
+
+Binary broadcasts are fire-and-forget: if the socket is momentarily disconnected the
+frame is dropped rather than buffered, since this data is transient. They arrive as
+`RealtimeEvent.BinaryBroadcast` (or the `binaryBroadcastFlow` view above).
+
+<Callout type="info">
+  This pairs naturally with [end-to-end encryption](/encryption): broadcast the
+  `ByteArray` ciphertext directly — no base64 tax — and the relay only ever sees
+  bytes it cannot read. Requires a Realtime server that supports binary payloads;
+  older servers silently drop binary frames.
+</Callout>
+
 ## Presence
 
 Presence tracks who is currently joined to a channel and keeps that roster in sync

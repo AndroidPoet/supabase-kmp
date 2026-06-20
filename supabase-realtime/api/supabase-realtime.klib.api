@@ -72,6 +72,7 @@ abstract interface io.github.androidpoet.supabase.realtime/RealtimeSubscription 
     abstract fun asFlow(): kotlinx.coroutines.flow/Flow<io.github.androidpoet.supabase.realtime/RealtimeEvent> // io.github.androidpoet.supabase.realtime/RealtimeSubscription.asFlow|asFlow(){}[0]
     abstract fun presenceState(): kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.realtime/RealtimeSubscription.presenceState|presenceState(){}[0]
     abstract suspend fun broadcast(kotlin/String, kotlinx.serialization.json/JsonObject) // io.github.androidpoet.supabase.realtime/RealtimeSubscription.broadcast|broadcast(kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
+    abstract suspend fun broadcastBinary(kotlin/String, kotlin/ByteArray) // io.github.androidpoet.supabase.realtime/RealtimeSubscription.broadcastBinary|broadcastBinary(kotlin.String;kotlin.ByteArray){}[0]
     abstract suspend fun broadcastWithAck(kotlin/String, kotlinx.serialization.json/JsonObject, kotlin/Long = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.realtime/RealtimeSubscription.broadcastWithAck|broadcastWithAck(kotlin.String;kotlinx.serialization.json.JsonObject;kotlin.Long){}[0]
     abstract suspend fun send(io.github.androidpoet.supabase.realtime/RealtimeSubscription.SendType, kotlin/String, kotlinx.serialization.json/JsonObject? = ...) // io.github.androidpoet.supabase.realtime/RealtimeSubscription.send|send(io.github.androidpoet.supabase.realtime.RealtimeSubscription.SendType;kotlin.String;kotlinx.serialization.json.JsonObject?){}[0]
     abstract suspend fun track(kotlinx.serialization.json/JsonObject) // io.github.androidpoet.supabase.realtime/RealtimeSubscription.track|track(kotlinx.serialization.json.JsonObject){}[0]
@@ -255,6 +256,21 @@ sealed interface io.github.androidpoet.supabase.realtime/RealtimeDebugEvent { //
 }
 
 sealed interface io.github.androidpoet.supabase.realtime/RealtimeEvent { // io.github.androidpoet.supabase.realtime/RealtimeEvent|null[0]
+    final class BinaryBroadcast : io.github.androidpoet.supabase.realtime/RealtimeEvent { // io.github.androidpoet.supabase.realtime/RealtimeEvent.BinaryBroadcast|null[0]
+        constructor <init>(kotlin/String, kotlin/ByteArray, kotlin/Boolean = ...) // io.github.androidpoet.supabase.realtime/RealtimeEvent.BinaryBroadcast.<init>|<init>(kotlin.String;kotlin.ByteArray;kotlin.Boolean){}[0]
+
+        final val event // io.github.androidpoet.supabase.realtime/RealtimeEvent.BinaryBroadcast.event|{}event[0]
+            final fun <get-event>(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeEvent.BinaryBroadcast.event.<get-event>|<get-event>(){}[0]
+        final val payload // io.github.androidpoet.supabase.realtime/RealtimeEvent.BinaryBroadcast.payload|{}payload[0]
+            final fun <get-payload>(): kotlin/ByteArray // io.github.androidpoet.supabase.realtime/RealtimeEvent.BinaryBroadcast.payload.<get-payload>|<get-payload>(){}[0]
+        final val replayed // io.github.androidpoet.supabase.realtime/RealtimeEvent.BinaryBroadcast.replayed|{}replayed[0]
+            final fun <get-replayed>(): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeEvent.BinaryBroadcast.replayed.<get-replayed>|<get-replayed>(){}[0]
+
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.realtime/RealtimeEvent.BinaryBroadcast.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.realtime/RealtimeEvent.BinaryBroadcast.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeEvent.BinaryBroadcast.toString|toString(){}[0]
+    }
+
     final class Broadcast : io.github.androidpoet.supabase.realtime/RealtimeEvent { // io.github.androidpoet.supabase.realtime/RealtimeEvent.Broadcast|null[0]
         constructor <init>(kotlin/String, kotlinx.serialization.json/JsonObject, kotlin/Boolean = ...) // io.github.androidpoet.supabase.realtime/RealtimeEvent.Broadcast.<init>|<init>(kotlin.String;kotlinx.serialization.json.JsonObject;kotlin.Boolean){}[0]
 
@@ -623,6 +639,7 @@ final class io.github.androidpoet.supabase.realtime/RealtimeFilter { // io.githu
     final fun neq(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.realtime/RealtimeFilter.neq|neq(kotlin.String;kotlin.String){}[0]
 }
 
+final fun (io.github.androidpoet.supabase.realtime/RealtimeSubscription).io.github.androidpoet.supabase.realtime/binaryBroadcastFlow(kotlin/String? = ...): kotlinx.coroutines.flow/Flow<kotlin/ByteArray> // io.github.androidpoet.supabase.realtime/binaryBroadcastFlow|binaryBroadcastFlow@io.github.androidpoet.supabase.realtime.RealtimeSubscription(kotlin.String?){}[0]
 final fun (io.github.androidpoet.supabase.realtime/RealtimeSubscription).io.github.androidpoet.supabase.realtime/broadcastFlow(kotlin/String? = ...): kotlinx.coroutines.flow/Flow<kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.realtime/broadcastFlow|broadcastFlow@io.github.androidpoet.supabase.realtime.RealtimeSubscription(kotlin.String?){}[0]
 final fun (io.github.androidpoet.supabase.realtime/RealtimeSubscription).io.github.androidpoet.supabase.realtime/postgresDeletesFlow(): kotlinx.coroutines.flow/Flow<kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.realtime/postgresDeletesFlow|postgresDeletesFlow@io.github.androidpoet.supabase.realtime.RealtimeSubscription(){}[0]
 final fun (io.github.androidpoet.supabase.realtime/RealtimeSubscription).io.github.androidpoet.supabase.realtime/postgresInsertsFlow(): kotlinx.coroutines.flow/Flow<kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.realtime/postgresInsertsFlow|postgresInsertsFlow@io.github.androidpoet.supabase.realtime.RealtimeSubscription(){}[0]

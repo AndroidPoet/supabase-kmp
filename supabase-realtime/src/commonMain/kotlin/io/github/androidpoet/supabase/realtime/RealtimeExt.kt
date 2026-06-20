@@ -24,6 +24,19 @@ public fun RealtimeSubscription.broadcastFlow(
         .filter { it is RealtimeEvent.Broadcast && (event == null || it.event == event) }
         .map { (it as RealtimeEvent.Broadcast).payload }
 
+/**
+ * Narrows [asFlow] to binary broadcasts, optionally only those whose event name
+ * equals [event] (all when `null`). Yields each message's raw [ByteArray] payload —
+ * the typed view over [RealtimeEvent.BinaryBroadcast]. Pair with
+ * [RealtimeSubscription.broadcastBinary] for sending.
+ */
+public fun RealtimeSubscription.binaryBroadcastFlow(
+    event: String? = null,
+): Flow<ByteArray> =
+    asFlow()
+        .filter { it is RealtimeEvent.BinaryBroadcast && (event == null || it.event == event) }
+        .map { (it as RealtimeEvent.BinaryBroadcast).payload }
+
 /** Narrows [asFlow] to `postgres_changes` INSERTs, yielding each inserted row
  * ([RealtimeEvent.PostgresInsert.record]). */
 public fun RealtimeSubscription.postgresInsertsFlow(): Flow<JsonObject> =

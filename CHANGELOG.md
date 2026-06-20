@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.9.0 — 2026-06-20
+
+### Added
+
+- **Binary broadcast** — send and receive raw `ByteArray` payloads over Realtime
+  broadcast as WebSocket binary frames, skipping the base64/JSON overhead of
+  textual broadcast. New `RealtimeSubscription.broadcastBinary(event, ByteArray)`,
+  `RealtimeEvent.BinaryBroadcast`, and the `binaryBroadcastFlow(event)` typed view.
+  Ideal for sensor/telemetry streams, image frames, or encrypted bytes (pairs with
+  `supabase-e2ee`). Additive; existing JSON broadcast is unchanged.
+
 ## 0.8.0 — 2026-06-20
 
 ### Added

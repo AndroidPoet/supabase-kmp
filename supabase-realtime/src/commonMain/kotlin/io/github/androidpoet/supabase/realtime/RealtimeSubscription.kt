@@ -77,6 +77,19 @@ public interface RealtimeSubscription {
     public suspend fun broadcast(event: String, payload: JsonObject)
 
     /**
+     * Broadcasts a raw binary [payload] under the [event] name, sent over the
+     * WebSocket as a binary frame instead of JSON. Received as
+     * [RealtimeEvent.BinaryBroadcast] / `binaryBroadcastFlow`. Prefer this over
+     * base64-in-[broadcast] for compact, high-frequency or non-textual data (sensor
+     * streams, image frames, encrypted bytes).
+     *
+     * Fire-and-forget like [broadcast]: if the socket is momentarily disconnected
+     * the frame is dropped rather than buffered, since binary broadcasts are
+     * transient. Requires the channel to be subscribed to reach other clients.
+     */
+    public suspend fun broadcastBinary(event: String, payload: ByteArray)
+
+    /**
      * Broadcasts [payload] under the [event] name like [broadcast], but awaits the
      * server's acknowledgement instead of returning fire-and-forget. Requires the
      * channel to have been configured with `acknowledgeBroadcasts` (see

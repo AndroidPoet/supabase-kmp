@@ -123,6 +123,8 @@ private class FakeSubscription : RealtimeSubscription {
 
     override suspend fun broadcast(event: String, payload: kotlinx.serialization.json.JsonObject) = Unit
 
+    override suspend fun broadcastBinary(event: String, payload: ByteArray) = Unit
+
     override suspend fun broadcastWithAck(
         event: String,
         payload: kotlinx.serialization.json.JsonObject,

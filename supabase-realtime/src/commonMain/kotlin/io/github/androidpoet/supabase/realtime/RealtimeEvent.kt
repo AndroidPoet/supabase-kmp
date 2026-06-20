@@ -55,6 +55,34 @@ public sealed interface RealtimeEvent {
         public val replayed: Boolean = false,
     ) : RealtimeEvent
 
+    /** A broadcast named [event] carrying a raw binary [payload], delivered over the
+     * WebSocket as a binary frame (sent with [RealtimeSubscription.broadcastBinary]).
+     * Use this for compact, non-textual data — sensor frames, image tiles, encrypted
+     * bytes — to skip the base64/JSON overhead of [Broadcast]. [replayed] mirrors
+     * [Broadcast.replayed]. */
+    public class BinaryBroadcast(
+        public val event: String,
+        public val payload: ByteArray,
+        public val replayed: Boolean = false,
+    ) : RealtimeEvent {
+        // ByteArray has identity equality; provide structural semantics so events
+        // compare by content like the other cases.
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is BinaryBroadcast) return false
+            return event == other.event && replayed == other.replayed && payload.contentEquals(other.payload)
+        }
+
+        override fun hashCode(): Int {
+            var result = event.hashCode()
+            result = 31 * result + payload.contentHashCode()
+            result = 31 * result + replayed.hashCode()
+            return result
+        }
+
+        override fun toString(): String = "BinaryBroadcast(event=$event, payload=${payload.size} bytes, replayed=$replayed)"
+    }
+
     /** A presence sync: [state] is the full cumulative membership after a
      * `presence_state`/`presence_diff`. */
     public data class PresenceSync(

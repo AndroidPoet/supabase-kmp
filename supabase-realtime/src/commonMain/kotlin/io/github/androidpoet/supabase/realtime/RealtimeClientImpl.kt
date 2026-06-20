@@ -17,6 +17,7 @@ import io.ktor.client.plugins.websocket.webSocketSession
 import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketSession
 import io.ktor.websocket.close
+import io.ktor.websocket.readBytes
 import io.ktor.websocket.readText
 import kotlinx.atomicfu.atomic
 import kotlinx.atomicfu.locks.SynchronizedObject
@@ -421,6 +422,15 @@ internal class RealtimeClientImpl(
         }
     }
 
+    // Sends a pre-encoded binary frame (a kind-3 broadcast push). Unlike
+    // [sendMessage], binary broadcasts are not buffered when disconnected: they are
+    // transient (sensor frames, image tiles, ...) so a stale replay on reconnect is
+    // worse than a drop. Fire-and-forget by design.
+    internal suspend fun sendBinaryFrame(bytes: ByteArray) {
+        val current = session ?: return
+        current.send(Frame.Binary(true, bytes))
+    }
+
     private suspend fun flushOutboundBuffer() {
         // Don't drain the buffer until we actually have a socket to send on —
         // clearing first and then bailing on a null session would silently lose
@@ -489,17 +499,11 @@ internal class RealtimeClientImpl(
         newScope.launch {
             try {
                 for (frame in ws.incoming) {
-                    if (frame !is Frame.Text) continue
-                    val message =
-                        try {
-                            json.decodeFromString<RealtimeMessage>(frame.readText())
-                        } catch (e: CancellationException) {
-                            throw e
-                        } catch (_: Throwable) {
-                            continue
-                        }
-                    recordInboundMessage(message)
-                    dispatchToSubscription(message)
+                    when (frame) {
+                        is Frame.Text -> handleTextFrame(frame)
+                        is Frame.Binary -> handleBinaryFrame(frame)
+                        else -> {} // ping/pong/close are handled by the engine
+                    }
                 }
             } catch (e: Throwable) {
                 if (e is CancellationException) throw e
@@ -788,6 +792,47 @@ internal class RealtimeClientImpl(
         return half + Random.nextLong(capped - half + 1)
     }
 
+    // Decodes a JSON text frame into a RealtimeMessage and dispatches it; a frame
+    // that fails to parse is skipped (a single bad frame must not kill the loop).
+    private suspend fun handleTextFrame(frame: Frame.Text) {
+        val message =
+            try {
+                json.decodeFromString<RealtimeMessage>(frame.readText())
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Throwable) {
+                return
+            }
+        recordInboundMessage(message)
+        dispatchToSubscription(message)
+    }
+
+    // Decodes a binary frame as a kind-4 broadcast and routes it to its channel.
+    // Non-broadcast or malformed binary frames decode to null and are ignored.
+    private suspend fun handleBinaryFrame(frame: Frame.Binary) {
+        val decoded =
+            try {
+                BinaryBroadcastCodec.decode(frame.readBytes())
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Throwable) {
+                return
+            }
+        if (decoded != null) dispatchBinaryToSubscription(decoded)
+    }
+
+    private suspend fun dispatchBinaryToSubscription(decoded: DecodedBinaryBroadcast) {
+        val subscription = synchronized(subscriptionsLock) { activeSubscriptions[decoded.topic] } ?: return
+        try {
+            subscription.handleBinaryBroadcast(decoded.event, decoded.payload)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Throwable) {
+            // Isolate per-subscription failures from the shared read loop, as in
+            // dispatchToSubscription.
+        }
+    }
+
     private suspend fun dispatchToSubscription(message: RealtimeMessage) {
         val subscription = synchronized(subscriptionsLock) { activeSubscriptions[message.topic] } ?: return
         try {
@@ -967,6 +1012,18 @@ internal class ChannelSubscriptionImpl(
 
     override suspend fun broadcast(event: String, payload: JsonObject) {
         send(RealtimeSubscription.SendType.BROADCAST, event, payload)
+    }
+
+    override suspend fun broadcastBinary(event: String, payload: ByteArray) {
+        client.sendBinaryFrame(
+            BinaryBroadcastCodec.encodePush(
+                joinRef = joinRef,
+                ref = client.nextRef(),
+                topic = topic,
+                event = event,
+                payload = payload,
+            ),
+        )
     }
 
     override suspend fun broadcastWithAck(
@@ -1199,6 +1256,12 @@ internal class ChannelSubscriptionImpl(
         val event = RealtimeEvent.Broadcast(event = eventName, payload = broadcastPayload, replayed = replayed)
         publish(event)
         broadcastCallbacks[eventName]?.invoke(broadcastPayload)
+    }
+
+    // Surfaces a decoded binary broadcast as a RealtimeEvent. Metadata is skipped on
+    // the wire (the reference clients send none), so replayed defaults to false.
+    internal fun handleBinaryBroadcast(event: String, payload: ByteArray) {
+        publish(RealtimeEvent.BinaryBroadcast(event = event, payload = payload))
     }
 
     private suspend fun handlePresenceDiff(payload: JsonObject) {
