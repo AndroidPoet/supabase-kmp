@@ -10,6 +10,16 @@
   Plus `E2eeKeyPair.deriveSelfSession()` — a deterministic self-key (ECDH against
   the pair's own public key) for encrypting your own data, where the server only
   ever sees ciphertext. DER round-trips across JDK / Apple / OpenSSL / WebCrypto.
+- **Secure nonce helper** — `generateNonce()` in `supabase-auth` draws a fresh,
+  URL-safe, high-entropy nonce from the SDK's CSPRNG (the same source as PKCE
+  verifiers, not `kotlin.random`). The native sign-in configs that ask for "a fresh
+  random value per sign-in" (`GoogleSignInConfig.nonce`, `AppleSignInConfig.nonce`)
+  now point at it so apps stop hand-rolling weak randomness.
+- **Apple first-sign-in name/email** — `NativeAuthCredential` gains optional
+  `fullName` and `email` fields, populated by the Apple provider from the
+  `ASAuthorizationAppleIDCredential` that Apple returns only on the **first**
+  authorization. Additive and defaulted, so other providers and call sites are
+  unaffected; `toString()` keeps masking the credential.
 
 ### Changed
 

@@ -12,7 +12,8 @@ package io.github.androidpoet.supabase.auth.google
  *   ID token is audienced for, so Supabase can validate it.
  * @property nonce optional raw nonce. When set it is forwarded to the provider and returned in
  *   [io.github.androidpoet.supabase.auth.native.NativeAuthCredential.nonce] so Supabase can validate
- *   the token's hashed `nonce` claim. Use a fresh random value per sign-in.
+ *   the token's hashed `nonce` claim. Use a fresh random value per sign-in — generate one with
+ *   [io.github.androidpoet.supabase.auth.native.generateNonce] rather than hand-rolling randomness.
  * @property filterByAuthorizedAccounts when true, only accounts that previously authorized this app
  *   are offered. Set false to allow first-time sign-ups.
  * @property autoSelectEnabled enables Google's auto sign-in when a single matching credential exists.

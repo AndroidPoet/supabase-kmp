@@ -16,18 +16,28 @@ import io.github.androidpoet.supabase.core.result.SupabaseResult
  * @property accessToken optional provider access token, when the flow returns one.
  * @property nonce the raw (un-hashed) nonce used to request the token, if a nonce was used. Supabase
  *   needs the raw nonce to validate the token's hashed `nonce` claim.
+ * @property fullName the user's full name, if the provider surfaced it. Sign in with Apple only
+ *   returns the name on the **first** authorization for an app, so capture it here when present —
+ *   the ID token does not carry it. Null for providers that don't return a name.
+ * @property email the user's email, if the provider surfaced it out-of-band from the ID token. Like
+ *   [fullName], Sign in with Apple only returns this on the first authorization. Null otherwise.
  */
 public data class NativeAuthCredential(
     public val provider: OAuthProvider,
     public val idToken: String,
     public val accessToken: String? = null,
     public val nonce: String? = null,
+    public val fullName: String? = null,
+    public val email: String? = null,
 ) {
-    // Mask the provider tokens so a native credential never leaks into logs or crash reports.
+    // Mask the provider tokens so a native credential never leaks into logs or crash reports. The
+    // name/email aren't secrets, but mask them too so the whole credential is log-safe by default.
     override fun toString(): String =
         "NativeAuthCredential(provider=$provider, idToken=***, " +
             "accessToken=${if (accessToken == null) "null" else "***"}, " +
-            "nonce=${if (nonce == null) "null" else "***"})"
+            "nonce=${if (nonce == null) "null" else "***"}, " +
+            "fullName=${if (fullName == null) "null" else "***"}, " +
+            "email=${if (email == null) "null" else "***"})"
 }
 
 /**

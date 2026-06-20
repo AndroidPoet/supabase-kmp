@@ -24,6 +24,7 @@ import platform.AuthenticationServices.ASAuthorizationScopeEmail
 import platform.AuthenticationServices.ASAuthorizationScopeFullName
 import platform.AuthenticationServices.ASPresentationAnchor
 import platform.Foundation.NSError
+import platform.Foundation.NSPersonNameComponents
 import platform.Foundation.NSString
 import platform.Foundation.NSUTF8StringEncoding
 import platform.Foundation.create
@@ -117,9 +118,17 @@ private class AppleAuthDelegate(
                 ),
             )
         } else {
+            // fullName/email are only populated by Apple on the FIRST authorization for this app and
+            // are absent from the ID token, so carry them through the credential while we can.
             deliver(
                 SupabaseResult.Success(
-                    NativeAuthCredential(provider = OAuthProvider.APPLE, idToken = token, nonce = rawNonce),
+                    NativeAuthCredential(
+                        provider = OAuthProvider.APPLE,
+                        idToken = token,
+                        nonce = rawNonce,
+                        fullName = credential.fullName?.let(::formatPersonName),
+                        email = credential.email,
+                    ),
                 ),
             )
         }
@@ -153,6 +162,18 @@ private const val APPLE_SIGN_IN_FAILED = "apple_sign_in_failed"
 // (Hard-coded rather than referencing the platform enum to avoid an extra import;
 // the AuthenticationServices error codes are stable ABI.)
 private const val ASAUTHORIZATION_ERROR_CANCELED: Long = 1001
+
+/**
+ * Joins Apple's structured name components into a single display name. Apple hands the name back as
+ * [NSPersonNameComponents] (given/family parts), but the credential surfaces a plain string; we keep
+ * only the parts the user actually provided so a half-filled name doesn't gain stray whitespace.
+ */
+private fun formatPersonName(components: NSPersonNameComponents): String? {
+    val parts =
+        listOfNotNull(components.givenName, components.familyName)
+            .filter { it.isNotBlank() }
+    return parts.joinToString(" ").ifBlank { null }
+}
 
 private fun sha256Hex(input: String): String {
     // Hashing a short nonce is pure CPU work, so use the synchronous hashBlocking variant rather
