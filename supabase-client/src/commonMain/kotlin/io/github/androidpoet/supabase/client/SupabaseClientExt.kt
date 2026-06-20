@@ -26,11 +26,23 @@ public suspend inline fun <reified T> SupabaseClient.postTyped(
     headers: Map<String, String> = emptyMap(),
 ): SupabaseResult<T> = post(endpoint, body, headers).deserialize()
 
+public suspend inline fun <reified T> SupabaseClient.putTyped(
+    endpoint: String,
+    body: String? = null,
+    headers: Map<String, String> = emptyMap(),
+): SupabaseResult<T> = put(endpoint, body, headers).deserialize()
+
 public suspend inline fun <reified T> SupabaseClient.patchTyped(
     endpoint: String,
     body: String? = null,
     headers: Map<String, String> = emptyMap(),
 ): SupabaseResult<T> = patch(endpoint, body, headers).deserialize()
+
+public suspend inline fun <reified T> SupabaseClient.deleteTyped(
+    endpoint: String,
+    body: String? = null,
+    headers: Map<String, String> = emptyMap(),
+): SupabaseResult<T> = delete(endpoint, body, headers).deserialize()
 
 public inline fun <reified T> SupabaseResult<String>.deserialize(): SupabaseResult<T> =
     when (this) {

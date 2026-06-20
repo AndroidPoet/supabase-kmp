@@ -5,6 +5,7 @@ import io.github.androidpoet.supabase.client.SupabaseLogLevel
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseErrorCodes
 import io.github.androidpoet.supabase.core.result.SupabaseResult
+import io.github.androidpoet.supabase.core.result.toException
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngineFactory
 import io.ktor.client.network.sockets.ConnectTimeoutException
@@ -237,7 +238,11 @@ internal class HttpTransport(
                     }
                 }.execute { response ->
                     if (!response.status.isSuccess()) {
-                        throw IOException("Stream request to $url failed with HTTP ${response.status.value}")
+                        // Surface the same classifiable error the non-streaming verbs do
+                        // (carrying httpStatus + code/category) instead of a bare
+                        // IOException, so a collector's `catch` can branch on it.
+                        val body = runCatching { response.bodyAsText() }.getOrNull().orEmpty()
+                        throw parseError(body, response.status.value, retryAfterSeconds = null).toException()
                     }
                     val channel = response.bodyAsChannel()
                     while (true) {

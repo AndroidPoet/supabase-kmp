@@ -169,10 +169,19 @@ public interface SupabaseClient : AutoCloseable {
      * Sets the bearer [token] applied to subsequent requests (typically the
      * current session's access token), overriding the API-key fallback until
      * [clearAccessToken] is called.
+     *
+     * Note: if the client was built with an `accessTokenProvider`, that provider
+     * takes precedence and this set/cleared token is ignored — drive auth through
+     * the provider instead, and return `null` from it to fall back to the API key
+     * (the provider's "signed-out" path).
      */
     public fun setAccessToken(token: String)
 
-    /** Clears any token set via [setAccessToken], reverting to the API-key credential. */
+    /**
+     * Clears any token set via [setAccessToken], reverting to the API-key
+     * credential. Has no effect when an `accessTokenProvider` was configured (the
+     * provider always wins; return `null` from it to revert to the API key).
+     */
     public fun clearAccessToken()
 
     /** Releases the underlying HTTP engine. After closing, the client must not be used again. */
