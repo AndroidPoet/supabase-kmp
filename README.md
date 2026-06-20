@@ -46,6 +46,13 @@ supabase-database = { module = "io.github.androidpoet:supabase-database", versio
 supabase-storage = { module = "io.github.androidpoet:supabase-storage", version.ref = "supabase-kmp" }
 supabase-realtime = { module = "io.github.androidpoet:supabase-realtime", version.ref = "supabase-kmp" }
 supabase-functions = { module = "io.github.androidpoet:supabase-functions", version.ref = "supabase-kmp" }
+
+# Optional add-ons — only add the ones you need
+supabase-auth-google = { module = "io.github.androidpoet:supabase-auth-google", version.ref = "supabase-kmp" }
+supabase-auth-apple = { module = "io.github.androidpoet:supabase-auth-apple", version.ref = "supabase-kmp" }
+supabase-auth-passkey = { module = "io.github.androidpoet:supabase-auth-passkey", version.ref = "supabase-kmp" }
+supabase-auth-admin = { module = "io.github.androidpoet:supabase-auth-admin", version.ref = "supabase-kmp" }
+supabase-e2ee = { module = "io.github.androidpoet:supabase-e2ee", version.ref = "supabase-kmp" }
 ```
 
 ```kotlin
