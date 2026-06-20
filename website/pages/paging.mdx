@@ -111,6 +111,75 @@ fun TodoList(pager: Paginator<Todo>) {
 
 That's the whole feature: build a paginator, observe `items`, call `loadNext()`.
 
+### A complete list screen
+
+A realistic screen also handles **refresh**, **errors** and the **empty/loading**
+states. Hold the paginator in a `ViewModel` and expose its flows:
+
+```kotlin
+class TodosViewModel(database: DatabaseClient) : ViewModel() {
+    val pager = database.paginator<Todo>(table = "todos", pageSize = 20) {
+        order("created_at", ascending = false)
+    }
+
+    init { loadNext() }                                   // first page
+
+    fun loadNext() = viewModelScope.launch { pager.loadNext() }
+    fun refresh() = viewModelScope.launch { pager.refresh() }   // pull-to-refresh
+}
+```
+
+Then bind every state the user can see — rows, the trailing loader, a failed-page
+row with retry, and the first-load empty state:
+
+```kotlin
+@Composable
+fun TodosScreen(vm: TodosViewModel) {
+    val todos by vm.pager.items.collectAsState()
+    val isLoading by vm.pager.isLoading.collectAsState()
+    val endReached by vm.pager.endReached.collectAsState()
+    val error by vm.pager.error.collectAsState()
+
+    LazyColumn {
+        itemsIndexed(todos, key = { _, t -> t.id }) { index, todo ->
+            TodoRow(todo)
+            if (index >= todos.lastIndex - 3 && !endReached) {
+                LaunchedEffect(index) { vm.loadNext() }   // prefetch near the end
+            }
+        }
+
+        when {
+            error != null -> item { ErrorRow(message = error?.message) { vm.loadNext() } }
+            isLoading -> item { LoadingRow() }
+            todos.isEmpty() -> item { EmptyState() }       // first load returned nothing
+        }
+    }
+}
+```
+
+`error` holds the *last* failure and is cleared on the next successful page, so a
+retry is just another `loadNext()`. `refresh()` resets back to page one — wire it to
+a `PullToRefreshBox` or a button.
+
+### Without Compose
+
+The paginator is plain Kotlin — nothing Android-specific — so it works the same in
+a KMP module, a server job or a test. Observe `items` from any coroutine, or drive
+it imperatively:
+
+```kotlin
+// React to each new page from anywhere.
+scope.launch { pager.items.collect { rows -> log("showing ${rows.size}") } }
+pager.loadNext()
+
+// Or drain the whole list (e.g. an export) — keep going until the end.
+while (!pager.endReached.value) {
+    pager.loadNext()
+    pager.error.value?.let { throw it }   // stop on a failed page
+}
+val everything = pager.items.value
+```
+
 ## Using androidx Paging 3
 
 If your Compose app already uses Paging 3, you can plug Supabase into it. The
