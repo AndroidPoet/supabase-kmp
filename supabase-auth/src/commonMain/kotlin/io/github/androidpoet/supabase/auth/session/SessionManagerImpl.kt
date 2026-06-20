@@ -4,7 +4,9 @@ import io.github.androidpoet.supabase.auth.accessTokenExpiryEpochSeconds
 import io.github.androidpoet.supabase.auth.models.Session
 import io.github.androidpoet.supabase.client.SupabaseClient
 import io.github.androidpoet.supabase.core.result.SupabaseError
+import io.github.androidpoet.supabase.core.result.SupabaseErrorCategory
 import io.github.androidpoet.supabase.core.result.SupabaseResult
+import io.github.androidpoet.supabase.core.result.category
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -132,10 +134,38 @@ internal class SessionManagerImpl(
                 result
             }
             is SupabaseResult.Failure -> {
-                _sessionState.value = SessionState.Expired(session)
+                // Don't sign the user out on a transient failure. A connectivity
+                // blip (Network), a server hiccup (Internal/5xx) or a rate limit
+                // (429) leaves the refresh token perfectly valid — flip to Expired
+                // only on a genuine invalidation (invalid_grant / reused or expired
+                // refresh token), which the error layer surfaces as Unauthorized or
+                // Validation. On a transient failure keep the current session and
+                // retry shortly.
+                val transient =
+                    result.error.category in
+                        setOf(
+                            SupabaseErrorCategory.Network,
+                            SupabaseErrorCategory.Internal,
+                            SupabaseErrorCategory.RateLimited,
+                        )
+                if (transient && currentSession != null) {
+                    scheduleTransientRetry()
+                } else {
+                    _sessionState.value = SessionState.Expired(session)
+                }
                 result
             }
         }
+
+    private fun scheduleTransientRetry() {
+        if (!autoRefreshEnabled) return
+        val job =
+            scope.launch {
+                delay(TRANSIENT_REFRESH_RETRY_MS)
+                refreshSession()
+            }
+        refreshJob.getAndSet(job)?.cancel()
+    }
 
     private fun scheduleRefresh(session: Session) {
         if (!autoRefreshEnabled) return
@@ -194,5 +224,9 @@ internal class SessionManagerImpl(
         // Upper bound (seconds) on the scheduled delay, chosen so `* 1000L` stays
         // well inside Long range regardless of a malformed `exp` claim.
         private const val MAX_REFRESH_DELAY_SECONDS = Long.MAX_VALUE / 1000L
+
+        // Retry cadence after a transient refresh failure (network/5xx/429). Fixed
+        // and modest so an offline device retries steadily without busy-looping.
+        private const val TRANSIENT_REFRESH_RETRY_MS = 30_000L
     }
 }

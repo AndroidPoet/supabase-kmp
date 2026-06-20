@@ -81,6 +81,57 @@ class SessionManagerImplTest {
                 manager.close()
             }
         }
+
+    @Test
+    fun test_refreshFailure_transient_keepsSessionAuthenticated() =
+        runTest {
+            val client = SessionFakeSupabaseClient()
+            val manager =
+                SessionManagerImpl(
+                    authClient = AuthClientImpl(client),
+                    supabaseClient = client,
+                    storage = FakeSessionStorage(),
+                    autoRefresh = false,
+                )
+            try {
+                manager.saveSession(staleSession)
+                client.nextPostFailure = SupabaseError(message = "server down", httpStatus = 503)
+
+                val result = manager.refreshSession()
+
+                // A 5xx is transient — the refresh token is still valid, so the user
+                // must NOT be signed out on a server hiccup.
+                assertTrue(result is SupabaseResult.Failure)
+                assertTrue(manager.sessionState.value is SessionState.Authenticated)
+            } finally {
+                manager.close()
+            }
+        }
+
+    @Test
+    fun test_refreshFailure_terminal_expiresSession() =
+        runTest {
+            val client = SessionFakeSupabaseClient()
+            val manager =
+                SessionManagerImpl(
+                    authClient = AuthClientImpl(client),
+                    supabaseClient = client,
+                    storage = FakeSessionStorage(),
+                    autoRefresh = false,
+                )
+            try {
+                manager.saveSession(staleSession)
+                client.nextPostFailure =
+                    SupabaseError(message = "invalid_grant", code = "invalid_grant", httpStatus = 400)
+
+                manager.refreshSession()
+
+                // A 4xx invalid_grant means the refresh token is dead — expire.
+                assertTrue(manager.sessionState.value is SessionState.Expired)
+            } finally {
+                manager.close()
+            }
+        }
 }
 
 private val staleSession =
@@ -144,6 +195,10 @@ private class SessionFakeSupabaseClient : SupabaseClient {
         headers: Map<String, String>,
     ): SupabaseResult<String> = SupabaseResult.Failure(SupabaseError("not used"))
 
+    // When set, the next refresh POST fails with this error instead of succeeding —
+    // lets a test exercise transient (network/5xx) vs. terminal (4xx) refresh paths.
+    var nextPostFailure: SupabaseError? = null
+
     override suspend fun post(
         endpoint: String,
         body: String?,
@@ -152,6 +207,7 @@ private class SessionFakeSupabaseClient : SupabaseClient {
         lastPostEndpoint = endpoint
         postCount++
         postSignals.trySend(postCount)
+        nextPostFailure?.let { return SupabaseResult.Failure(it) }
         return SupabaseResult.Success(
             """{"access_token":"refreshed-acc","refresh_token":"refreshed-ref","expires_in":3600,"token_type":"bearer","user":{"id":"user-1"}}""",
         )

@@ -22,6 +22,14 @@
 
 ### Fixed
 
+- **`supabase-auth` no longer signs the user out on a transient refresh failure.**
+  A token refresh that failed for a connectivity blip, a 5xx server hiccup or a
+  rate limit (`429`) flipped `SessionState` to `Expired`, logging the user out even
+  though the refresh token was still valid. The session now stays `Authenticated`
+  on a transient failure (categories `Network` / `Internal` / `RateLimited`) and
+  retries shortly; it expires only on a genuine invalidation (`invalid_grant` /
+  reused or expired refresh token, surfaced as `Unauthorized` / `Validation`).
+
 - **`supabase-auth-apple` reports user-cancellation distinctly.** A cancelled Apple
   sign-in (`ASAuthorizationError.canceled`) now returns `SupabaseError(code =
   "apple_sign_in_cancelled")` instead of a generic, code-less failure, so apps can
