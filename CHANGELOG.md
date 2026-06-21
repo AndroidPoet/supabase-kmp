@@ -16,6 +16,10 @@
   produced a data class with duplicate properties that wouldn't compile. The generator now
   raises an actionable error naming both columns, matching the existing table- and enum-name
   collision checks.
+- **Codegen fails fast on colliding enum labels instead of silently dropping one.** Two distinct
+  Postgres enum labels that normalise to the same Kotlin constant (e.g. `active`/`Active`, or
+  `in progress`/`in_progress`) were silently collapsed to one constant, so a row carrying the
+  dropped label failed to deserialize at runtime. The generator now raises an actionable error.
 - **`Paginator.refresh()` during an in-flight load no longer leaves the list empty.** Pull-to-
   refresh while a page was still loading reset the state and then called `loadNext()`, but that
   call no-opped against the stale load's `isLoading` flag and the stale result was discarded by

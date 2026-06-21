@@ -116,9 +116,20 @@ public object SupabaseModelGenerator {
 
     private fun buildEnum(name: String, values: List<String>): TypeSpec {
         val builder = TypeSpec.enumBuilder(name).addAnnotation(serializable)
+        // Distinct Postgres labels can normalise to the same Kotlin constant (e.g. `active` and
+        // `Active`, or `in progress` and `in_progress`). KotlinPoet silently keeps only one, so a
+        // label would be dropped and rows carrying it would fail to deserialize — fail fast with an
+        // actionable message instead, mirroring the table/column/enum-name collision checks.
+        val claimedConstants = mutableMapOf<String, String>()
         for (value in values) {
+            val constant = Naming.enumConstant(value)
+            val clash = claimedConstants.put(constant, value)
+            check(clash == null) {
+                "Enum values `$clash` and `$value` in enum `$name` both map to the Kotlin constant " +
+                    "`$constant`. Rename one of the enum labels so the generated names don't collide."
+            }
             builder.addEnumConstant(
-                Naming.enumConstant(value),
+                constant,
                 TypeSpec.anonymousClassBuilder().addAnnotation(serialNameOf(value)).build(),
             )
         }

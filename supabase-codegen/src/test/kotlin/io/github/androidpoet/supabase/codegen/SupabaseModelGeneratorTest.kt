@@ -135,6 +135,31 @@ class SupabaseModelGeneratorTest {
     }
 
     @Test
+    fun fails_fast_when_two_enum_values_collide_on_one_kotlin_constant() {
+        // Postgres enum labels are case-sensitive and allow spaces, so `active` and `Active`
+        // are distinct labels that both normalise to the Kotlin constant ACTIVE — which would
+        // emit a duplicate enum constant that doesn't compile. Fail fast instead.
+        val schema =
+            """
+            {
+              "definitions": {
+                "items": {
+                  "required": [],
+                  "properties": {
+                    "status": { "format": "public.status", "type": "string", "enum": ["active", "Active"] }
+                  }
+                }
+              }
+            }
+            """.trimIndent()
+        val error =
+            assertFailsWith<IllegalStateException> {
+                SupabaseModelGenerator.generate(schema, packageName = "p")
+            }
+        assertContains(error.message ?: "", "ACTIVE")
+    }
+
+    @Test
     fun fails_fast_when_two_tables_collide_on_one_kotlin_name() {
         val schema =
             """
