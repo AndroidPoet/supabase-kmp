@@ -1,12 +1,14 @@
 package io.github.androidpoet.supabase.core.paging
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 
 /**
  * A small, dependency-free, **demand-driven** paginator for infinite-scroll UIs.
@@ -91,6 +93,37 @@ public class Paginator<T>(
                 _error.value = null
                 epoch
             }
+        runFetch(startEpoch)
+    }
+
+    /**
+     * Resets to the first page and loads it again — for pull-to-refresh. Any page
+     * still in flight is discarded so it cannot append onto the cleared list.
+     */
+    public suspend fun refresh() {
+        val startEpoch =
+            mutex.withLock {
+                epoch++
+                offset = 0
+                _endReached.value = false
+                _error.value = null
+                _items.value = emptyList()
+                // Take ownership of the loading flag in the SAME lock as the reset and
+                // epoch bump: a page still in flight from the previous epoch would
+                // otherwise keep _isLoading=true, making this reload a no-op and leaving
+                // the list empty. The stale load's result is dropped by the epoch check,
+                // and its finally won't clear our flag (the epoch no longer matches).
+                _isLoading.value = true
+                epoch
+            }
+        runFetch(startEpoch)
+    }
+
+    // Runs one fetch for [startEpoch] and folds the result in only while that epoch is
+    // still current. The loading flag is cleared under the mutex and only by the load
+    // that owns the current epoch, so a stale in-flight load can never clear a newer
+    // load's flag.
+    private suspend fun runFetch(startEpoch: Int) {
         try {
             val page = fetch(offset, pageSize)
             mutex.withLock {
@@ -105,23 +138,12 @@ public class Paginator<T>(
         } catch (e: Throwable) {
             mutex.withLock { if (epoch == startEpoch) _error.value = e }
         } finally {
-            _isLoading.value = false
+            // Cleared under NonCancellable so a cancelled load still releases the flag
+            // (the mutex is a suspension point that a cancelled coroutine would skip).
+            withContext(NonCancellable) {
+                mutex.withLock { if (epoch == startEpoch) _isLoading.value = false }
+            }
         }
-    }
-
-    /**
-     * Resets to the first page and loads it again — for pull-to-refresh. Any page
-     * still in flight is discarded so it cannot append onto the cleared list.
-     */
-    public suspend fun refresh() {
-        mutex.withLock {
-            epoch++
-            offset = 0
-            _endReached.value = false
-            _error.value = null
-            _items.value = emptyList()
-        }
-        loadNext()
     }
 }
 

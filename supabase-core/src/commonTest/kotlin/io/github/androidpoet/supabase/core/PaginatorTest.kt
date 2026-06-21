@@ -2,6 +2,9 @@ package io.github.androidpoet.supabase.core
 
 import io.github.androidpoet.supabase.core.paging.Paginator
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -85,6 +88,39 @@ class PaginatorTest {
             assertEquals(listOf(0, 1), pager.items.value) // back to first page
             assertNull(pager.error.value)
             assertTrue(!pager.endReached.value)
+        }
+
+    @Test
+    fun test_refresh_whileLoadInFlight_stillLoadsFreshPage() =
+        runTest {
+            // The first load blocks inside fetch (so _isLoading stays true); a refresh that
+            // arrives during it must still load the fresh first page, not no-op into an empty
+            // list because the stale load is holding the loading flag.
+            val firstLoadGate = CompletableDeferred<Unit>()
+            var calls = 0
+            val pager =
+                Paginator(pageSize = 2) { _, _ ->
+                    calls++
+                    if (calls == 1) {
+                        firstLoadGate.await()
+                        listOf("stale-a", "stale-b")
+                    } else {
+                        listOf("fresh-a", "fresh-b")
+                    }
+                }
+
+            val first = launch { pager.loadNext() }
+            runCurrent() // first load is now suspended inside fetch with _isLoading = true
+
+            val refreshed = launch { pager.refresh() }
+            runCurrent() // refresh must load the fresh page despite the in-flight stale load
+
+            firstLoadGate.complete(Unit) // release the stale load; its result must be discarded
+            first.join()
+            refreshed.join()
+
+            assertEquals(listOf("fresh-a", "fresh-b"), pager.items.value)
+            assertEquals(false, pager.isLoading.value)
         }
 
     @Test

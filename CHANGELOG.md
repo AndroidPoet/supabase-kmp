@@ -4,6 +4,12 @@
 
 ### Fixed
 
+- **`Paginator.refresh()` during an in-flight load no longer leaves the list empty.** Pull-to-
+  refresh while a page was still loading reset the state and then called `loadNext()`, but that
+  call no-opped against the stale load's `isLoading` flag and the stale result was discarded by
+  the epoch check — so the list stayed empty and idle. `refresh()` now takes the loading flag in
+  the same lock as the reset, and the flag is cleared under the mutex only by the load owning the
+  current epoch (so a stale load can't clear a newer load's flag).
 - **Multi-column `order()` no longer silently drops sort columns.** Each `order(...)` call
   emitted its own `order=` query parameter, but PostgREST expects multi-column ordering as a
   single comma-joined value (`order=a.desc,b.asc`) and honours only one of several repeated
