@@ -1,0 +1,299 @@
+---
+title: Security & Keys
+description: Best practices for Supabase keys and secrets across app types — which key is safe where, why RLS (not the key) is your security, per-platform setup for Android/iOS/Wasm/desktop/server, hiding keys, and rotation.
+---
+
+import { Steps, Callout, Tabs } from 'nextra/components'
+
+# Security & Keys
+
+The single most common Supabase mistake is putting the wrong key in the wrong
+place. This guide is the rulebook: which key goes where, why the client key is safe
+to ship, how to keep keys out of source control, and what to do per app type.
+
+<Callout type="info">
+  One sentence to remember: **the client key is not your security — Row Level
+  Security is.** The key that ships in your app is *designed* to be public; what
+  actually protects your data is RLS on every exposed table. Everything below
+  follows from that.
+</Callout>
+
+## The two kinds of key
+
+Supabase has moved to a new key model. There are two families; you only ever put
+**one** of them in a client.
+
+| Key | New name | Legacy name | Where it belongs |
+| --- | --- | --- | --- |
+| **Client / publishable** | `sb_publishable_…` | `anon` | ✅ Shipped in apps, web pages, CLIs — **safe to expose** (with RLS) |
+| **Server / secret** | `sb_secret_…` | `service_role` | 🔒 Server / Edge Functions **only** — bypasses RLS, **never** in a client |
+
+- The **publishable** key replaces the `anon` key. Low-privilege, identifies your
+  project, safe to bundle into mobile/desktop binaries and web bundles.
+- The **secret** key replaces `service_role`. Full access, **bypasses RLS**. You can
+  create *several* secret keys and **revoke them individually** — a big improvement
+  over the single legacy `service_role` key.
+
+<Callout type="warning">
+  Never ship a secret / `service_role` key in a client — not in a mobile binary, a
+  web page, a CLI, or "just on `localhost`." It bypasses RLS, so a leak exposes your
+  entire database. In this SDK the secret key belongs only behind
+  [`supabase-auth-admin`](/auth) on a trusted server.
+</Callout>
+
+### Legacy keys still work (for now)
+
+Both models work simultaneously, so existing projects don't break. Notes:
+
+- Projects created after **Nov 1, 2025** no longer get legacy `anon`/`service_role`
+  keys — they're publishable/secret from the start.
+- Supabase plans to remove legacy keys in **late 2026** (their roadmap marks the
+  exact date "TBC"), after which apps still using them stop working.
+- Migration is non-breaking: both key types are valid at once, so you can swap one
+  client at a time, then deactivate the legacy keys when nothing depends on them.
+
+**Recommendation:** use publishable + secret keys for new work; treat legacy
+`anon`/`service_role` as "still fine, but migrate when convenient."
+
+## RLS is the real security
+
+The publishable/`anon` key is safe to expose **only because Row Level Security
+decides what each request may do.** Supabase's own docs put it plainly: the anon key
+"is not a secret and must be paired with RLS and least-privilege grants."
+
+So the non-negotiable rule:
+
+<Callout type="warning">
+  **Enable RLS on every table reachable through your exposed schema, and write
+  least-privilege policies.** A table with the Data API on and no RLS is wide open
+  to anyone holding the publishable key — which is everyone.
+</Callout>
+
+```sql
+alter table todos enable row level security;             -- on by default for new tables
+
+create policy "owner reads" on todos for select
+  to authenticated using (auth.uid() = user_id);          -- least privilege
+```
+
+A table with RLS **enabled but no policies** denies everything — that's the safe
+default to start from, then open up deliberately. See [Project Setup](/project-setup)
+for the full table+policy pattern.
+
+### Prefer asymmetric JWT signing keys
+
+For verifying user JWTs, Supabase now recommends **asymmetric signing keys
+(ES256/RS256)** over the legacy shared HS256 secret (the shared secret is "not
+recommended for production"). Asymmetric keys allow **local, fast verification** and
+**zero-downtime rotation** (rotating doesn't sign users out). Verify tokens against
+the published JWKS endpoint rather than a hardcoded secret:
+
+```
+GET https://<project-ref>.supabase.co/auth/v1/.well-known/jwks.json
+```
+
+The public key can only *verify* signatures, never mint tokens, so it's safe to
+fetch and cache. (Ed25519 is listed "coming soon" — stick to ES256/RS256 today.)
+
+## Per–app-type setup
+
+The rule never changes — **publishable key in clients, secret key only on a
+server** — but *how you keep the key out of source* differs per platform.
+
+<Tabs items={['Android / iOS (KMP)', 'Web / Wasm', 'Desktop / CLI', 'Server / Admin']}>
+<Tabs.Tab>
+
+Bundling the **publishable** key in a mobile binary is officially fine. Still, don't
+hardcode it in committed source — keep it in build config so you can rotate it
+without a code change.
+
+**Android** — put the key in `local.properties` (gitignored) and surface it via
+`BuildConfig`:
+
+```properties
+# local.properties (NOT committed)
+SUPABASE_URL=https://your-ref.supabase.co
+SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxx
+```
+
+```kotlin
+// build.gradle.kts (android block)
+buildConfigField("String", "SUPABASE_URL", "\"${properties["SUPABASE_URL"]}\"")
+buildConfigField("String", "SUPABASE_PUBLISHABLE_KEY", "\"${properties["SUPABASE_PUBLISHABLE_KEY"]}\"")
+```
+
+In shared KMP code, inject those values at startup (e.g. via `expect`/`actual` or a
+DI module) rather than constants in `commonMain`:
+
+```kotlin
+val client = Supabase.create(
+    projectUrl = config.supabaseUrl,
+    apiKey = config.supabasePublishableKey,   // publishable / anon — never the secret key
+)
+```
+
+**iOS** — the equivalent is an `.xcconfig` build setting (gitignored) read via
+`Info.plist`, passed into the same `Supabase.create(...)`.
+
+**Protect the user's session, not just the key.** The biggest client-side risk is
+the signed-in user's tokens, not the publishable key. This SDK keeps session storage
+**pluggable (bring-your-own)** for exactly this reason — wire `SessionStorage` to
+platform secure storage (Keychain / EncryptedSharedPreferences), which matches
+Supabase's own "supply a secure storage adapter" guidance.
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+On the web the publishable key **will** be visible in the browser — that's expected
+and safe *with RLS*. Inject it at build time via a public env var (the framework's
+`PUBLIC_`/`NEXT_PUBLIC_` convention) so it isn't a hardcoded literal:
+
+```kotlin
+// Wasm app — value supplied by your bundler's public env, not committed source
+val client = Supabase.create(projectUrl = PUBLIC_SUPABASE_URL, apiKey = PUBLIC_SUPABASE_PUBLISHABLE_KEY)
+```
+
+Anything that must stay secret (payment keys, privileged writes) goes behind an
+**Edge Function** or a server — never the browser. Repeat: no secret key in web code,
+"even on `localhost`."
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+Same rule as mobile: the **publishable** key may be bundled in the executable. Read
+it from an environment variable or a config file next to the app, not a committed
+constant, so each install/rotation is a config change rather than a rebuild:
+
+```kotlin
+val client = Supabase.create(
+    projectUrl = System.getenv("SUPABASE_URL"),
+    apiKey = System.getenv("SUPABASE_PUBLISHABLE_KEY"),
+)
+```
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+This is the **only** place the secret key is allowed. Use it with
+[`supabase-auth-admin`](/auth) (service-role admin APIs) on a trusted backend.
+
+- Load it from an environment variable or your platform's secrets manager — **never
+  a repo, never an image layer baked at build, never a client**.
+- Prefer a **dedicated secret key** you can revoke independently if it leaks.
+
+```kotlin
+// Server-side only.
+val admin = Supabase.create(
+    projectUrl = System.getenv("SUPABASE_URL"),
+    apiKey = System.getenv("SUPABASE_SECRET_KEY"),   // sb_secret_… — server process only
+)
+```
+
+</Tabs.Tab>
+</Tabs>
+
+## Hiding keys: the hygiene rules
+
+Even though the publishable key isn't a secret, treat **all** keys with the same
+discipline — it keeps the genuinely-secret ones safe and makes rotation painless.
+
+<Steps>
+### Never commit keys
+Keep them in `local.properties`, `.xcconfig`, `.env`, or a secrets manager — all
+**gitignored**. Supabase's docs are blunt: "Never check your `.env` files into Git."
+
+### Read keys from config, not constants
+A literal in `commonMain` means rotating a key is a code change in every app. Inject
+from build config / env so rotation is a config swap.
+
+### Encrypt secrets at rest where you can
+For stored secrets, "prefer encrypting them when stored in files or environment
+variables," and use a tool's native secret store over plain files.
+
+### Assume a leaked secret key = full compromise
+Because it bypasses RLS. Rotate immediately (next section). Supabase auto-revokes
+secret keys it detects in public GitHub repos and notifies you — but don't rely on
+that.
+</Steps>
+
+## Server-side secrets (Edge Functions & Vault)
+
+Secrets your *backend* needs (Stripe keys, the Supabase secret key, third-party
+tokens) have two homes:
+
+**Edge Function secrets** — for code running in Edge Functions:
+
+```bash
+supabase secrets set STRIPE_SECRET_KEY=sk_live_xxx     # one at a time
+supabase secrets set --env-file .env                   # or in bulk
+supabase secrets list
+```
+
+Functions also receive built-in secrets. Newer projects expose
+`SUPABASE_PUBLISHABLE_KEYS`, `SUPABASE_SECRET_KEYS` ("should NEVER be used in a
+browser") and `SUPABASE_JWKS` (for JWT verification); older projects still see
+`SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` / `SUPABASE_URL` / `SUPABASE_DB_URL`.
+
+**Supabase Vault** — when a secret must be read from **inside the database**
+(Postgres functions, triggers, webhooks). Vault stores AEAD-encrypted secrets in the
+DB while keeping the encryption key out of it. Reach for Vault only for in-database
+needs; for app/Edge code, env secrets are simpler.
+
+## Local development hygiene
+
+The CLI loads a `.env` file from your project root (next to `config.toml`), and
+`config.toml` can reference env vars so secrets stay out of version control:
+
+```toml
+# supabase/config.toml — reference, don't inline
+[auth.external.github]
+client_id = "env(GITHUB_CLIENT_ID)"
+secret    = "env(GITHUB_SECRET)"
+```
+
+Gitignore the `.env`. (The exact `.env` path has shifted between CLI versions —
+project-root vs `supabase/.env` — so check what your `supabase --version` loads.)
+
+## Rotating a key
+
+<Tabs items={['Secret key', 'JWT signing key', 'Legacy anon/service_role']}>
+<Tabs.Tab>
+
+In **Settings → API Keys**: create a new secret key → roll it out to your servers →
+delete the compromised one. Deletion is **irreversible** and immediate. Because you
+can run two secret keys at once, this is zero-downtime.
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+In **Project Settings → JWT Keys → Signing Keys**: rotate (the current key becomes
+"previously used"), deploy, then revoke the old key. Rotation **does not sign users
+out** — existing sessions stay valid until you explicitly revoke. Wait at least
+access-token-lifetime + ~15 min before revoking so in-flight tokens still verify.
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+Rotating a leaked **legacy** `anon`/`service_role` key historically meant rotating
+the project's **JWT secret**, which re-signs everything and **signs all users out** —
+disruptive. This is the main reason to migrate to publishable/secret keys +
+asymmetric signing keys, where rotation is granular and seamless.
+
+</Tabs.Tab>
+</Tabs>
+
+## Cheatsheet
+
+| Do | Don't |
+| --- | --- |
+| Ship the **publishable / `anon`** key in clients | Ship the **secret / `service_role`** key anywhere client-side |
+| Enable **RLS** on every exposed table | Rely on hiding the key for security |
+| Keep keys in gitignored config / env | Hardcode keys in committed source |
+| Put the secret key only on a server (`supabase-auth-admin`) | Use the secret key "just for testing" in an app |
+| Store the user's **session** in platform secure storage | Leave session tokens in plaintext storage |
+| Use **asymmetric** JWT signing keys + JWKS | Verify against a shared HS256 secret in production |
+| Rotate a leaked key immediately (and migrate off legacy) | Assume "it's just the anon key, it's fine" without RLS |
+
+**Bottom line:** publishable key in the app, secret key on the server, **RLS on
+everything**, keys in config not source, sessions in secure storage. Get those five
+right and you're following Supabase's own guidance.
