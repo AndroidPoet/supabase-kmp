@@ -2198,10 +2198,10 @@ public final class io/github/androidpoet/supabase/auth/native/NativeAuthCredenti
 }
 
 public final class io/github/androidpoet/supabase/auth/native/NativeAuthExtKt {
-	public static final fun signInWith (Lio/github/androidpoet/supabase/auth/AuthClient;Lio/github/androidpoet/supabase/auth/native/NativeAuthProvider;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun signInWith$default (Lio/github/androidpoet/supabase/auth/AuthClient;Lio/github/androidpoet/supabase/auth/native/NativeAuthProvider;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static final fun signInWithAndSaveSession (Lio/github/androidpoet/supabase/auth/AuthClient;Lio/github/androidpoet/supabase/auth/session/SessionManager;Lio/github/androidpoet/supabase/auth/native/NativeAuthProvider;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun signInWithAndSaveSession$default (Lio/github/androidpoet/supabase/auth/AuthClient;Lio/github/androidpoet/supabase/auth/session/SessionManager;Lio/github/androidpoet/supabase/auth/native/NativeAuthProvider;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun signInWith (Lio/github/androidpoet/supabase/auth/AuthClient;Lio/github/androidpoet/supabase/auth/native/NativeAuthProvider;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun signInWith$default (Lio/github/androidpoet/supabase/auth/AuthClient;Lio/github/androidpoet/supabase/auth/native/NativeAuthProvider;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun signInWithAndSaveSession (Lio/github/androidpoet/supabase/auth/AuthClient;Lio/github/androidpoet/supabase/auth/session/SessionManager;Lio/github/androidpoet/supabase/auth/native/NativeAuthProvider;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun signInWithAndSaveSession$default (Lio/github/androidpoet/supabase/auth/AuthClient;Lio/github/androidpoet/supabase/auth/session/SessionManager;Lio/github/androidpoet/supabase/auth/native/NativeAuthProvider;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 }
 
 public abstract interface class io/github/androidpoet/supabase/auth/native/NativeAuthProvider {

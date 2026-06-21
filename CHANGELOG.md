@@ -17,6 +17,15 @@
   `Authenticated`) and schedules a retry, matching the existing behaviour for a transient
   failure on an already-active session. The refresh token is still valid in this case, so
   the user keeps their session and recovers automatically when connectivity returns.
+- **Apple first-sign-in name/email are now reachable through `signInWith`.** The native
+  credential captures the `fullName`/`email` that Sign in with Apple returns only on the
+  first authorization (and never in the ID token), but the `signInWith` /
+  `signInWithAndSaveSession` convenience extensions discarded the credential and returned
+  only the session — and the `id_token` grant can't carry name/email either, so the data was
+  unrecoverable unless you abandoned the sugar and called `provider.signIn()` directly. Both
+  extensions gain an optional `onCredential: (NativeAuthCredential) -> Unit` hook that fires
+  with the raw credential on a successful native flow, so you can capture the name/email (e.g.
+  to write to user metadata or a profile row). Additive and backward compatible.
 
 ## 0.9.1 — 2026-06-21
 
