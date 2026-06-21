@@ -473,7 +473,13 @@ internal class StorageClientImpl(
         return client
             .post("${StoragePaths.OBJECT_SIGN}/$bucket", body = body)
             .deserialize<List<SignedUrlItemResponse>>()
-            .map { list -> list.map { appendDownloadQuery(resolveStorageUrl(it.signedUrl), download, fileName) } }
+            // Skip paths the server couldn't sign (signedURL == null) so one unsignable
+            // path in the batch doesn't discard the URLs that did sign successfully.
+            .map { list ->
+                list.mapNotNull { item ->
+                    item.signedUrl?.let { appendDownloadQuery(resolveStorageUrl(it), download, fileName) }
+                }
+            }
     }
 
     override suspend fun createUploadSignedUrl(

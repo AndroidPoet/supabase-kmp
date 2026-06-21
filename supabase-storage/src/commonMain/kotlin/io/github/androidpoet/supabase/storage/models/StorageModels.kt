@@ -108,11 +108,18 @@ public data class SignedUrlsRequest(
     @SerialName("expiresIn") val expiresIn: Long,
 )
 
-/** One entry of a batch signed-URL response: the requested [path] and its [signedUrl]. */
+/**
+ * One entry of a batch signed-URL response: the requested [path] and its [signedUrl].
+ *
+ * The batch endpoint returns `200 OK` even on partial success — a path that can't be signed
+ * (missing object or no access) comes back with `signedURL: null` and an [error] message. Both
+ * fields must therefore be nullable, or one unsignable path would fail the decode of the whole batch.
+ */
 @Serializable
 public data class SignedUrlItemResponse(
     @SerialName("path") val path: String,
-    @SerialName("signedURL") val signedUrl: String,
+    @SerialName("signedURL") val signedUrl: String? = null,
+    @SerialName("error") val error: String? = null,
 )
 
 /**

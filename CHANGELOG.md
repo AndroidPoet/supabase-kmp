@@ -18,6 +18,27 @@
 
 ### Fixed
 
+- **Realtime presence no longer reports a false leave when a member is still connected.** Presence
+  stored a single meta per key and removed the whole key on any `presence_diff` leave, so a member
+  tracked from two connections (two tabs/devices, or a shared presence key) vanished from
+  `presenceState()` as soon as one connection left. Presence now keeps the full Phoenix metas array
+  per key, removes only the metas that actually left (matched by `phx_ref`), and drops the key only
+  once its last meta is gone. The public single-meta `PresenceState` shape is unchanged.
+- **Realtime `postgres_changes` no longer mis-routes when the server's echoed bindings diverge.** The
+  join reply's bindings were paired to local callbacks purely by array index; a reordered, normalised,
+  or rejected binding would silently route changes to the wrong callback. The echoed `event`/`schema`/
+  `table`/`filter` are now verified against the local config before the server id is trusted (matching
+  realtime-js), so a mismatched binding is skipped rather than mis-paired.
+- **Storage `createSignedUrls` no longer fails the whole batch when one path is unsignable.** The
+  batch endpoint returns `200` even on partial success, with `signedURL: null` and an `error` for
+  paths it couldn't sign. The response item required a non-null `signedURL`, so a single missing
+  object made the entire call fail to decode. `signedURL` is now nullable (and `error` is modelled);
+  unsignable paths are skipped so the URLs that did sign are still returned.
+- **Session auto-refresh now uses the server's absolute `expires_at` for opaque tokens.** When the
+  access token isn't a decodable JWT, the refresh scheduler fell back to the relative `expires_in`
+  captured at issue time — so after a restore the token looked valid long after it had actually
+  expired, refreshing too late and yielding 401s. It now prefers JWT `exp` → `Session.expiresAt` →
+  `expires_in`. JWT-token apps (the common case) are unaffected.
 - **MFA challenge responses now decode.** `MfaChallengeResponse` required a non-null `factor_id`, but
   GoTrue's `POST /factors/{id}/challenge` returns only `id`, `type`, `expires_at` and `webauthn` — no
   `factor_id` — so `mfaChallenge()` threw a missing-field error on **every** call. The non-existent

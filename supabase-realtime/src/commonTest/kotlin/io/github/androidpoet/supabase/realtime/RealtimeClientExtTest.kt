@@ -198,7 +198,17 @@ class RealtimeClientExtTest {
                             put(
                                 "user-1",
                                 buildJsonObject {
-                                    put("metas", kotlinx.serialization.json.buildJsonArray {})
+                                    put(
+                                        "metas",
+                                        kotlinx.serialization.json.buildJsonArray {
+                                            add(
+                                                buildJsonObject {
+                                                    put("phx_ref", "ref-1")
+                                                    put("online_at", "t0")
+                                                },
+                                            )
+                                        },
+                                    )
                                 },
                             )
                         },
@@ -207,6 +217,106 @@ class RealtimeClientExtTest {
             )
 
             assertEquals(1, stateSize)
+        }
+
+    @Test
+    fun test_presenceDiff_leaveKeepsMemberWhileOtherMetasRemain() =
+        runTest {
+            val realtime = RealtimeClientImpl(ExtFakeSupabaseClient(), RealtimeConfig(autoReconnect = false))
+            var latest: PresenceState = emptyMap()
+
+            val subscription =
+                realtime.subscribeToPresence(
+                    channel = "room",
+                    callback = { state: PresenceState -> latest = state },
+                ) as ChannelSubscriptionImpl
+
+            fun meta(ref: String) =
+                buildJsonObject {
+                    put("phx_ref", ref)
+                    put("online_at", ref)
+                }
+
+            // user-1 is tracked from two connections (two metas under one key).
+            subscription.handleMessage(
+                io.github.androidpoet.supabase.realtime.models.RealtimeMessage(
+                    topic = "realtime:room",
+                    event = "presence_state",
+                    payload =
+                        buildJsonObject {
+                            put(
+                                "user-1",
+                                buildJsonObject {
+                                    put(
+                                        "metas",
+                                        kotlinx.serialization.json.buildJsonArray {
+                                            add(meta("ref-a"))
+                                            add(meta("ref-b"))
+                                        },
+                                    )
+                                },
+                            )
+                        },
+                    ref = "1",
+                ),
+            )
+            assertEquals(1, latest.size)
+
+            // One connection leaves: the member must STILL be present (ref-b remains).
+            subscription.handleMessage(
+                io.github.androidpoet.supabase.realtime.models.RealtimeMessage(
+                    topic = "realtime:room",
+                    event = "presence_diff",
+                    payload =
+                        buildJsonObject {
+                            put("joins", buildJsonObject {})
+                            put(
+                                "leaves",
+                                buildJsonObject {
+                                    put(
+                                        "user-1",
+                                        buildJsonObject {
+                                            put(
+                                                "metas",
+                                                kotlinx.serialization.json.buildJsonArray { add(meta("ref-a")) },
+                                            )
+                                        },
+                                    )
+                                },
+                            )
+                        },
+                    ref = "2",
+                ),
+            )
+            assertEquals(1, latest.size, "member must remain while another meta is still present")
+
+            // The last connection leaves: now the member is gone.
+            subscription.handleMessage(
+                io.github.androidpoet.supabase.realtime.models.RealtimeMessage(
+                    topic = "realtime:room",
+                    event = "presence_diff",
+                    payload =
+                        buildJsonObject {
+                            put("joins", buildJsonObject {})
+                            put(
+                                "leaves",
+                                buildJsonObject {
+                                    put(
+                                        "user-1",
+                                        buildJsonObject {
+                                            put(
+                                                "metas",
+                                                kotlinx.serialization.json.buildJsonArray { add(meta("ref-b")) },
+                                            )
+                                        },
+                                    )
+                                },
+                            )
+                        },
+                    ref = "3",
+                ),
+            )
+            assertEquals(0, latest.size, "member gone once its last meta leaves")
         }
 
     @Test

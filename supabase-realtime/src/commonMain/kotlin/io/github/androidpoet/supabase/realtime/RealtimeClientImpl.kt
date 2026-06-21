@@ -54,6 +54,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
@@ -890,10 +891,15 @@ internal class ChannelSubscriptionImpl(
     private val _status = MutableStateFlow(RealtimeSubscription.Status.SUBSCRIBING)
 
     // Cumulative presence state, mutated only on the single inbound dispatch loop.
-    private val presenceMembers = mutableMapOf<String, JsonObject>()
+    // Phoenix presence keeps an ARRAY of metas per key (the same key can be tracked
+    // from several connections), so a leave must drop only the metas that left and
+    // remove the key only once no metas remain. We hold the full metas list as the
+    // source of truth and derive the public single-meta snapshot from its first entry.
+    private val presenceMetas = mutableMapOf<String, MutableList<JsonObject>>()
 
-    // Immutable snapshot of [presenceMembers], republished on every change so
-    // presenceState() can be read safely from any thread.
+    // Immutable snapshot derived from [presenceMetas] (first meta per key, phx_ref
+    // stripped), republished on every change so presenceState() can be read safely
+    // from any thread.
     @Volatile
     private var presenceSnapshot: PresenceState = emptyMap()
 
@@ -1279,29 +1285,43 @@ internal class ChannelSubscriptionImpl(
         val joins = payload["joins"]?.jsonObject
         val leaves = payload["leaves"]?.jsonObject
         joins?.forEach { (key, value) ->
-            val presence = unwrapPresence(value.jsonObject)
-            presenceMembers[key] = presence
-            publish(RealtimeEvent.PresenceJoin(key = key, newPresence = presence))
+            // Append the joining metas; the same key may already hold metas from
+            // another connection, so we must not overwrite them.
+            val joining = metasOf(value.jsonObject)
+            presenceMetas.getOrPut(key) { mutableListOf() }.addAll(joining)
+            publish(RealtimeEvent.PresenceJoin(key = key, newPresence = firstMeta(joining)))
         }
         leaves?.forEach { (key, value) ->
-            val presence = unwrapPresence(value.jsonObject)
-            presenceMembers.remove(key)
-            publish(RealtimeEvent.PresenceLeave(key = key, leftPresence = presence))
+            // Remove only the metas that actually left (matched by phx_ref) and drop
+            // the key only once no metas remain — a member tracked from several
+            // connections stays present until its last connection leaves.
+            val leaving = metasOf(value.jsonObject)
+            val leavingRefs = leaving.mapNotNull(::phxRef).toSet()
+            val remaining = presenceMetas[key]?.apply { removeAll { phxRef(it) in leavingRefs } }
+            if (remaining == null || remaining.isEmpty()) presenceMetas.remove(key)
+            publish(RealtimeEvent.PresenceLeave(key = key, leftPresence = firstMeta(leaving)))
         }
-        // Hand the callback the full, cumulative presence state — not just the
-        // members in this diff — so callers always see who is currently present.
-        val state: PresenceState = presenceMembers.toMap()
-        presenceSnapshot = state
-        presenceCallback?.invoke(state)
+        publishPresenceState()
     }
 
     private suspend fun handlePresenceState(payload: JsonObject) {
-        presenceMembers.clear()
-        payload.forEach { (key, value) -> presenceMembers[key] = unwrapPresence(value.jsonObject) }
-        val state: PresenceState = presenceMembers.toMap()
-        presenceSnapshot = state
+        presenceMetas.clear()
+        payload.forEach { (key, value) -> presenceMetas[key] = metasOf(value.jsonObject).toMutableList() }
+        val state = publishPresenceState()
         publish(RealtimeEvent.PresenceSync(state = state))
+    }
+
+    // Rebuilds the public single-meta snapshot from [presenceMetas] (first meta per
+    // key, phx_ref stripped), stores it, and hands the callback the full cumulative
+    // state — not just the members in this diff — so callers always see who is present.
+    private suspend fun publishPresenceState(): PresenceState {
+        val state: PresenceState =
+            presenceMetas
+                .mapNotNull { (key, metas) -> metas.firstOrNull()?.let { key to stripPhxRef(it) } }
+                .toMap()
+        presenceSnapshot = state
         presenceCallback?.invoke(state)
+        return state
     }
 
     private suspend fun handleSystemReply(payload: JsonObject, ref: String?) {
@@ -1342,20 +1362,33 @@ internal class ChannelSubscriptionImpl(
     }
 
     // The join reply echoes `postgres_changes: [{id, event, schema, table, filter}]`
-    // in the same order we registered them, so we can pair each server id with the
-    // local callback at the same index. Rebuilt on every (re)join.
+    // in the same order we registered them, so we pair each server id with the local
+    // callback at the same index. But we verify the echoed attributes match that
+    // callback's config before trusting the pairing: a reordered, normalised, or
+    // rejected binding would otherwise silently route changes to the wrong callback
+    // (mirrors realtime-js's subscribe() 'ok' attribute check). Rebuilt on every
+    // (re)join.
     private fun captureServerBindings(response: JsonObject) {
         val bindings = (response["postgres_changes"] as? JsonArray) ?: return
         serverBindingsById.clear()
         bindings.forEachIndexed { index, element ->
-            val id =
-                (element as? JsonObject)
-                    ?.get("id")
-                    ?.jsonPrimitive
-                    ?.content
-                    ?.toLongOrNull() ?: return@forEachIndexed
-            postgresCallbacks.getOrNull(index)?.let { serverBindingsById[id] = it }
+            val echoed = element as? JsonObject ?: return@forEachIndexed
+            val id = echoed["id"]?.jsonPrimitive?.content?.toLongOrNull() ?: return@forEachIndexed
+            val config = postgresCallbacks.getOrNull(index) ?: return@forEachIndexed
+            if (serverBindingMatches(echoed, config)) serverBindingsById[id] = config
         }
+    }
+
+    // Whether a server-echoed postgres binding matches the local config at its index,
+    // comparing all four attributes (event as its wire value, schema, table, filter)
+    // exactly as realtime-js does. Absent and JSON-null fields both read as null, so
+    // an omitted table/filter matches a null config field.
+    private fun serverBindingMatches(echoed: JsonObject, config: PostgresCallbackConfig): Boolean {
+        fun attr(key: String): String? = echoed[key]?.jsonPrimitive?.contentOrNull
+        return attr("event") == config.event.toWireValue() &&
+            attr("schema") == config.schema &&
+            attr("table") == config.table &&
+            attr("filter") == config.filter
     }
 }
 
@@ -1368,17 +1401,23 @@ internal fun PostgresChangeEvent.toWireValue(): String =
     }
 
 // The realtime wire wraps each presence entry as `{"metas":[{phx_ref, ...state}]}`.
-// Callers want the user state, not the envelope, so lift the first meta entry and
-// drop the server-internal `phx_ref`. Returns the object unchanged if there is no
-// `metas` array (e.g. an already-flattened payload), so this is safe to apply
-// unconditionally.
-private fun unwrapPresence(entry: JsonObject): JsonObject {
-    val metas = entry["metas"] as? JsonArray ?: return entry
-    val first = metas.firstOrNull() as? JsonObject ?: return buildJsonObject {}
-    return buildJsonObject {
-        first.forEach { (k, v) -> if (k != "phx_ref") put(k, v) }
-    }
-}
+// A single key can carry several metas (the same key tracked from multiple
+// connections), so we keep the whole list. Returns a single-element list of the
+// object itself if there is no `metas` array (e.g. an already-flattened payload),
+// so this is safe to apply unconditionally.
+private fun metasOf(entry: JsonObject): List<JsonObject> =
+    (entry["metas"] as? JsonArray)?.mapNotNull { it as? JsonObject } ?: listOf(entry)
+
+// The server-internal presence ref used to correlate joins and leaves for a key.
+private fun phxRef(meta: JsonObject): String? = meta["phx_ref"]?.jsonPrimitive?.contentOrNull
+
+// Drops the server-internal `phx_ref` so callers see only the user state.
+private fun stripPhxRef(meta: JsonObject): JsonObject =
+    buildJsonObject { meta.forEach { (k, v) -> if (k != "phx_ref") put(k, v) } }
+
+// The representative (first) meta of a join/leave set, phx_ref stripped, for events.
+private fun firstMeta(metas: List<JsonObject>): JsonObject =
+    metas.firstOrNull()?.let(::stripPhxRef) ?: buildJsonObject {}
 
 // Control frames that are regenerated on reconnect and must not be replayed
 // from the outbound buffer (they would carry stale refs / duplicate joins).

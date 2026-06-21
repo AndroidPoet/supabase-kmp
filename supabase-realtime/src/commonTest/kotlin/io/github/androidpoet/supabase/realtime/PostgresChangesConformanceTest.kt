@@ -90,7 +90,101 @@ class PostgresChangesConformanceTest {
     fun test_realtimeFilter_inOperator_usesParenList() {
         assertEquals("status=in.(open,pending)", realtimeFilter { isIn("status", listOf("open", "pending")) })
     }
+
+    @Test
+    fun test_joinReply_capturesMatchingBinding_routesChangeById() =
+        runTest {
+            var invoked = false
+            val subscription =
+                realtime()
+                    .channel("room-1")
+                    .onPostgresChange(schema = "public", table = "messages", event = PostgresChangeEvent.INSERT) {
+                        invoked = true
+                    }.subscribe() as ChannelSubscriptionImpl
+
+            // Join reply echoes a binding whose attributes MATCH the local config → id 77 is captured.
+            subscription.handleMessage(replyWithBinding(subscription.joinRef, id = 77, event = "INSERT"))
+            subscription.handleMessage(insertChange(ids = listOf(77)))
+
+            assertEquals(true, invoked)
+        }
+
+    @Test
+    fun test_joinReply_attributeMismatch_doesNotCaptureBinding_noMisroute() =
+        runTest {
+            var invoked = false
+            val subscription =
+                realtime()
+                    .channel("room-1")
+                    .onPostgresChange(schema = "public", table = "messages", event = PostgresChangeEvent.INSERT) {
+                        invoked = true
+                    }.subscribe() as ChannelSubscriptionImpl
+
+            // The server echoes a DIFFERENT event (UPDATE) at this binding's index. Without the
+            // attribute check, id 77 would be paired by index to the INSERT callback, so an UPDATE
+            // tagged id 77 would wrongly fire an INSERT-only subscriber. The check prevents capture,
+            // and the UPDATE then can't match the INSERT binding via the type fallback either.
+            subscription.handleMessage(replyWithBinding(subscription.joinRef, id = 77, event = "UPDATE"))
+            subscription.handleMessage(updateChange(ids = listOf(77)))
+
+            assertEquals(false, invoked)
+        }
 }
+
+private fun replyWithBinding(joinRef: String?, id: Long, event: String) =
+    io.github.androidpoet.supabase.realtime.models.RealtimeMessage(
+        topic = "realtime:room-1",
+        event = "phx_reply",
+        ref = joinRef,
+        payload =
+            kotlinx.serialization.json.buildJsonObject {
+                put("status", kotlinx.serialization.json.JsonPrimitive("ok"))
+                put(
+                    "response",
+                    kotlinx.serialization.json.buildJsonObject {
+                        put(
+                            "postgres_changes",
+                            kotlinx.serialization.json.buildJsonArray {
+                                add(
+                                    kotlinx.serialization.json.buildJsonObject {
+                                        put("id", kotlinx.serialization.json.JsonPrimitive(id))
+                                        put("event", kotlinx.serialization.json.JsonPrimitive(event))
+                                        put("schema", kotlinx.serialization.json.JsonPrimitive("public"))
+                                        put("table", kotlinx.serialization.json.JsonPrimitive("messages"))
+                                    },
+                                )
+                            },
+                        )
+                    },
+                )
+            },
+    )
+
+private fun insertChange(ids: List<Long>) = postgresChange("INSERT", ids)
+
+private fun updateChange(ids: List<Long>) = postgresChange("UPDATE", ids)
+
+private fun postgresChange(type: String, ids: List<Long>) =
+    io.github.androidpoet.supabase.realtime.models.RealtimeMessage(
+        topic = "realtime:room-1",
+        event = "postgres_changes",
+        payload =
+            kotlinx.serialization.json.buildJsonObject {
+                put(
+                    "ids",
+                    kotlinx.serialization.json.buildJsonArray { ids.forEach { add(kotlinx.serialization.json.JsonPrimitive(it)) } },
+                )
+                put(
+                    "data",
+                    kotlinx.serialization.json.buildJsonObject {
+                        put("type", kotlinx.serialization.json.JsonPrimitive(type))
+                        put("schema", kotlinx.serialization.json.JsonPrimitive("public"))
+                        put("table", kotlinx.serialization.json.JsonPrimitive("messages"))
+                        put("record", kotlinx.serialization.json.buildJsonObject { put("id", kotlinx.serialization.json.JsonPrimitive(1)) })
+                    },
+                )
+            },
+    )
 
 private class FakeClient : SupabaseClient {
     override val projectUrl: String = "https://example.supabase.co"

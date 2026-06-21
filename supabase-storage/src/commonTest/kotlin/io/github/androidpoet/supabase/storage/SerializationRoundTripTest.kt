@@ -124,6 +124,27 @@ class SerializationRoundTripTest {
     }
 
     @Test
+    fun test_signedUrlBatch_decodesPartialFailureWithNullSignedUrl() {
+        // The batch sign endpoint returns 200 even on partial success: an unsignable
+        // path comes back with `signedURL: null` and an `error`. A non-null signedURL
+        // field would throw and fail the whole batch; both must be nullable.
+        val payload =
+            """
+            [
+              { "path": "ok.png", "signedURL": "/object/sign/avatars/ok.png?token=abc", "error": null },
+              { "path": "missing.png", "signedURL": null, "error": "Either the object does not exist or you do not have access to it" }
+            ]
+            """.trimIndent()
+
+        val items = json.decodeFromString<List<SignedUrlItemResponse>>(payload)
+
+        assertEquals(2, items.size)
+        assertEquals("/object/sign/avatars/ok.png?token=abc", items[0].signedUrl)
+        assertEquals(null, items[1].signedUrl)
+        assertEquals("Either the object does not exist or you do not have access to it", items[1].error)
+    }
+
+    @Test
     fun test_icebergNamespaceMetadata_decodesWhenNamespaceOmitted() {
         // The metadata response can return only `properties`; a required `namespace`
         // would throw MissingFieldException out of a SupabaseResult-returning call.

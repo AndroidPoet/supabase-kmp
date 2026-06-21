@@ -207,14 +207,16 @@ internal class SessionManagerImpl(
         return maxOf(cappedSeconds * 1000L, MIN_REFRESH_DELAY_MS)
     }
 
-    // Prefer the access token's absolute `exp` claim: a persisted session
-    // carries a relative `expires_in` captured at issue time, so scheduling off
-    // it after the clock has advanced refreshes too late (or never). Fall back
-    // to `expires_in` when the token is not a decodable JWT.
+    // Prefer an ABSOLUTE expiry so a persisted session scheduled off it after the
+    // clock has advanced doesn't refresh too late (or never). The access token's
+    // `exp` claim is authoritative when the token is a decodable JWT; otherwise
+    // fall back to GoTrue's absolute `expires_at`, and only as a last resort to the
+    // relative `expires_in` (captured at issue time — stale after a restore).
     private fun remainingSecondsUntilExpiry(session: Session): Long {
-        val expiryEpochSeconds = accessTokenExpiryEpochSeconds(session.accessToken)
+        val now = Clock.System.now().epochSeconds
+        val expiryEpochSeconds = accessTokenExpiryEpochSeconds(session.accessToken) ?: session.expiresAt
         return if (expiryEpochSeconds != null) {
-            expiryEpochSeconds - Clock.System.now().epochSeconds
+            expiryEpochSeconds - now
         } else {
             session.expiresIn
         }
