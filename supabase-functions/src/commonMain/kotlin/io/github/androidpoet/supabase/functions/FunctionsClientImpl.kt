@@ -109,10 +109,18 @@ internal class FunctionsClientImpl(
  * WHATWG event-stream rules: a blank line dispatches the accumulated event; `:`
  * lines are comments (keep-alives) and ignored; recognised fields are `data`,
  * `event` and `id`; a single leading space after the colon is stripped; multiple
- * `data` lines are joined with `\n`. Events with no field data at dispatch are
- * skipped. A trailing event with no terminating blank line is flushed on close.
+ * `data` lines are joined with `\n`.
+ *
+ * An event is dispatched when it carries `data`, or carries an `event:` type with
+ * no data (streaming functions use that for terminal signals such as
+ * `event: done`); a block with neither is skipped. The last-event-id **persists**
+ * across events — an event that omits `id:` inherits the most recent one, matching
+ * the browser `EventSource.lastEventId` semantics — so it is deliberately NOT reset
+ * on dispatch (which is also why an `id:`-only block does not, on its own, emit a
+ * spurious event after a later keep-alive). A trailing event with no terminating
+ * blank line is flushed on close.
  */
-private fun parseServerSentEvents(lines: Flow<String>): Flow<FunctionServerSentEvent> =
+internal fun parseServerSentEvents(lines: Flow<String>): Flow<FunctionServerSentEvent> =
     flow {
         val data = StringBuilder()
         var event: String? = null
@@ -120,7 +128,7 @@ private fun parseServerSentEvents(lines: Flow<String>): Flow<FunctionServerSentE
         var hasData = false
 
         suspend fun dispatch() {
-            if (hasData || event != null || id != null) {
+            if (hasData || event != null) {
                 emit(
                     FunctionServerSentEvent(
                         id = id,
@@ -131,8 +139,8 @@ private fun parseServerSentEvents(lines: Flow<String>): Flow<FunctionServerSentE
             }
             data.clear()
             event = null
-            id = null
             hasData = false
+            // `id` is the persistent last-event-id and is intentionally NOT reset here.
         }
 
         lines.collect { raw ->

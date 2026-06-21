@@ -4,6 +4,13 @@
 
 ### Fixed
 
+- **Edge Function SSE streaming: the last-event-id now persists across events.** The
+  `invokeSSE` parser reset the id on every event, so a streamed event that omitted `id:`
+  reported `null` instead of inheriting the most recent id (the browser
+  `EventSource.lastEventId` behaviour). The id is now carried forward until the server sends
+  a new one. As part of the same fix, a block carrying only a (now-persistent) id no longer
+  dispatches a spurious empty event after a keep-alive; `data` events and `event:`-only
+  terminal signals (e.g. `event: done`) are unaffected.
 - **Custom request `Content-Type` is no longer overridden with `application/json`.** The
   transport unconditionally set `Content-Type: application/json` and then *appended* the
   caller's header; because Ktor's String-body transformer reads the first `Content-Type`

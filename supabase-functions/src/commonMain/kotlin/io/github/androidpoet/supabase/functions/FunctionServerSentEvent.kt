@@ -9,6 +9,10 @@ import io.github.androidpoet.supabase.client.defaultJson
  * to `"message"` on the wire when omitted) and [data] (`data:`; multiple `data:`
  * lines in one event are joined with `\n`). Keep-alive comment lines (`:`) are
  * dropped by the parser and never surface as events.
+ *
+ * [id] carries the *last-event-id*: it persists across events, so an event that
+ * omits `id:` reports the most recently seen id (matching the browser
+ * `EventSource.lastEventId`), and is `null` only until the server first sends one.
  */
 public data class FunctionServerSentEvent(
     public val id: String? = null,
