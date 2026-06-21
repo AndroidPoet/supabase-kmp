@@ -1,0 +1,252 @@
+---
+title: Project Setup
+description: Set up the whole project end to end — create a Supabase backend (hosted or local with the CLI), define your schema with migrations and RLS, get your keys, and connect it from your Kotlin Multiplatform app.
+---
+
+import { Steps, Callout, Tabs } from 'nextra/components'
+
+# Project Setup
+
+[Getting Started](/getting-started) shows the *app* side — add the library, create
+a client, make a call. This page covers the other half: standing up the **Supabase
+backend** from nothing, so the URL and anon key that page asks for actually exist.
+
+By the end you'll have a Supabase project (hosted or local), a schema with proper
+row-level security, and a Kotlin client talking to it.
+
+<Callout type="info">
+  Two ways to run a backend: a **hosted** project (fastest — Supabase runs it for
+  you) or a **local** stack via the CLI (free, offline, great for development). You
+  can do both and deploy your local schema to the hosted one when ready.
+</Callout>
+
+## 1. Create your project
+
+<Tabs items={['Hosted (dashboard)', 'Local (CLI)']}>
+<Tabs.Tab>
+
+The quickest start — no tools to install:
+
+<Steps>
+### Create the project
+Go to [database.new](https://database.new) (or the [dashboard](https://supabase.com/dashboard)),
+click **New project**, pick an organization, name it, choose a **region close to your
+users**, and set a strong **database password** (save it — you'll need it for
+migrations).
+
+### Wait for it to provision
+Takes a minute or two. When it's ready, the project is live with a Postgres
+database, Auth, Storage and Realtime already running.
+</Steps>
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+Run the full Supabase stack on your machine with Docker — no account needed to start.
+
+<Steps>
+### Install the CLI
+
+```bash
+# macOS / Linux (Homebrew)
+brew install supabase/tap/supabase
+
+# Windows (Scoop)
+scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
+scoop install supabase
+
+# or as a dev dependency in any project
+npm install --save-dev supabase
+```
+
+### Initialize and start
+
+```bash
+supabase init     # creates a supabase/ folder (config, migrations, seed)
+supabase start    # boots the local stack (needs Docker running)
+```
+
+`supabase start` prints your local URLs and keys when it finishes. Stop it later
+with `supabase stop`.
+
+</Steps>
+
+<Callout type="warning">
+  The local stack needs **Docker** running. If `supabase start` hangs or errors,
+  check that Docker Desktop (or your daemon) is up.
+</Callout>
+
+</Tabs.Tab>
+</Tabs>
+
+## 2. Get your URL and keys
+
+These are the two values [Getting Started](/getting-started) needs for
+`Supabase.create(...)`.
+
+<Tabs items={['Hosted', 'Local']}>
+<Tabs.Tab>
+
+In the dashboard: **Project Settings → API**.
+
+- **Project URL** → `https://<ref>.supabase.co`
+- **`anon` `public` key** → your client `apiKey`
+- **`service_role` key** → server-side only (see the warning below)
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+Run `supabase status` (or `supabase status -o env` for shell-ready output):
+
+```bash
+supabase status
+# API URL:    http://127.0.0.1:54321
+# anon key:   eyJhbGciOi...        ← your client apiKey
+# service_role key: eyJhbGciOi...  ← server-side only
+```
+
+On a device/emulator, `127.0.0.1` points at the device itself — use your machine's
+LAN IP (e.g. `http://192.168.1.x:54321`), or `10.0.2.2` for the Android emulator.
+
+</Tabs.Tab>
+</Tabs>
+
+<Callout type="warning">
+  Ship the **anon** key in your app — never the `service_role` key. The anon key is
+  safe to publish because **Row Level Security** decides what each user can access
+  (next step). The service-role key bypasses RLS and belongs only on a trusted
+  server (`supabase-auth-admin`). Never commit it to source.
+</Callout>
+
+## 3. Define your schema with migrations
+
+Don't click tables together by hand — describe them as **migrations** (versioned SQL
+files) so your schema is reproducible and reviewable. Create one:
+
+```bash
+supabase migration new create_todos
+```
+
+That makes a timestamped file under `supabase/migrations/`. Fill it in — a table
+**plus** the RLS policies that make the anon key safe:
+
+```sql filename="supabase/migrations/<timestamp>_create_todos.sql"
+create table todos (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references auth.users (id) default auth.uid(),
+  title      text not null,
+  done       boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+-- Lock the table down, then grant each user access to only their own rows.
+alter table todos enable row level security;
+
+create policy "users read their todos"   on todos for select
+  to authenticated using (auth.uid() = user_id);
+create policy "users insert their todos" on todos for insert
+  to authenticated with check (auth.uid() = user_id);
+create policy "users update their todos" on todos for update
+  to authenticated using (auth.uid() = user_id);
+create policy "users delete their todos" on todos for delete
+  to authenticated using (auth.uid() = user_id);
+```
+
+<Callout type="info">
+  **RLS is your security model.** With it on, the public anon key can't read or
+  write anything a policy doesn't explicitly allow — that's exactly why the anon key
+  is safe to ship. A table with RLS enabled and *no* policies denies everything.
+</Callout>
+
+Apply it:
+
+<Tabs items={['Local', 'Hosted']}>
+<Tabs.Tab>
+
+```bash
+supabase db reset    # re-runs every migration + seed.sql on the local database
+```
+
+Use `supabase migration up` to apply only new migrations without wiping data.
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+Push your migrations to the hosted database (after linking — see step 4):
+
+```bash
+supabase db push
+```
+
+</Tabs.Tab>
+</Tabs>
+
+## 4. Deploy local → hosted
+
+Developed locally and ready to go live? Link your local project to the hosted one,
+then push the schema:
+
+```bash
+supabase login                              # opens a browser to authenticate
+supabase link --project-ref <your-ref>      # the <ref> from your project URL
+supabase db push                            # applies your migrations to the hosted DB
+```
+
+Now the same schema runs in both places, and future changes are just
+`supabase migration new …` → `supabase db push`.
+
+## 5. Connect from your Kotlin app
+
+Add the library and create a client with the URL + anon key from step 2 (full
+walkthrough in [Getting Started](/getting-started)):
+
+```kotlin
+val client = Supabase.create(
+    projectUrl = "https://your-project.supabase.co", // or http://127.0.0.1:54321 locally
+    apiKey = "your-anon-key",
+) {
+    logging = true
+}
+
+val database = createDatabaseClient(client)
+```
+
+Then describe your rows as a `@Serializable` class that mirrors the table — there's
+no code generation step; the typed model *is* the contract:
+
+```kotlin
+@Serializable
+data class Todo(
+    val id: String,
+    val title: String,
+    val done: Boolean,
+)
+
+database.selectTyped<Todo>(table = "todos")
+    .onSuccess { todos -> println("Loaded ${todos.size}") }
+    .onFailure { error -> println("Error: ${error.message}") }
+```
+
+Because RLS scopes rows to the signed-in user, sign a user in first
+([Authentication](/auth)) — otherwise an authenticated-only table returns nothing.
+
+## Recap
+
+<Steps>
+### Backend exists
+A hosted project, or a local stack via `supabase start`.
+
+### Schema is versioned
+Tables + **RLS policies** live in `supabase/migrations/`, applied with
+`supabase db reset` (local) or `supabase db push` (hosted).
+
+### Keys in hand
+Project URL + **anon** key (from the dashboard or `supabase status`); service-role
+key kept off the client.
+
+### App connected
+`Supabase.create(url, anonKey)` → feature clients → typed `@Serializable` calls.
+</Steps>
+
+From here, continue with [Getting Started](/getting-started) for the client rhythm,
+or jump to [Authentication](/auth), [Database](/database) and [Realtime](/realtime).

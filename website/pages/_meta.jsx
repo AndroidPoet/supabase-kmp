@@ -1,6 +1,7 @@
 export default {
   index: 'Introduction',
   'getting-started': 'Getting Started',
+  'project-setup': 'Project Setup',
   configuration: 'Configuration',
   'results-and-errors': 'Results & Errors',
   auth: 'Authentication',
