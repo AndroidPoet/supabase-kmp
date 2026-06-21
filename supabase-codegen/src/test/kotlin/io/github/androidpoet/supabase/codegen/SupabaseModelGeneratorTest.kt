@@ -49,6 +49,21 @@ class SupabaseModelGeneratorTest {
     }
 
     @Test
+    fun nullable_columns_default_to_null_so_partial_selects_decode() {
+        // kotlinx.serialization treats a `T?` WITHOUT a default as REQUIRED (the key must
+        // be present, even if null), so a `select=...` that omits the column throws
+        // MissingFieldException at runtime. Nullable columns must default to null to be
+        // truly optional; required columns must NOT, so the row's presence is enforced.
+        assertContains(generated, "val createdAt: String? = null")
+        assertContains(generated, "val score: Long? = null")
+        assertContains(generated, "val metadata: JsonElement? = null")
+        assertContains(generated, "val priority: PriorityLevel? = null")
+        // Required columns stay non-default.
+        assertFalse("val id: String = null" in generated, "required id must not be optional")
+        assertFalse("val id: String? = null" in generated, "required id must stay non-null")
+    }
+
+    @Test
     fun maps_real_postgrest_integer_formats_to_int_and_long() {
         assertContains(generated, "val rank: Int") // int32 → Int
         assertFalse("val rank: Int?" in generated, "rank is required → must be non-null")

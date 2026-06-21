@@ -10,6 +10,7 @@ import com.squareup.kotlinpoet.INT
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.LIST
 import com.squareup.kotlinpoet.LONG
+import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.STRING
@@ -123,7 +124,14 @@ public object SupabaseModelGenerator {
             val prop = PropertySpec.builder(propName, type).initializer(propName)
             if (propName != columnName) prop.addAnnotation(serialNameOf(columnName))
 
-            ctor.addParameter(propName, type)
+            // A nullable column gets a `= null` default so it is OPTIONAL on the wire.
+            // kotlinx.serialization treats a `T?` WITHOUT a default as required (the key
+            // must be present, even if null), so a partial `select=...` that omits the
+            // column — the common case — would throw MissingFieldException. Required
+            // (NOT NULL) columns stay non-default so the row's presence is still enforced.
+            val param = ParameterSpec.builder(propName, type)
+            if (nullable) param.defaultValue("null")
+            ctor.addParameter(param.build())
             typeBuilder.addProperty(prop.build())
         }
         return typeBuilder.primaryConstructor(ctor.build()).build()

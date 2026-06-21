@@ -18,6 +18,12 @@
 
 ### Fixed
 
+- **Codegen models now decode partial `select=...` responses (nullable columns are optional).**
+  Nullable columns were generated without a default, but kotlinx.serialization treats a `T?` with no
+  default as *required* — the JSON key must be present — so any query that omits a column (every
+  partial `select`, the common case) threw `MissingFieldException` at decode. Nullable columns now
+  default to `null` (truly optional); required (NOT NULL) columns stay non-default so a row's presence
+  is still enforced. Verified by decoding a real partial payload against generated models.
 - **Codegen output now compiles when a schema has enums.** Generated enums were referenced with an
   empty-package name, so KotlinPoet emitted `import <Enum>` from the default package — which Kotlin
   forbids, making the entire generated file fail to compile for any schema containing a Postgres enum.
