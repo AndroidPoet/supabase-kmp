@@ -88,10 +88,22 @@ public object SupabaseModelGenerator {
                 .addModifiers(KModifier.DATA)
                 .addAnnotation(serializable)
 
+        // Two columns can normalise to the same Kotlin property (e.g. `user_id` and `userId`).
+        // That would emit a data class with duplicate properties that doesn't compile, so we fail
+        // fast with an actionable message — mirroring the table- and enum-name collision checks.
+        val claimedProps = mutableMapOf<String, String>()
+
         for ((columnName, column) in definition.properties) {
             val nullable = columnName !in definition.required
             val type = kotlinType(tableName, columnName, column, enums).copy(nullable = nullable)
             val propName = Naming.camel(columnName)
+
+            val clash = claimedProps.put(propName, columnName)
+            check(clash == null) {
+                "Columns `$clash` and `$columnName` in table `$tableName` both map to the Kotlin " +
+                    "property `$propName`. Rename one of the columns (or its exposed name) so the " +
+                    "generated names don't collide."
+            }
 
             val prop = PropertySpec.builder(propName, type).initializer(propName)
             if (propName != columnName) prop.addAnnotation(serialNameOf(columnName))

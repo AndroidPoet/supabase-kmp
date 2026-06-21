@@ -110,6 +110,31 @@ class SupabaseModelGeneratorTest {
     }
 
     @Test
+    fun fails_fast_when_two_columns_collide_on_one_kotlin_property() {
+        // user_id and userId both normalise to the Kotlin property `userId`, which would emit a
+        // data class with two identical properties that doesn't compile. Fail fast instead.
+        val schema =
+            """
+            {
+              "definitions": {
+                "events": {
+                  "required": [],
+                  "properties": {
+                    "user_id": { "format": "int64", "type": "integer" },
+                    "userId":  { "format": "int64", "type": "integer" }
+                  }
+                }
+              }
+            }
+            """.trimIndent()
+        val error =
+            assertFailsWith<IllegalStateException> {
+                SupabaseModelGenerator.generate(schema, packageName = "p")
+            }
+        assertContains(error.message ?: "", "userId")
+    }
+
+    @Test
     fun fails_fast_when_two_tables_collide_on_one_kotlin_name() {
         val schema =
             """

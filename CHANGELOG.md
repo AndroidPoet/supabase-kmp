@@ -11,6 +11,11 @@
 
 ### Fixed
 
+- **Codegen fails fast on colliding column names instead of emitting uncompilable output.** Two
+  columns in one table that normalise to the same Kotlin property (e.g. `user_id` and `userId`)
+  produced a data class with duplicate properties that wouldn't compile. The generator now
+  raises an actionable error naming both columns, matching the existing table- and enum-name
+  collision checks.
 - **`Paginator.refresh()` during an in-flight load no longer leaves the list empty.** Pull-to-
   refresh while a page was still loading reset the state and then called `loadNext()`, but that
   call no-opped against the stale load's `isLoading` flag and the stale result was discarded by
