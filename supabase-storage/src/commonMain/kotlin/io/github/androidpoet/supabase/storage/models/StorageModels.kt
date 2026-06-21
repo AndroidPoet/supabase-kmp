@@ -114,10 +114,15 @@ public data class SignedUrlsRequest(
  * The batch endpoint returns `200 OK` even on partial success — a path that can't be signed
  * (missing object or no access) comes back with `signedURL: null` and an [error] message. Both
  * fields must therefore be nullable, or one unsignable path would fail the decode of the whole batch.
+ *
+ * [path] is likewise optional: some storage-server versions omit the `path` key from batch items
+ * entirely (supabase/storage#353), and storage-js itself types it as `string | null`. Keeping it
+ * required would throw on the whole batch for the very partial-failure case this model exists to
+ * tolerate. The client never reads it, so making it nullable has no call-site impact.
  */
 @Serializable
 public data class SignedUrlItemResponse(
-    @SerialName("path") val path: String,
+    @SerialName("path") val path: String? = null,
     @SerialName("signedURL") val signedUrl: String? = null,
     @SerialName("error") val error: String? = null,
 )

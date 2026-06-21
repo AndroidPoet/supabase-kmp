@@ -1080,19 +1080,19 @@ final class io.github.androidpoet.supabase.storage.models/ObjectSortByRequest { 
 }
 
 final class io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse { // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse|null[0]
-    constructor <init>(kotlin/String, kotlin/String? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.<init>|<init>(kotlin.String;kotlin.String?;kotlin.String?){}[0]
+    constructor <init>(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.<init>|<init>(kotlin.String?;kotlin.String?;kotlin.String?){}[0]
 
     final val error // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.error|{}error[0]
         final fun <get-error>(): kotlin/String? // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.error.<get-error>|<get-error>(){}[0]
     final val path // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.path|{}path[0]
-        final fun <get-path>(): kotlin/String // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.path.<get-path>|<get-path>(){}[0]
+        final fun <get-path>(): kotlin/String? // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.path.<get-path>|<get-path>(){}[0]
     final val signedUrl // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.signedUrl|{}signedUrl[0]
         final fun <get-signedUrl>(): kotlin/String? // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.signedUrl.<get-signedUrl>|<get-signedUrl>(){}[0]
 
-    final fun component1(): kotlin/String // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.component1|component1(){}[0]
+    final fun component1(): kotlin/String? // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.component1|component1(){}[0]
     final fun component2(): kotlin/String? // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.component2|component2(){}[0]
     final fun component3(): kotlin/String? // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.component3|component3(){}[0]
-    final fun copy(kotlin/String = ..., kotlin/String? = ..., kotlin/String? = ...): io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.copy|copy(kotlin.String;kotlin.String?;kotlin.String?){}[0]
+    final fun copy(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ...): io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.copy|copy(kotlin.String?;kotlin.String?;kotlin.String?){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.toString|toString(){}[0]

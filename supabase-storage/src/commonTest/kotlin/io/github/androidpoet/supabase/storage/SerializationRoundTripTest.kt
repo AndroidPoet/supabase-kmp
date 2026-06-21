@@ -145,6 +145,25 @@ class SerializationRoundTripTest {
     }
 
     @Test
+    fun test_signedUrlBatch_decodesWhenPathOmitted() {
+        // Some storage-server versions omit the `path` key from batch items entirely
+        // (supabase/storage#353). A required `path` would throw MissingFieldException and
+        // fail the whole batch decode; it must be optional.
+        val payload =
+            """
+            [
+              { "signedURL": "/object/sign/avatars/ok.png?token=abc", "error": null }
+            ]
+            """.trimIndent()
+
+        val items = json.decodeFromString<List<SignedUrlItemResponse>>(payload)
+
+        assertEquals(1, items.size)
+        assertEquals(null, items[0].path)
+        assertEquals("/object/sign/avatars/ok.png?token=abc", items[0].signedUrl)
+    }
+
+    @Test
     fun test_icebergNamespaceMetadata_decodesWhenNamespaceOmitted() {
         // The metadata response can return only `properties`; a required `namespace`
         // would throw MissingFieldException out of a SupabaseResult-returning call.

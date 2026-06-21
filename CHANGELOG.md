@@ -18,6 +18,13 @@
 
 ### Fixed
 
+- **`createSignedUrls()` no longer fails the whole batch when an item omits `path`.**
+  `SignedUrlItemResponse.path` was required, but some storage-server versions omit the `path` key
+  from batch items entirely (supabase/storage#353), and `storage-js` types it as nullable. A single
+  item missing `path` threw `MissingFieldException` and failed the decode of the entire batch — the
+  exact partial-failure case the response is designed to tolerate (it already returns `200` with
+  `signedURL: null` for unsignable paths). `path` is now optional; the client never reads it, so
+  there is no call-site impact.
 - **`generateLink()` now decodes the server's response (was throwing on every call).** GoTrue returns
   a *flat* object — `models.User` fields plus top-level `action_link`/`email_otp`/`hashed_token`/
   `redirect_to`/`verification_type` — but the SDK expected a `{ properties, user }` envelope, so every
