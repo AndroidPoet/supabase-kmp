@@ -3,14 +3,14 @@ package io.github.androidpoet.supabase.codegen.gradle
 import io.github.androidpoet.supabase.codegen.SchemaFetcher
 import io.github.androidpoet.supabase.codegen.SupabaseModelGenerator
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Configures [the generate task][GenerateSupabaseModelsTask]. Add a `supabaseCodegen { }`
@@ -49,32 +49,40 @@ public abstract class SupabaseCodegenExtension {
  * an on-demand task — it is deliberately NOT wired into `compileKotlin`, because the schema
  * lives behind the network and needs a key, and you don't want either on every build. Run it
  * when your schema changes (and commit the result, the way `supabase gen types` is used).
+ *
+ * Everything is `@Internal`: this is a side-effecting command whose real input (the remote
+ * schema) Gradle can't observe, so tracking inputs/outputs would only add footguns — notably
+ * an `@OutputDirectory` pointed at a hand-written source dir would clash with the Kotlin
+ * compile's source set. Keeping properties internal also lets the action raise its own clear
+ * errors instead of Gradle's generic "no value" validation firing first.
  */
+@DisableCachingByDefault(because = "Fetches a remote schema over the network; always regenerates")
 public abstract class GenerateSupabaseModelsTask : DefaultTask() {
-    @get:Input
+    @get:Internal
     public abstract val url: Property<String>
 
-    // The key is a secret, so it is kept out of the task input snapshot (no caching to disk).
     @get:Internal
     public abstract val key: Property<String>
 
-    @get:Input
+    @get:Internal
     public abstract val packageName: Property<String>
 
-    @get:Input
+    @get:Internal
     public abstract val fileName: Property<String>
 
-    @get:OutputDirectory
+    @get:Internal
     public abstract val outputDir: DirectoryProperty
 
     @TaskAction
     public fun generate() {
         val projectUrl =
             url.orNull?.takeIf { it.isNotBlank() }
-                ?: error("supabaseCodegen.url is not set (or export SUPABASE_URL).")
+                ?: throw GradleException("supabaseCodegen.url is not set (or export SUPABASE_URL).")
         val apiKey =
             key.orNull?.takeIf { it.isNotBlank() }
-                ?: error("supabaseCodegen.key is not set (or export SUPABASE_KEY). Use a key that can read your tables.")
+                ?: throw GradleException(
+                    "supabaseCodegen.key is not set (or export SUPABASE_KEY). Use a key that can read your tables.",
+                )
         val pkg = packageName.get()
         val file = fileName.get()
 
