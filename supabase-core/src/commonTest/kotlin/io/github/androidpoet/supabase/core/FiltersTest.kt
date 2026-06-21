@@ -271,6 +271,43 @@ class FiltersTest {
     }
 
     @Test
+    fun test_order_multipleColumns_mergeIntoSingleParam() {
+        // PostgREST wants one comma-joined order param; repeated order= params drop all
+        // but one column, so successive order() calls must accumulate into a single pair.
+        val result =
+            filters {
+                order("created_at", ascending = false)
+                order("name")
+            }
+        assertEquals(listOf("order" to "created_at.desc,name.asc"), result)
+    }
+
+    @Test
+    fun test_order_enum_multipleColumns_mergeIntoSingleParam() {
+        val result =
+            filters {
+                order("created_at", OrderDirection.DESCENDING, NullsPlacement.LAST)
+                order("name", OrderDirection.ASCENDING)
+            }
+        assertEquals(listOf("order" to "created_at.desc.nullslast,name.asc"), result)
+    }
+
+    @Test
+    fun test_order_differentReferencedTables_stayInSeparateParams() {
+        // Terms scoped to different resources keep their own order keys.
+        val result =
+            filters {
+                order("a")
+                order("b", referencedTable = "profiles")
+                order("c")
+            }
+        assertEquals(
+            listOf("order" to "a.asc,c.asc", "profiles.order" to "b.asc"),
+            result,
+        )
+    }
+
+    @Test
     fun test_limit_producesCorrectParam() {
         val result = filters { limit(25) }
         assertEquals(listOf("limit" to "25"), result)

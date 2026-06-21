@@ -555,7 +555,7 @@ public class FilterBuilder {
                 null -> ""
             }
         val key = if (referencedTable == null) "order" else "$referencedTable.order"
-        params += key to "$column.$dir$nulls"
+        appendOrder(key, "$column.$dir$nulls")
     }
 
     /**
@@ -576,7 +576,24 @@ public class FilterBuilder {
     ) {
         val nullsPart = if (nulls != null) ".${nulls.postgrestName}" else ""
         val key = if (referencedTable == null) "order" else "$referencedTable.order"
-        params += key to "$column.${direction.postgrestName}$nullsPart"
+        appendOrder(key, "$column.${direction.postgrestName}$nullsPart")
+    }
+
+    /**
+     * Accumulates an order term into a SINGLE `order` (or `<table>.order`) parameter,
+     * comma-joining successive [order] calls. PostgREST expects multi-column ordering
+     * as one comma-separated `order` value (`order=a.desc,b.asc`) and honours only one
+     * of several repeated `order=` params — so emitting a separate pair per call would
+     * silently drop every sort column but one. Terms scoped to different referenced
+     * tables keep their own keys.
+     */
+    private fun appendOrder(key: String, term: String) {
+        val index = params.indexOfFirst { it.first == key }
+        if (index >= 0) {
+            params[index] = key to "${params[index].second},$term"
+        } else {
+            params += key to term
+        }
     }
 
     /**

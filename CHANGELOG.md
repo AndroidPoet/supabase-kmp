@@ -4,6 +4,11 @@
 
 ### Fixed
 
+- **Multi-column `order()` no longer silently drops sort columns.** Each `order(...)` call
+  emitted its own `order=` query parameter, but PostgREST expects multi-column ordering as a
+  single comma-joined value (`order=a.desc,b.asc`) and honours only one of several repeated
+  `order=` params — so `order("a"); order("b")` sorted by only one column. Successive `order`
+  calls now accumulate into one parameter (per referenced table), matching PostgREST.
 - **Edge Function SSE streaming: the last-event-id now persists across events.** The
   `invokeSSE` parser reset the id on every event, so a streamed event that omitted `id:`
   reported `null` instead of inheriting the most recent id (the browser
