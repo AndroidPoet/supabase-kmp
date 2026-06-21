@@ -22,6 +22,7 @@ dokka = "1.9.20"
 spotless = "8.7.0"
 ktlint = "1.5.0"
 passkeys = "0.1.0"
+kotlinpoet = "1.18.1"
 
 [libraries]
 passkeys = { module = "io.github.androidpoet:passkeys", version.ref = "passkeys" }
@@ -43,6 +44,8 @@ ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+
+kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
 
 cryptography-random = { module = "dev.whyoleg.cryptography:cryptography-random", version.ref = "cryptography" }
 cryptography-core = { module = "dev.whyoleg.cryptography:cryptography-core", version.ref = "cryptography" }
