@@ -160,6 +160,35 @@ class SupabaseModelGeneratorTest {
     }
 
     @Test
+    fun fails_fast_when_a_table_and_an_enum_collide_on_one_kotlin_name() {
+        // Table `order_status` → `class OrderStatus`; a column whose Postgres enum type
+        // is `order_status` → `enum class OrderStatus`. Both are top-level types in one
+        // file, so without a cross-check they emit a redeclaration that won't compile.
+        val schema =
+            """
+            {
+              "definitions": {
+                "order_status": {
+                  "required": [],
+                  "properties": { "id": { "format": "uuid", "type": "string" } }
+                },
+                "orders": {
+                  "required": [],
+                  "properties": {
+                    "status": { "format": "public.order_status", "type": "string", "enum": ["open", "closed"] }
+                  }
+                }
+              }
+            }
+            """.trimIndent()
+        val error =
+            assertFailsWith<IllegalStateException> {
+                SupabaseModelGenerator.generate(schema, packageName = "p")
+            }
+        assertContains(error.message ?: "", "OrderStatus")
+    }
+
+    @Test
     fun fails_fast_when_two_tables_collide_on_one_kotlin_name() {
         val schema =
             """

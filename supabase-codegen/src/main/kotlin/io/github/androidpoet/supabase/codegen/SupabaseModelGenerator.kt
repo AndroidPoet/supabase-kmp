@@ -66,6 +66,20 @@ public object SupabaseModelGenerator {
             tables += buildDataClass(className, tableName, definition, enums)
         }
 
+        // Enums and table data classes are all emitted as top-level types in one file,
+        // so a table and an enum that normalise to the same Kotlin name (e.g. table
+        // `order_status` and Postgres enum `order_status`) would emit two declarations
+        // with the same name that don't compile. Fail fast, mirroring the table/column/
+        // enum-name collision checks.
+        for (enumName in enums.keys) {
+            val tableName = claimedNames[enumName]
+            check(tableName == null) {
+                "Postgres enum `$enumName` and table `$tableName` both map to the Kotlin type " +
+                    "`$enumName`. Rename one of them (or its exposed name) so the generated " +
+                    "names don't collide."
+            }
+        }
+
         val file =
             FileSpec
                 .builder(packageName, fileName)

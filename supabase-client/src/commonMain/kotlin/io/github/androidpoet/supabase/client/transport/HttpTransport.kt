@@ -561,9 +561,13 @@ internal class HttpTransport(
         // Prefer the textual machine code. Legacy GoTrue puts the numeric HTTP
         // status in `code` and the real string code in `error_code`, so reading
         // `error_code` first surfaces e.g. "weak_password" instead of "400".
-        // PostgREST (only `code`, the SQLSTATE) and new GoTrue/Storage (string
-        // `code`) are unaffected since they don't send `error_code`.
-        val code = str("error_code", "code", "statusCode")
+        // Storage puts its string code (e.g. "NoSuchKey", "InvalidMimeType") in
+        // `error` and only a numeric `statusCode`, so `error` is read before
+        // `statusCode` — otherwise the code became "404" and every Storage code-set
+        // match (and isFileNotFound()) was dead. `error` is read after `code` so a
+        // real PostgREST/new-GoTrue `code` still wins. PostgREST (SQLSTATE in `code`)
+        // and new GoTrue (string `code`) are unaffected.
+        val code = str("error_code", "code", "error", "statusCode")
 
         return SupabaseError(
             message = message,

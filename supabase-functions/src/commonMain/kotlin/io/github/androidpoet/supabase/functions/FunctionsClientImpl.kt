@@ -24,7 +24,7 @@ internal class FunctionsClientImpl(
         headers: Map<String, String>,
         region: FunctionRegion?,
     ): SupabaseResult<String> {
-        val endpoint = "${FunctionsPaths.BASE}/$functionName"
+        val endpoint = endpointFor(functionName, region)
         val merged = buildHeaders(headers, region)
         // GET requests carry no body, so a request body and its Content-Type are
         // meaningless; dispatch a bodyless GET and ignore any supplied body.
@@ -59,7 +59,7 @@ internal class FunctionsClientImpl(
     ): SupabaseResult<String> {
         // postRaw/putRaw already prepend projectUrl (see SupabaseClientImpl);
         // pass a relative path or the project URL is duplicated.
-        val url = "${FunctionsPaths.BASE}/$functionName"
+        val url = endpointFor(functionName, region)
         val merged = buildHeaders(headers, region)
         return when (method) {
             FunctionMethod.PUT -> client.putRaw(url = url, body = body, contentType = contentType, headers = merged)
@@ -79,12 +79,30 @@ internal class FunctionsClientImpl(
         val merged = buildHeaders(headers, region)
         val lines =
             client.streamLines(
-                endpoint = "${FunctionsPaths.BASE}/$functionName",
+                endpoint = endpointFor(functionName, region),
                 body = body,
                 contentType = contentType,
                 headers = merged,
             )
         return parseServerSentEvents(lines)
+    }
+
+    // A pinned region is sent BOTH as the `x-region` header (see buildHeaders) and as
+    // the `forceFunctionRegion` query param, matching functions-js — the gateway treats
+    // the query param as the authoritative routing override, so the header alone leaves
+    // the pin weaker than the reference client. ANY means "no pin", so the param is
+    // omitted. Region values are AWS-style codes (alphanumeric + hyphen), so they need
+    // no percent-encoding.
+    private fun endpointFor(
+        functionName: String,
+        region: FunctionRegion?,
+    ): String {
+        val base = "${FunctionsPaths.BASE}/$functionName"
+        return if (region != null && region != FunctionRegion.ANY) {
+            "$base?forceFunctionRegion=${region.value}"
+        } else {
+            base
+        }
     }
 
     private fun buildHeaders(

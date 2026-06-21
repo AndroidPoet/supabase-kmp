@@ -452,7 +452,7 @@ internal class RealtimeClientImpl(
             }
         for ((index, message) in pending.withIndex()) {
             try {
-                current.send(Frame.Text(json.encodeToString(message)))
+                current.send(Frame.Text(json.encodeToString(restampJoinRef(message))))
             } catch (e: Throwable) {
                 if (e is CancellationException) throw e
                 // The socket died mid-flush. Re-buffer everything we haven't sent yet
@@ -464,6 +464,17 @@ internal class RealtimeClientImpl(
                 return
             }
         }
+    }
+
+    // A buffered broadcast/presence push captured its channel's joinRef when it was
+    // enqueued (while disconnected). The reconnect rejoins each channel with a FRESH
+    // joinRef before this flush runs, so replaying the push with the stale joinRef
+    // makes the server drop it as a stale-channel message. Re-stamp it with the
+    // channel's current joinRef (looked up by topic). Messages for a channel that's
+    // since been removed, or already carrying the current ref, pass through unchanged.
+    private fun restampJoinRef(message: RealtimeMessage): RealtimeMessage {
+        val current = synchronized(subscriptionsLock) { activeSubscriptions[message.topic]?.joinRef }
+        return if (current != null && current != message.joinRef) message.copy(joinRef = current) else message
     }
 
     // Single teardown path for the live socket and its read-loop/heartbeat scope, so

@@ -224,6 +224,10 @@ private fun categorizeByStatus(status: Int?): SupabaseErrorCategory =
         // Satisfiable are request-shape problems, so they map to Validation too.
         400, 406, 416, 422 -> SupabaseErrorCategory.Validation
         429 -> SupabaseErrorCategory.RateLimited
+        // 408 Request Timeout and 425 Too Early are transient: treat them like a
+        // server-side hiccup (Internal) so they're retryable and the session
+        // transient-failure guard doesn't sign the user out on a fluke timeout.
+        408, 425 -> SupabaseErrorCategory.Internal
         in 500..599 -> SupabaseErrorCategory.Internal
         else -> SupabaseErrorCategory.Unknown
     }

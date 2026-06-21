@@ -9,7 +9,7 @@ import kotlin.test.assertTrue
 
 class FunctionsClientImplTest {
     @Test
-    fun test_invoke_withRegion_setsRegionHeader() =
+    fun test_invoke_withRegion_setsRegionHeaderAndQueryParam() =
         runTest {
             val fake = FakeSupabaseClient()
             val sut = FunctionsClientImpl(fake)
@@ -22,8 +22,26 @@ class FunctionsClientImplTest {
                 )
 
             assertTrue(result is SupabaseResult.Success)
-            assertEquals("/functions/v1/hello", fake.lastPostEndpoint)
+            // A pinned region is sent both as the x-region header AND the
+            // forceFunctionRegion query param (the authoritative routing override),
+            // matching functions-js.
+            assertEquals("/functions/v1/hello?forceFunctionRegion=ap-southeast-1", fake.lastPostEndpoint)
             assertEquals("ap-southeast-1", fake.lastPostHeaders["x-region"])
+        }
+
+    @Test
+    fun test_invoke_withoutRegion_omitsForceFunctionRegionParam() =
+        runTest {
+            val fake = FakeSupabaseClient()
+            val sut = FunctionsClientImpl(fake)
+
+            sut.invoke(functionName = "hello", body = """{"a":1}""")
+            assertEquals("/functions/v1/hello", fake.lastPostEndpoint)
+
+            // ANY means "no pin": no header and no query param.
+            sut.invoke(functionName = "hello", body = """{"a":1}""", region = FunctionRegion.ANY)
+            assertEquals("/functions/v1/hello", fake.lastPostEndpoint)
+            assertTrue(fake.lastPostHeaders["x-region"] == null)
         }
 
     @Test

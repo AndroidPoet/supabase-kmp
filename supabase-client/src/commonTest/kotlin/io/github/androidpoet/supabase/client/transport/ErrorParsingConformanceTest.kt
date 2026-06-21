@@ -4,6 +4,7 @@ import io.github.androidpoet.supabase.client.SupabaseConfig
 import io.github.androidpoet.supabase.core.result.SupabaseErrorCategory
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.core.result.category
+import io.github.androidpoet.supabase.core.result.isFileNotFound
 import io.github.androidpoet.supabase.core.result.isRetryable
 import io.ktor.client.engine.mock.respond
 import io.ktor.http.HttpStatusCode
@@ -118,6 +119,34 @@ class ErrorParsingConformanceTest {
             assertEquals("NoSuchKey", error.code)
             assertEquals("Object not found", error.message)
             assertEquals(SupabaseErrorCategory.NotFound, error.category)
+        }
+
+    @Test
+    fun test_storage_realShape_extractsStringCodeFromErrorField() =
+        runTest {
+            // The Storage server's actual error shape puts the string code in `error`
+            // and only a numeric `statusCode` — NOT a string `code`. Reading only
+            // `code`/`statusCode` set the code to "404", so isFileNotFound() and every
+            // Storage code-set match were dead.
+            val error =
+                errorFor(
+                    HttpStatusCode.NotFound,
+                    """{"statusCode":"404","error":"NoSuchKey","message":"Object not found"}""",
+                )
+            assertEquals("NoSuchKey", error.code)
+            assertEquals("Object not found", error.message)
+            assertTrue(error.isFileNotFound())
+            assertEquals(SupabaseErrorCategory.NotFound, error.category)
+        }
+
+    @Test
+    fun test_requestTimeout408_mapsInternalAndIsRetryable() =
+        runTest {
+            // 408 is transient: it must be retryable and must NOT collapse to Unknown,
+            // or the session transient-failure guard could sign the user out on a fluke.
+            val error = errorFor(HttpStatusCode.RequestTimeout, "")
+            assertEquals(SupabaseErrorCategory.Internal, error.category)
+            assertTrue(error.category.isRetryable)
         }
 
     @Test

@@ -18,6 +18,29 @@
 
 ### Fixed
 
+- **Storage error codes are now surfaced (`isFileNotFound()` and Storage code matching work).** The
+  error parser read the machine code only from `error_code`/`code`/`statusCode`, but the Storage
+  server puts its string code (e.g. `NoSuchKey`, `InvalidMimeType`, `Throttling`) in an `error` field
+  and sends only a numeric `statusCode` — so `SupabaseError.code` became `"404"`, `isFileNotFound()`
+  never returned true, and every Storage code-set categorisation was dead (it survived only via the
+  HTTP-status fallback). The `error` field is now read (after `code`, before `statusCode`).
+- **Transient `408`/`425` responses are no longer miscategorised as non-retryable.** They fell through
+  to `Unknown` (not retryable), which the session transient-failure guard could treat as a hard
+  failure and sign the user out on. They now map to `Internal` (retryable), like other transient
+  server conditions.
+- **Codegen fails fast when a table and a Postgres enum map to the same Kotlin type name.** A table
+  `order_status` and an enum type `order_status` both emit a top-level `OrderStatus` declaration in
+  one file, which doesn't compile. The generator now raises an actionable error, completing the
+  table/column/enum collision checks with the missing table-vs-enum case.
+- **Edge Functions region pinning now sends `forceFunctionRegion` too.** A pinned `FunctionRegion`
+  was sent only as the `x-region` header; the gateway treats the `forceFunctionRegion` query param as
+  the authoritative routing override, so the pin was weaker than intended. Both are now sent (matching
+  functions-js); `ANY` still sends neither.
+- **Realtime no longer drops buffered broadcasts replayed after a reconnect.** A broadcast enqueued
+  while disconnected captured its channel's `join_ref` at enqueue time, but the reconnect rejoins each
+  channel with a fresh `join_ref` before the buffer flushes — so the server dropped the replayed push
+  as a stale-channel message. Buffered pushes are now re-stamped with the channel's current `join_ref`
+  at flush time.
 - **Bulk insert/upsert now quotes column names so unusual identifiers survive PostgREST parsing.**
   The `columns=` hint (sent on multi-row inserts and whenever a column set is supplied or derived)
   joined the names raw, so an identifier with a reserved char (comma, parenthesis), whitespace, mixed
