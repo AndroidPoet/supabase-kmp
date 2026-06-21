@@ -109,6 +109,37 @@ class SessionManagerImplTest {
         }
 
     @Test
+    fun test_restoreSession_transientFailure_keepsStoredSessionAuthenticated() =
+        runTest {
+            val client = SessionFakeSupabaseClient()
+            val manager =
+                SessionManagerImpl(
+                    authClient = AuthClientImpl(client),
+                    supabaseClient = client,
+                    storage = FakeSessionStorage(storedSession = staleSession),
+                    autoRefresh = false,
+                )
+            try {
+                // Offline app launch: the refresh kicked off by restore fails with a
+                // transient (network/5xx) error before any session is in memory.
+                client.nextPostFailure = SupabaseError(message = "offline", httpStatus = 503)
+
+                val result = manager.restoreSession()
+
+                // The persisted refresh token is still valid, so a transient failure
+                // during restore must NOT sign the user out — adopt the stored session
+                // instead of dropping to Expired.
+                assertTrue(result is SupabaseResult.Failure)
+                val state = manager.sessionState.value
+                assertTrue(state is SessionState.Authenticated)
+                assertEquals("stale-acc", state.session.accessToken)
+                assertEquals("Bearer stale-acc", client.accessTokenHeader)
+            } finally {
+                manager.close()
+            }
+        }
+
+    @Test
     fun test_refreshFailure_terminal_expiresSession() =
         runTest {
             val client = SessionFakeSupabaseClient()

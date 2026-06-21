@@ -10,6 +10,13 @@
   now negotiates Realtime **Protocol 2.0.0** (`vsn=2.0.0`): text frames use the array form
   `[join_ref, ref, topic, event, payload]` (new internal `RealtimeMessageSerializer`) and the
   binary frames that carry binary broadcast share the same transport. No public API change.
+- **Offline app launch no longer signs the user out.** When restoring a persisted session,
+  a transient refresh failure (offline, 5xx, 429) dropped the session straight to `Expired`,
+  because the keep-session guard only fired when a session was already in memory — during
+  restore there isn't one yet. Restore now adopts the stored session (it stays
+  `Authenticated`) and schedules a retry, matching the existing behaviour for a transient
+  failure on an already-active session. The refresh token is still valid in this case, so
+  the user keeps their session and recovers automatically when connectivity returns.
 
 ## 0.9.1 — 2026-06-21
 

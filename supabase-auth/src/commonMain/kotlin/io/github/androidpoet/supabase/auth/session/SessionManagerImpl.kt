@@ -148,7 +148,16 @@ internal class SessionManagerImpl(
                             SupabaseErrorCategory.Internal,
                             SupabaseErrorCategory.RateLimited,
                         )
-                if (transient && currentSession != null) {
+                if (transient) {
+                    // A transient failure (offline, 5xx, 429) leaves the refresh token
+                    // valid, so keep the session and retry. This must also cover restore:
+                    // there is no currentSession yet, but the session being restored is
+                    // still usable, so adopt it here instead of dropping to Expired — that
+                    // is what lets an offline app launch stay logged in.
+                    if (currentSession == null) {
+                        _sessionState.value = SessionState.Authenticated(session)
+                        supabaseClient.setAccessToken(session.accessToken)
+                    }
                     scheduleTransientRetry()
                 } else {
                     _sessionState.value = SessionState.Expired(session)
