@@ -18,6 +18,12 @@
 
 ### Fixed
 
+- **Bulk insert/upsert now quotes column names so unusual identifiers survive PostgREST parsing.**
+  The `columns=` hint (sent on multi-row inserts and whenever a column set is supplied or derived)
+  joined the names raw, so an identifier with a reserved char (comma, parenthesis), whitespace, mixed
+  case, or a reserved word (e.g. `order`, `userId`) was mis-parsed or case-folded — silently dropping
+  or misrouting that column. Each name is now double-quoted before joining, matching postgrest-js.
+  Plain `snake_case` columns (the common case) are unaffected.
 - **Realtime presence no longer reports a false leave when a member is still connected.** Presence
   stored a single meta per key and removed the whole key on any `presence_diff` leave, so a member
   tracked from two connections (two tabs/devices, or a shared presence key) vanished from

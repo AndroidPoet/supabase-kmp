@@ -76,7 +76,24 @@ class DatabaseClientImplTest {
                 )
             }
 
-            assertEquals("/rest/v1/messages?columns=id%2Cname", client.lastPostEndpoint)
+            // Each column name is double-quoted (%22) then comma-joined, matching postgrest-js,
+            // so reserved-char/mixed-case identifiers survive PostgREST parsing.
+            assertEquals("/rest/v1/messages?columns=%22id%22%2C%22name%22", client.lastPostEndpoint)
+        }
+
+    @Test
+    fun test_insert_quotesReservedAndMixedCaseColumnNames() =
+        runTest {
+            val client = FakeSupabaseClient()
+            val sut = DatabaseClientImpl(client)
+
+            // `order` is a SQL reserved word and `userId` is mixed-case; without the
+            // surrounding double quotes PostgREST would mis-parse/case-fold them.
+            runSuspend {
+                sut.insert(table = "messages", body = "{}", columns = listOf("order", "userId"))
+            }
+
+            assertEquals("/rest/v1/messages?columns=%22order%22%2C%22userId%22", client.lastPostEndpoint)
         }
 
     @Test
@@ -95,7 +112,7 @@ class DatabaseClientImplTest {
                 )
             }
 
-            assertEquals("/rest/v1/messages?columns=a%2Cb", client.lastPostEndpoint)
+            assertEquals("/rest/v1/messages?columns=%22a%22%2C%22b%22", client.lastPostEndpoint)
         }
 
     @Test

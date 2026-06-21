@@ -166,7 +166,13 @@ internal class DatabaseClientImpl(
         val endpoint =
             buildEndpoint("${DatabasePaths.BASE}/$safeTable") {
                 if (onConflict != null) add("on_conflict" to onConflict)
-                if (effectiveColumns.isNotEmpty()) add("columns" to effectiveColumns.joinToString(","))
+                // Double-quote each column name so identifiers with reserved chars (comma,
+                // parenthesis), whitespace, mixed case, or reserved words survive PostgREST's
+                // parsing — matching postgrest-js, which quotes every name before joining. The
+                // quotes and separators are percent-encoded on the wire by the query builder.
+                if (effectiveColumns.isNotEmpty()) {
+                    add("columns" to effectiveColumns.joinToString(",") { "\"$it\"" })
+                }
             }
         val requestHeaders =
             headers +
