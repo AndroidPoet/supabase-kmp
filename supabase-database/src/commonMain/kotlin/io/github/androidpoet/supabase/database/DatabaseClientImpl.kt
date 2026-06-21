@@ -336,12 +336,18 @@ internal class DatabaseClientImpl(
                     }
                 }
         if (head) {
+            // A head RPC is still an HTTP POST, so the request schema is selected by
+            // Content-Profile (isReadRequest = false) — PostgREST ignores Accept-Profile
+            // on a POST — and the JSON/custom body needs its Content-Type, exactly like
+            // the non-head path. Only the response body is discarded (count comes back in
+            // the Prefer/Content-Range path).
             val result =
                 client.post(
                     endpoint = endpoint,
                     body = params,
                     headers =
-                        addSchemaHeaders(requestHeaders, safeSchema, isReadRequest = true) +
+                        addSchemaHeaders(requestHeaders, safeSchema, isReadRequest = false) +
+                            contentTypeHeaders(contentType) +
                             ("Accept" to acceptHeader(single, csv, stripNulls, explain)),
                 )
             return when (result) {

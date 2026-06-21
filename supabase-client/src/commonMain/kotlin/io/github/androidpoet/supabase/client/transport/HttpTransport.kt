@@ -195,7 +195,7 @@ internal class HttpTransport(
             resolveBearer = { if (outgoingHeaders.hasAuthorization()) null else resolveBearerToken() },
         ) { _, bearer ->
             httpClient.post(url) {
-                contentType(ContentType.Application.Json)
+                if (!outgoingHeaders.hasContentType()) contentType(ContentType.Application.Json)
                 body?.let { setBody(it) }
                 outgoingHeaders.forEach { (k, v) -> header(k, v) }
                 if (!outgoingHeaders.hasAuthorization()) {
@@ -265,7 +265,7 @@ internal class HttpTransport(
             resolveBearer = { if (outgoingHeaders.hasAuthorization()) null else resolveBearerToken() },
         ) { _, bearer ->
             httpClient.put(url) {
-                contentType(ContentType.Application.Json)
+                if (!outgoingHeaders.hasContentType()) contentType(ContentType.Application.Json)
                 body?.let { setBody(it) }
                 outgoingHeaders.forEach { (k, v) -> header(k, v) }
                 if (!outgoingHeaders.hasAuthorization()) {
@@ -287,7 +287,7 @@ internal class HttpTransport(
             resolveBearer = { if (outgoingHeaders.hasAuthorization()) null else resolveBearerToken() },
         ) { _, bearer ->
             httpClient.patch(url) {
-                contentType(ContentType.Application.Json)
+                if (!outgoingHeaders.hasContentType()) contentType(ContentType.Application.Json)
                 body?.let { setBody(it) }
                 outgoingHeaders.forEach { (k, v) -> header(k, v) }
                 if (!outgoingHeaders.hasAuthorization()) {
@@ -481,6 +481,13 @@ internal class HttpTransport(
     // a lowercased `authorization` isn't missed, which would otherwise cause the
     // SDK to inject a second `Authorization` header.
     private fun Map<String, String>.hasAuthorization(): Boolean = keys.any { it.equals("Authorization", ignoreCase = true) }
+
+    // A caller-supplied Content-Type must win over the JSON default: Ktor's
+    // `contentType()` sets the header and a later `header("Content-Type", …)` only
+    // appends a second value, and the String body transformer reads the FIRST value
+    // — so unconditionally defaulting to JSON would silently send a CSV/custom body
+    // as application/json. Apply the default only when the caller didn't set one.
+    private fun Map<String, String>.hasContentType(): Boolean = keys.any { it.equals("Content-Type", ignoreCase = true) }
 
     // A request that throws (rather than returning a response) never reached a
     // usable server response: offline, DNS/TLS failure, connection refused, or a

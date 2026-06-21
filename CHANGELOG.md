@@ -4,6 +4,17 @@
 
 ### Fixed
 
+- **Custom request `Content-Type` is no longer overridden with `application/json`.** The
+  transport unconditionally set `Content-Type: application/json` and then *appended* the
+  caller's header; because Ktor's String-body transformer reads the first `Content-Type`
+  value, a caller-supplied type was silently dropped. This broke every non-JSON write — a
+  `text/csv` bulk insert (`insertCsv`-style) or CSV/scalar `rpc` was sent as JSON and rejected
+  by PostgREST. The JSON default now applies only when the caller didn't set a `Content-Type`,
+  so custom types are honoured (JSON requests are unchanged).
+- **`rpc(head = true)` now selects a non-default schema correctly.** A head RPC is an HTTP
+  POST, but it sent the schema in `Accept-Profile`, which PostgREST only reads on GET/HEAD —
+  so a head-count RPC in a non-`public` schema resolved against the wrong schema. It now uses
+  `Content-Profile` (and sends the body's `Content-Type`), matching the non-head RPC path.
 - **Realtime binary broadcast now works against a live server.** The client connected with
   `vsn=1.0.0`, which the server routes to its stock V1 JSON serializer — that has no support
   for the binary broadcast frames (kinds 3/4), so the feature was inert end-to-end. The client

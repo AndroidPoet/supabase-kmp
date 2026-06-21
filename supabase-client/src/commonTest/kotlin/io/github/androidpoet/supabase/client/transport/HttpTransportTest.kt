@@ -72,6 +72,77 @@ class HttpTransportTest {
         }
 
     @Test
+    fun test_post_callerContentTypeOverridesJsonDefault() =
+        runTest {
+            var sentContentType: String? = null
+            val transport =
+                HttpTransport(
+                    config =
+                        SupabaseConfig(
+                            logging = false,
+                            logLevel = io.ktor.client.plugins.logging.LogLevel.NONE,
+                            headers = emptyMap(),
+                        ),
+                    engineFactory =
+                        TestMockEngineFactory { request ->
+                            sentContentType = request.body.contentType?.toString()
+                            respond(
+                                content = "{}",
+                                status = HttpStatusCode.OK,
+                                headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                            )
+                        },
+                    projectUrl = "https://example.supabase.co",
+                    apiKey = "anon",
+                )
+
+            transport.post(
+                url = "https://example.supabase.co/rest/v1/data",
+                body = "id,name\n1,a",
+                headers = mapOf("Content-Type" to "text/csv"),
+            )
+
+            // A CSV bulk insert passes Content-Type: text/csv. The transport must honour it
+            // and not force application/json, or PostgREST rejects the body. (Ktor appends a
+            // charset for text bodies, which is fine — assert on the media type.)
+            assertEquals("text/csv", sentContentType?.substringBefore(';')?.trim())
+        }
+
+    @Test
+    fun test_post_defaultsToJsonWhenCallerOmitsContentType() =
+        runTest {
+            var sentContentType: String? = null
+            val transport =
+                HttpTransport(
+                    config =
+                        SupabaseConfig(
+                            logging = false,
+                            logLevel = io.ktor.client.plugins.logging.LogLevel.NONE,
+                            headers = emptyMap(),
+                        ),
+                    engineFactory =
+                        TestMockEngineFactory { request ->
+                            sentContentType = request.body.contentType?.toString()
+                            respond(
+                                content = "{}",
+                                status = HttpStatusCode.OK,
+                                headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                            )
+                        },
+                    projectUrl = "https://example.supabase.co",
+                    apiKey = "anon",
+                )
+
+            transport.post(
+                url = "https://example.supabase.co/rest/v1/data",
+                body = "{}",
+                headers = emptyMap(),
+            )
+
+            assertEquals("application/json", sentContentType?.substringBefore(';'))
+        }
+
+    @Test
     fun test_get_typedIOExceptionMapsToConnectionFailed() =
         runTest {
             val transport =
