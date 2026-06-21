@@ -76,6 +76,15 @@ class SupabaseModelGeneratorTest {
         assertContains(generated, "LOW")
         assertContains(generated, "HIGH")
         assertContains(generated, "val priority: PriorityLevel?")
+        // The enum lives in the SAME file/package, so it must be referenced directly,
+        // never imported. An empty-package ClassName made KotlinPoet emit
+        // `import PriorityLevel` from the default package, which Kotlin forbids — the
+        // whole generated file then failed to compile. Guard against that regression.
+        assertFalse(
+            "import PriorityLevel" in generated,
+            "enum must not be imported from the default package (uncompilable)",
+        )
+        assertFalse("import com.example.db.PriorityLevel" in generated, "same-package enum must not be self-imported")
     }
 
     @Test

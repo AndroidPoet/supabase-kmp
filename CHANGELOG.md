@@ -18,6 +18,10 @@
 
 ### Fixed
 
+- **Codegen output now compiles when a schema has enums.** Generated enums were referenced with an
+  empty-package name, so KotlinPoet emitted `import <Enum>` from the default package — which Kotlin
+  forbids, making the entire generated file fail to compile for any schema containing a Postgres enum.
+  Enums are now referenced with the file's own package (no import), and the generated source compiles.
 - **Storage error codes are now surfaced (`isFileNotFound()` and Storage code matching work).** The
   error parser read the machine code only from `error_code`/`code`/`statusCode`, but the Storage
   server puts its string code (e.g. `NoSuchKey`, `InvalidMimeType`, `Throttling`) in an `error` field

@@ -63,7 +63,7 @@ public object SupabaseModelGenerator {
                 "Tables `$clash` and `$tableName` both map to the Kotlin class `$className`. " +
                     "Rename one of the tables (or its exposed name) so the generated names don't collide."
             }
-            tables += buildDataClass(className, tableName, definition, enums)
+            tables += buildDataClass(packageName, className, tableName, definition, enums)
         }
 
         // Enums and table data classes are all emitted as top-level types in one file,
@@ -90,6 +90,7 @@ public object SupabaseModelGenerator {
     }
 
     private fun buildDataClass(
+        packageName: String,
         className: String,
         tableName: String,
         definition: TableDefinition,
@@ -109,7 +110,7 @@ public object SupabaseModelGenerator {
 
         for ((columnName, column) in definition.properties) {
             val nullable = columnName !in definition.required
-            val type = kotlinType(tableName, columnName, column, enums).copy(nullable = nullable)
+            val type = kotlinType(packageName, tableName, columnName, column, enums).copy(nullable = nullable)
             val propName = Naming.camel(columnName)
 
             val clash = claimedProps.put(propName, columnName)
@@ -155,6 +156,7 @@ public object SupabaseModelGenerator {
 
     /** Maps one column to its Kotlin type, registering any enum it introduces. */
     private fun kotlinType(
+        packageName: String,
         tableName: String,
         columnName: String,
         column: ColumnProperty,
@@ -163,7 +165,10 @@ public object SupabaseModelGenerator {
         if (column.enum.isNotEmpty()) {
             val enumName = Naming.enumName(column.format, tableName, columnName)
             registerEnum(enums, enumName, column.enum)
-            return ClassName("", enumName)
+            // Enums are emitted into THIS same file/package, so reference them with the
+            // file's package — an empty-package ClassName makes KotlinPoet emit an
+            // `import <Enum>` from the default package, which Kotlin forbids (uncompilable).
+            return ClassName(packageName, enumName)
         }
         if (column.type == "array") {
             val items = column.items
@@ -173,7 +178,7 @@ public object SupabaseModelGenerator {
                     items.enum.isNotEmpty() -> {
                         val enumName = Naming.enumName(items.format, tableName, columnName)
                         registerEnum(enums, enumName, items.enum)
-                        ClassName("", enumName)
+                        ClassName(packageName, enumName)
                     }
                     // A nested array (e.g. int[][]) reports its element `type` as "array" with
                     // no scalar format. Keep it as raw JSON so deserialization can't fail trying
