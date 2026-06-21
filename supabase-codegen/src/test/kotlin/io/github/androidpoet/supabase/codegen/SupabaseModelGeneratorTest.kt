@@ -79,6 +79,35 @@ class SupabaseModelGeneratorTest {
     }
 
     @Test
+    fun maps_money_to_string_but_numeric_to_double() {
+        // Postgres `money` (CASHOID) is NOT a JSONTYPE_NUMERIC type, so PostgREST emits it as a
+        // locale-formatted string (e.g. "$1,234.56") — decoding it into Double throws on every row.
+        // It must map to String. `numeric`/`decimal` ARE emitted as JSON numbers, so they stay Double.
+        val spec =
+            """
+            {
+              "definitions": {
+                "invoices": {
+                  "required": ["id"],
+                  "properties": {
+                    "id":      { "format": "uuid", "type": "string" },
+                    "price":   { "format": "money", "type": "string" },
+                    "tax":     { "format": "numeric", "type": "number" },
+                    "total":   { "format": "decimal", "type": "number" }
+                  }
+                }
+              }
+            }
+            """.trimIndent()
+
+        val generated = SupabaseModelGenerator.generate(spec, packageName = "com.example.db")
+
+        assertContains(generated, "val price: String?") // money → String (would throw as Double)
+        assertContains(generated, "val tax: Double?") // numeric → Double (JSON number)
+        assertContains(generated, "val total: Double?") // decimal → Double (JSON number)
+    }
+
+    @Test
     fun snake_case_columns_become_camelCase_with_serialName() {
         assertContains(generated, "@SerialName(\"created_at\")")
         assertContains(generated, "val createdAt:")

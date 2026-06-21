@@ -223,7 +223,8 @@ public object SupabaseModelGenerator {
             in DOUBLE_TYPES -> DOUBLE
             in BOOL_TYPES -> BOOLEAN
             in JSON_TYPES -> jsonElement
-            // text, varchar, char, uuid, timestamp*, date, time, bytea, … → String (ISO-8601 for dates)
+            // text, varchar, char, uuid, timestamp*, date, time, bytea, money, … → String
+            // (ISO-8601 for dates; money arrives locale-formatted, e.g. "$1,234.56")
             else -> STRING
         }
 
@@ -234,8 +235,15 @@ public object SupabaseModelGenerator {
     // "boolean"), which is why those coarse names are mapped here too.
     private val INT_TYPES = setOf("int32", "integer", "int4", "smallint", "int2", "serial", "serial4", "smallserial")
     private val LONG_TYPES = setOf("int64", "bigint", "int8", "bigserial", "serial8")
+
+    // `money` is deliberately NOT here. Postgres `money` (CASHOID) is not a `JSONTYPE_NUMERIC` type,
+    // so PostgREST (via `to_json`) emits it as a locale-formatted *string* — e.g. "$1,234.56" — not a
+    // bare number. Mapping it to Double would throw at decode on every row; it falls through to String
+    // below (consumers can parse it, or expose the column as `amount::numeric` to get a JSON number).
+    // `numeric`/`decimal` ARE emitted as JSON numbers, so Double decodes them (with the usual IEEE-754
+    // precision caveat for very large/high-scale values).
     private val DOUBLE_TYPES =
-        setOf("number", "double precision", "float8", "real", "float4", "numeric", "decimal", "money")
+        setOf("number", "double precision", "float8", "real", "float4", "numeric", "decimal")
     private val BOOL_TYPES = setOf("boolean", "bool")
     private val JSON_TYPES = setOf("json", "jsonb")
 }

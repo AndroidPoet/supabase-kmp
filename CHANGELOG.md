@@ -18,6 +18,13 @@
 
 ### Fixed
 
+- **Codegen now maps Postgres `money` columns to `String` instead of `Double` (was undecodable).**
+  Postgres `money` is not a JSON-numeric type, so PostgREST serialises it as a locale-formatted
+  *string* (e.g. `"$1,234.56"`) — decoding that into `Double` threw `NumberFormatException` on every
+  row of any table with a `money` column. `money` now generates a `String` property (parse it
+  client-side, or expose the column as `amount::numeric` to receive a JSON number). `numeric`/`decimal`
+  remain `Double` (PostgREST emits those as JSON numbers; note the usual IEEE-754 precision limit for
+  very large/high-scale values — select them as `::text` if you need exact precision).
 - **`createSignedUrls()` no longer fails the whole batch when an item omits `path`.**
   `SignedUrlItemResponse.path` was required, but some storage-server versions omit the `path` key
   from batch items entirely (supabase/storage#353), and `storage-js` types it as nullable. A single
