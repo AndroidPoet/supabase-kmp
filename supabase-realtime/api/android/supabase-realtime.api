@@ -591,17 +591,6 @@ public final class io/github/androidpoet/supabase/realtime/models/RealtimeMessag
 	public fun toString ()Ljava/lang/String;
 }
 
-public final synthetic class io/github/androidpoet/supabase/realtime/models/RealtimeMessage$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/realtime/models/RealtimeMessage$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/realtime/models/RealtimeMessage;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/realtime/models/RealtimeMessage;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
 public final class io/github/androidpoet/supabase/realtime/models/RealtimeMessage$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }

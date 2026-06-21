@@ -4,9 +4,10 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
 /**
- * A raw Phoenix protocol frame: the `{topic, event, payload, ref}` envelope sent
- * over the Realtime WebSocket. Surfaced via [RealtimeDebugEvent] for diagnostics;
- * application code normally works with decoded [RealtimeEvent]s instead.
+ * A raw Phoenix protocol frame. On the wire (Realtime Protocol 2.0.0) this is the
+ * array `[join_ref, ref, topic, event, payload]`, encoded by [RealtimeMessageSerializer].
+ * Surfaced via [RealtimeDebugEvent] for diagnostics; application code normally works
+ * with decoded [RealtimeEvent]s instead.
  *
  * @param topic the channel topic (e.g. `realtime:room1`) or `phoenix` for socket
  *   control frames.
@@ -14,12 +15,11 @@ import kotlinx.serialization.json.JsonObject
  * @param joinRef the ref of the join that scopes this message (`join_ref`).
  * @param ref the per-message correlation ref used to match replies.
  */
-@Serializable
+@Serializable(with = RealtimeMessageSerializer::class)
 public data class RealtimeMessage(
     public val topic: String,
     public val event: String,
     public val payload: JsonObject,
-    @SerialName("join_ref")
     public val joinRef: String? = null,
     public val ref: String? = null,
 )

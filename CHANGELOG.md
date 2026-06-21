@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- **Realtime binary broadcast now works against a live server.** The client connected with
+  `vsn=1.0.0`, which the server routes to its stock V1 JSON serializer — that has no support
+  for the binary broadcast frames (kinds 3/4), so the feature was inert end-to-end. The client
+  now negotiates Realtime **Protocol 2.0.0** (`vsn=2.0.0`): text frames use the array form
+  `[join_ref, ref, topic, event, payload]` (new internal `RealtimeMessageSerializer`) and the
+  binary frames that carry binary broadcast share the same transport. No public API change.
+
 ## 0.9.1 — 2026-06-21
 
 ### Added

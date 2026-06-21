@@ -5,8 +5,11 @@ import io.github.androidpoet.supabase.realtime.models.PostgresChange
 import io.github.androidpoet.supabase.realtime.models.PostgresChangeEvent
 import io.github.androidpoet.supabase.realtime.models.RealtimeMessage
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -14,16 +17,11 @@ class SerializationRoundTripTest {
     private val json = Json { ignoreUnknownKeys = true }
 
     @Test
-    fun test_realtimeMessage_decodesFromWireJson() {
+    fun test_realtimeMessage_decodesFromV2ArrayWire() {
+        // Protocol 2.0.0 wire form: [join_ref, ref, topic, event, payload].
         val payload =
             """
-            {
-              "topic": "realtime:public:messages",
-              "event": "phx_reply",
-              "payload": { "status": "ok", "response": {} },
-              "join_ref": "1",
-              "ref": "2"
-            }
+            ["1", "2", "realtime:public:messages", "phx_reply", { "status": "ok", "response": {} }]
             """.trimIndent()
 
         val message = json.decodeFromString<RealtimeMessage>(payload)
@@ -33,6 +31,26 @@ class SerializationRoundTripTest {
         assertEquals("1", message.joinRef)
         assertEquals("2", message.ref)
         assertEquals(JsonPrimitive("ok"), message.payload["status"])
+    }
+
+    @Test
+    fun test_realtimeMessage_encodesToV2Array() {
+        val message =
+            RealtimeMessage(
+                topic = "realtime:room",
+                event = "phx_join",
+                payload = JsonObject(emptyMap()),
+                joinRef = "7",
+                ref = null,
+            )
+
+        val array = json.parseToJsonElement(json.encodeToString(message)).jsonArray
+
+        assertEquals(5, array.size)
+        assertEquals("7", array[0].jsonPrimitive.content) // join_ref
+        assertEquals(JsonNull, array[1]) // ref absent → null slot still present
+        assertEquals("realtime:room", array[2].jsonPrimitive.content)
+        assertEquals("phx_join", array[3].jsonPrimitive.content)
     }
 
     @Test
