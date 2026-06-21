@@ -72,6 +72,24 @@ class E2eeTest {
         }
 
     @Test
+    fun test_tamperedCiphertext_failsAuthentication() =
+        runTest {
+            val alice = generateE2eeKeyPair().value()
+            val bob = generateE2eeKeyPair().value()
+            val aliceSession = alice.deriveSession(bob.publicKey).value()
+            val bobSession = bob.deriveSession(alice.publicKey).value()
+
+            val cipher = aliceSession.encrypt("integrity matters").value()
+            // Flip a bit in the trailing GCM auth tag — AEAD must reject it.
+            val tampered = cipher.copyOf()
+            tampered[tampered.size - 1] = (tampered[tampered.size - 1].toInt() xor 0x01).toByte()
+
+            assertTrue(bobSession.decryptToString(tampered) is SupabaseResult.Failure)
+            // The untampered ciphertext still decrypts, proving the tamper test is meaningful.
+            assertEquals("integrity matters", bobSession.decryptToString(cipher).value())
+        }
+
+    @Test
     fun test_wrongPeerKey_cannotDecrypt() =
         runTest {
             val alice = generateE2eeKeyPair().value()

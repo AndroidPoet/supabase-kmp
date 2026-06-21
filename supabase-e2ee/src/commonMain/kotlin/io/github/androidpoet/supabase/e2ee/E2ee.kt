@@ -126,6 +126,12 @@ public suspend fun E2eeKeyPair.deriveSelfSession(): SupabaseResult<E2eeSession> 
  * AES-256-GCM (the raw shared secret is never used as a key directly). Both sides
  * derive the **same** key locally; the server never sees it. Pairing two devices?
  * Each calls this with the other's published public key.
+ *
+ * **Security — authenticate the peer key.** This is raw ECDH: it does not verify that
+ * [peerPublicKey] actually belongs to the intended peer. An attacker who can substitute
+ * the published key (e.g. by tampering with the table you fetch it from) can mount a
+ * man-in-the-middle attack. Distribute public keys over a trusted channel or verify their
+ * fingerprints out-of-band. (The [deriveSelfSession] path has no peer and is unaffected.)
  */
 public suspend fun E2eeKeyPair.deriveSession(peerPublicKey: ByteArray): SupabaseResult<E2eeSession> =
     cryptoResult("derive") {
