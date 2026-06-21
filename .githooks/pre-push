@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#
+# pre-push: run the gates CI enforces, so a red CI is caught locally first.
+# Runs detekt + apiCheck by default (fast-ish); set RUN_TESTS=1 to also run jvmTest.
+#
+# Skip once:      git push --no-verify
+# Skip always:    SKIP_HOOKS=1 git push ...
+# With tests:     RUN_TESTS=1 git push ...
+#
+set -euo pipefail
+
+[ "${SKIP_HOOKS:-}" = "1" ] && exit 0
+cd "$(git rev-parse --show-toplevel)"
+
+if [ "${RUN_TESTS:-}" = "1" ]; then
+  echo "▶ pre-push: detekt + apiCheck + jvmTest…"
+  ./gradlew detekt apiCheck jvmTest
+else
+  echo "▶ pre-push: detekt + apiCheck (set RUN_TESTS=1 to include jvmTest)…"
+  ./gradlew detekt apiCheck
+fi
+
+echo "✓ pre-push: checks passed"

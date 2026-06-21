@@ -10,6 +10,19 @@ published to <https://androidpoet.github.io/supabase-kmp/>.
 - Android SDK (set `sdk.dir` in `local.properties`, or `ANDROID_HOME`)
 - Xcode (only for building/running the Apple targets)
 
+## Git hooks (recommended)
+
+Run once after cloning so the same gates CI enforces run automatically:
+
+```bash
+./gradlew installGitHooks
+```
+
+This enables a **pre-commit** hook (auto-formats staged Kotlin with `spotlessApply`)
+and a **pre-push** hook (`detekt` + `apiCheck`; add `RUN_TESTS=1` for `jvmTest`).
+Skip per-invocation with `git commit/push --no-verify`. See
+[`.githooks/README.md`](.githooks/README.md).
+
 ## Local checks
 
 Before opening a PR, run the same gates CI runs:

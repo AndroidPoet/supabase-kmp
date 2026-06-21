@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+#
+# pre-commit: auto-format staged Kotlin so CI's spotlessCheck never fails on style.
+# Fast by design — only runs when Kotlin/Gradle-script files are staged.
+#
+# Skip once:      git commit --no-verify
+# Skip always:    SKIP_HOOKS=1 git commit ...
+#
+set -euo pipefail
+
+[ "${SKIP_HOOKS:-}" = "1" ] && exit 0
+cd "$(git rev-parse --show-toplevel)"
+
+# Collect staged Kotlin / Gradle-script files (added, copied, modified).
+staged="$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(kt|kts)$' || true)"
+[ -z "$staged" ] && exit 0
+
+echo "▶ pre-commit: formatting staged Kotlin (spotlessApply)…"
+./gradlew --quiet spotlessApply
+
+# Re-stage the files we were committing, in case spotless reformatted them.
+echo "$staged" | while IFS= read -r f; do
+  [ -n "$f" ] && [ -e "$f" ] && git add -- "$f"
+done
+
+echo "✓ pre-commit: Kotlin formatted"

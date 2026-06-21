@@ -205,3 +205,11 @@ gradle.projectsEvaluated {
         mustRunAfter(supabaseDbReset)
     }
 }
+
+// One-time setup so contributors get the same gates as CI before they push.
+// Points git at the version-controlled .githooks/ directory (see .githooks/README.md).
+tasks.register<Exec>("installGitHooks") {
+    group = "git hooks"
+    description = "Enable the repo's pre-commit/pre-push hooks (sets core.hooksPath to .githooks)."
+    commandLine("git", "config", "core.hooksPath", ".githooks")
+}
