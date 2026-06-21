@@ -369,6 +369,12 @@ public suspend inline fun <reified T> DatabaseClient.upsertTypedMany(
  * [value] is serialized to JSON and applied as a partial update to every matched
  * row; the echoed [ReturnOption.REPRESENTATION] body is decoded back into [T]. An
  * empty [filters] block updates the whole table, so scope it carefully.
+ *
+ * Note: `null` fields of [value] are **omitted** from the request (the serializer
+ * uses `explicitNulls = false`), so they leave the existing column value untouched
+ * rather than overwriting it with `NULL`. This means a typed update can only set
+ * non-null values; to clear a column to `NULL`, use [update] with a raw JSON body
+ * (e.g. `{"avatar_url": null}`) instead.
  */
 public suspend inline fun <reified T> DatabaseClient.updateTyped(
     table: String,
@@ -409,6 +415,9 @@ public suspend fun DatabaseClient.updateUnit(
 /**
  * Updates rows matching [filters] with [value] without fetching them back — the
  * typed counterpart to [updateUnit] that serializes [value] for you.
+ *
+ * Note: as with [updateTyped], `null` fields of [value] are omitted (not written as
+ * `NULL`); use [updateUnit] with a raw JSON body to clear a column to `NULL`.
  */
 public suspend inline fun <reified T> DatabaseClient.updateUnitTyped(
     table: String,
