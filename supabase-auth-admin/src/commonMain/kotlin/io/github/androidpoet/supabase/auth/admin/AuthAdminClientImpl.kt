@@ -7,6 +7,7 @@ import io.github.androidpoet.supabase.auth.admin.models.CustomProviderCreateRequ
 import io.github.androidpoet.supabase.auth.admin.models.CustomProviderListResponse
 import io.github.androidpoet.supabase.auth.admin.models.CustomProviderType
 import io.github.androidpoet.supabase.auth.admin.models.CustomProviderUpdateRequest
+import io.github.androidpoet.supabase.auth.admin.models.GenerateLinkProperties
 import io.github.androidpoet.supabase.auth.admin.models.GenerateLinkRequest
 import io.github.androidpoet.supabase.auth.admin.models.GenerateLinkResponse
 import io.github.androidpoet.supabase.auth.admin.models.InviteUserRequest
@@ -36,6 +37,7 @@ import io.github.androidpoet.supabase.core.util.urlEncode
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.jsonObject
 
 internal class AuthAdminClientImpl(
     private val client: SupabaseClient,
@@ -71,12 +73,32 @@ internal class AuthAdminClientImpl(
         val body = defaultJson.encodeToString(request)
         // The redirect is carried in the request body (redirect_to) for this endpoint, which is
         // authoritative — so it is not also appended as a query param.
-        return client
-            .post(
-                endpoint = AuthAdminPaths.ADMIN_GENERATE_LINK,
-                body = body,
-                headers = adminHeaders,
-            ).deserialize()
+        return when (
+            val result =
+                client.post(
+                    endpoint = AuthAdminPaths.ADMIN_GENERATE_LINK,
+                    body = body,
+                    headers = adminHeaders,
+                )
+        ) {
+            is SupabaseResult.Success -> SupabaseResult.catching { reshapeGenerateLink(result.value) }
+            is SupabaseResult.Failure -> result
+        }
+    }
+
+    // GoTrue's generate_link response is a FLAT object: the embedded user's fields at the top level
+    // plus the link fields (action_link, email_otp, hashed_token, redirect_to, verification_type).
+    // There is no `properties`/`user` envelope, so decoding straight into GenerateLinkResponse threw
+    // MissingFieldException on `properties` for every call. Reshape it the way auth-js does — split
+    // the five link fields into `properties` and decode the remaining fields as the `user`.
+    private fun reshapeGenerateLink(raw: String): GenerateLinkResponse {
+        val obj = defaultJson.parseToJsonElement(raw).jsonObject
+        val linkKeys = setOf("action_link", "email_otp", "hashed_token", "redirect_to", "verification_type")
+        val properties =
+            defaultJson.decodeFromJsonElement<GenerateLinkProperties>(JsonObject(obj.filterKeys { it in linkKeys }))
+        val userObject = JsonObject(obj.filterKeys { it !in linkKeys })
+        val user = if (userObject.isEmpty()) null else defaultJson.decodeFromJsonElement<User>(userObject)
+        return GenerateLinkResponse(properties = properties, user = user)
     }
 
     override suspend fun createUser(attributes: AdminUserAttributes): SupabaseResult<User> {

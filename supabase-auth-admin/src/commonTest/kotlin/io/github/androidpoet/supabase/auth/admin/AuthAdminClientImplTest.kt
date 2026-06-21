@@ -278,8 +278,13 @@ class AuthAdminClientImplTest {
             assertEquals("new@example.com", body["new_email"]?.jsonPrimitive?.content)
             assertEquals("app://callback", body["redirect_to"]?.jsonPrimitive?.content)
             val value = success.value as io.github.androidpoet.supabase.auth.admin.models.GenerateLinkResponse
+            // The flat GoTrue response is reshaped: the five link fields populate `properties`...
             assertEquals("https://example.com/action", value.properties.actionLink)
             assertEquals("magiclink", value.properties.verificationType)
+            assertEquals("123456", value.properties.emailOtp)
+            // ...and the remaining top-level fields become the embedded `user`.
+            assertEquals("u1", value.user?.id)
+            assertEquals("user@example.com", value.user?.email)
         }
 
     @Test
@@ -635,17 +640,18 @@ private class FakeSupabaseClient : SupabaseClient {
                     """{"id":"u1","email":"invite@example.com"}""",
                 )
             endpoint.startsWith("/auth/v1/admin/generate_link") ->
+                // GoTrue returns a FLAT object — the user fields and the link fields are all at the
+                // top level (no `properties`/`user` envelope). The client reshapes this.
                 SupabaseResult.Success(
                     """
                     {
-                      "properties": {
-                        "action_link": "https://example.com/action",
-                        "email_otp": "123456",
-                        "hashed_token": "hash",
-                        "redirect_to": "app://callback",
-                        "verification_type": "magiclink"
-                      },
-                      "user": {"id":"u1","email":"user@example.com"}
+                      "id": "u1",
+                      "email": "user@example.com",
+                      "action_link": "https://example.com/action",
+                      "email_otp": "123456",
+                      "hashed_token": "hash",
+                      "redirect_to": "app://callback",
+                      "verification_type": "magiclink"
                     }
                     """.trimIndent(),
                 )

@@ -143,7 +143,10 @@ public enum class OAuthClientTokenEndpointAuthMethod(
 @Serializable
 public data class OAuthClient(
     @SerialName("client_id") public val clientId: String,
-    @SerialName("client_name") public val clientName: String,
+    // GoTrue tags client_name/redirect_uris/grant_types/response_types with `omitempty`, so a client
+    // missing any of them drops the key entirely — these must be optional or the decode of every
+    // listOAuthClients/getOAuthClient row would throw MissingFieldException.
+    @SerialName("client_name") public val clientName: String? = null,
     @SerialName("client_secret") public val clientSecret: String? = null,
     @SerialName("client_type") public val clientType: OAuthClientType = OAuthClientType.UNKNOWN,
     @SerialName("token_endpoint_auth_method")
@@ -152,9 +155,9 @@ public data class OAuthClient(
     public val registrationType: OAuthClientRegistrationType = OAuthClientRegistrationType.UNKNOWN,
     @SerialName("client_uri") public val clientUri: String? = null,
     @SerialName("logo_uri") public val logoUri: String? = null,
-    @SerialName("redirect_uris") public val redirectUris: List<String>,
-    @SerialName("grant_types") public val grantTypes: List<String>,
-    @SerialName("response_types") public val responseTypes: List<String>,
+    @SerialName("redirect_uris") public val redirectUris: List<String> = emptyList(),
+    @SerialName("grant_types") public val grantTypes: List<String> = emptyList(),
+    @SerialName("response_types") public val responseTypes: List<String> = emptyList(),
     public val scope: String? = null,
     @SerialName("created_at") public val createdAt: String? = null,
     @SerialName("updated_at") public val updatedAt: String? = null,

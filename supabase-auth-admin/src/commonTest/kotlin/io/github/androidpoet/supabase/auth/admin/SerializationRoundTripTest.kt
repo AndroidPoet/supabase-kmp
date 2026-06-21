@@ -120,6 +120,23 @@ class SerializationRoundTripTest {
     }
 
     @Test
+    fun test_oAuthClient_decodesWhenOmitemptyFieldsAbsent() {
+        // GoTrue tags client_name/redirect_uris/grant_types/response_types with `omitempty`, so a
+        // client missing them drops the keys. Only client_id and client_type are always present.
+        // These must decode (not throw MissingFieldException).
+        val payload = """{ "client_id": "client-123", "client_type": "public" }"""
+
+        val client = json.decodeFromString<OAuthClient>(payload)
+
+        assertEquals("client-123", client.clientId)
+        assertEquals(OAuthClientType.PUBLIC, client.clientType)
+        assertEquals(null, client.clientName)
+        assertEquals(emptyList<String>(), client.redirectUris)
+        assertEquals(emptyList<String>(), client.grantTypes)
+        assertEquals(emptyList<String>(), client.responseTypes)
+    }
+
+    @Test
     fun test_oAuthClient_roundTrip() {
         val original =
             OAuthClient(

@@ -18,6 +18,18 @@
 
 ### Fixed
 
+- **`generateLink()` now decodes the server's response (was throwing on every call).** GoTrue returns
+  a *flat* object — `models.User` fields plus top-level `action_link`/`email_otp`/`hashed_token`/
+  `redirect_to`/`verification_type` — but the SDK expected a `{ properties, user }` envelope, so every
+  `generateLink()` threw `MissingFieldException` (the required `properties` key was always absent). The
+  flat response is now reshaped into `GenerateLinkResponse`: the five link fields populate `properties`
+  and the remaining fields populate `user` (mirroring `auth-js`). Verified against the GoTrue source and
+  a flat fixture.
+- **`OAuthClient` now decodes when the server omits empty fields.** GoTrue tags `client_name`,
+  `redirect_uris`, `grant_types`, and `response_types` with `omitempty`, so a client that lacks them
+  drops the keys entirely — but those were required (non-default) properties, so decode threw
+  `MissingFieldException`. `clientName` is now nullable (`null` default) and the three lists default to
+  empty, so a minimal `{ client_id, client_type }` payload decodes cleanly.
 - **Codegen models now decode partial `select=...` responses (nullable columns are optional).**
   Nullable columns were generated without a default, but kotlinx.serialization treats a `T?` with no
   default as *required* — the JSON key must be present — so any query that omits a column (every
