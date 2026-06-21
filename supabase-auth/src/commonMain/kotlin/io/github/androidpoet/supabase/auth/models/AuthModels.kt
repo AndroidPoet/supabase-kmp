@@ -13,6 +13,12 @@ public data class Session(
     @SerialName("access_token") val accessToken: String,
     @SerialName("refresh_token") val refreshToken: String,
     @SerialName("expires_in") val expiresIn: Long,
+    /**
+     * Absolute Unix timestamp (seconds) at which [accessToken] expires, as sent by GoTrue. Prefer this
+     * over computing `now + expiresIn` when present, since it reflects the server's clock. Null for
+     * responses (or older servers) that omit it — fall back to [expiresIn] then.
+     */
+    @SerialName("expires_at") val expiresAt: Long? = null,
     @SerialName("token_type") val tokenType: String = "bearer",
     val user: User,
     /**
@@ -29,7 +35,8 @@ public data class Session(
     // Mask the bearer credentials so a session never leaks into logs or crash reports; the
     // generated toString() would print every token verbatim.
     override fun toString(): String =
-        "Session(tokenType=$tokenType, expiresIn=$expiresIn, accessToken=***, refreshToken=***, " +
+        "Session(tokenType=$tokenType, expiresIn=$expiresIn, expiresAt=$expiresAt, " +
+            "accessToken=***, refreshToken=***, " +
             "providerToken=${if (providerToken == null) "null" else "***"}, " +
             "providerRefreshToken=${if (providerRefreshToken == null) "null" else "***"}, user=$user)"
 }
@@ -586,11 +593,18 @@ public data class MfaChallengeRequest(
     @SerialName("channel") public val channel: String? = null,
 )
 
-/** Result of creating an MFA challenge: the challenge [id] to pass to verify, and when it [expiresAt]. */
+/**
+ * Result of creating an MFA challenge: the challenge [id] to pass to verify, the factor [type]
+ * (`"totp"`, `"phone"` or `"webauthn"`), and when it [expiresAt].
+ *
+ * GoTrue's challenge response carries only `id`, `type`, `expires_at` and `webauthn` — there is no
+ * `factor_id` (the factor is identified by the URL path), so this must not require one or every
+ * `mfaChallenge()` decode would fail with a missing-field error.
+ */
 @Serializable
 public data class MfaChallengeResponse(
     @SerialName("id") public val id: String,
-    @SerialName("factor_id") public val factorId: String,
+    @SerialName("type") public val type: String? = null,
     @SerialName("expires_at") public val expiresAt: Long? = null,
 )
 
@@ -600,7 +614,6 @@ public data class MfaChallengeResponse(
  */
 @Serializable
 public data class MfaVerifyRequest(
-    @SerialName("factor_id") public val factorId: String,
     @SerialName("challenge_id") public val challengeId: String,
     @SerialName("code") public val code: String,
     @SerialName("webauthn") public val webauthn: MfaWebauthnVerification? = null,
@@ -624,11 +637,13 @@ public data class MfaVerifyResponse(
     @SerialName("refresh_token") public val refreshToken: String,
     @SerialName("token_type") public val tokenType: String = "bearer",
     @SerialName("expires_in") public val expiresIn: Long,
+    /** Absolute Unix timestamp (seconds) at which [accessToken] expires, when sent by GoTrue. */
+    @SerialName("expires_at") public val expiresAt: Long? = null,
     @SerialName("user") public val user: User,
 ) {
     // Mask the bearer credentials so this MFA session never leaks into logs or crash reports.
     override fun toString(): String =
-        "MfaVerifyResponse(tokenType=$tokenType, expiresIn=$expiresIn, accessToken=***, " +
+        "MfaVerifyResponse(tokenType=$tokenType, expiresIn=$expiresIn, expiresAt=$expiresAt, accessToken=***, " +
             "refreshToken=***, user=$user)"
 }
 

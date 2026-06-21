@@ -242,13 +242,30 @@ class SerializationRoundTripTest {
         val original =
             MfaChallengeResponse(
                 id = "challenge-id",
-                factorId = "factor-id",
+                type = "totp",
                 expiresAt = 1718000000,
             )
 
         val decoded = json.decodeFromString<MfaChallengeResponse>(json.encodeToString(original))
 
         assertEquals(original, decoded)
+    }
+
+    @Test
+    fun test_mfaChallengeResponse_decodesRealGoTruePayload() {
+        // GoTrue's POST /factors/{id}/challenge returns only id/type/expires_at/webauthn — no
+        // `factor_id`. A required factorId field made this decode throw a missing-field error on
+        // every challenge; this guards that the wire shape stays decodable.
+        val payload =
+            """
+            { "id": "11111111-1111-1111-1111-111111111111", "type": "totp", "expires_at": 1718000300 }
+            """.trimIndent()
+
+        val decoded = json.decodeFromString<MfaChallengeResponse>(payload)
+
+        assertEquals("11111111-1111-1111-1111-111111111111", decoded.id)
+        assertEquals("totp", decoded.type)
+        assertEquals(1718000300, decoded.expiresAt)
     }
 
     @Test

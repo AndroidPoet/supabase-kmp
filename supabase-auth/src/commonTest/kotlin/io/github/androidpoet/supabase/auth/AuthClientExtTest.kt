@@ -1300,7 +1300,7 @@ private class FakeAuthClient : AuthClient {
         SupabaseResult.Failure(SupabaseError("not used"))
 
     override suspend fun mfaChallenge(factorId: String, accessToken: String, channel: String?): SupabaseResult<MfaChallengeResponse> =
-        SupabaseResult.Success(MfaChallengeResponse(id = "challenge-1", factorId = factorId)).also {
+        SupabaseResult.Success(MfaChallengeResponse(id = "challenge-1", type = "totp")).also {
             lastMfaChallengeFactorId = factorId
         }
 

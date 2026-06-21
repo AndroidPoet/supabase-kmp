@@ -763,7 +763,6 @@ internal class AuthClientImpl(
         val body =
             defaultJson.encodeToString(
                 MfaVerifyRequest(
-                    factorId = factorId,
                     challengeId = challengeId,
                     code = code,
                     webauthn = webauthn,

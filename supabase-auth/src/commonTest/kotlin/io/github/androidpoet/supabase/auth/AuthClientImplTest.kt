@@ -915,6 +915,10 @@ class AuthClientImplTest {
             sut.mfaVerify(factorId = "factor-1", challengeId = "challenge-1", code = "123456", accessToken = "tok")
 
             assertTrue(client.lastPostBody?.contains("webauthn") == false)
+            // GoTrue's VerifyFactorParams is {challenge_id, code, webauthn}; the factor lives in the
+            // URL path, so the body must NOT carry a factor_id (which the server ignores).
+            assertTrue(client.lastPostBody?.contains("\"challenge_id\":\"challenge-1\"") == true)
+            assertTrue(client.lastPostBody?.contains("factor_id") == false)
         }
 
     // ---- A10: POST /resend type guard ----

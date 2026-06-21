@@ -9,8 +9,21 @@
   it never did anything; `nonce` belongs to the self-service reauthentication flow, not admin.
   Keeping it implied admin-reauth support that doesn't exist.
 
+### Added
+
+- **`Session.expiresAt` / `MfaVerifyResponse.expiresAt`** — GoTrue's `AccessTokenResponse` includes
+  an absolute `expires_at` (Unix seconds) alongside the relative `expires_in`; both models now carry
+  it (nullable, for servers/responses that omit it). Prefer it over computing `now + expiresIn`, since
+  it reflects the server's clock. Additive and backward-compatible.
+
 ### Fixed
 
+- **MFA challenge responses now decode.** `MfaChallengeResponse` required a non-null `factor_id`, but
+  GoTrue's `POST /factors/{id}/challenge` returns only `id`, `type`, `expires_at` and `webauthn` — no
+  `factor_id` — so `mfaChallenge()` threw a missing-field error on **every** call. The non-existent
+  field is removed and the real `type` field added. Relatedly, `MfaVerifyRequest` no longer sends a
+  `factor_id` in the body (GoTrue's `VerifyFactorParams` is `{challenge_id, code, webauthn}`; the
+  factor is identified by the URL path).
 - **Codegen fails fast on colliding column names instead of emitting uncompilable output.** Two
   columns in one table that normalise to the same Kotlin property (e.g. `user_id` and `userId`)
   produced a data class with duplicate properties that wouldn't compile. The generator now
