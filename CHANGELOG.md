@@ -18,6 +18,11 @@
 
 ### Fixed
 
+- **Realtime `joinRef` is now `@Volatile` (cross-thread visibility).** The per-subscription Phoenix
+  `joinRef` is written on the (re)join coroutine and read on the inbound read-loop, but it was a plain
+  `var` while its sibling cross-thread single-value fields are `@Volatile`. It is a single-reference
+  read/write (not a compound op), so this was a visibility gap rather than a corruption race, but it is
+  now `@Volatile` for strict correctness and consistency.
 - **Codegen now maps Postgres `money` columns to `String` instead of `Double` (was undecodable).**
   Postgres `money` is not a JSON-numeric type, so PostgREST serialises it as a locale-formatted
   *string* (e.g. `"$1,234.56"`) — decoding that into `Double` threw `NumberFormatException` on every

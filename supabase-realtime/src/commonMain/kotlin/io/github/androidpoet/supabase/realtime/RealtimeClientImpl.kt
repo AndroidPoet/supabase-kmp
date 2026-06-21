@@ -929,6 +929,13 @@ internal class ChannelSubscriptionImpl(
     // concurrency rules (a bare @Volatile would not make put/remove atomic).
     private val pendingAcks = mutableMapOf<String, CompletableDeferred<SupabaseResult<Unit>>>()
     private val pendingAcksLock = Mutex()
+
+    // The Phoenix join_ref for the current connection. Written on (re)join from the
+    // caller/reconnect coroutine and read from the inbound read-loop (reply matching,
+    // send/broadcast stamping, buffer re-stamping). A single-reference read/write, not
+    // a compound op, so it needs visibility — not a lock — like the other cross-thread
+    // single-value fields (@Volatile, per the project's concurrency rules).
+    @Volatile
     internal var joinRef: String? = null
     internal val hasPresenceTracking: Boolean = presenceCallback != null
     override val status: StateFlow<RealtimeSubscription.Status> = _status.asStateFlow()
