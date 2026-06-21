@@ -10,8 +10,8 @@ import java.net.http.HttpResponse
  * read-only request; it only needs an API key whose role can see the target tables
  * (use a service/secret key at build time so RLS doesn't hide tables from codegen).
  */
-internal object SchemaFetcher {
-    fun fetch(projectUrl: String, apiKey: String): String {
+public object SchemaFetcher {
+    public fun fetch(projectUrl: String, apiKey: String): String {
         val uri = URI.create("${projectUrl.trimEnd('/')}/rest/v1/")
         val request =
             HttpRequest

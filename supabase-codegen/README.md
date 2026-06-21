@@ -17,6 +17,38 @@ runs at build time (it uses `java.net.http`), but its output is portable.
 
 ## Usage
 
+There are two ways to run it. Both call the same generator; pick whichever fits your build.
+
+### Gradle plugin (recommended)
+
+```kotlin
+// build.gradle.kts
+plugins {
+    id("io.github.androidpoet.supabase.codegen")
+}
+
+supabaseCodegen {
+    url.set(providers.environmentVariable("SUPABASE_URL"))
+    key.set(providers.environmentVariable("SUPABASE_KEY"))
+    packageName.set("com.example.db")
+    outputDir.set(layout.projectDirectory.dir("src/commonMain/kotlin")) // commit the result
+}
+```
+
+Then run it **when your schema changes**:
+
+```bash
+SUPABASE_URL=… SUPABASE_KEY=… ./gradlew generateSupabaseModels
+```
+
+The task is deliberately **not** wired into `compileKotlin`: the schema lives behind the
+network and needs a key, and you don't want either on every build. This mirrors how
+Supabase's own `supabase gen types` is used — regenerate on demand, commit the output. If
+you'd rather keep the file out of git, point `outputDir` at `build/generated/supabase` and
+add that as a source directory.
+
+### CLI
+
 ```bash
 ./gradlew :supabase-codegen:run --args="\
   --url https://<ref>.supabase.co \
@@ -31,7 +63,7 @@ Optional: `--file` (default `SupabaseModels`), `--package` (default `supabase.ge
 
 > Use a key whose role can read the tables you want generated. Anon/publishable keys only
 > see what RLS allows, so unprotected tables may be missing — run codegen with a
-> service/secret key at build time so the full schema is visible.
+> service/secret key so the full schema is visible.
 
 ## Type mapping
 
