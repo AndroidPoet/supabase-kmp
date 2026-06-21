@@ -137,7 +137,7 @@ abstract interface io.github.androidpoet.supabase.auth.admin/AuthAdminClient { /
 }
 
 final class io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes { // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes|null[0]
-    constructor <init>(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlin/Boolean? = ..., kotlin/Boolean? = ..., kotlin/String? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.<init>|<init>(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlinx.serialization.json.JsonObject?;kotlinx.serialization.json.JsonObject?;kotlin.Boolean?;kotlin.Boolean?;kotlin.String?;kotlin.String?){}[0]
+    constructor <init>(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlin/Boolean? = ..., kotlin/Boolean? = ..., kotlin/String? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.<init>|<init>(kotlin.String?;kotlin.String?;kotlin.String?;kotlinx.serialization.json.JsonObject?;kotlinx.serialization.json.JsonObject?;kotlin.Boolean?;kotlin.Boolean?;kotlin.String?;kotlin.String?){}[0]
 
     final val appMetadata // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.appMetadata|{}appMetadata[0]
         final fun <get-appMetadata>(): kotlinx.serialization.json/JsonObject? // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.appMetadata.<get-appMetadata>|<get-appMetadata>(){}[0]
@@ -147,8 +147,6 @@ final class io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes
         final fun <get-email>(): kotlin/String? // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.email.<get-email>|<get-email>(){}[0]
     final val emailConfirm // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.emailConfirm|{}emailConfirm[0]
         final fun <get-emailConfirm>(): kotlin/Boolean? // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.emailConfirm.<get-emailConfirm>|<get-emailConfirm>(){}[0]
-    final val nonce // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.nonce|{}nonce[0]
-        final fun <get-nonce>(): kotlin/String? // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.nonce.<get-nonce>|<get-nonce>(){}[0]
     final val password // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.password|{}password[0]
         final fun <get-password>(): kotlin/String? // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.password.<get-password>|<get-password>(){}[0]
     final val phone // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.phone|{}phone[0]
@@ -161,16 +159,15 @@ final class io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes
         final fun <get-userMetadata>(): kotlinx.serialization.json/JsonObject? // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.userMetadata.<get-userMetadata>|<get-userMetadata>(){}[0]
 
     final fun component1(): kotlin/String? // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.component1|component1(){}[0]
-    final fun component10(): kotlin/String? // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.component10|component10(){}[0]
     final fun component2(): kotlin/String? // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.component2|component2(){}[0]
     final fun component3(): kotlin/String? // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.component3|component3(){}[0]
-    final fun component4(): kotlin/String? // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.component4|component4(){}[0]
+    final fun component4(): kotlinx.serialization.json/JsonObject? // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.component4|component4(){}[0]
     final fun component5(): kotlinx.serialization.json/JsonObject? // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.component5|component5(){}[0]
-    final fun component6(): kotlinx.serialization.json/JsonObject? // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.component6|component6(){}[0]
+    final fun component6(): kotlin/Boolean? // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.component6|component6(){}[0]
     final fun component7(): kotlin/Boolean? // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.component7|component7(){}[0]
-    final fun component8(): kotlin/Boolean? // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.component8|component8(){}[0]
+    final fun component8(): kotlin/String? // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.component8|component8(){}[0]
     final fun component9(): kotlin/String? // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.component9|component9(){}[0]
-    final fun copy(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlin/Boolean? = ..., kotlin/Boolean? = ..., kotlin/String? = ..., kotlin/String? = ...): io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.copy|copy(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlinx.serialization.json.JsonObject?;kotlinx.serialization.json.JsonObject?;kotlin.Boolean?;kotlin.Boolean?;kotlin.String?;kotlin.String?){}[0]
+    final fun copy(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlin/Boolean? = ..., kotlin/Boolean? = ..., kotlin/String? = ..., kotlin/String? = ...): io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.copy|copy(kotlin.String?;kotlin.String?;kotlin.String?;kotlinx.serialization.json.JsonObject?;kotlinx.serialization.json.JsonObject?;kotlin.Boolean?;kotlin.Boolean?;kotlin.String?;kotlin.String?){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // io.github.androidpoet.supabase.auth.admin.models/AdminUserAttributes.toString|toString(){}[0]

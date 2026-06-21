@@ -15,7 +15,6 @@ public data class AdminUserAttributes(
     public val email: String? = null,
     public val phone: String? = null,
     public val password: String? = null,
-    public val nonce: String? = null,
     @SerialName("user_metadata") public val userMetadata: JsonObject? = null,
     @SerialName("app_metadata") public val appMetadata: JsonObject? = null,
     @SerialName("email_confirm") public val emailConfirm: Boolean? = null,
@@ -26,7 +25,7 @@ public data class AdminUserAttributes(
     // Mask the password so it never leaks into logs or crash reports.
     override fun toString(): String =
         "AdminUserAttributes(email=$email, phone=$phone, " +
-            "password=${if (password == null) "null" else "***"}, nonce=$nonce, " +
+            "password=${if (password == null) "null" else "***"}, " +
             "userMetadata=$userMetadata, appMetadata=$appMetadata, emailConfirm=$emailConfirm, " +
             "phoneConfirm=$phoneConfirm, banDuration=$banDuration, role=$role)"
 }

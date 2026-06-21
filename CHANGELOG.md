@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Removed
+
+- **`AdminUserAttributes.nonce`** — removed a non-functional field. GoTrue's admin
+  create/update-user endpoint has no `nonce` parameter (it silently ignored the key), so setting
+  it never did anything; `nonce` belongs to the self-service reauthentication flow, not admin.
+  Keeping it implied admin-reauth support that doesn't exist.
+
 ### Fixed
 
 - **`Paginator.refresh()` during an in-flight load no longer leaves the list empty.** Pull-to-

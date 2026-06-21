@@ -64,26 +64,24 @@ public final class io/github/androidpoet/supabase/auth/admin/AuthAdminClientExtK
 public final class io/github/androidpoet/supabase/auth/admin/models/AdminUserAttributes {
 	public static final field Companion Lio/github/androidpoet/supabase/auth/admin/models/AdminUserAttributes$Companion;
 	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
-	public final fun component10 ()Ljava/lang/String;
 	public final fun component2 ()Ljava/lang/String;
 	public final fun component3 ()Ljava/lang/String;
-	public final fun component4 ()Ljava/lang/String;
+	public final fun component4 ()Lkotlinx/serialization/json/JsonObject;
 	public final fun component5 ()Lkotlinx/serialization/json/JsonObject;
-	public final fun component6 ()Lkotlinx/serialization/json/JsonObject;
+	public final fun component6 ()Ljava/lang/Boolean;
 	public final fun component7 ()Ljava/lang/Boolean;
-	public final fun component8 ()Ljava/lang/Boolean;
+	public final fun component8 ()Ljava/lang/String;
 	public final fun component9 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;)Lio/github/androidpoet/supabase/auth/admin/models/AdminUserAttributes;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/auth/admin/models/AdminUserAttributes;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/auth/admin/models/AdminUserAttributes;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;)Lio/github/androidpoet/supabase/auth/admin/models/AdminUserAttributes;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/auth/admin/models/AdminUserAttributes;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/auth/admin/models/AdminUserAttributes;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAppMetadata ()Lkotlinx/serialization/json/JsonObject;
 	public final fun getBanDuration ()Ljava/lang/String;
 	public final fun getEmail ()Ljava/lang/String;
 	public final fun getEmailConfirm ()Ljava/lang/Boolean;
-	public final fun getNonce ()Ljava/lang/String;
 	public final fun getPassword ()Ljava/lang/String;
 	public final fun getPhone ()Ljava/lang/String;
 	public final fun getPhoneConfirm ()Ljava/lang/Boolean;
