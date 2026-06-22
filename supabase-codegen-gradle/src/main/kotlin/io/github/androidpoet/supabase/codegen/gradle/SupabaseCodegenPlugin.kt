@@ -111,10 +111,18 @@ public abstract class GenerateSupabaseModelsTask : DefaultTask() {
         }
 
         logger.lifecycle("Fetching Supabase schema from ${projectUrl.trimEnd('/')}/rest/v1/ …")
+        val pkg = packageName.get()
         val spec = SchemaFetcher.fetch(projectUrl, apiKey)
-        val files = SupabaseModelGenerator.generate(spec, packageName.get())
+        val files = SupabaseModelGenerator.generate(spec, pkg)
 
         val root = outputDir.get().asFile
+        // Clear the generator-owned subpackages first so a table/enum dropped from the schema
+        // doesn't leave a stale file. Scoped to those dirs, so hand-written code elsewhere is safe.
+        val packageDir = root.resolve(pkg.replace('.', '/'))
+        for (sub in SupabaseModelGenerator.generatedSubpackages) {
+            packageDir.resolve(sub).deleteRecursively()
+        }
+
         for (file in files) {
             val target = root.resolve(file.relativePath)
             target.parentFile.mkdirs()
