@@ -67,9 +67,13 @@ public object SupabaseSqlDelightGenerator {
         sb.append("CREATE TABLE IF NOT EXISTS ${quote(tableName)} (\n").append(columns).append("\n);\n")
 
         sb.append("\nselectAll:\nSELECT * FROM ${quote(tableName)};\n")
+        sb.append("\ncountAll:\nSELECT COUNT(*) FROM ${quote(tableName)};\n")
         if (pk != null) {
             sb.append("\nselectById:\nSELECT * FROM ${quote(tableName)} WHERE ${quote(pk)} = ?;\n")
             sb.append("\ndeleteById:\nDELETE FROM ${quote(tableName)} WHERE ${quote(pk)} = ?;\n")
+            // Offset + keyset pagination, ordered by the primary key.
+            sb.append("\npage:\nSELECT * FROM ${quote(tableName)} ORDER BY ${quote(pk)} LIMIT ? OFFSET ?;\n")
+            sb.append("\npageAfter:\nSELECT * FROM ${quote(tableName)} WHERE ${quote(pk)} > ? ORDER BY ${quote(pk)} LIMIT ?;\n")
         }
         val cols = definition.properties.keys
         val colList = cols.joinToString(", ") { quote(it) }

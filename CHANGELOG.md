@@ -6,9 +6,18 @@
 
 - **Codegen can emit SQLDelight `.sq` schema** (`--format sqldelight`, or `SupabaseSqlDelightGenerator`).
   Generates one `.sq` file per table — `CREATE TABLE` with Postgres→SQLite storage classes, the primary
-  key detected from PostgREST's `<pk/>` description marker, and standard `selectAll`/`selectById`/
-  `upsert`/`deleteById` queries — for SQLDelight's own plugin to compile into a typed database. The
-  default `--format kotlin` (one `@Serializable` file per table/enum) is unchanged.
+  key detected from PostgREST's `<pk/>` description marker, and standard queries: `selectAll`,
+  `selectById`, `upsert`, `deleteById`, `countAll`, plus offset `page` and keyset `pageAfter`
+  pagination — for SQLDelight's own plugin to compile into a typed database. The default
+  `--format kotlin` (one `@Serializable` file per table/enum) is unchanged.
+- **Codegen can emit offline-sync adapters** (`--format sqldelight --adapters true`, or
+  `SupabaseSqlDelightAdapterGenerator`). Writes a `SupabaseAdapters.kt` with a
+  `supabaseAdapters(driver)` factory that wires each generated table into an
+  [offline-sync](https://github.com/AndroidPoet/offline-sync-kmp) `LocalStore` as its source of
+  truth — one generic adapter per table configured by a column descriptor (kind + nullability) and
+  primary key, no per-table conversion code. Requires the offline-sync runtime on the classpath.
+- **Read the schema from a local file** with `--spec <openapi.json>` instead of fetching it from a
+  live project — no network, no key. (`--url`/`--key` still work as before.)
 
 ## 0.9.4
 

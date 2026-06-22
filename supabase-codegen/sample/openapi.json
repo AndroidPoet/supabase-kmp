@@ -1,0 +1,35 @@
+{
+  "swagger": "2.0",
+  "info": { "title": "sample PostgREST schema", "version": "12.0.1" },
+  "host": "sample.supabase.co",
+  "basePath": "/",
+  "definitions": {
+    "chat_rooms": {
+      "required": ["id", "name", "is_private", "member_count", "created_at"],
+      "properties": {
+        "id": { "format": "uuid", "type": "string", "description": "Note:\nThis is a Primary Key.<pk/>" },
+        "name": { "format": "text", "type": "string" },
+        "topic": { "format": "text", "type": "string" },
+        "is_private": { "format": "boolean", "type": "boolean" },
+        "member_count": { "format": "int32", "type": "integer" },
+        "settings": { "format": "jsonb", "type": "object" },
+        "created_at": { "format": "timestamp with time zone", "type": "string" }
+      }
+    },
+    "chat_messages": {
+      "required": ["id", "room_id", "body", "edited", "score", "created_at"],
+      "properties": {
+        "id": { "format": "uuid", "type": "string", "description": "Note:\nThis is a Primary Key.<pk/>" },
+        "room_id": { "format": "uuid", "type": "string", "description": "Note:\nThis is a Foreign Key to `chat_rooms.id`.<fk table='chat_rooms' column='id'/>" },
+        "sender_id": { "format": "uuid", "type": "string" },
+        "body": { "format": "text", "type": "string" },
+        "reactions": { "format": "jsonb", "type": "object" },
+        "edited": { "format": "boolean", "type": "boolean" },
+        "score": { "format": "int64", "type": "integer" },
+        "price": { "format": "numeric", "type": "number" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "created_at": { "format": "timestamp with time zone", "type": "string" }
+      }
+    }
+  }
+}
