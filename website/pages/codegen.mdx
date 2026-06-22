@@ -1,0 +1,288 @@
+---
+title: Codegen
+description: Generate typed @Serializable Kotlin models from your live Supabase schema — one file per table and enum, in commonMain-safe code, via a Gradle plugin or CLI. Includes an auto-sync mode that keeps models in lockstep with the database.
+---
+
+import { Callout } from 'nextra/components'
+
+# Codegen — typed models from your schema
+
+Every Supabase project publishes a machine-readable description of its database
+(the PostgREST OpenAPI document, served at `/rest/v1/`). The codegen reads that
+description and writes Kotlin `@Serializable` data classes that match your tables
+and enums — so instead of hand-writing a `data class Todo(...)` and keeping it in
+sync with your database by memory, you generate it.
+
+The generator is a **build-time tool** — exactly like Supabase's own
+`supabase gen types`. It runs on your machine (or CI), reads the schema, and emits
+Kotlin source. It never ships inside your app, and it only ever *reads* the schema —
+it never writes to your database. The code it produces uses only multiplatform-common
+types, so it drops straight into `commonMain` and compiles for **any** KMP target,
+including Android + iOS only.
+
+<Callout type="info">
+The generator runs on the JVM (Gradle is a JVM process), but it works for every KMP
+target. Your app does **not** need a JVM/desktop target — only the generated models
+need to be common, and they are.
+</Callout>
+
+## Install
+
+The generator ships as a Gradle plugin published to Maven Central. Add Maven Central
+to your plugin repositories in **`settings.gradle.kts`**:
+
+```kotlin
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+```
+
+Then apply the plugin in the module that should own the generated models:
+
+```kotlin
+plugins {
+    id("io.github.androidpoet.supabase.codegen") version "0.9.4"
+}
+```
+
+## Pick a mode
+
+There are two ways to use the codegen, and the right one depends on **where you want
+your source of truth to live**.
+
+| | Auto-sync | On-demand (commit) |
+| --- | --- | --- |
+| When models are generated | Before **every** compile | When **you** run the task |
+| Where they live | `build/` (gitignored) | Your source tree (committed) |
+| Can go stale? | No — always fresh | Yes, until you re-run |
+| Build needs network + key? | Yes (skipped if unset) | No |
+| Visible in code review? | No | Yes (diffed in PRs) |
+| Closest analogue | SQLDelight / jOOQ | `supabase gen types` |
+
+Auto-sync guarantees your models always match the database. Commit mode keeps builds
+offline and makes schema changes show up as a reviewable diff. Both are first-class —
+choose per project.
+
+## Mode A — Auto-sync
+
+Turn on `autoSync` and the models are regenerated into `build/generated/supabase`
+before every Kotlin compile, so they always reflect the live schema. Add that output
+as a source directory so it gets compiled:
+
+```kotlin
+plugins {
+    id("io.github.androidpoet.supabase.codegen") version "0.9.4"
+}
+
+supabaseCodegen {
+    packageName.set("com.example.db")
+    autoSync.set(true)
+    // url/key fall back to the SUPABASE_URL / SUPABASE_KEY environment variables
+}
+
+// Compile the generated output (KMP commonMain shown):
+kotlin.sourceSets.commonMain {
+    kotlin.srcDir(layout.buildDirectory.dir("generated/supabase"))
+}
+```
+
+For an Android-only module, register it on the Android source set instead:
+
+```kotlin
+android.sourceSets.getByName("main").java.srcDir(layout.buildDirectory.dir("generated/supabase"))
+```
+
+Then just build with the credentials in the environment:
+
+```bash
+export SUPABASE_URL="https://<ref>.supabase.co"
+export SUPABASE_KEY="<service_role key>"
+./gradlew build   # models regenerate, then compile
+```
+
+<Callout type="info">
+**Offline and CI stay green.** If `SUPABASE_URL`/`SUPABASE_KEY` aren't set, auto-sync is
+**skipped with a warning** rather than failing — so a teammate or CI job without a Supabase
+instance can still build. A configured-but-unreachable fetch *does* fail the build (with a
+30s connect / 60s request timeout), so you find out when the schema is genuinely unavailable.
+</Callout>
+
+<Callout type="warning">
+Auto-sync output lives under `build/` and is regenerated on every run, so **never commit it
+and never hand-edit it** — your changes would be wiped. Add `build/` to `.gitignore` (most
+projects already do). To customise a model, [extend it](#customising-models) in your own file.
+</Callout>
+
+## Mode B — On-demand (commit the models)
+
+Leave `autoSync` off (the default) and run the task when your schema changes, writing
+straight into your source set so the models are committed — the way `supabase gen types`
+is typically used:
+
+```kotlin
+plugins {
+    id("io.github.androidpoet.supabase.codegen") version "0.9.4"
+}
+
+supabaseCodegen {
+    packageName.set("com.example.db")
+    outputDir.set(layout.projectDirectory.dir("src/commonMain/kotlin"))
+}
+```
+
+```bash
+export SUPABASE_URL="https://<ref>.supabase.co"
+export SUPABASE_KEY="<service_role key>"
+./gradlew generateSupabaseModels   # writes into commonMain — commit the result
+```
+
+The task is deliberately **not** wired into `compileKotlin` in this mode, so a normal
+`./gradlew build` never hits the network or needs a key.
+
+## Mode C — CLI
+
+If you'd rather keep codegen out of your build script (or drive it from a CI script),
+run the `supabase-codegen` tool directly. It mirrors `supabase gen types`:
+
+```bash
+supabase-codegen \
+  --url https://<ref>.supabase.co \
+  --key <service_role key> \
+  --package com.example.db \
+  --out src/commonMain/kotlin
+```
+
+`--url`/`--key` fall back to `SUPABASE_URL` / `SUPABASE_KEY`. `--package` defaults to
+`supabase.generated` and `--out` to `build/generated/supabase`.
+
+## What gets generated
+
+Models are split by kind into typed sub-packages (the jOOQ layout), one file each, so a
+large schema stays navigable and a single column change is a one-file diff:
+
+```
+com/example/db/
+  tables/
+    ChatRooms.kt
+    ChatMessages.kt
+  enums/
+    OrderStatus.kt
+```
+
+A table like:
+
+```sql
+create table chat_messages (
+    id         uuid primary key default gen_random_uuid(),
+    room_id    uuid not null references chat_rooms(id),
+    sender_id  uuid references auth.users(id),     -- nullable
+    body       text not null,
+    created_at timestamptz not null default now()
+);
+```
+
+becomes:
+
+```kotlin
+package com.example.db.tables
+
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
+public data class ChatMessages(
+    public val id: String,
+    @SerialName("room_id")
+    public val roomId: String,
+    @SerialName("sender_id")
+    public val senderId: String? = null,
+    public val body: String,
+    @SerialName("created_at")
+    public val createdAt: String,
+)
+```
+
+Two details worth knowing, because they make the models *correct* against real responses:
+
+- **Snake_case columns become camelCase** Kotlin properties, with a `@SerialName` so the
+  wire name still matches.
+- **`NOT NULL` columns are non-null and required; nullable columns are `T? = null`.** The
+  default matters: kotlinx.serialization treats a `T?` *without* a default as required (the
+  key must be present), so a partial `select=...` that omits a nullable column would throw.
+  Giving nullable columns a `= null` default makes them genuinely optional, while `NOT NULL`
+  columns stay non-default so a row missing them still fails loudly.
+
+### Type mapping
+
+| Postgres | Kotlin |
+| --- | --- |
+| `int2`, `int4`, `integer`, `serial` | `Int` |
+| `int8`, `bigint`, `bigserial` | `Long` |
+| `numeric`, `decimal`, `real`, `double precision` | `Double` |
+| `boolean` | `Boolean` |
+| `json`, `jsonb` | `kotlinx.serialization.json.JsonElement` |
+| `text`, `varchar`, `uuid`, `timestamp*`, `date`, `time`, `bytea` | `String` |
+| Postgres `enum` | a generated `enum class` (in `enums/`) |
+| array (`text[]`, `int4[]`, …) | `List<T>` of the element type |
+
+<Callout type="warning">
+**`money` maps to `String`, not `Double`.** PostgREST serialises Postgres `money` as a
+locale-formatted string (e.g. `"$1,234.56"`), so decoding it into `Double` would throw on
+every row. Parse it client-side, or expose the column as `amount::numeric` to receive a
+JSON number (which maps to `Double`). Dates/timestamps arrive as ISO-8601 strings.
+</Callout>
+
+## Customising models
+
+The generated files are owned by the generator and overwritten on every run, so **don't edit
+them**. Because the models are plain Kotlin data classes, you add behaviour the idiomatic way —
+with extension functions and properties in your **own** file, which survive regeneration:
+
+```kotlin
+// app/src/commonMain/kotlin/com/example/db/ChatMessagesExt.kt  (your file, never regenerated)
+import com.example.db.tables.ChatMessages
+
+val ChatMessages.isFromAnon: Boolean
+    get() = senderId == null
+
+fun ChatMessages.preview(max: Int = 40): String =
+    if (body.length <= max) body else body.take(max) + "…"
+```
+
+<Callout type="info">
+On regeneration the generator first clears the sub-packages it owns (`tables/`, `enums/`),
+so a table or enum you drop from the database won't leave a stale file behind. The cleanup is
+scoped to those sub-packages, so hand-written code elsewhere in the package — like the
+extensions above — is left untouched.
+</Callout>
+
+## Which key to use
+
+Use a **`service_role`** key (or any role that can read every table you want generated). The
+`anon` key only sees tables exposed by your RLS policies, so codegen may come back with fewer
+tables — or none. Codegen only performs a read-only `GET /rest/v1/`; it never modifies your
+database.
+
+<Callout type="warning">
+Never commit your `service_role` key. Pass it via the `SUPABASE_URL` / `SUPABASE_KEY`
+environment variables (the plugin and CLI both read them) rather than hard-coding it in a
+build file, and keep any local credentials file gitignored.
+</Callout>
+
+## Configuration reference
+
+The `supabaseCodegen { }` extension:
+
+| Property | Default | Purpose |
+| --- | --- | --- |
+| `url` | `$SUPABASE_URL` | Project URL, e.g. `https://<ref>.supabase.co`. |
+| `key` | `$SUPABASE_KEY` | API key whose role can read the target tables. |
+| `packageName` | `supabase.generated` | Base package; models go under `.tables` / `.enums`. |
+| `outputDir` | `build/generated/supabase` | Where files are written. |
+| `autoSync` | `false` | Regenerate before every compile (otherwise on-demand). |
+
+The plugin registers a `generateSupabaseModels` task (group `supabase`) you can run directly
+in either mode.
