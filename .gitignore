@@ -16,5 +16,11 @@ docs/
 # Local-only Supabase config for the web sample
 samples/passkey-web/src/wasmJsMain/resources/config.js
 
+# Codegen credentials (kept local, never committed). The credentials are passed via
+# SUPABASE_URL / SUPABASE_KEY env vars; this guards any stray files. The *generated*
+# models contain no secrets (just table structure) and ARE committed — see
+# samples/chat-compose/.../generated/SupabaseModels.kt.
+codegen.local.properties
+
 # Local-only JVM desktop demo app — kept on this machine, never pushed to GitHub
 samples/desktop-demo/
