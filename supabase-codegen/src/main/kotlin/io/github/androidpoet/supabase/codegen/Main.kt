@@ -14,8 +14,9 @@ import java.nio.file.Path
  * ```
  * `--url`/`--key` fall back to the `SUPABASE_URL` / `SUPABASE_KEY` environment vars.
  *
- * Output is one file per table (under `{package}.tables`) and per enum (under
- * `{package}.enums`).
+ * `--format kotlin` (default) emits one Kotlin file per table (under `{package}.tables`) and per
+ * enum (under `{package}.enums`). `--format sqldelight` emits one `.sq` file per table for
+ * SQLDelight's plugin to compile.
  */
 public fun main(args: Array<String>) {
     val options = parseArgs(args)
@@ -27,17 +28,27 @@ public fun main(args: Array<String>) {
     }
     val packageName = options["--package"] ?: "supabase.generated"
     val outDir = options["--out"] ?: "build/generated/supabase"
+    val format = options["--format"]?.lowercase() ?: "kotlin"
 
     println("Fetching schema from ${url.trimEnd('/')}/rest/v1/ …")
     val spec = SchemaFetcher.fetch(url, key)
-    val files = SupabaseModelGenerator.generate(spec, packageName)
-
-    // Clear the generator-owned subpackages first so a table/enum dropped from the schema
-    // doesn't leave a stale file. Scoped to those dirs, so hand-written code elsewhere is safe.
     val packageDir = Path.of(outDir, *packageName.split('.').toTypedArray())
-    for (sub in SupabaseModelGenerator.generatedSubpackages) {
-        packageDir.resolve(sub).toFile().deleteRecursively()
-    }
+
+    // Generate, clearing prior output first so a dropped table/enum can't leave a stale file.
+    val files =
+        when (format) {
+            "kotlin" -> {
+                for (sub in SupabaseModelGenerator.generatedSubpackages) {
+                    packageDir.resolve(sub).toFile().deleteRecursively()
+                }
+                SupabaseModelGenerator.generate(spec, packageName)
+            }
+            "sqldelight" -> {
+                packageDir.toFile().listFiles { f -> f.extension == "sq" }?.forEach { it.delete() }
+                SupabaseSqlDelightGenerator.generate(spec, packageName)
+            }
+            else -> error("Unknown --format '$format' (use 'kotlin' or 'sqldelight').")
+        }
 
     for (file in files) {
         val target = Path.of(outDir, file.relativePath)
@@ -45,7 +56,7 @@ public fun main(args: Array<String>) {
         Files.writeString(target, file.contents)
         println("✓ Wrote $target")
     }
-    println("✓ Generated ${files.size} file(s)")
+    println("✓ Generated ${files.size} $format file(s)")
 }
 
 private fun parseArgs(args: Array<String>): Map<String, String> {

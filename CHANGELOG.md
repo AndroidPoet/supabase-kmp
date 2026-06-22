@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- **Codegen can emit SQLDelight `.sq` schema** (`--format sqldelight`, or `SupabaseSqlDelightGenerator`).
+  Generates one `.sq` file per table — `CREATE TABLE` with Postgres→SQLite storage classes, the primary
+  key detected from PostgREST's `<pk/>` description marker, and standard `selectAll`/`selectById`/
+  `upsert`/`deleteById` queries — for SQLDelight's own plugin to compile into a typed database. The
+  default `--format kotlin` (one `@Serializable` file per table/enum) is unchanged.
+
 ## 0.9.4
 
 > Codegen-only release: `supabase-codegen` + `supabase-codegen-gradle` published at `0.9.4`.
