@@ -14,7 +14,6 @@ class SupabaseCodegenPluginTest {
         val extension = project.extensions.findByType(SupabaseCodegenExtension::class.java)
         assertNotNull(extension, "supabaseCodegen extension should be registered")
         assertEquals("supabase.generated", extension.packageName.get())
-        assertEquals("SupabaseModels", extension.fileName.get())
 
         val task = project.tasks.findByName("generateSupabaseModels")
         assertNotNull(task, "generateSupabaseModels task should be registered")

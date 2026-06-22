@@ -13,6 +13,9 @@ import java.nio.file.Path
  *   --package com.example.db --out src/commonMain/kotlin
  * ```
  * `--url`/`--key` fall back to the `SUPABASE_URL` / `SUPABASE_KEY` environment vars.
+ *
+ * Output is one file per table (under `{package}.tables`) and per enum (under
+ * `{package}.enums`).
  */
 public fun main(args: Array<String>) {
     val options = parseArgs(args)
@@ -24,17 +27,18 @@ public fun main(args: Array<String>) {
     }
     val packageName = options["--package"] ?: "supabase.generated"
     val outDir = options["--out"] ?: "build/generated/supabase"
-    val fileName = options["--file"] ?: "SupabaseModels"
 
     println("Fetching schema from ${url.trimEnd('/')}/rest/v1/ …")
     val spec = SchemaFetcher.fetch(url, key)
-    val code = SupabaseModelGenerator.generate(spec, packageName, fileName)
+    val files = SupabaseModelGenerator.generate(spec, packageName)
 
-    val targetDir = Path.of(outDir, *packageName.split('.').toTypedArray())
-    Files.createDirectories(targetDir)
-    val target = targetDir.resolve("$fileName.kt")
-    Files.writeString(target, code)
-    println("✓ Wrote $target")
+    for (file in files) {
+        val target = Path.of(outDir, file.relativePath)
+        Files.createDirectories(target.parent)
+        Files.writeString(target, file.contents)
+        println("✓ Wrote $target")
+    }
+    println("✓ Generated ${files.size} file(s)")
 }
 
 private fun parseArgs(args: Array<String>): Map<String, String> {

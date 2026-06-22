@@ -34,18 +34,15 @@ public abstract class SupabaseCodegenExtension {
     /** API key whose role can read the target tables. Falls back to `SUPABASE_KEY`. */
     public abstract val key: Property<String>
 
-    /** Package for the generated file. Defaults to `supabase.generated`. */
+    /** Package for the generated models. Defaults to `supabase.generated`. */
     public abstract val packageName: Property<String>
 
-    /** Generated file name (without extension). Defaults to `SupabaseModels`. */
-    public abstract val fileName: Property<String>
-
-    /** Where to write the generated file. Defaults to `build/generated/supabase`. */
+    /** Where to write the generated files. Defaults to `build/generated/supabase`. */
     public abstract val outputDir: DirectoryProperty
 }
 
 /**
- * Fetches the Supabase schema and writes one Kotlin file of `@Serializable` models. This is
+ * Fetches the Supabase schema and writes one Kotlin file per table/enum of `@Serializable` models. This is
  * an on-demand task — it is deliberately NOT wired into `compileKotlin`, because the schema
  * lives behind the network and needs a key, and you don't want either on every build. Run it
  * when your schema changes (and commit the result, the way `supabase gen types` is used).
@@ -68,9 +65,6 @@ public abstract class GenerateSupabaseModelsTask : DefaultTask() {
     public abstract val packageName: Property<String>
 
     @get:Internal
-    public abstract val fileName: Property<String>
-
-    @get:Internal
     public abstract val outputDir: DirectoryProperty
 
     @TaskAction
@@ -84,17 +78,19 @@ public abstract class GenerateSupabaseModelsTask : DefaultTask() {
                     "supabaseCodegen.key is not set (or export SUPABASE_KEY). Use a key that can read your tables.",
                 )
         val pkg = packageName.get()
-        val file = fileName.get()
 
         logger.lifecycle("Fetching Supabase schema from ${projectUrl.trimEnd('/')}/rest/v1/ …")
         val spec = SchemaFetcher.fetch(projectUrl, apiKey)
-        val code = SupabaseModelGenerator.generate(spec, pkg, file)
+        val files = SupabaseModelGenerator.generate(spec, pkg)
 
-        val packageDir = outputDir.get().asFile.resolve(pkg.replace('.', '/'))
-        packageDir.mkdirs()
-        val target = packageDir.resolve("$file.kt")
-        target.writeText(code)
-        logger.lifecycle("✓ Wrote $target")
+        val root = outputDir.get().asFile
+        for (file in files) {
+            val target = root.resolve(file.relativePath)
+            target.parentFile.mkdirs()
+            target.writeText(file.contents)
+            logger.lifecycle("✓ Wrote $target")
+        }
+        logger.lifecycle("✓ Generated ${files.size} file(s)")
     }
 }
 
@@ -103,7 +99,6 @@ public class SupabaseCodegenPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         val extension = project.extensions.create("supabaseCodegen", SupabaseCodegenExtension::class.java)
         extension.packageName.convention("supabase.generated")
-        extension.fileName.convention("SupabaseModels")
         extension.outputDir.convention(project.layout.buildDirectory.dir("generated/supabase"))
 
         project.tasks.register("generateSupabaseModels", GenerateSupabaseModelsTask::class.java) { task ->
@@ -112,7 +107,6 @@ public class SupabaseCodegenPlugin : Plugin<Project> {
             task.url.set(extension.url.orElse(project.providers.environmentVariable("SUPABASE_URL")))
             task.key.set(extension.key.orElse(project.providers.environmentVariable("SUPABASE_KEY")))
             task.packageName.set(extension.packageName)
-            task.fileName.set(extension.fileName)
             task.outputDir.set(extension.outputDir)
             // The remote schema can change without any local input changing, so never report
             // up-to-date — when you run the task, you mean it.

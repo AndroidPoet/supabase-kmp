@@ -18,11 +18,22 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import kotlinx.serialization.json.Json
 
+/** One generated Kotlin source file: its path relative to the output root, and its contents. */
+public data class GeneratedFile(
+    public val relativePath: String,
+    public val contents: String,
+)
+
 /**
- * Generates Kotlin `@Serializable` data classes (one per table) and `enum class`es
- * (one per Postgres enum) from a PostgREST OpenAPI document. The database is the
- * source of truth — this only ever *reads* the schema and emits Kotlin source; it
- * never writes anything back to the database.
+ * Generates Kotlin `@Serializable` data classes (one file per table, under a `tables`
+ * sub-package) and `enum class`es (one file per Postgres enum, under an `enums`
+ * sub-package) from a PostgREST OpenAPI document. The database is the source of truth —
+ * this only ever *reads* the schema and emits Kotlin source; it never writes anything
+ * back to the database.
+ *
+ * The generated files are fully owned by the generator and overwritten on every run, so
+ * never hand-edit them. To add behaviour, write extension functions/properties on the
+ * generated types in your OWN file — that survives regeneration.
  */
 public object SupabaseModelGenerator {
     private val json =
@@ -35,63 +46,71 @@ public object SupabaseModelGenerator {
     private val serialName = ClassName("kotlinx.serialization", "SerialName")
     private val jsonElement = ClassName("kotlinx.serialization.json", "JsonElement")
 
-    /**
-     * Parses the OpenAPI [specJson] served at `{projectUrl}/rest/v1/` and returns a
-     * single Kotlin source file (named [fileName]) under [packageName] containing a
-     * data class for every table and an enum class for every Postgres enum.
-     */
-    public fun generate(
-        specJson: String,
-        packageName: String,
-        fileName: String = "SupabaseModels",
-    ): String = generate(json.decodeFromString(OpenApiSpec.serializer(), specJson), packageName, fileName)
+    // Sub-packages each kind of model is emitted into, so a large schema stays navigable and
+    // a table and an enum that share a Kotlin name (e.g. `order_status`) land in different
+    // packages instead of colliding. Mirrors jOOQ's `tables`/`enums` layout.
+    private const val TABLES_SUBPACKAGE = "tables"
+    private const val ENUMS_SUBPACKAGE = "enums"
 
-    internal fun generate(spec: OpenApiSpec, packageName: String, fileName: String): String {
+    private val header =
+        listOf(
+            "Generated from the Supabase schema. Do not edit by hand.",
+            "To customise a model, add extension functions/properties in your OWN file —",
+            "this file is regenerated (overwritten) on every run.",
+        )
+
+    /**
+     * Parses the OpenAPI [specJson] served at `{projectUrl}/rest/v1/` and returns one
+     * [GeneratedFile] per table (under `{packageName}.tables`) and per Postgres enum
+     * (under `{packageName}.enums`).
+     */
+    public fun generate(specJson: String, packageName: String): List<GeneratedFile> =
+        generate(json.decodeFromString(OpenApiSpec.serializer(), specJson), packageName)
+
+    internal fun generate(spec: OpenApiSpec, packageName: String): List<GeneratedFile> {
+        val tablesPackage = "$packageName.$TABLES_SUBPACKAGE"
+        val enumsPackage = "$packageName.$ENUMS_SUBPACKAGE"
+
         // Collected across all tables and de-duplicated by enum type name, since the
         // same Postgres enum can back columns on many tables.
         val enums = linkedMapOf<String, List<String>>()
-        val tables = mutableListOf<TypeSpec>()
-        // Two distinct tables can normalise to the same Kotlin class name (e.g. `user_profile`
-        // and `userProfile`). That would emit duplicate declarations that don't compile, so we
-        // fail fast with an actionable message instead.
-        val claimedNames = mutableMapOf<String, String>()
+        // Keyed by Kotlin class name so two tables that normalise to the same name (e.g.
+        // `user_profile` and `userProfile`) are caught: they would emit two files with the
+        // same class, so we fail fast with an actionable message instead.
+        val tableTypes = linkedMapOf<String, TypeSpec>()
+        val claimedTables = mutableMapOf<String, String>()
 
         for ((tableName, definition) in spec.definitions) {
             if (definition.properties.isEmpty()) continue // a data class needs ≥1 property
             val className = Naming.pascal(tableName)
-            val clash = claimedNames.put(className, tableName)
+            val clash = claimedTables.put(className, tableName)
             check(clash == null) {
                 "Tables `$clash` and `$tableName` both map to the Kotlin class `$className`. " +
                     "Rename one of the tables (or its exposed name) so the generated names don't collide."
             }
-            tables += buildDataClass(packageName, className, tableName, definition, enums)
+            tableTypes[className] = buildDataClass(enumsPackage, className, tableName, definition, enums)
         }
 
-        // Enums and table data classes are all emitted as top-level types in one file,
-        // so a table and an enum that normalise to the same Kotlin name (e.g. table
-        // `order_status` and Postgres enum `order_status`) would emit two declarations
-        // with the same name that don't compile. Fail fast, mirroring the table/column/
-        // enum-name collision checks.
-        for (enumName in enums.keys) {
-            val tableName = claimedNames[enumName]
-            check(tableName == null) {
-                "Postgres enum `$enumName` and table `$tableName` both map to the Kotlin type " +
-                    "`$enumName`. Rename one of them (or its exposed name) so the generated " +
-                    "names don't collide."
-            }
-        }
+        // Tables and enums live in separate sub-packages, so a table and an enum that share a
+        // Kotlin name no longer collide — no cross-check needed (unlike the single-file layout).
 
-        val file =
-            FileSpec
-                .builder(packageName, fileName)
-                .addFileComment("Generated from the Supabase schema. Do not edit by hand.")
-        enums.forEach { (name, values) -> file.addType(buildEnum(name, values)) }
-        tables.forEach(file::addType)
-        return file.build().toString()
+        val files = mutableListOf<GeneratedFile>()
+        enums.forEach { (name, values) -> files += fileOf(enumsPackage, name, buildEnum(name, values)) }
+        tableTypes.forEach { (name, type) -> files += fileOf(tablesPackage, name, type) }
+        return files
+    }
+
+    /** Wraps a single top-level [type] in its own file under [packageName]. */
+    private fun fileOf(packageName: String, fileName: String, type: TypeSpec): GeneratedFile {
+        val builder = FileSpec.builder(packageName, fileName)
+        header.forEach(builder::addFileComment)
+        val contents = builder.addType(type).build().toString()
+        val relativePath = "${packageName.replace('.', '/')}/$fileName.kt"
+        return GeneratedFile(relativePath, contents)
     }
 
     private fun buildDataClass(
-        packageName: String,
+        enumsPackage: String,
         className: String,
         tableName: String,
         definition: TableDefinition,
@@ -111,7 +130,7 @@ public object SupabaseModelGenerator {
 
         for ((columnName, column) in definition.properties) {
             val nullable = columnName !in definition.required
-            val type = kotlinType(packageName, tableName, columnName, column, enums).copy(nullable = nullable)
+            val type = kotlinType(enumsPackage, tableName, columnName, column, enums).copy(nullable = nullable)
             val propName = Naming.camel(columnName)
 
             val clash = claimedProps.put(propName, columnName)
@@ -164,7 +183,7 @@ public object SupabaseModelGenerator {
 
     /** Maps one column to its Kotlin type, registering any enum it introduces. */
     private fun kotlinType(
-        packageName: String,
+        enumsPackage: String,
         tableName: String,
         columnName: String,
         column: ColumnProperty,
@@ -173,10 +192,9 @@ public object SupabaseModelGenerator {
         if (column.enum.isNotEmpty()) {
             val enumName = Naming.enumName(column.format, tableName, columnName)
             registerEnum(enums, enumName, column.enum)
-            // Enums are emitted into THIS same file/package, so reference them with the
-            // file's package — an empty-package ClassName makes KotlinPoet emit an
-            // `import <Enum>` from the default package, which Kotlin forbids (uncompilable).
-            return ClassName(packageName, enumName)
+            // Enums live in their own `.enums` package; reference them by their full
+            // package so KotlinPoet emits a correct `import {package}.enums.{Enum}`.
+            return ClassName(enumsPackage, enumName)
         }
         if (column.type == "array") {
             val items = column.items
@@ -186,7 +204,7 @@ public object SupabaseModelGenerator {
                     items.enum.isNotEmpty() -> {
                         val enumName = Naming.enumName(items.format, tableName, columnName)
                         registerEnum(enums, enumName, items.enum)
-                        ClassName(packageName, enumName)
+                        ClassName(enumsPackage, enumName)
                     }
                     // A nested array (e.g. int[][]) reports its element `type` as "array" with
                     // no scalar format. Keep it as raw JSON so deserialization can't fail trying
