@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## 0.9.2
+
+### Added
+
+- **Codegen is now published to Maven Central.** The `supabase-codegen` CLI/library and the
+  `io.github.androidpoet.supabase.codegen` Gradle plugin (`supabase-codegen-gradle`) are published
+  under the same `io.github.androidpoet` group as the rest of the SDK. Apply the plugin with
+  `plugins { id("io.github.androidpoet.supabase.codegen") version "0.9.2" }` (add `mavenCentral()` to
+  `pluginManagement.repositories`), or run the CLI, to generate `@Serializable` models from your
+  Supabase schema. The generator is a JVM build-time tool (like `supabase gen types`); only the code
+  it emits is multiplatform-common, so it works for any KMP target set including Android+iOS-only.
+
 ### Removed
 
 - **`AdminUserAttributes.nonce`** — removed a non-functional field. GoTrue's admin
