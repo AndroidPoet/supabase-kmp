@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Changed
+
+- **Codegen now emits one file per model in typed sub-packages** instead of a single
+  `SupabaseModels.kt`. Tables go to `{package}.tables` (one file each) and Postgres enums to
+  `{package}.enums`, mirroring jOOQ's layout — large schemas stay navigable and a column change
+  produces a one-file diff. A table and an enum that share a Kotlin name (e.g. `order_status`) no
+  longer collide, since they land in different packages. **API:** `SupabaseModelGenerator.generate`
+  now returns `List<GeneratedFile>` and no longer takes a `fileName`; the CLI's `--file` flag and the
+  Gradle extension's `fileName` property were removed. The generated header now points users to
+  extension functions/properties for customisation (don't hand-edit generated files).
+
 ## 0.9.2
 
 ### Added

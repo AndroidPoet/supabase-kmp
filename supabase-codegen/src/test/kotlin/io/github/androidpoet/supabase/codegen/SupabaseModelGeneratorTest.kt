@@ -32,13 +32,24 @@ class SupabaseModelGeneratorTest {
         }
         """.trimIndent()
 
-    private val generated = SupabaseModelGenerator.generate(fixture, packageName = "com.example.db")
+    // All generated files concatenated, for the content-level assertions below.
+    private val generated = source(fixture)
+
+    private fun source(spec: String, packageName: String = "com.example.db"): String =
+        SupabaseModelGenerator.generate(spec, packageName).joinToString("\n") { it.contents }
 
     @Test
     fun generates_a_serializable_data_class_named_after_the_table() {
-        assertContains(generated, "package com.example.db")
+        assertContains(generated, "package com.example.db.tables")
         assertContains(generated, "@Serializable")
         assertContains(generated, "data class Todos(")
+    }
+
+    @Test
+    fun emits_one_file_per_table_and_per_enum_in_typed_folders() {
+        val paths = SupabaseModelGenerator.generate(fixture, "com.example.db").map { it.relativePath }
+        assertContains(paths, "com/example/db/tables/Todos.kt")
+        assertContains(paths, "com/example/db/enums/PriorityLevel.kt")
     }
 
     @Test
@@ -100,7 +111,7 @@ class SupabaseModelGeneratorTest {
             }
             """.trimIndent()
 
-        val generated = SupabaseModelGenerator.generate(spec, packageName = "com.example.db")
+        val generated = source(spec)
 
         assertContains(generated, "val price: String?") // money → String (would throw as Double)
         assertContains(generated, "val tax: Double?") // numeric → Double (JSON number)
@@ -114,21 +125,21 @@ class SupabaseModelGeneratorTest {
     }
 
     @Test
-    fun postgres_enums_become_serializable_enum_classes() {
+    fun postgres_enums_become_serializable_enum_classes_in_their_own_package() {
         assertContains(generated, "enum class PriorityLevel")
         assertContains(generated, "@SerialName(\"low\")")
         assertContains(generated, "LOW")
         assertContains(generated, "HIGH")
         assertContains(generated, "val priority: PriorityLevel?")
-        // The enum lives in the SAME file/package, so it must be referenced directly,
-        // never imported. An empty-package ClassName made KotlinPoet emit
-        // `import PriorityLevel` from the default package, which Kotlin forbids — the
-        // whole generated file then failed to compile. Guard against that regression.
+        // Enums live in their own `.enums` package; the table file imports them from there.
+        assertContains(generated, "package com.example.db.enums")
+        assertContains(generated, "import com.example.db.enums.PriorityLevel")
+        // Never an empty-package import (`import PriorityLevel`), which Kotlin forbids and
+        // would make the generated file uncompilable. Guard against that regression.
         assertFalse(
-            "import PriorityLevel" in generated,
+            "import PriorityLevel\n" in generated,
             "enum must not be imported from the default package (uncompilable)",
         )
-        assertFalse("import com.example.db.PriorityLevel" in generated, "same-package enum must not be self-imported")
     }
 
     @Test
@@ -156,7 +167,7 @@ class SupabaseModelGeneratorTest {
               }
             }
             """.trimIndent()
-        val out = SupabaseModelGenerator.generate(schema, packageName = "p")
+        val out = source(schema, "p")
         assertContains(out, "val `class`: String") // hard keyword → backticked
         assertContains(out, "val `1stPlace`: Int?") // digit-leading identifier → backticked
         assertContains(out, "@SerialName(\"1st_place\")")
@@ -213,10 +224,10 @@ class SupabaseModelGeneratorTest {
     }
 
     @Test
-    fun fails_fast_when_a_table_and_an_enum_collide_on_one_kotlin_name() {
-        // Table `order_status` → `class OrderStatus`; a column whose Postgres enum type
-        // is `order_status` → `enum class OrderStatus`. Both are top-level types in one
-        // file, so without a cross-check they emit a redeclaration that won't compile.
+    fun a_table_and_an_enum_with_the_same_name_no_longer_collide() {
+        // Table `order_status` → `tables/OrderStatus.kt`; a column whose Postgres enum type
+        // is `order_status` → `enums/OrderStatus.kt`. In the single-file layout these were a
+        // fatal redeclaration; split into typed sub-packages they coexist cleanly.
         val schema =
             """
             {
@@ -234,11 +245,9 @@ class SupabaseModelGeneratorTest {
               }
             }
             """.trimIndent()
-        val error =
-            assertFailsWith<IllegalStateException> {
-                SupabaseModelGenerator.generate(schema, packageName = "p")
-            }
-        assertContains(error.message ?: "", "OrderStatus")
+        val paths = SupabaseModelGenerator.generate(schema, "p").map { it.relativePath }
+        assertContains(paths, "p/tables/OrderStatus.kt")
+        assertContains(paths, "p/enums/OrderStatus.kt")
     }
 
     @Test
