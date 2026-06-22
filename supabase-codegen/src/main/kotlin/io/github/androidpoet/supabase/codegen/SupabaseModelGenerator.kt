@@ -52,6 +52,14 @@ public object SupabaseModelGenerator {
     private const val TABLES_SUBPACKAGE = "tables"
     private const val ENUMS_SUBPACKAGE = "enums"
 
+    /**
+     * The sub-packages (under the configured package) that this generator fully owns and emits
+     * into. Writers should delete these before writing a fresh run so a table/enum dropped from
+     * the schema doesn't leave an orphan file behind — scoping the cleanup to these dirs keeps
+     * any hand-written code elsewhere in the package safe.
+     */
+    public val generatedSubpackages: List<String> = listOf(TABLES_SUBPACKAGE, ENUMS_SUBPACKAGE)
+
     private val header =
         listOf(
             "Generated from the Supabase schema. Do not edit by hand.",

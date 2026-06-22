@@ -4,6 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class SupabaseModelGeneratorTest {
     // A representative slice of a REAL PostgREST OpenAPI document. Note the integer formats
@@ -50,6 +51,21 @@ class SupabaseModelGeneratorTest {
         val paths = SupabaseModelGenerator.generate(fixture, "com.example.db").map { it.relativePath }
         assertContains(paths, "com/example/db/tables/Todos.kt")
         assertContains(paths, "com/example/db/enums/PriorityLevel.kt")
+    }
+
+    @Test
+    fun every_generated_file_lives_under_a_declared_owned_subpackage() {
+        // The writers delete `generatedSubpackages` before each run to clear stale output, so every
+        // file MUST live under one of them — otherwise a dropped table/enum would orphan a file the
+        // cleanup never touches. This guards that invariant if a new model kind is ever added.
+        val owned = SupabaseModelGenerator.generatedSubpackages.map { "com/example/db/$it/" }
+        val files = SupabaseModelGenerator.generate(fixture, "com.example.db")
+        for (file in files) {
+            assertTrue(
+                owned.any { file.relativePath.startsWith(it) },
+                "generated file ${file.relativePath} is outside the cleaned subpackages $owned",
+            )
+        }
     }
 
     @Test

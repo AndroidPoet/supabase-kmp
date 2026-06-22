@@ -32,6 +32,13 @@ public fun main(args: Array<String>) {
     val spec = SchemaFetcher.fetch(url, key)
     val files = SupabaseModelGenerator.generate(spec, packageName)
 
+    // Clear the generator-owned subpackages first so a table/enum dropped from the schema
+    // doesn't leave a stale file. Scoped to those dirs, so hand-written code elsewhere is safe.
+    val packageDir = Path.of(outDir, *packageName.split('.').toTypedArray())
+    for (sub in SupabaseModelGenerator.generatedSubpackages) {
+        packageDir.resolve(sub).toFile().deleteRecursively()
+    }
+
     for (file in files) {
         val target = Path.of(outDir, file.relativePath)
         Files.createDirectories(target.parent)

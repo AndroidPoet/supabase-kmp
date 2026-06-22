@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Fixed
+
+- **Codegen clears stale models on regeneration.** Before writing, the CLI and Gradle task now
+  delete the generator-owned subpackages (`tables/`, `enums/`) under the target package, so a table
+  or enum dropped from the schema no longer leaves an orphan file that compiles against a column/table
+  that no longer exists. This matters most with `autoSync` (which regenerates every build). Cleanup is
+  scoped to those subpackages, so hand-written code elsewhere in the package is untouched.
+- **Codegen schema fetch now has timeouts** (30s connect, 60s request) so a stalled connection fails
+  the build with a clear error instead of hanging the compile pipeline indefinitely.
+
 ## 0.9.3
 
 ### Added
