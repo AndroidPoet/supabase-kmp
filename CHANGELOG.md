@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.9.4
+
+> Codegen-only release: `supabase-codegen` + `supabase-codegen-gradle` published at `0.9.4`.
+> The other SDK modules are unchanged from `0.9.2`/`0.9.3`.
+
 ### Fixed
 
 - **Codegen clears stale models on regeneration.** Before writing, the CLI and Gradle task now
