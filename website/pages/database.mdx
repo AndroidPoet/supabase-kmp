@@ -31,6 +31,12 @@ val database = createDatabaseClient(client)
 data class Todo(val id: String, val title: String, val done: Boolean)
 ```
 
+<Callout type="info">
+You don't have to write these models by hand. The [Codegen](/codegen) tool generates a
+typed `@Serializable` data class for every table and enum straight from your live schema —
+so your models can't drift from the database.
+</Callout>
+
 Every call returns a `SupabaseResult` — see [Results & Errors](/results-and-errors)
 for how to handle the success and failure branches.
 

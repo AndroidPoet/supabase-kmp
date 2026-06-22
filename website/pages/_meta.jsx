@@ -7,6 +7,7 @@ export default {
   'results-and-errors': 'Results & Errors',
   auth: 'Authentication',
   database: 'Database',
+  codegen: 'Codegen',
   storage: 'Storage',
   realtime: 'Realtime',
   functions: 'Edge Functions',
