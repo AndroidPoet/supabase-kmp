@@ -52,6 +52,72 @@ android {
     }
 }
 
+// --- Supabase model auto-sync -------------------------------------------------------------
+// Regenerate @Serializable models from the LIVE schema into build/generated/supabase before
+// every build, so they always track the database. Output lives under build/ (gitignored) and is
+// never hand-edited — the SQLDelight "generated code is build output" model. Skips gracefully when
+// SUPABASE_URL/SUPABASE_KEY are unset, so the sample still configures offline / without an instance.
+//
+// (A standalone consumer would instead apply the published plugin with `autoSync = true`; this
+// sample drives the codegen CLI directly because a project can't apply a sibling module's plugin
+// within the same Gradle build.)
+// Resolve url/key via providers at configuration time (tracked as config-cache inputs) so we
+// avoid storing script-capturing lambdas on the task, which the configuration cache rejects.
+val supabaseGeneratedDir =
+    layout.buildDirectory
+        .dir("generated/supabase")
+        .get()
+        .asFile
+val supabaseUrlForGen =
+    providers
+        .gradleProperty("SUPABASE_URL")
+        .orElse(providers.environmentVariable("SUPABASE_URL"))
+        .orElse("")
+        .get()
+val supabaseKeyForGen =
+    providers
+        .gradleProperty("SUPABASE_KEY")
+        .orElse(providers.environmentVariable("SUPABASE_KEY"))
+        .orElse("")
+        .get()
+val supabaseCodegenConfigured = supabaseUrlForGen.isNotBlank() && supabaseKeyForGen.isNotBlank()
+
+val codegenClasspath: Configuration by configurations.creating
+dependencies { codegenClasspath(project(":supabase-codegen")) }
+
+val generateSupabaseModels by tasks.registering(JavaExec::class) {
+    group = "supabase"
+    description = "Auto-sync @Serializable models from the live Supabase schema"
+    classpath = codegenClasspath
+    mainClass.set("io.github.androidpoet.supabase.codegen.MainKt")
+    args(
+        "--url",
+        supabaseUrlForGen,
+        "--key",
+        supabaseKeyForGen,
+        "--package",
+        "io.github.androidpoet.supabase.sample.chat.generated",
+        "--out",
+        supabaseGeneratedDir.path,
+    )
+    // No declared outputs → JavaExec always runs (the remote schema can change with no local
+    // change). Disabled (not failed) when unconfigured so the sample still builds offline.
+    enabled = supabaseCodegenConfigured
+}
+
+if (!supabaseCodegenConfigured) {
+    logger.lifecycle("supabase codegen: SUPABASE_URL/SUPABASE_KEY not set — model auto-sync disabled for this build.")
+}
+
+// Compile the generated models, and regenerate them first on every Kotlin compile.
+android.sourceSets
+    .getByName("main")
+    .java
+    .srcDir(supabaseGeneratedDir)
+tasks
+    .matching { it.name.startsWith("compile") && it.name.contains("Kotlin") }
+    .configureEach { dependsOn(generateSupabaseModels) }
+
 dependencies {
     implementation(project(":supabase-client"))
     implementation(project(":supabase-auth"))
