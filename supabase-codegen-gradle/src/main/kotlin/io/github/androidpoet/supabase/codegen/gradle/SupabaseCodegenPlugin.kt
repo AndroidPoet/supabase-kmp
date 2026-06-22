@@ -21,11 +21,17 @@ import org.gradle.work.DisableCachingByDefault
  *     url.set(providers.environmentVariable("SUPABASE_URL"))
  *     key.set(providers.environmentVariable("SUPABASE_KEY"))
  *     packageName.set("com.example.db")
- *     outputDir.set(layout.projectDirectory.dir("src/commonMain/kotlin"))
+ *     autoSync.set(true) // regenerate from the live schema on every build
  * }
  * ```
  *
  * `url`/`key` fall back to the `SUPABASE_URL` / `SUPABASE_KEY` environment variables.
+ *
+ * With [autoSync] on, the models are regenerated into [outputDir] (defaults to
+ * `build/generated/supabase`, which you should gitignore) before every Kotlin compile, so they
+ * always track the database — the SQLDelight/RevenueCat "generated code is build output, never
+ * edited" model. Add the output as a source directory, e.g.
+ * `kotlin.sourceSets.commonMain { kotlin.srcDir(layout.buildDirectory.dir("generated/supabase")) }`.
  */
 public abstract class SupabaseCodegenExtension {
     /** Project URL, e.g. `https://<ref>.supabase.co`. Falls back to `SUPABASE_URL`. */
@@ -39,13 +45,22 @@ public abstract class SupabaseCodegenExtension {
 
     /** Where to write the generated files. Defaults to `build/generated/supabase`. */
     public abstract val outputDir: DirectoryProperty
+
+    /**
+     * When `true`, regenerate the models from the live schema before every Kotlin compile so they
+     * stay in sync with the database (output goes to [outputDir]; gitignore it and never hand-edit).
+     * Requires network + a key on every build; if neither `url`/`key` nor the env vars are set, the
+     * build skips codegen (with a warning) rather than failing, so it stays buildable offline/in CI
+     * without credentials. A reachable-but-failing fetch still fails the build. Defaults to `false`
+     * (the on-demand `generateSupabaseModels` task, committed like `supabase gen types`).
+     */
+    public abstract val autoSync: Property<Boolean>
 }
 
 /**
- * Fetches the Supabase schema and writes one Kotlin file per table/enum of `@Serializable` models. This is
- * an on-demand task — it is deliberately NOT wired into `compileKotlin`, because the schema
- * lives behind the network and needs a key, and you don't want either on every build. Run it
- * when your schema changes (and commit the result, the way `supabase gen types` is used).
+ * Fetches the Supabase schema and writes one Kotlin file per table/enum of `@Serializable` models.
+ * By default this is an on-demand task; with `supabaseCodegen.autoSync = true` it is wired to run
+ * before every Kotlin compile so the models always track the live schema.
  *
  * Everything is `@Internal`: this is a side-effecting command whose real input (the remote
  * schema) Gradle can't observe, so tracking inputs/outputs would only add footguns — notably
@@ -67,21 +82,37 @@ public abstract class GenerateSupabaseModelsTask : DefaultTask() {
     @get:Internal
     public abstract val outputDir: DirectoryProperty
 
+    /** Set by the plugin from `supabaseCodegen.autoSync`; controls the missing-credentials behaviour. */
+    @get:Internal
+    public abstract val autoSync: Property<Boolean>
+
     @TaskAction
     public fun generate() {
-        val projectUrl =
-            url.orNull?.takeIf { it.isNotBlank() }
-                ?: throw GradleException("supabaseCodegen.url is not set (or export SUPABASE_URL).")
-        val apiKey =
-            key.orNull?.takeIf { it.isNotBlank() }
-                ?: throw GradleException(
-                    "supabaseCodegen.key is not set (or export SUPABASE_KEY). Use a key that can read your tables.",
+        val auto = autoSync.getOrElse(false)
+        val projectUrl = url.orNull?.takeIf { it.isNotBlank() }
+        val apiKey = key.orNull?.takeIf { it.isNotBlank() }
+
+        // In auto-sync mode an unconfigured build (no url/key) must not fail — that would break
+        // offline/CI builds and contributors who don't have a Supabase instance. Skip instead.
+        // A configured-but-unreachable fetch below still throws and fails the build.
+        if (projectUrl == null || apiKey == null) {
+            if (auto) {
+                logger.warn(
+                    "supabaseCodegen: SUPABASE_URL/SUPABASE_KEY not set — skipping auto-sync codegen for this build.",
                 )
-        val pkg = packageName.get()
+                return
+            }
+            throw GradleException(
+                when (projectUrl) {
+                    null -> "supabaseCodegen.url is not set (or export SUPABASE_URL)."
+                    else -> "supabaseCodegen.key is not set (or export SUPABASE_KEY). Use a key that can read your tables."
+                },
+            )
+        }
 
         logger.lifecycle("Fetching Supabase schema from ${projectUrl.trimEnd('/')}/rest/v1/ …")
         val spec = SchemaFetcher.fetch(projectUrl, apiKey)
-        val files = SupabaseModelGenerator.generate(spec, pkg)
+        val files = SupabaseModelGenerator.generate(spec, packageName.get())
 
         val root = outputDir.get().asFile
         for (file in files) {
@@ -100,17 +131,31 @@ public class SupabaseCodegenPlugin : Plugin<Project> {
         val extension = project.extensions.create("supabaseCodegen", SupabaseCodegenExtension::class.java)
         extension.packageName.convention("supabase.generated")
         extension.outputDir.convention(project.layout.buildDirectory.dir("generated/supabase"))
+        extension.autoSync.convention(false)
 
-        project.tasks.register("generateSupabaseModels", GenerateSupabaseModelsTask::class.java) { task ->
-            task.group = "supabase"
-            task.description = "Generates Kotlin @Serializable models from your Supabase schema"
-            task.url.set(extension.url.orElse(project.providers.environmentVariable("SUPABASE_URL")))
-            task.key.set(extension.key.orElse(project.providers.environmentVariable("SUPABASE_KEY")))
-            task.packageName.set(extension.packageName)
-            task.outputDir.set(extension.outputDir)
-            // The remote schema can change without any local input changing, so never report
-            // up-to-date — when you run the task, you mean it.
-            task.outputs.upToDateWhen { false }
+        val generateTask =
+            project.tasks.register("generateSupabaseModels", GenerateSupabaseModelsTask::class.java) { task ->
+                task.group = "supabase"
+                task.description = "Generates Kotlin @Serializable models from your Supabase schema"
+                task.url.set(extension.url.orElse(project.providers.environmentVariable("SUPABASE_URL")))
+                task.key.set(extension.key.orElse(project.providers.environmentVariable("SUPABASE_KEY")))
+                task.packageName.set(extension.packageName)
+                task.outputDir.set(extension.outputDir)
+                task.autoSync.set(extension.autoSync)
+                // The remote schema can change without any local input changing, so never report
+                // up-to-date — when this runs, it means it.
+                task.outputs.upToDateWhen { false }
+            }
+
+        // Auto-sync: regenerate before every Kotlin compile so the models track the live schema.
+        // Done in afterEvaluate so the Kotlin/Android compile tasks (and the user's autoSync choice)
+        // are registered. The generated dir still has to be added as a source set by the consumer.
+        project.afterEvaluate {
+            if (extension.autoSync.getOrElse(false)) {
+                project.tasks
+                    .matching { it.name.startsWith("compile") && it.name.contains("Kotlin") }
+                    .configureEach { it.dependsOn(generateTask) }
+            }
         }
     }
 }

@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Added
+
+- **Codegen auto-sync** — `supabaseCodegen { autoSync = true }` wires model generation into every
+  Kotlin compile so the generated models always track the live schema (the SQLDelight/RevenueCat
+  "generated code is build output, never hand-edited" model). Output goes to `build/generated/supabase`
+  (gitignore it) and the generator owns it. When `SUPABASE_URL`/`SUPABASE_KEY` are unset, auto-sync
+  is skipped (with a warning) rather than failing, so offline/CI builds without credentials still
+  build; a configured-but-unreachable fetch still fails the build. The default stays the on-demand
+  `generateSupabaseModels` task (commit the output, like `supabase gen types`).
+
 ### Changed
 
 - **Codegen now emits one file per model in typed sub-packages** instead of a single

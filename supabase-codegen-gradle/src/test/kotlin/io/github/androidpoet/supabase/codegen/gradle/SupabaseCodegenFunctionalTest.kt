@@ -49,4 +49,37 @@ class SupabaseCodegenFunctionalTest {
             "task must be configuration-cache compatible, got:\n${result.output}",
         )
     }
+
+    @Test
+    fun auto_sync_skips_instead_of_failing_when_credentials_are_missing() {
+        // With autoSync on, an unconfigured build (no url/key) must SUCCEED with a skip warning,
+        // so offline/CI builds and credential-less contributors aren't broken.
+        val dir = createTempDirectory("codegen-ft-auto").toFile()
+        File(dir, "settings.gradle.kts").writeText("""rootProject.name = "ft-auto"""")
+        File(dir, "build.gradle.kts").writeText(
+            """
+            plugins { id("io.github.androidpoet.supabase.codegen") }
+
+            supabaseCodegen {
+                url.set("")
+                key.set("")
+                packageName.set("com.example.db")
+                autoSync.set(true)
+            }
+            """.trimIndent(),
+        )
+
+        val result =
+            GradleRunner
+                .create()
+                .withProjectDir(dir)
+                .withPluginClasspath()
+                .withArguments("generateSupabaseModels")
+                .build()
+
+        assertTrue(
+            "skipping auto-sync codegen" in result.output,
+            "expected a skip warning, got:\n${result.output}",
+        )
+    }
 }
