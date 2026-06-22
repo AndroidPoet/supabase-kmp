@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.9.3
+
 ### Added
 
 - **Codegen auto-sync** — `supabaseCodegen { autoSync = true }` wires model generation into every
@@ -22,6 +24,12 @@
   now returns `List<GeneratedFile>` and no longer takes a `fileName`; the CLI's `--file` flag and the
   Gradle extension's `fileName` property were removed. The generated header now points users to
   extension functions/properties for customisation (don't hand-edit generated files).
+
+### Fixed
+
+- **chat-compose sample builds again** — pinned `androidx.lifecycle` to `2.8.7` (the `2.11.0` it had
+  required AGP 9.1 / compileSdk 37, but the project is on AGP 8.7.3 / compileSdk 35, so the sample
+  failed dependency resolution). Sample-only; no published-module change.
 
 ## 0.9.2
 
