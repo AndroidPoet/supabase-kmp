@@ -52,6 +52,7 @@ supabase-database = { module = "io.github.androidpoet:supabase-database", versio
 supabase-storage = { module = "io.github.androidpoet:supabase-storage", version.ref = "supabase-kmp" }
 supabase-realtime = { module = "io.github.androidpoet:supabase-realtime", version.ref = "supabase-kmp" }
 supabase-functions = { module = "io.github.androidpoet:supabase-functions", version.ref = "supabase-kmp" }
+supabase-sync = { module = "io.github.androidpoet:supabase-sync", version.ref = "supabase-kmp" } # + supabase-sync-core, supabase-sync-sqldelight for offline-first sync
 
 # Optional add-ons — only add the ones you need
 supabase-auth-google = { module = "io.github.androidpoet:supabase-auth-google", version.ref = "supabase-kmp" }
@@ -136,6 +137,9 @@ Errors carry a `category` (`Conflict`, `NotFound`, `Unauthorized`, `RateLimited`
 | **supabase-realtime** | `io.github.androidpoet:supabase-realtime` | WebSocket (Phoenix protocol), auto-reconnect, broadcast, presence |
 | **supabase-functions** | `io.github.androidpoet:supabase-functions` | Edge function invocation with typed responses |
 | **supabase-e2ee** | `io.github.androidpoet:supabase-e2ee` | Optional client-side E2E encryption (ECDH → HKDF → AES-256-GCM) |
+| **supabase-sync-core** | `io.github.androidpoet:supabase-sync-core` | Offline-first sync engine — pull/merge/push, conflict resolution, keyset cursor (transport-agnostic) |
+| **supabase-sync-sqldelight** | `io.github.androidpoet:supabase-sync-sqldelight` | On-device local store over SQLDelight — typed-table SSOT, outbox, cursor, pagination |
+| **supabase-sync** | `io.github.androidpoet:supabase-sync` | Supabase remote source — incremental pull/push over PostgREST + live Realtime deltas |
 
 ## Targets
 

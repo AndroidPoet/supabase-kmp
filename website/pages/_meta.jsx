@@ -10,6 +10,7 @@ export default {
   codegen: 'Codegen',
   storage: 'Storage',
   realtime: 'Realtime',
+  'offline-sync': 'Offline Sync',
   functions: 'Edge Functions',
   'spring-boot': 'Spring Boot Backend',
   paging: 'Pagination',

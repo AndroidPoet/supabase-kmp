@@ -4,6 +4,18 @@
 
 ### Added
 
+- **Offline-first sync** — three new opt-in modules that keep a local database in sync with Supabase,
+  so the app reads instantly and works offline:
+  - `supabase-sync-core` — transport-agnostic engine (pull → merge → push, `LastWriteWins` + per-table
+    conflict resolvers, composite `(updatedAt, id)` keyset cursor).
+  - `supabase-sync-sqldelight` — on-device `LocalStore` over SQLDelight: synced rows live in your own
+    typed tables (source of truth via `TableAdapter`), with an outbox, pull cursor, tombstone sidecar
+    and offset/keyset pagination.
+  - `supabase-sync` — `SupabaseRemoteSource`: incremental pull + bulk upsert over PostgREST and live
+    deltas over Realtime. Synced tables expose `id`, an integer epoch-millis `updated_at`, and a
+    `deleted` tombstone (names configurable via `SyncColumns`). The core SDK stays thin — these are
+    opt-in. Pairs with codegen's `--adapters` output.
+
 - **Codegen can emit SQLDelight `.sq` schema** (`--format sqldelight`, or `SupabaseSqlDelightGenerator`).
   Generates one `.sq` file per table — `CREATE TABLE` with Postgres→SQLite storage classes, the primary
   key detected from PostgREST's `<pk/>` description marker, and standard queries: `selectAll`,

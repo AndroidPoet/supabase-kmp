@@ -1,0 +1,105 @@
+---
+title: Offline Sync
+description: Keep a local SQLDelight database in sync with Supabase so your Kotlin Multiplatform app reads instantly, works offline, and pushes changes when it reconnects.
+---
+
+import { Callout } from 'nextra/components'
+
+# Offline Sync
+
+Offline sync keeps a copy of your data **on the device** and reconciles it with
+Supabase in the background. Your UI reads from the local copy — so it's instant and
+works with no network — while edits are queued and pushed to the server as soon as
+you're back online. The remote database stays the source of truth.
+
+This is **opt-in**: it lives in three separate modules, so the core SDK stays thin.
+Add them only if you want offline-first behaviour.
+
+| Module | What it does |
+|--------|--------------|
+| `supabase-sync-core` | The engine: pull → merge → push, conflict resolution, the pull cursor. Transport-agnostic. |
+| `supabase-sync-sqldelight` | The on-device store, backed by SQLDelight. This is what saves data locally. |
+| `supabase-sync` | The Supabase side: pulls/pushes over PostgREST and streams live changes over Realtime. |
+
+## How it works
+
+One **sync cycle** does three things for a table:
+
+1. **Pull** — fetch every row that changed on the server since the last time, using a
+   keyset cursor so nothing is skipped or re-fetched.
+2. **Merge** — for any row you also edited locally, a **conflict resolver** decides the
+   winner (last-write-wins by default, or your own per-table rule).
+3. **Push** — send your queued local edits (the *outbox*) to the server.
+
+Between syncs you can also **observe** a table for live Realtime changes, which are
+merged into the local store the moment they arrive.
+
+## The table contract
+
+Every synced table needs three columns. The names are configurable through
+`SyncColumns`, but the meaning is fixed:
+
+| Column | Type | Purpose |
+|--------|------|---------|
+| `id` | `text` / `uuid` | Primary key; used to match rows on upsert. |
+| `updated_at` | `bigint` (epoch millis) | When the row last changed — drives last-write-wins and the pull cursor. |
+| `deleted` | `boolean` | A soft-delete tombstone, so deletions still show up in an incremental pull. |
+
+<Callout type="warning">
+`updated_at` must be an **integer epoch-millis** column (`bigint`), not a
+`timestamptz`. The cursor compares it as a number, so a timestamp column won't sort
+correctly against it. Store the millis, or add a generated `bigint` column.
+</Callout>
+
+Add Row Level Security policies that let the same token both **read** the rows and
+**subscribe** to them over Realtime.
+
+## Wiring it up
+
+```kotlin
+import io.github.androidpoet.supabase.sync.SyncEngine
+import io.github.androidpoet.supabase.sync.remote.SupabaseRemoteSource
+import io.github.androidpoet.supabase.sync.remote.SyncColumns
+
+// 1. The Supabase clients (share one auth token so RLS applies to reads + realtime).
+val database = createDatabaseClient(client)
+val realtime = createRealtimeClient(client)
+
+// 2. The remote half — PostgREST + Realtime.
+val remote = SupabaseRemoteSource(
+    database = database,
+    realtime = realtime,
+    columns = SyncColumns(), // defaults: id / updated_at / deleted
+)
+
+// 3. The local half (SQLDelight) and the engine.
+val local = openOfflineSyncStore(driver, adapters = supabaseAdapters(driver))
+val engine = SyncEngine(local, remote)
+
+// Pull changes, merge, push your outbox:
+engine.sync("notes")
+
+// Or stay live — Realtime deltas merged into the local store as they arrive:
+engine.observe("notes").collect { /* update your UI */ }
+```
+
+Bring your own SQLDelight `SqlDriver` (Android, iOS/macOS native, JVM). The
+`supabaseAdapters(driver)` factory is generated for you by codegen — see
+[Codegen](/codegen) (`--adapters`).
+
+## Reads, writes, and conflicts
+
+- **Reads** come from the local SQLDelight tables — instant and offline.
+- **Writes** go into the local store and an outbox first, then push on the next `sync()`.
+  They apply locally right away, so the UI updates immediately (optimistic).
+- **Deletes** are soft: the row is tombstoned (`deleted = true`) rather than removed, so
+  the deletion propagates to other devices through an incremental pull.
+- **Conflicts** (a row changed both locally and remotely) are resolved per table. The
+  default keeps the newer `updated_at`; register a `ConflictResolver` for field-level
+  merges or any other policy.
+
+## What it is not
+
+This is a small, explicit sync layer for small-to-medium offline-first apps — not a
+PowerSync-scale replication engine. It assumes server-set `updated_at`, soft deletes,
+and a re-pull on reconnect. See the module READMEs for the full envelope.
