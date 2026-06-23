@@ -23,6 +23,7 @@ spotless = "8.7.0"
 ktlint = "1.5.0"
 passkeys = "0.1.0"
 kotlinpoet = "1.18.1"
+sqldelight = "2.1.0"
 
 [libraries]
 passkeys = { module = "io.github.androidpoet:passkeys", version.ref = "passkeys" }
@@ -46,6 +47,10 @@ ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 
 kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
+
+sqldelight-runtime = { module = "app.cash.sqldelight:runtime", version.ref = "sqldelight" }
+sqldelight-driver-sqlite = { module = "app.cash.sqldelight:sqlite-driver", version.ref = "sqldelight" }
+sqldelight-driver-native = { module = "app.cash.sqldelight:native-driver", version.ref = "sqldelight" }
 
 cryptography-random = { module = "dev.whyoleg.cryptography:cryptography-random", version.ref = "cryptography" }
 cryptography-core = { module = "dev.whyoleg.cryptography:cryptography-core", version.ref = "cryptography" }
@@ -86,3 +91,4 @@ binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibil
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 atomicfu = { id = "org.jetbrains.kotlinx.atomicfu", version.ref = "atomicfu" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }

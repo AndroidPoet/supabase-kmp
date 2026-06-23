@@ -1,0 +1,19 @@
+-- Sidecar sync metadata for rows that live in the consumer's own typed tables (SSOT path). Keeps
+-- the server `updatedAt` and the soft-delete tombstone out of the domain schema, so a typed table
+-- stays a clean 1:1 mirror of the remote. Keyed by (tableName, id) like the rest of the store.
+CREATE TABLE SyncMeta (
+  tableName TEXT NOT NULL,
+  id        TEXT NOT NULL,
+  updatedAt INTEGER NOT NULL,
+  deleted   INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (tableName, id)
+);
+
+put:
+INSERT OR REPLACE INTO SyncMeta(tableName, id, updatedAt, deleted) VALUES (?, ?, ?, ?);
+
+get:
+SELECT updatedAt, deleted FROM SyncMeta WHERE tableName = ? AND id = ?;
+
+delete:
+DELETE FROM SyncMeta WHERE tableName = ? AND id = ?;

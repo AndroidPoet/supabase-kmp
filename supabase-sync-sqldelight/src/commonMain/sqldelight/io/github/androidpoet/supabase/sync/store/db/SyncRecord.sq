@@ -1,0 +1,29 @@
+-- The synced rows, stored in their transport-neutral form (see core's `Record`). Keyed by
+-- (tableName, id) so one database holds every table's rows side by side. `fields` is the
+-- JsonObject serialised to text; `deleted` is a soft-delete tombstone (0/1).
+CREATE TABLE SyncRecord (
+  tableName TEXT NOT NULL,
+  id        TEXT NOT NULL,
+  updatedAt INTEGER NOT NULL,
+  deleted   INTEGER NOT NULL DEFAULT 0,
+  fields    TEXT NOT NULL,
+  PRIMARY KEY (tableName, id)
+);
+
+upsert:
+INSERT OR REPLACE INTO SyncRecord(tableName, id, updatedAt, deleted, fields)
+VALUES (?, ?, ?, ?, ?);
+
+selectById:
+SELECT updatedAt, deleted, fields FROM SyncRecord WHERE tableName = ? AND id = ?;
+
+-- Offset pagination, ordered by id.
+page:
+SELECT id, updatedAt, deleted, fields FROM SyncRecord WHERE tableName = ? ORDER BY id LIMIT ? OFFSET ?;
+
+-- Keyset pagination: the next rows after a given id (pass '' for the first page).
+pageAfter:
+SELECT id, updatedAt, deleted, fields FROM SyncRecord WHERE tableName = ? AND id > ? ORDER BY id LIMIT ?;
+
+countAll:
+SELECT COUNT(*) FROM SyncRecord WHERE tableName = ?;
