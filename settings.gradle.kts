@@ -32,6 +32,9 @@ include(":supabase-codegen")
 include(":supabase-codegen-gradle")
 include(":e2e-tests")
 include(":samples:chat-compose")
+include(":samples:auth-starter")
+include(":samples:storage-gallery")
+include(":samples:todo-crud")
 include(":samples:passkey-web")
 
 // Local-only JVM desktop demo: gitignored and not pushed to GitHub. Only
