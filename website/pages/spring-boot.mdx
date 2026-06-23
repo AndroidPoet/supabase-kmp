@@ -33,8 +33,6 @@ the client plus database (and auth, if you sign users in):
 dependencies {
     implementation("io.github.androidpoet:supabase-client:0.9.1")
     implementation("io.github.androidpoet:supabase-database:0.9.1")
-
-    // Supabase KMP is coroutine-first; bridge to Spring MVC with runBlocking.
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
 }
 ```
