@@ -50,13 +50,22 @@ internal object E2e {
      * setup instructions if it is missing. Also asserts the [runId] safety
      * invariant before any test touches the network.
      */
-    fun config(): HostedConfig {
+    fun config(): HostedConfig =
+        configOrNull()
+            ?: error(
+                "E2E not configured. Export SUPABASE_E2E_URL and SUPABASE_E2E_ANON_KEY " +
+                    "(and SUPABASE_E2E_SERVICE_KEY for storage/admin) before running :e2e-tests:e2eTest.",
+            )
+
+    /**
+     * Like [config] but returns null instead of throwing when the hosted project
+     * isn't configured (e.g. in CI, which holds no hosted credentials). Lets
+     * config-dependent tests skip cleanly rather than fail.
+     */
+    fun configOrNull(): HostedConfig? {
         val url = env("SUPABASE_E2E_URL")
         val anon = env("SUPABASE_E2E_ANON_KEY")
-        check(!url.isNullOrBlank() && !anon.isNullOrBlank()) {
-            "E2E not configured. Export SUPABASE_E2E_URL and SUPABASE_E2E_ANON_KEY " +
-                "(and SUPABASE_E2E_SERVICE_KEY for storage/admin) before running :e2e-tests:e2eTest."
-        }
+        if (url.isNullOrBlank() || anon.isNullOrBlank()) return null
         check(runId.startsWith("e2e-")) { "Safety invariant violated: runId must start with 'e2e-'." }
         return HostedConfig(url = url, anonKey = anon, serviceKey = env("SUPABASE_E2E_SERVICE_KEY"))
     }

@@ -25,16 +25,15 @@ import kotlin.test.assertEquals
 class RealtimeBinaryE2eTest {
     @Test
     fun test_realtime_binaryBroadcast_roundTripsRawBytes() {
-        val config = E2e.config()
         // Needs a binary-capable hosted Realtime server (>= 2.103.2); the local CI
-        // stack isn't one. Gate on the service key as the "fully configured hosted
-        // project" signal and skip (not fail) otherwise.
+        // lane has no hosted config. Skip (not fail) when it isn't configured.
+        val config = E2e.configOrNull()
         assumeTrue(
-            "requires a fully configured hosted project (SUPABASE_E2E_SERVICE_KEY) — skipped without it",
-            config.serviceKey != null,
+            "requires hosted E2E config (SUPABASE_E2E_URL/ANON_KEY) — skipped without it",
+            config?.serviceKey != null,
         )
         runBlocking {
-            val client = E2e.anonClient(config)
+            val client = E2e.anonClient(config!!)
             val realtime = createRealtimeClient(client)
 
             val channelName = E2e.artifact("bin-bcast")

@@ -20,12 +20,15 @@ import kotlin.test.assertContentEquals
 class StorageE2eTest {
     @Test
     fun test_storage_uploadFakePng_roundTripsThenCleansUp() {
-        val config = E2e.config()
-        // Bucket administration requires the service role. Skip (not fail) when it
-        // is absent — e.g. in CI, which deliberately never holds a service-role key.
-        assumeTrue("requires SUPABASE_E2E_SERVICE_KEY — skipped without it", config.serviceKey != null)
+        // Needs hosted config + the service role for bucket admin. Skip (not fail)
+        // when absent — e.g. in CI, which holds no hosted/service-role credentials.
+        val config = E2e.configOrNull()
+        assumeTrue(
+            "requires hosted E2E config + SUPABASE_E2E_SERVICE_KEY — skipped without it",
+            config?.serviceKey != null,
+        )
         runTest {
-            val storage = createStorageClient(E2e.serviceClient(config))
+            val storage = createStorageClient(E2e.serviceClient(config!!))
 
             val bucketId = E2e.artifact("bucket")
             val objectPath = "fake.png"
