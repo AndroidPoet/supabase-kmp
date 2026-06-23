@@ -40,24 +40,16 @@ jobs:
           distribution: zulu
           java-version: 17
 
-      - uses: gradle/actions/setup-gradle@v4
-
-      # Kotlin extraction requires a traced compile (build-mode: none only sees
-      # Java, and this project is ~all Kotlin). Manual mode lets us compile just
-      # the JVM source sets of the library modules — enough for CodeQL to trace
-      # every published module without pulling in the Android sample build.
+      # No-build extraction. The traced-compile (manual) path runs CodeQL's
+      # Kotlin compiler plugin, which hard-fails on Kotlin 2.4.0
+      # ("KotlinVersionTooRecentError: supports versions below 2.3.30"). The
+      # no-build mode extracts Kotlin straight from source, so analysis keeps
+      # working on newer Kotlin until the traced extractor catches up.
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
           languages: java-kotlin
-          build-mode: manual
-
-      # --rerun-tasks --no-build-cache force kotlinc to actually run under the
-      # tracer; otherwise setup-gradle's restored cache makes compileKotlinJvm
-      # UP-TO-DATE, CodeQL sees no compilation, and the analysis fails with
-      # "no source code seen during build".
-      - name: Compile JVM sources (traced by CodeQL)
-        run: ./gradlew compileKotlinJvm --no-daemon --no-build-cache --rerun-tasks
+          build-mode: none
 
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@v4
