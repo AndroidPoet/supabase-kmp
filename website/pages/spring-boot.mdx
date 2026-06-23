@@ -1,0 +1,164 @@
+---
+title: Spring Boot Backend
+description: Use Supabase KMP as the data layer of a Spring Boot backend — create the client as a bean, drive PostgREST with typed CRUD, and bridge the coroutine API to Spring MVC.
+---
+
+import { Callout } from 'nextra/components'
+
+# Spring Boot Backend
+
+Supabase KMP is a Kotlin Multiplatform library, but one of those platforms is
+plain **JVM** — which means it runs perfectly well inside a server framework like
+**Spring Boot**. Instead of reaching for the Postgres JDBC driver and an ORM, your
+backend can talk to Supabase the same way a mobile or web client does: over
+PostgREST, with Row Level Security doing the gatekeeping.
+
+This guide shows the pieces. There's also a complete, runnable example —
+[**AndroidPoet/supabase-kmp-spring**](https://github.com/AndroidPoet/supabase-kmp-spring)
+— a Spring Boot service with Users + Products CRUD, auto-generated OpenAPI/Swagger,
+and the whole object graph wired with [Metro DI](https://github.com/ZacSweers/metro).
+
+<Callout type="info">
+  Use the **anon** key on the server too, and let RLS scope what each request can
+  see — exactly as you would in a client app. Reserve the service-role key for the
+  admin module, never a public endpoint.
+</Callout>
+
+## Add the dependencies
+
+You only need the JVM artifacts for the modules you use. A backend typically wants
+the client plus database (and auth, if you sign users in):
+
+```kotlin filename="build.gradle.kts"
+dependencies {
+    implementation("io.github.androidpoet:supabase-client:0.9.1")
+    implementation("io.github.androidpoet:supabase-database:0.9.1")
+
+    // Supabase KMP is coroutine-first; bridge to Spring MVC with runBlocking.
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
+}
+```
+
+<Callout type="warning">
+  The published artifacts are compiled for **Java 17** and ship Kotlin **2.4.0**
+  metadata. Build your app with `jvmTarget = 17` (or higher) and a Kotlin compiler
+  that can read 2.4 metadata (**Kotlin 2.3+**), or you'll hit
+  *"incompatible version of Kotlin"* at compile time.
+</Callout>
+
+## Create the client as a bean
+
+Everything starts from a `SupabaseClient`. Build it once and expose it — and the
+feature clients — as Spring beans so the rest of the app can inject them:
+
+```kotlin filename="SupabaseConfiguration.kt"
+@Configuration
+class SupabaseConfiguration(
+    @Value("\${supabase.url}") private val url: String,
+    @Value("\${supabase.anon-key}") private val anonKey: String,
+) {
+    @Bean
+    fun supabaseClient(): SupabaseClient =
+        Supabase.create(projectUrl = url, apiKey = anonKey) { logging = true }
+
+    @Bean
+    fun databaseClient(client: SupabaseClient): DatabaseClient = createDatabaseClient(client)
+}
+```
+
+Keep the URL and key out of source — read them from the environment
+(`SUPABASE_URL`, `SUPABASE_ANON_KEY`) via `application.yml`.
+
+## A repository over PostgREST
+
+Define a `@Serializable` model that matches your table, then write a repository.
+Every call returns a [`SupabaseResult`](/results-and-errors) — no exceptions on the
+happy path:
+
+```kotlin filename="ProductRepository.kt"
+@Serializable
+data class Product(
+    val id: Long,
+    val name: String,
+    val price: Double,
+    @SerialName("created_at") val createdAt: String? = null,
+)
+
+@Serializable
+data class NewProduct(val name: String, val price: Double)
+
+@Repository
+class ProductRepository(private val database: DatabaseClient) {
+    private val table = "products"
+
+    suspend fun findAll(): SupabaseResult<List<Product>> =
+        database.selectTyped(table = table) {
+            order("created_at", ascending = false)
+        }
+
+    suspend fun create(product: NewProduct): SupabaseResult<Product> =
+        database
+            .insert(table = table, body = defaultJson.encodeToString(NewProduct.serializer(), product))
+            .deserialize<List<Product>>()
+            .map { it.first() }
+
+    suspend fun delete(id: Long): SupabaseResult<Unit> =
+        database.deleteUnit(table = table) { eq("id", id) }
+}
+```
+
+## Bridge coroutines to Spring MVC
+
+Supabase KMP is `suspend`-based; Spring MVC controllers are blocking. Bridge them
+with `runBlocking`, and turn each `SupabaseResult` into a value (or an HTTP error)
+in one helper:
+
+```kotlin filename="SupabaseResultExtensions.kt"
+fun <T> SupabaseResult<T>.unwrap(): T =
+    when (this) {
+        is SupabaseResult.Success -> value
+        is SupabaseResult.Failure -> {
+            val status = when (error.category) {
+                SupabaseErrorCategory.Conflict -> HttpStatus.CONFLICT
+                SupabaseErrorCategory.NotFound -> HttpStatus.NOT_FOUND
+                SupabaseErrorCategory.Unauthorized -> HttpStatus.UNAUTHORIZED
+                SupabaseErrorCategory.RateLimited -> HttpStatus.TOO_MANY_REQUESTS
+                SupabaseErrorCategory.Validation -> HttpStatus.BAD_REQUEST
+                else -> HttpStatus.BAD_GATEWAY
+            }
+            throw ResponseStatusException(status, error.message)
+        }
+    }
+```
+
+Because the error carries a [`category`](/results-and-errors), the right HTTP
+status falls out without parsing codes. Now a controller stays a one-liner:
+
+```kotlin filename="ProductController.kt"
+@RestController
+@RequestMapping("/api/products")
+class ProductController(private val repository: ProductRepository) {
+    @GetMapping
+    fun list(): List<Product> = runBlocking { repository.findAll().unwrap() }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    fun create(@RequestBody product: NewProduct): Product =
+        runBlocking { repository.create(product).unwrap() }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun delete(@PathVariable id: Long) = runBlocking { repository.delete(id).unwrap() }
+}
+```
+
+That's the whole pattern: one client, typed repositories, a `runBlocking` +
+`unwrap()` seam at the service boundary, and RLS enforcing access on the server.
+
+## Full example
+
+The [**supabase-kmp-spring**](https://github.com/AndroidPoet/supabase-kmp-spring)
+repository puts it all together — Users + Products CRUD, request validation,
+RFC 7807 Problem Details errors, health probes, auto-generated OpenAPI + Swagger
+UI, and Metro DI building the object graph. Clone it, point it at your project,
+and run `./gradlew bootRun`.

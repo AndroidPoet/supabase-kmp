@@ -11,6 +11,7 @@ export default {
   storage: 'Storage',
   realtime: 'Realtime',
   functions: 'Edge Functions',
+  'spring-boot': 'Spring Boot Backend',
   paging: 'Pagination',
   encryption: 'End-to-End Encryption',
   'vector-search': 'Vector Search',
