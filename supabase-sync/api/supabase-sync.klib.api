@@ -1,0 +1,34 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, macosArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <supabase-kmp:supabase-sync>
+final class io.github.androidpoet.supabase.sync.remote/SupabaseRemoteSource : io.github.androidpoet.supabase.sync/RemoteSource { // io.github.androidpoet.supabase.sync.remote/SupabaseRemoteSource|null[0]
+    constructor <init>(io.github.androidpoet.supabase.database/DatabaseClient, io.github.androidpoet.supabase.realtime/RealtimeClient, io.github.androidpoet.supabase.sync.remote/SyncColumns = ..., kotlin/String = ..., kotlin/Int = ..., kotlinx.coroutines/CoroutineScope = ...) // io.github.androidpoet.supabase.sync.remote/SupabaseRemoteSource.<init>|<init>(io.github.androidpoet.supabase.database.DatabaseClient;io.github.androidpoet.supabase.realtime.RealtimeClient;io.github.androidpoet.supabase.sync.remote.SyncColumns;kotlin.String;kotlin.Int;kotlinx.coroutines.CoroutineScope){}[0]
+
+    final fun changes(kotlin/String): kotlinx.coroutines.flow/Flow<io.github.androidpoet.supabase.sync/RemoteChange> // io.github.androidpoet.supabase.sync.remote/SupabaseRemoteSource.changes|changes(kotlin.String){}[0]
+    final suspend fun pull(kotlin/String, io.github.androidpoet.supabase.sync/Cursor?): io.github.androidpoet.supabase.sync/PullResult // io.github.androidpoet.supabase.sync.remote/SupabaseRemoteSource.pull|pull(kotlin.String;io.github.androidpoet.supabase.sync.Cursor?){}[0]
+    final suspend fun push(kotlin/String, kotlin.collections/List<io.github.androidpoet.supabase.sync/PendingChange>): io.github.androidpoet.supabase.sync/PushResult // io.github.androidpoet.supabase.sync.remote/SupabaseRemoteSource.push|push(kotlin.String;kotlin.collections.List<io.github.androidpoet.supabase.sync.PendingChange>){}[0]
+}
+
+final class io.github.androidpoet.supabase.sync.remote/SyncColumns { // io.github.androidpoet.supabase.sync.remote/SyncColumns|null[0]
+    constructor <init>(kotlin/String = ..., kotlin/String = ..., kotlin/String = ...) // io.github.androidpoet.supabase.sync.remote/SyncColumns.<init>|<init>(kotlin.String;kotlin.String;kotlin.String){}[0]
+
+    final val deleted // io.github.androidpoet.supabase.sync.remote/SyncColumns.deleted|{}deleted[0]
+        final fun <get-deleted>(): kotlin/String // io.github.androidpoet.supabase.sync.remote/SyncColumns.deleted.<get-deleted>|<get-deleted>(){}[0]
+    final val id // io.github.androidpoet.supabase.sync.remote/SyncColumns.id|{}id[0]
+        final fun <get-id>(): kotlin/String // io.github.androidpoet.supabase.sync.remote/SyncColumns.id.<get-id>|<get-id>(){}[0]
+    final val updatedAt // io.github.androidpoet.supabase.sync.remote/SyncColumns.updatedAt|{}updatedAt[0]
+        final fun <get-updatedAt>(): kotlin/String // io.github.androidpoet.supabase.sync.remote/SyncColumns.updatedAt.<get-updatedAt>|<get-updatedAt>(){}[0]
+
+    final fun component1(): kotlin/String // io.github.androidpoet.supabase.sync.remote/SyncColumns.component1|component1(){}[0]
+    final fun component2(): kotlin/String // io.github.androidpoet.supabase.sync.remote/SyncColumns.component2|component2(){}[0]
+    final fun component3(): kotlin/String // io.github.androidpoet.supabase.sync.remote/SyncColumns.component3|component3(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/String = ...): io.github.androidpoet.supabase.sync.remote/SyncColumns // io.github.androidpoet.supabase.sync.remote/SyncColumns.copy|copy(kotlin.String;kotlin.String;kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.sync.remote/SyncColumns.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.sync.remote/SyncColumns.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.sync.remote/SyncColumns.toString|toString(){}[0]
+}

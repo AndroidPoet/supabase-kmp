@@ -1,0 +1,22 @@
+-- Local changes still waiting to be pushed (the outbox). One pending change per (tableName, id):
+-- re-enqueuing the same row replaces the prior entry, so the outbox holds the latest local
+-- intent. `kind` is the `ChangeKind` name (UPSERT / DELETE).
+CREATE TABLE Outbox (
+  tableName TEXT NOT NULL,
+  id        TEXT NOT NULL,
+  kind      TEXT NOT NULL,
+  updatedAt INTEGER NOT NULL,
+  deleted   INTEGER NOT NULL DEFAULT 0,
+  fields    TEXT NOT NULL,
+  PRIMARY KEY (tableName, id)
+);
+
+enqueue:
+INSERT OR REPLACE INTO Outbox(tableName, id, kind, updatedAt, deleted, fields)
+VALUES (?, ?, ?, ?, ?, ?);
+
+pending:
+SELECT id, kind, updatedAt, deleted, fields FROM Outbox WHERE tableName = ? ORDER BY updatedAt, id;
+
+clearPending:
+DELETE FROM Outbox WHERE tableName = ? AND id IN ?;

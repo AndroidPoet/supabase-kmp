@@ -1,0 +1,16 @@
+-- The last pull position per table: the largest `(updatedAt, id)` seen, for keyset-stable
+-- incremental pulls (see core's `Cursor`).
+CREATE TABLE SyncCursor (
+  tableName TEXT NOT NULL PRIMARY KEY,
+  updatedAt INTEGER NOT NULL,
+  id        TEXT NOT NULL DEFAULT ''
+);
+
+cursor:
+SELECT updatedAt, id FROM SyncCursor WHERE tableName = ?;
+
+setCursor:
+INSERT OR REPLACE INTO SyncCursor(tableName, updatedAt, id) VALUES (?, ?, ?);
+
+clearCursor:
+DELETE FROM SyncCursor WHERE tableName = ?;

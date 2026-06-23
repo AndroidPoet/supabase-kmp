@@ -1,0 +1,174 @@
+public final class io/github/androidpoet/supabase/sync/ChangeKind : java/lang/Enum {
+	public static final field DELETE Lio/github/androidpoet/supabase/sync/ChangeKind;
+	public static final field UPSERT Lio/github/androidpoet/supabase/sync/ChangeKind;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/sync/ChangeKind;
+	public static fun values ()[Lio/github/androidpoet/supabase/sync/ChangeKind;
+}
+
+public abstract interface class io/github/androidpoet/supabase/sync/ConflictResolver {
+	public abstract fun resolve (Lio/github/androidpoet/supabase/sync/Record;Lio/github/androidpoet/supabase/sync/Record;)Lio/github/androidpoet/supabase/sync/Record;
+}
+
+public final class io/github/androidpoet/supabase/sync/Cursor {
+	public fun <init> (JLjava/lang/String;)V
+	public synthetic fun <init> (JLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()J
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (JLjava/lang/String;)Lio/github/androidpoet/supabase/sync/Cursor;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/sync/Cursor;JLjava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/sync/Cursor;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public final fun getUpdatedAt ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/androidpoet/supabase/sync/LastWriteWins : io/github/androidpoet/supabase/sync/ConflictResolver {
+	public static final field INSTANCE Lio/github/androidpoet/supabase/sync/LastWriteWins;
+	public fun resolve (Lio/github/androidpoet/supabase/sync/Record;Lio/github/androidpoet/supabase/sync/Record;)Lio/github/androidpoet/supabase/sync/Record;
+}
+
+public abstract interface class io/github/androidpoet/supabase/sync/LocalStore {
+	public abstract fun clearPending (Ljava/lang/String;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun cursor (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun enqueue (Ljava/lang/String;Lio/github/androidpoet/supabase/sync/PendingChange;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun get (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun pending (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun setCursor (Ljava/lang/String;Lio/github/androidpoet/supabase/sync/Cursor;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun upsert (Ljava/lang/String;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/github/androidpoet/supabase/sync/Page {
+	public fun <init> (Ljava/util/List;JJJ)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()J
+	public final fun component3 ()J
+	public final fun component4 ()J
+	public final fun copy (Ljava/util/List;JJJ)Lio/github/androidpoet/supabase/sync/Page;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/sync/Page;Ljava/util/List;JJJILjava/lang/Object;)Lio/github/androidpoet/supabase/sync/Page;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHasMore ()Z
+	public final fun getItems ()Ljava/util/List;
+	public final fun getLimit ()J
+	public final fun getOffset ()J
+	public final fun getTotal ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/androidpoet/supabase/sync/PendingChange {
+	public fun <init> (Lio/github/androidpoet/supabase/sync/Record;Lio/github/androidpoet/supabase/sync/ChangeKind;)V
+	public final fun component1 ()Lio/github/androidpoet/supabase/sync/Record;
+	public final fun component2 ()Lio/github/androidpoet/supabase/sync/ChangeKind;
+	public final fun copy (Lio/github/androidpoet/supabase/sync/Record;Lio/github/androidpoet/supabase/sync/ChangeKind;)Lio/github/androidpoet/supabase/sync/PendingChange;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/sync/PendingChange;Lio/github/androidpoet/supabase/sync/Record;Lio/github/androidpoet/supabase/sync/ChangeKind;ILjava/lang/Object;)Lio/github/androidpoet/supabase/sync/PendingChange;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getKind ()Lio/github/androidpoet/supabase/sync/ChangeKind;
+	public final fun getRecord ()Lio/github/androidpoet/supabase/sync/Record;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/androidpoet/supabase/sync/PullResult {
+	public fun <init> (Ljava/util/List;Lio/github/androidpoet/supabase/sync/Cursor;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Lio/github/androidpoet/supabase/sync/Cursor;
+	public final fun copy (Ljava/util/List;Lio/github/androidpoet/supabase/sync/Cursor;)Lio/github/androidpoet/supabase/sync/PullResult;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/sync/PullResult;Ljava/util/List;Lio/github/androidpoet/supabase/sync/Cursor;ILjava/lang/Object;)Lio/github/androidpoet/supabase/sync/PullResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChanged ()Ljava/util/List;
+	public final fun getNextCursor ()Lio/github/androidpoet/supabase/sync/Cursor;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/androidpoet/supabase/sync/PushResult {
+	public fun <init> (Ljava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;Ljava/util/List;)Lio/github/androidpoet/supabase/sync/PushResult;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/sync/PushResult;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lio/github/androidpoet/supabase/sync/PushResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAccepted ()Ljava/util/List;
+	public final fun getRejected ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/androidpoet/supabase/sync/Record {
+	public fun <init> (Ljava/lang/String;JZLkotlinx/serialization/json/JsonObject;)V
+	public synthetic fun <init> (Ljava/lang/String;JZLkotlinx/serialization/json/JsonObject;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()J
+	public final fun component3 ()Z
+	public final fun component4 ()Lkotlinx/serialization/json/JsonObject;
+	public final fun copy (Ljava/lang/String;JZLkotlinx/serialization/json/JsonObject;)Lio/github/androidpoet/supabase/sync/Record;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/sync/Record;Ljava/lang/String;JZLkotlinx/serialization/json/JsonObject;ILjava/lang/Object;)Lio/github/androidpoet/supabase/sync/Record;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDeleted ()Z
+	public final fun getFields ()Lkotlinx/serialization/json/JsonObject;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getUpdatedAt ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/androidpoet/supabase/sync/RemoteChange {
+	public fun <init> (Lio/github/androidpoet/supabase/sync/Record;)V
+	public final fun component1 ()Lio/github/androidpoet/supabase/sync/Record;
+	public final fun copy (Lio/github/androidpoet/supabase/sync/Record;)Lio/github/androidpoet/supabase/sync/RemoteChange;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/sync/RemoteChange;Lio/github/androidpoet/supabase/sync/Record;ILjava/lang/Object;)Lio/github/androidpoet/supabase/sync/RemoteChange;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRecord ()Lio/github/androidpoet/supabase/sync/Record;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class io/github/androidpoet/supabase/sync/RemoteSource {
+	public abstract fun changes (Ljava/lang/String;)Lkotlinx/coroutines/flow/Flow;
+	public abstract fun pull (Ljava/lang/String;Lio/github/androidpoet/supabase/sync/Cursor;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun push (Ljava/lang/String;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/github/androidpoet/supabase/sync/ResolverRegistry {
+	public fun <init> ()V
+	public fun <init> (Lio/github/androidpoet/supabase/sync/ConflictResolver;)V
+	public synthetic fun <init> (Lio/github/androidpoet/supabase/sync/ConflictResolver;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun forTable (Ljava/lang/String;)Lio/github/androidpoet/supabase/sync/ConflictResolver;
+	public final fun register (Ljava/lang/String;Lio/github/androidpoet/supabase/sync/ConflictResolver;)Lio/github/androidpoet/supabase/sync/ResolverRegistry;
+}
+
+public final class io/github/androidpoet/supabase/sync/SyncEngine {
+	public fun <init> (Lio/github/androidpoet/supabase/sync/LocalStore;Lio/github/androidpoet/supabase/sync/RemoteSource;Lio/github/androidpoet/supabase/sync/ResolverRegistry;)V
+	public synthetic fun <init> (Lio/github/androidpoet/supabase/sync/LocalStore;Lio/github/androidpoet/supabase/sync/RemoteSource;Lio/github/androidpoet/supabase/sync/ResolverRegistry;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun observe (Ljava/lang/String;)Lkotlinx/coroutines/flow/Flow;
+	public final fun sync (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/github/androidpoet/supabase/sync/SyncResult {
+	public fun <init> (III)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun component3 ()I
+	public final fun copy (III)Lio/github/androidpoet/supabase/sync/SyncResult;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/sync/SyncResult;IIIILjava/lang/Object;)Lio/github/androidpoet/supabase/sync/SyncResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPulled ()I
+	public final fun getPushed ()I
+	public final fun getRejected ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class io/github/androidpoet/supabase/sync/TableAdapter {
+	public abstract fun count ()J
+	public abstract fun delete (Ljava/lang/String;)V
+	public abstract fun get (Ljava/lang/String;)Lkotlinx/serialization/json/JsonObject;
+	public abstract fun getTable ()Ljava/lang/String;
+	public abstract fun page (JJ)Ljava/util/List;
+	public abstract fun pageAfter (Ljava/lang/String;J)Ljava/util/List;
+	public abstract fun upsert (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;)V
+}
+

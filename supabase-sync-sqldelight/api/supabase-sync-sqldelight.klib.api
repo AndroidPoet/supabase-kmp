@@ -1,0 +1,344 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, macosArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <supabase-kmp:supabase-sync-sqldelight>
+final enum class io.github.androidpoet.supabase.sync.store/ColumnKind : kotlin/Enum<io.github.androidpoet.supabase.sync.store/ColumnKind> { // io.github.androidpoet.supabase.sync.store/ColumnKind|null[0]
+    enum entry BOOL // io.github.androidpoet.supabase.sync.store/ColumnKind.BOOL|null[0]
+    enum entry INTEGER // io.github.androidpoet.supabase.sync.store/ColumnKind.INTEGER|null[0]
+    enum entry JSON // io.github.androidpoet.supabase.sync.store/ColumnKind.JSON|null[0]
+    enum entry REAL // io.github.androidpoet.supabase.sync.store/ColumnKind.REAL|null[0]
+    enum entry TEXT // io.github.androidpoet.supabase.sync.store/ColumnKind.TEXT|null[0]
+
+    final val entries // io.github.androidpoet.supabase.sync.store/ColumnKind.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.androidpoet.supabase.sync.store/ColumnKind> // io.github.androidpoet.supabase.sync.store/ColumnKind.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.androidpoet.supabase.sync.store/ColumnKind // io.github.androidpoet.supabase.sync.store/ColumnKind.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.androidpoet.supabase.sync.store/ColumnKind> // io.github.androidpoet.supabase.sync.store/ColumnKind.values|values#static(){}[0]
+}
+
+abstract interface io.github.androidpoet.supabase.sync.store.db/OfflineSyncDb : app.cash.sqldelight/Transacter { // io.github.androidpoet.supabase.sync.store.db/OfflineSyncDb|null[0]
+    abstract val outboxQueries // io.github.androidpoet.supabase.sync.store.db/OfflineSyncDb.outboxQueries|{}outboxQueries[0]
+        abstract fun <get-outboxQueries>(): io.github.androidpoet.supabase.sync.store.db/OutboxQueries // io.github.androidpoet.supabase.sync.store.db/OfflineSyncDb.outboxQueries.<get-outboxQueries>|<get-outboxQueries>(){}[0]
+    abstract val syncCursorQueries // io.github.androidpoet.supabase.sync.store.db/OfflineSyncDb.syncCursorQueries|{}syncCursorQueries[0]
+        abstract fun <get-syncCursorQueries>(): io.github.androidpoet.supabase.sync.store.db/SyncCursorQueries // io.github.androidpoet.supabase.sync.store.db/OfflineSyncDb.syncCursorQueries.<get-syncCursorQueries>|<get-syncCursorQueries>(){}[0]
+    abstract val syncMetaQueries // io.github.androidpoet.supabase.sync.store.db/OfflineSyncDb.syncMetaQueries|{}syncMetaQueries[0]
+        abstract fun <get-syncMetaQueries>(): io.github.androidpoet.supabase.sync.store.db/SyncMetaQueries // io.github.androidpoet.supabase.sync.store.db/OfflineSyncDb.syncMetaQueries.<get-syncMetaQueries>|<get-syncMetaQueries>(){}[0]
+    abstract val syncRecordQueries // io.github.androidpoet.supabase.sync.store.db/OfflineSyncDb.syncRecordQueries|{}syncRecordQueries[0]
+        abstract fun <get-syncRecordQueries>(): io.github.androidpoet.supabase.sync.store.db/SyncRecordQueries // io.github.androidpoet.supabase.sync.store.db/OfflineSyncDb.syncRecordQueries.<get-syncRecordQueries>|<get-syncRecordQueries>(){}[0]
+
+    final object Companion { // io.github.androidpoet.supabase.sync.store.db/OfflineSyncDb.Companion|null[0]
+        final val Schema // io.github.androidpoet.supabase.sync.store.db/OfflineSyncDb.Companion.Schema|{}Schema[0]
+            final fun <get-Schema>(): app.cash.sqldelight.db/SqlSchema<app.cash.sqldelight.db/QueryResult.Value<kotlin/Unit>> // io.github.androidpoet.supabase.sync.store.db/OfflineSyncDb.Companion.Schema.<get-Schema>|<get-Schema>(){}[0]
+
+        final fun invoke(app.cash.sqldelight.db/SqlDriver): io.github.androidpoet.supabase.sync.store.db/OfflineSyncDb // io.github.androidpoet.supabase.sync.store.db/OfflineSyncDb.Companion.invoke|invoke(app.cash.sqldelight.db.SqlDriver){}[0]
+    }
+}
+
+final class io.github.androidpoet.supabase.sync.store.db/Cursor { // io.github.androidpoet.supabase.sync.store.db/Cursor|null[0]
+    constructor <init>(kotlin/Long, kotlin/String) // io.github.androidpoet.supabase.sync.store.db/Cursor.<init>|<init>(kotlin.Long;kotlin.String){}[0]
+
+    final val id // io.github.androidpoet.supabase.sync.store.db/Cursor.id|{}id[0]
+        final fun <get-id>(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/Cursor.id.<get-id>|<get-id>(){}[0]
+    final val updatedAt // io.github.androidpoet.supabase.sync.store.db/Cursor.updatedAt|{}updatedAt[0]
+        final fun <get-updatedAt>(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/Cursor.updatedAt.<get-updatedAt>|<get-updatedAt>(){}[0]
+
+    final fun component1(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/Cursor.component1|component1(){}[0]
+    final fun component2(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/Cursor.component2|component2(){}[0]
+    final fun copy(kotlin/Long = ..., kotlin/String = ...): io.github.androidpoet.supabase.sync.store.db/Cursor // io.github.androidpoet.supabase.sync.store.db/Cursor.copy|copy(kotlin.Long;kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.sync.store.db/Cursor.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.sync.store.db/Cursor.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/Cursor.toString|toString(){}[0]
+}
+
+final class io.github.androidpoet.supabase.sync.store.db/Get { // io.github.androidpoet.supabase.sync.store.db/Get|null[0]
+    constructor <init>(kotlin/Long, kotlin/Long) // io.github.androidpoet.supabase.sync.store.db/Get.<init>|<init>(kotlin.Long;kotlin.Long){}[0]
+
+    final val deleted // io.github.androidpoet.supabase.sync.store.db/Get.deleted|{}deleted[0]
+        final fun <get-deleted>(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/Get.deleted.<get-deleted>|<get-deleted>(){}[0]
+    final val updatedAt // io.github.androidpoet.supabase.sync.store.db/Get.updatedAt|{}updatedAt[0]
+        final fun <get-updatedAt>(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/Get.updatedAt.<get-updatedAt>|<get-updatedAt>(){}[0]
+
+    final fun component1(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/Get.component1|component1(){}[0]
+    final fun component2(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/Get.component2|component2(){}[0]
+    final fun copy(kotlin/Long = ..., kotlin/Long = ...): io.github.androidpoet.supabase.sync.store.db/Get // io.github.androidpoet.supabase.sync.store.db/Get.copy|copy(kotlin.Long;kotlin.Long){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.sync.store.db/Get.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.sync.store.db/Get.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/Get.toString|toString(){}[0]
+}
+
+final class io.github.androidpoet.supabase.sync.store.db/Outbox { // io.github.androidpoet.supabase.sync.store.db/Outbox|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/String, kotlin/Long, kotlin/Long, kotlin/String) // io.github.androidpoet.supabase.sync.store.db/Outbox.<init>|<init>(kotlin.String;kotlin.String;kotlin.String;kotlin.Long;kotlin.Long;kotlin.String){}[0]
+
+    final val deleted // io.github.androidpoet.supabase.sync.store.db/Outbox.deleted|{}deleted[0]
+        final fun <get-deleted>(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/Outbox.deleted.<get-deleted>|<get-deleted>(){}[0]
+    final val fields // io.github.androidpoet.supabase.sync.store.db/Outbox.fields|{}fields[0]
+        final fun <get-fields>(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/Outbox.fields.<get-fields>|<get-fields>(){}[0]
+    final val id // io.github.androidpoet.supabase.sync.store.db/Outbox.id|{}id[0]
+        final fun <get-id>(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/Outbox.id.<get-id>|<get-id>(){}[0]
+    final val kind // io.github.androidpoet.supabase.sync.store.db/Outbox.kind|{}kind[0]
+        final fun <get-kind>(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/Outbox.kind.<get-kind>|<get-kind>(){}[0]
+    final val tableName // io.github.androidpoet.supabase.sync.store.db/Outbox.tableName|{}tableName[0]
+        final fun <get-tableName>(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/Outbox.tableName.<get-tableName>|<get-tableName>(){}[0]
+    final val updatedAt // io.github.androidpoet.supabase.sync.store.db/Outbox.updatedAt|{}updatedAt[0]
+        final fun <get-updatedAt>(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/Outbox.updatedAt.<get-updatedAt>|<get-updatedAt>(){}[0]
+
+    final fun component1(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/Outbox.component1|component1(){}[0]
+    final fun component2(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/Outbox.component2|component2(){}[0]
+    final fun component3(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/Outbox.component3|component3(){}[0]
+    final fun component4(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/Outbox.component4|component4(){}[0]
+    final fun component5(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/Outbox.component5|component5(){}[0]
+    final fun component6(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/Outbox.component6|component6(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/Long = ..., kotlin/Long = ..., kotlin/String = ...): io.github.androidpoet.supabase.sync.store.db/Outbox // io.github.androidpoet.supabase.sync.store.db/Outbox.copy|copy(kotlin.String;kotlin.String;kotlin.String;kotlin.Long;kotlin.Long;kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.sync.store.db/Outbox.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.sync.store.db/Outbox.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/Outbox.toString|toString(){}[0]
+}
+
+final class io.github.androidpoet.supabase.sync.store.db/OutboxQueries : app.cash.sqldelight/TransacterImpl { // io.github.androidpoet.supabase.sync.store.db/OutboxQueries|null[0]
+    constructor <init>(app.cash.sqldelight.db/SqlDriver) // io.github.androidpoet.supabase.sync.store.db/OutboxQueries.<init>|<init>(app.cash.sqldelight.db.SqlDriver){}[0]
+
+    final fun <#A1: kotlin/Any> pending(kotlin/String, kotlin/Function5<kotlin/String, kotlin/String, kotlin/Long, kotlin/Long, kotlin/String, #A1>): app.cash.sqldelight/Query<#A1> // io.github.androidpoet.supabase.sync.store.db/OutboxQueries.pending|pending(kotlin.String;kotlin.Function5<kotlin.String,kotlin.String,kotlin.Long,kotlin.Long,kotlin.String,0:0>){0§<kotlin.Any>}[0]
+    final fun clearPending(kotlin/String, kotlin.collections/Collection<kotlin/String>): app.cash.sqldelight.db/QueryResult<kotlin/Long> // io.github.androidpoet.supabase.sync.store.db/OutboxQueries.clearPending|clearPending(kotlin.String;kotlin.collections.Collection<kotlin.String>){}[0]
+    final fun enqueue(kotlin/String, kotlin/String, kotlin/String, kotlin/Long, kotlin/Long, kotlin/String): app.cash.sqldelight.db/QueryResult<kotlin/Long> // io.github.androidpoet.supabase.sync.store.db/OutboxQueries.enqueue|enqueue(kotlin.String;kotlin.String;kotlin.String;kotlin.Long;kotlin.Long;kotlin.String){}[0]
+    final fun pending(kotlin/String): app.cash.sqldelight/Query<io.github.androidpoet.supabase.sync.store.db/Pending> // io.github.androidpoet.supabase.sync.store.db/OutboxQueries.pending|pending(kotlin.String){}[0]
+}
+
+final class io.github.androidpoet.supabase.sync.store.db/Page { // io.github.androidpoet.supabase.sync.store.db/Page|null[0]
+    constructor <init>(kotlin/String, kotlin/Long, kotlin/Long, kotlin/String) // io.github.androidpoet.supabase.sync.store.db/Page.<init>|<init>(kotlin.String;kotlin.Long;kotlin.Long;kotlin.String){}[0]
+
+    final val deleted // io.github.androidpoet.supabase.sync.store.db/Page.deleted|{}deleted[0]
+        final fun <get-deleted>(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/Page.deleted.<get-deleted>|<get-deleted>(){}[0]
+    final val fields // io.github.androidpoet.supabase.sync.store.db/Page.fields|{}fields[0]
+        final fun <get-fields>(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/Page.fields.<get-fields>|<get-fields>(){}[0]
+    final val id // io.github.androidpoet.supabase.sync.store.db/Page.id|{}id[0]
+        final fun <get-id>(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/Page.id.<get-id>|<get-id>(){}[0]
+    final val updatedAt // io.github.androidpoet.supabase.sync.store.db/Page.updatedAt|{}updatedAt[0]
+        final fun <get-updatedAt>(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/Page.updatedAt.<get-updatedAt>|<get-updatedAt>(){}[0]
+
+    final fun component1(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/Page.component1|component1(){}[0]
+    final fun component2(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/Page.component2|component2(){}[0]
+    final fun component3(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/Page.component3|component3(){}[0]
+    final fun component4(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/Page.component4|component4(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/Long = ..., kotlin/Long = ..., kotlin/String = ...): io.github.androidpoet.supabase.sync.store.db/Page // io.github.androidpoet.supabase.sync.store.db/Page.copy|copy(kotlin.String;kotlin.Long;kotlin.Long;kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.sync.store.db/Page.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.sync.store.db/Page.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/Page.toString|toString(){}[0]
+}
+
+final class io.github.androidpoet.supabase.sync.store.db/PageAfter { // io.github.androidpoet.supabase.sync.store.db/PageAfter|null[0]
+    constructor <init>(kotlin/String, kotlin/Long, kotlin/Long, kotlin/String) // io.github.androidpoet.supabase.sync.store.db/PageAfter.<init>|<init>(kotlin.String;kotlin.Long;kotlin.Long;kotlin.String){}[0]
+
+    final val deleted // io.github.androidpoet.supabase.sync.store.db/PageAfter.deleted|{}deleted[0]
+        final fun <get-deleted>(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/PageAfter.deleted.<get-deleted>|<get-deleted>(){}[0]
+    final val fields // io.github.androidpoet.supabase.sync.store.db/PageAfter.fields|{}fields[0]
+        final fun <get-fields>(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/PageAfter.fields.<get-fields>|<get-fields>(){}[0]
+    final val id // io.github.androidpoet.supabase.sync.store.db/PageAfter.id|{}id[0]
+        final fun <get-id>(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/PageAfter.id.<get-id>|<get-id>(){}[0]
+    final val updatedAt // io.github.androidpoet.supabase.sync.store.db/PageAfter.updatedAt|{}updatedAt[0]
+        final fun <get-updatedAt>(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/PageAfter.updatedAt.<get-updatedAt>|<get-updatedAt>(){}[0]
+
+    final fun component1(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/PageAfter.component1|component1(){}[0]
+    final fun component2(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/PageAfter.component2|component2(){}[0]
+    final fun component3(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/PageAfter.component3|component3(){}[0]
+    final fun component4(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/PageAfter.component4|component4(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/Long = ..., kotlin/Long = ..., kotlin/String = ...): io.github.androidpoet.supabase.sync.store.db/PageAfter // io.github.androidpoet.supabase.sync.store.db/PageAfter.copy|copy(kotlin.String;kotlin.Long;kotlin.Long;kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.sync.store.db/PageAfter.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.sync.store.db/PageAfter.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/PageAfter.toString|toString(){}[0]
+}
+
+final class io.github.androidpoet.supabase.sync.store.db/Pending { // io.github.androidpoet.supabase.sync.store.db/Pending|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/Long, kotlin/Long, kotlin/String) // io.github.androidpoet.supabase.sync.store.db/Pending.<init>|<init>(kotlin.String;kotlin.String;kotlin.Long;kotlin.Long;kotlin.String){}[0]
+
+    final val deleted // io.github.androidpoet.supabase.sync.store.db/Pending.deleted|{}deleted[0]
+        final fun <get-deleted>(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/Pending.deleted.<get-deleted>|<get-deleted>(){}[0]
+    final val fields // io.github.androidpoet.supabase.sync.store.db/Pending.fields|{}fields[0]
+        final fun <get-fields>(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/Pending.fields.<get-fields>|<get-fields>(){}[0]
+    final val id // io.github.androidpoet.supabase.sync.store.db/Pending.id|{}id[0]
+        final fun <get-id>(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/Pending.id.<get-id>|<get-id>(){}[0]
+    final val kind // io.github.androidpoet.supabase.sync.store.db/Pending.kind|{}kind[0]
+        final fun <get-kind>(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/Pending.kind.<get-kind>|<get-kind>(){}[0]
+    final val updatedAt // io.github.androidpoet.supabase.sync.store.db/Pending.updatedAt|{}updatedAt[0]
+        final fun <get-updatedAt>(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/Pending.updatedAt.<get-updatedAt>|<get-updatedAt>(){}[0]
+
+    final fun component1(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/Pending.component1|component1(){}[0]
+    final fun component2(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/Pending.component2|component2(){}[0]
+    final fun component3(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/Pending.component3|component3(){}[0]
+    final fun component4(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/Pending.component4|component4(){}[0]
+    final fun component5(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/Pending.component5|component5(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/Long = ..., kotlin/Long = ..., kotlin/String = ...): io.github.androidpoet.supabase.sync.store.db/Pending // io.github.androidpoet.supabase.sync.store.db/Pending.copy|copy(kotlin.String;kotlin.String;kotlin.Long;kotlin.Long;kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.sync.store.db/Pending.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.sync.store.db/Pending.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/Pending.toString|toString(){}[0]
+}
+
+final class io.github.androidpoet.supabase.sync.store.db/SelectById { // io.github.androidpoet.supabase.sync.store.db/SelectById|null[0]
+    constructor <init>(kotlin/Long, kotlin/Long, kotlin/String) // io.github.androidpoet.supabase.sync.store.db/SelectById.<init>|<init>(kotlin.Long;kotlin.Long;kotlin.String){}[0]
+
+    final val deleted // io.github.androidpoet.supabase.sync.store.db/SelectById.deleted|{}deleted[0]
+        final fun <get-deleted>(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/SelectById.deleted.<get-deleted>|<get-deleted>(){}[0]
+    final val fields // io.github.androidpoet.supabase.sync.store.db/SelectById.fields|{}fields[0]
+        final fun <get-fields>(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/SelectById.fields.<get-fields>|<get-fields>(){}[0]
+    final val updatedAt // io.github.androidpoet.supabase.sync.store.db/SelectById.updatedAt|{}updatedAt[0]
+        final fun <get-updatedAt>(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/SelectById.updatedAt.<get-updatedAt>|<get-updatedAt>(){}[0]
+
+    final fun component1(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/SelectById.component1|component1(){}[0]
+    final fun component2(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/SelectById.component2|component2(){}[0]
+    final fun component3(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/SelectById.component3|component3(){}[0]
+    final fun copy(kotlin/Long = ..., kotlin/Long = ..., kotlin/String = ...): io.github.androidpoet.supabase.sync.store.db/SelectById // io.github.androidpoet.supabase.sync.store.db/SelectById.copy|copy(kotlin.Long;kotlin.Long;kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.sync.store.db/SelectById.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.sync.store.db/SelectById.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/SelectById.toString|toString(){}[0]
+}
+
+final class io.github.androidpoet.supabase.sync.store.db/SyncCursor { // io.github.androidpoet.supabase.sync.store.db/SyncCursor|null[0]
+    constructor <init>(kotlin/String, kotlin/Long, kotlin/String) // io.github.androidpoet.supabase.sync.store.db/SyncCursor.<init>|<init>(kotlin.String;kotlin.Long;kotlin.String){}[0]
+
+    final val id // io.github.androidpoet.supabase.sync.store.db/SyncCursor.id|{}id[0]
+        final fun <get-id>(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/SyncCursor.id.<get-id>|<get-id>(){}[0]
+    final val tableName // io.github.androidpoet.supabase.sync.store.db/SyncCursor.tableName|{}tableName[0]
+        final fun <get-tableName>(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/SyncCursor.tableName.<get-tableName>|<get-tableName>(){}[0]
+    final val updatedAt // io.github.androidpoet.supabase.sync.store.db/SyncCursor.updatedAt|{}updatedAt[0]
+        final fun <get-updatedAt>(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/SyncCursor.updatedAt.<get-updatedAt>|<get-updatedAt>(){}[0]
+
+    final fun component1(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/SyncCursor.component1|component1(){}[0]
+    final fun component2(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/SyncCursor.component2|component2(){}[0]
+    final fun component3(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/SyncCursor.component3|component3(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/Long = ..., kotlin/String = ...): io.github.androidpoet.supabase.sync.store.db/SyncCursor // io.github.androidpoet.supabase.sync.store.db/SyncCursor.copy|copy(kotlin.String;kotlin.Long;kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.sync.store.db/SyncCursor.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.sync.store.db/SyncCursor.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/SyncCursor.toString|toString(){}[0]
+}
+
+final class io.github.androidpoet.supabase.sync.store.db/SyncCursorQueries : app.cash.sqldelight/TransacterImpl { // io.github.androidpoet.supabase.sync.store.db/SyncCursorQueries|null[0]
+    constructor <init>(app.cash.sqldelight.db/SqlDriver) // io.github.androidpoet.supabase.sync.store.db/SyncCursorQueries.<init>|<init>(app.cash.sqldelight.db.SqlDriver){}[0]
+
+    final fun <#A1: kotlin/Any> cursor(kotlin/String, kotlin/Function2<kotlin/Long, kotlin/String, #A1>): app.cash.sqldelight/Query<#A1> // io.github.androidpoet.supabase.sync.store.db/SyncCursorQueries.cursor|cursor(kotlin.String;kotlin.Function2<kotlin.Long,kotlin.String,0:0>){0§<kotlin.Any>}[0]
+    final fun clearCursor(kotlin/String): app.cash.sqldelight.db/QueryResult<kotlin/Long> // io.github.androidpoet.supabase.sync.store.db/SyncCursorQueries.clearCursor|clearCursor(kotlin.String){}[0]
+    final fun cursor(kotlin/String): app.cash.sqldelight/Query<io.github.androidpoet.supabase.sync.store.db/Cursor> // io.github.androidpoet.supabase.sync.store.db/SyncCursorQueries.cursor|cursor(kotlin.String){}[0]
+    final fun setCursor(kotlin/String, kotlin/Long, kotlin/String): app.cash.sqldelight.db/QueryResult<kotlin/Long> // io.github.androidpoet.supabase.sync.store.db/SyncCursorQueries.setCursor|setCursor(kotlin.String;kotlin.Long;kotlin.String){}[0]
+}
+
+final class io.github.androidpoet.supabase.sync.store.db/SyncMeta { // io.github.androidpoet.supabase.sync.store.db/SyncMeta|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/Long, kotlin/Long) // io.github.androidpoet.supabase.sync.store.db/SyncMeta.<init>|<init>(kotlin.String;kotlin.String;kotlin.Long;kotlin.Long){}[0]
+
+    final val deleted // io.github.androidpoet.supabase.sync.store.db/SyncMeta.deleted|{}deleted[0]
+        final fun <get-deleted>(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/SyncMeta.deleted.<get-deleted>|<get-deleted>(){}[0]
+    final val id // io.github.androidpoet.supabase.sync.store.db/SyncMeta.id|{}id[0]
+        final fun <get-id>(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/SyncMeta.id.<get-id>|<get-id>(){}[0]
+    final val tableName // io.github.androidpoet.supabase.sync.store.db/SyncMeta.tableName|{}tableName[0]
+        final fun <get-tableName>(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/SyncMeta.tableName.<get-tableName>|<get-tableName>(){}[0]
+    final val updatedAt // io.github.androidpoet.supabase.sync.store.db/SyncMeta.updatedAt|{}updatedAt[0]
+        final fun <get-updatedAt>(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/SyncMeta.updatedAt.<get-updatedAt>|<get-updatedAt>(){}[0]
+
+    final fun component1(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/SyncMeta.component1|component1(){}[0]
+    final fun component2(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/SyncMeta.component2|component2(){}[0]
+    final fun component3(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/SyncMeta.component3|component3(){}[0]
+    final fun component4(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/SyncMeta.component4|component4(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/Long = ..., kotlin/Long = ...): io.github.androidpoet.supabase.sync.store.db/SyncMeta // io.github.androidpoet.supabase.sync.store.db/SyncMeta.copy|copy(kotlin.String;kotlin.String;kotlin.Long;kotlin.Long){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.sync.store.db/SyncMeta.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.sync.store.db/SyncMeta.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/SyncMeta.toString|toString(){}[0]
+}
+
+final class io.github.androidpoet.supabase.sync.store.db/SyncMetaQueries : app.cash.sqldelight/TransacterImpl { // io.github.androidpoet.supabase.sync.store.db/SyncMetaQueries|null[0]
+    constructor <init>(app.cash.sqldelight.db/SqlDriver) // io.github.androidpoet.supabase.sync.store.db/SyncMetaQueries.<init>|<init>(app.cash.sqldelight.db.SqlDriver){}[0]
+
+    final fun <#A1: kotlin/Any> get(kotlin/String, kotlin/String, kotlin/Function2<kotlin/Long, kotlin/Long, #A1>): app.cash.sqldelight/Query<#A1> // io.github.androidpoet.supabase.sync.store.db/SyncMetaQueries.get|get(kotlin.String;kotlin.String;kotlin.Function2<kotlin.Long,kotlin.Long,0:0>){0§<kotlin.Any>}[0]
+    final fun delete(kotlin/String, kotlin/String): app.cash.sqldelight.db/QueryResult<kotlin/Long> // io.github.androidpoet.supabase.sync.store.db/SyncMetaQueries.delete|delete(kotlin.String;kotlin.String){}[0]
+    final fun get(kotlin/String, kotlin/String): app.cash.sqldelight/Query<io.github.androidpoet.supabase.sync.store.db/Get> // io.github.androidpoet.supabase.sync.store.db/SyncMetaQueries.get|get(kotlin.String;kotlin.String){}[0]
+    final fun put(kotlin/String, kotlin/String, kotlin/Long, kotlin/Long): app.cash.sqldelight.db/QueryResult<kotlin/Long> // io.github.androidpoet.supabase.sync.store.db/SyncMetaQueries.put|put(kotlin.String;kotlin.String;kotlin.Long;kotlin.Long){}[0]
+}
+
+final class io.github.androidpoet.supabase.sync.store.db/SyncRecord { // io.github.androidpoet.supabase.sync.store.db/SyncRecord|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/Long, kotlin/Long, kotlin/String) // io.github.androidpoet.supabase.sync.store.db/SyncRecord.<init>|<init>(kotlin.String;kotlin.String;kotlin.Long;kotlin.Long;kotlin.String){}[0]
+
+    final val deleted // io.github.androidpoet.supabase.sync.store.db/SyncRecord.deleted|{}deleted[0]
+        final fun <get-deleted>(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/SyncRecord.deleted.<get-deleted>|<get-deleted>(){}[0]
+    final val fields // io.github.androidpoet.supabase.sync.store.db/SyncRecord.fields|{}fields[0]
+        final fun <get-fields>(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/SyncRecord.fields.<get-fields>|<get-fields>(){}[0]
+    final val id // io.github.androidpoet.supabase.sync.store.db/SyncRecord.id|{}id[0]
+        final fun <get-id>(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/SyncRecord.id.<get-id>|<get-id>(){}[0]
+    final val tableName // io.github.androidpoet.supabase.sync.store.db/SyncRecord.tableName|{}tableName[0]
+        final fun <get-tableName>(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/SyncRecord.tableName.<get-tableName>|<get-tableName>(){}[0]
+    final val updatedAt // io.github.androidpoet.supabase.sync.store.db/SyncRecord.updatedAt|{}updatedAt[0]
+        final fun <get-updatedAt>(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/SyncRecord.updatedAt.<get-updatedAt>|<get-updatedAt>(){}[0]
+
+    final fun component1(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/SyncRecord.component1|component1(){}[0]
+    final fun component2(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/SyncRecord.component2|component2(){}[0]
+    final fun component3(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/SyncRecord.component3|component3(){}[0]
+    final fun component4(): kotlin/Long // io.github.androidpoet.supabase.sync.store.db/SyncRecord.component4|component4(){}[0]
+    final fun component5(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/SyncRecord.component5|component5(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/Long = ..., kotlin/Long = ..., kotlin/String = ...): io.github.androidpoet.supabase.sync.store.db/SyncRecord // io.github.androidpoet.supabase.sync.store.db/SyncRecord.copy|copy(kotlin.String;kotlin.String;kotlin.Long;kotlin.Long;kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.sync.store.db/SyncRecord.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.sync.store.db/SyncRecord.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.sync.store.db/SyncRecord.toString|toString(){}[0]
+}
+
+final class io.github.androidpoet.supabase.sync.store.db/SyncRecordQueries : app.cash.sqldelight/TransacterImpl { // io.github.androidpoet.supabase.sync.store.db/SyncRecordQueries|null[0]
+    constructor <init>(app.cash.sqldelight.db/SqlDriver) // io.github.androidpoet.supabase.sync.store.db/SyncRecordQueries.<init>|<init>(app.cash.sqldelight.db.SqlDriver){}[0]
+
+    final fun <#A1: kotlin/Any> page(kotlin/String, kotlin/Long, kotlin/Long, kotlin/Function4<kotlin/String, kotlin/Long, kotlin/Long, kotlin/String, #A1>): app.cash.sqldelight/Query<#A1> // io.github.androidpoet.supabase.sync.store.db/SyncRecordQueries.page|page(kotlin.String;kotlin.Long;kotlin.Long;kotlin.Function4<kotlin.String,kotlin.Long,kotlin.Long,kotlin.String,0:0>){0§<kotlin.Any>}[0]
+    final fun <#A1: kotlin/Any> pageAfter(kotlin/String, kotlin/String, kotlin/Long, kotlin/Function4<kotlin/String, kotlin/Long, kotlin/Long, kotlin/String, #A1>): app.cash.sqldelight/Query<#A1> // io.github.androidpoet.supabase.sync.store.db/SyncRecordQueries.pageAfter|pageAfter(kotlin.String;kotlin.String;kotlin.Long;kotlin.Function4<kotlin.String,kotlin.Long,kotlin.Long,kotlin.String,0:0>){0§<kotlin.Any>}[0]
+    final fun <#A1: kotlin/Any> selectById(kotlin/String, kotlin/String, kotlin/Function3<kotlin/Long, kotlin/Long, kotlin/String, #A1>): app.cash.sqldelight/Query<#A1> // io.github.androidpoet.supabase.sync.store.db/SyncRecordQueries.selectById|selectById(kotlin.String;kotlin.String;kotlin.Function3<kotlin.Long,kotlin.Long,kotlin.String,0:0>){0§<kotlin.Any>}[0]
+    final fun countAll(kotlin/String): app.cash.sqldelight/Query<kotlin/Long> // io.github.androidpoet.supabase.sync.store.db/SyncRecordQueries.countAll|countAll(kotlin.String){}[0]
+    final fun page(kotlin/String, kotlin/Long, kotlin/Long): app.cash.sqldelight/Query<io.github.androidpoet.supabase.sync.store.db/Page> // io.github.androidpoet.supabase.sync.store.db/SyncRecordQueries.page|page(kotlin.String;kotlin.Long;kotlin.Long){}[0]
+    final fun pageAfter(kotlin/String, kotlin/String, kotlin/Long): app.cash.sqldelight/Query<io.github.androidpoet.supabase.sync.store.db/PageAfter> // io.github.androidpoet.supabase.sync.store.db/SyncRecordQueries.pageAfter|pageAfter(kotlin.String;kotlin.String;kotlin.Long){}[0]
+    final fun selectById(kotlin/String, kotlin/String): app.cash.sqldelight/Query<io.github.androidpoet.supabase.sync.store.db/SelectById> // io.github.androidpoet.supabase.sync.store.db/SyncRecordQueries.selectById|selectById(kotlin.String;kotlin.String){}[0]
+    final fun upsert(kotlin/String, kotlin/String, kotlin/Long, kotlin/Long, kotlin/String): app.cash.sqldelight.db/QueryResult<kotlin/Long> // io.github.androidpoet.supabase.sync.store.db/SyncRecordQueries.upsert|upsert(kotlin.String;kotlin.String;kotlin.Long;kotlin.Long;kotlin.String){}[0]
+}
+
+final class io.github.androidpoet.supabase.sync.store/Column { // io.github.androidpoet.supabase.sync.store/Column|null[0]
+    constructor <init>(kotlin/String, io.github.androidpoet.supabase.sync.store/ColumnKind, kotlin/Boolean = ...) // io.github.androidpoet.supabase.sync.store/Column.<init>|<init>(kotlin.String;io.github.androidpoet.supabase.sync.store.ColumnKind;kotlin.Boolean){}[0]
+
+    final val kind // io.github.androidpoet.supabase.sync.store/Column.kind|{}kind[0]
+        final fun <get-kind>(): io.github.androidpoet.supabase.sync.store/ColumnKind // io.github.androidpoet.supabase.sync.store/Column.kind.<get-kind>|<get-kind>(){}[0]
+    final val name // io.github.androidpoet.supabase.sync.store/Column.name|{}name[0]
+        final fun <get-name>(): kotlin/String // io.github.androidpoet.supabase.sync.store/Column.name.<get-name>|<get-name>(){}[0]
+    final val nullable // io.github.androidpoet.supabase.sync.store/Column.nullable|{}nullable[0]
+        final fun <get-nullable>(): kotlin/Boolean // io.github.androidpoet.supabase.sync.store/Column.nullable.<get-nullable>|<get-nullable>(){}[0]
+
+    final fun component1(): kotlin/String // io.github.androidpoet.supabase.sync.store/Column.component1|component1(){}[0]
+    final fun component2(): io.github.androidpoet.supabase.sync.store/ColumnKind // io.github.androidpoet.supabase.sync.store/Column.component2|component2(){}[0]
+    final fun component3(): kotlin/Boolean // io.github.androidpoet.supabase.sync.store/Column.component3|component3(){}[0]
+    final fun copy(kotlin/String = ..., io.github.androidpoet.supabase.sync.store/ColumnKind = ..., kotlin/Boolean = ...): io.github.androidpoet.supabase.sync.store/Column // io.github.androidpoet.supabase.sync.store/Column.copy|copy(kotlin.String;io.github.androidpoet.supabase.sync.store.ColumnKind;kotlin.Boolean){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.sync.store/Column.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.sync.store/Column.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.sync.store/Column.toString|toString(){}[0]
+}
+
+final class io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore : io.github.androidpoet.supabase.sync/LocalStore { // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore|null[0]
+    constructor <init>(app.cash.sqldelight.db/SqlDriver, kotlin.collections/Map<kotlin/String, io.github.androidpoet.supabase.sync/TableAdapter> = ...) // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.<init>|<init>(app.cash.sqldelight.db.SqlDriver;kotlin.collections.Map<kotlin.String,io.github.androidpoet.supabase.sync.TableAdapter>){}[0]
+    constructor <init>(io.github.androidpoet.supabase.sync.store.db/OfflineSyncDb, kotlin.collections/Map<kotlin/String, io.github.androidpoet.supabase.sync/TableAdapter> = ...) // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.<init>|<init>(io.github.androidpoet.supabase.sync.store.db.OfflineSyncDb;kotlin.collections.Map<kotlin.String,io.github.androidpoet.supabase.sync.TableAdapter>){}[0]
+
+    final suspend fun clearPending(kotlin/String, kotlin.collections/List<kotlin/String>) // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.clearPending|clearPending(kotlin.String;kotlin.collections.List<kotlin.String>){}[0]
+    final suspend fun count(kotlin/String): kotlin/Long // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.count|count(kotlin.String){}[0]
+    final suspend fun cursor(kotlin/String): io.github.androidpoet.supabase.sync/Cursor? // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.cursor|cursor(kotlin.String){}[0]
+    final suspend fun enqueue(kotlin/String, io.github.androidpoet.supabase.sync/PendingChange) // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.enqueue|enqueue(kotlin.String;io.github.androidpoet.supabase.sync.PendingChange){}[0]
+    final suspend fun get(kotlin/String, kotlin/String): io.github.androidpoet.supabase.sync/Record? // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.get|get(kotlin.String;kotlin.String){}[0]
+    final suspend fun page(kotlin/String, kotlin/Long, kotlin/Long): io.github.androidpoet.supabase.sync/Page<io.github.androidpoet.supabase.sync/Record> // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.page|page(kotlin.String;kotlin.Long;kotlin.Long){}[0]
+    final suspend fun pageAfter(kotlin/String, kotlin/String?, kotlin/Long): kotlin.collections/List<io.github.androidpoet.supabase.sync/Record> // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.pageAfter|pageAfter(kotlin.String;kotlin.String?;kotlin.Long){}[0]
+    final suspend fun pending(kotlin/String): kotlin.collections/List<io.github.androidpoet.supabase.sync/PendingChange> // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.pending|pending(kotlin.String){}[0]
+    final suspend fun setCursor(kotlin/String, io.github.androidpoet.supabase.sync/Cursor?) // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.setCursor|setCursor(kotlin.String;io.github.androidpoet.supabase.sync.Cursor?){}[0]
+    final suspend fun upsert(kotlin/String, kotlin.collections/List<io.github.androidpoet.supabase.sync/Record>) // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.upsert|upsert(kotlin.String;kotlin.collections.List<io.github.androidpoet.supabase.sync.Record>){}[0]
+}
+
+final class io.github.androidpoet.supabase.sync.store/SqlDelightTableAdapter : io.github.androidpoet.supabase.sync/TableAdapter { // io.github.androidpoet.supabase.sync.store/SqlDelightTableAdapter|null[0]
+    constructor <init>(app.cash.sqldelight.db/SqlDriver, kotlin/String, kotlin.collections/List<io.github.androidpoet.supabase.sync.store/Column>, kotlin/String) // io.github.androidpoet.supabase.sync.store/SqlDelightTableAdapter.<init>|<init>(app.cash.sqldelight.db.SqlDriver;kotlin.String;kotlin.collections.List<io.github.androidpoet.supabase.sync.store.Column>;kotlin.String){}[0]
+
+    final val table // io.github.androidpoet.supabase.sync.store/SqlDelightTableAdapter.table|{}table[0]
+        final fun <get-table>(): kotlin/String // io.github.androidpoet.supabase.sync.store/SqlDelightTableAdapter.table.<get-table>|<get-table>(){}[0]
+
+    final fun count(): kotlin/Long // io.github.androidpoet.supabase.sync.store/SqlDelightTableAdapter.count|count(){}[0]
+    final fun delete(kotlin/String) // io.github.androidpoet.supabase.sync.store/SqlDelightTableAdapter.delete|delete(kotlin.String){}[0]
+    final fun get(kotlin/String): kotlinx.serialization.json/JsonObject? // io.github.androidpoet.supabase.sync.store/SqlDelightTableAdapter.get|get(kotlin.String){}[0]
+    final fun page(kotlin/Long, kotlin/Long): kotlin.collections/List<kotlin/Pair<kotlin/String, kotlinx.serialization.json/JsonObject>> // io.github.androidpoet.supabase.sync.store/SqlDelightTableAdapter.page|page(kotlin.Long;kotlin.Long){}[0]
+    final fun pageAfter(kotlin/String?, kotlin/Long): kotlin.collections/List<kotlin/Pair<kotlin/String, kotlinx.serialization.json/JsonObject>> // io.github.androidpoet.supabase.sync.store/SqlDelightTableAdapter.pageAfter|pageAfter(kotlin.String?;kotlin.Long){}[0]
+    final fun upsert(kotlin/String, kotlinx.serialization.json/JsonObject) // io.github.androidpoet.supabase.sync.store/SqlDelightTableAdapter.upsert|upsert(kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
+}
+
+final fun io.github.androidpoet.supabase.sync.store/openOfflineSyncStore(app.cash.sqldelight.db/SqlDriver, kotlin.collections/Map<kotlin/String, io.github.androidpoet.supabase.sync/TableAdapter> = ...): io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore // io.github.androidpoet.supabase.sync.store/openOfflineSyncStore|openOfflineSyncStore(app.cash.sqldelight.db.SqlDriver;kotlin.collections.Map<kotlin.String,io.github.androidpoet.supabase.sync.TableAdapter>){}[0]
