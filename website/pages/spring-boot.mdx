@@ -15,8 +15,7 @@ PostgREST, with Row Level Security doing the gatekeeping.
 
 This guide shows the pieces. There's also a complete, runnable example —
 [**AndroidPoet/supabase-kmp-spring**](https://github.com/AndroidPoet/supabase-kmp-spring)
-— a Spring Boot service with Users + Products CRUD, auto-generated OpenAPI/Swagger,
-and the whole object graph wired with [Metro DI](https://github.com/ZacSweers/metro).
+— a Spring Boot service with Users + Products CRUD and auto-generated OpenAPI/Swagger.
 
 <Callout type="info">
   Use the **anon** key on the server too, and let RLS scope what each request can
@@ -157,6 +156,5 @@ That's the whole pattern: one client, typed repositories, a `runBlocking` +
 
 The [**supabase-kmp-spring**](https://github.com/AndroidPoet/supabase-kmp-spring)
 repository puts it all together — Users + Products CRUD, request validation,
-RFC 7807 Problem Details errors, health probes, auto-generated OpenAPI + Swagger
-UI, and Metro DI building the object graph. Clone it, point it at your project,
-and run `./gradlew bootRun`.
+RFC 7807 Problem Details errors, health probes, and auto-generated OpenAPI +
+Swagger UI. Clone it, point it at your project, and run `./gradlew bootRun`.
