@@ -1,6 +1,10 @@
+import io.github.androidpoet.supabase.Configuration
+
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.vanniktech.publish)
+    alias(libs.plugins.kover)
 }
 
 kotlin {
@@ -23,4 +27,8 @@ kotlin {
             implementation(libs.kotlinx.coroutines.test)
         }
     }
+}
+
+mavenPublishing {
+    coordinates(Configuration.GROUP, "supabase-sync-core", Configuration.VERSION)
 }

@@ -1,7 +1,11 @@
+import io.github.androidpoet.supabase.Configuration
+
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.sqldelight)
+    alias(libs.plugins.vanniktech.publish)
+    alias(libs.plugins.kover)
 }
 
 kotlin {
@@ -39,4 +43,8 @@ sqldelight {
             packageName.set("io.github.androidpoet.supabase.sync.store.db")
         }
     }
+}
+
+mavenPublishing {
+    coordinates(Configuration.GROUP, "supabase-sync-sqldelight", Configuration.VERSION)
 }

@@ -30,6 +30,9 @@ val publishedModules =
         "supabase-realtime",
         "supabase-functions",
         "supabase-e2ee",
+        "supabase-sync-core",
+        "supabase-sync-sqldelight",
+        "supabase-sync",
     )
 
 // Validate the binary (ABI) compatibility of every published module so an
