@@ -3,6 +3,7 @@ package io.github.androidpoet.supabase.e2e
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.storage.createStorageClient
 import kotlinx.coroutines.test.runTest
+import org.junit.Assume.assumeTrue
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 
@@ -18,11 +19,12 @@ import kotlin.test.assertContentEquals
  */
 class StorageE2eTest {
     @Test
-    fun test_storage_uploadFakePng_roundTripsThenCleansUp() =
+    fun test_storage_uploadFakePng_roundTripsThenCleansUp() {
+        val config = E2e.config()
+        // Bucket administration requires the service role. Skip (not fail) when it
+        // is absent — e.g. in CI, which deliberately never holds a service-role key.
+        assumeTrue("requires SUPABASE_E2E_SERVICE_KEY — skipped without it", config.serviceKey != null)
         runTest {
-            val config = E2e.config()
-            // Bucket administration requires the service role; skip-by-failing with guidance if absent.
-            E2e.requireServiceKey(config)
             val storage = createStorageClient(E2e.serviceClient(config))
 
             val bucketId = E2e.artifact("bucket")
@@ -45,6 +47,7 @@ class StorageE2eTest {
                 cleanupBucket(bucketId)
             }
         }
+    }
 
     /** Best-effort teardown: removes only the run-id bucket; warns instead of throwing. */
     private suspend fun cleanupBucket(bucketId: String) {

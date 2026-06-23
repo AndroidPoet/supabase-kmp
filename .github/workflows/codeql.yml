@@ -1,19 +1,16 @@
 name: CodeQL
 
+# NOTE: CodeQL's Kotlin extractor currently supports only Kotlin < 2.3.30, but
+# this project builds on Kotlin 2.4.0. Both extraction modes are dead ends today:
+#   * build-mode: manual → the traced compile fails with
+#       "KotlinVersionTooRecentError: supports versions below 2.3.30"
+#   * build-mode: none   → "no source code seen during build" (can't read Kotlin)
+# So CodeQL can't analyze this codebase yet. To avoid a red X on every push/PR
+# while we wait for the extractor to catch up, this workflow only runs on a
+# weekly schedule and on manual dispatch. The manual build-mode is kept so the
+# job starts working again automatically once CodeQL supports Kotlin 2.4.
 on:
-  push:
-    branches: [main]
-    paths-ignore: &docs-paths
-      - '**/*.md'
-      - 'website/**'
-      - 'art/**'
-      - 'LICENSE'
-      - '.gitignore'
-  pull_request:
-    branches: [main]
-    paths-ignore: *docs-paths
   schedule:
-    # Weekly, so newly-published CodeQL queries catch issues even without a push.
     - cron: '0 6 * * 1'
   workflow_dispatch:
 
@@ -40,16 +37,20 @@ jobs:
           distribution: zulu
           java-version: 17
 
-      # No-build extraction. The traced-compile (manual) path runs CodeQL's
-      # Kotlin compiler plugin, which hard-fails on Kotlin 2.4.0
-      # ("KotlinVersionTooRecentError: supports versions below 2.3.30"). The
-      # no-build mode extracts Kotlin straight from source, so analysis keeps
-      # working on newer Kotlin until the traced extractor catches up.
+      - uses: gradle/actions/setup-gradle@v4
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
           languages: java-kotlin
-          build-mode: none
+          build-mode: manual
+
+      # --rerun-tasks --no-build-cache force kotlinc to actually run under the
+      # tracer; otherwise setup-gradle's restored cache makes compileKotlinJvm
+      # UP-TO-DATE, CodeQL sees no compilation, and the analysis fails with
+      # "no source code seen during build".
+      - name: Compile JVM sources (traced by CodeQL)
+        run: ./gradlew compileKotlinJvm --no-daemon --no-build-cache --rerun-tasks
 
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@v4
