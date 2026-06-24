@@ -2,6 +2,49 @@
 
 ## Unreleased
 
+## 0.10.0 - 2026-06-24
+
+> First `0.10.x` release. Carries a **breaking** filter-DSL redesign — pre-1.0, so we
+> took the chance to fix the API rather than bolt on overloads.
+
+### Changed
+
+- **Typed, value-based filter DSL (breaking).** Filters are now built from typed
+  `Column<T>` tokens with infix operators (vocabulary mirrors JetBrains Exposed /
+  Ktorm), so the compiler rejects mismatches like `age eq "oops"`:
+  ```kotlin
+  object Todos { val done = Column<Boolean>("done"); val createdAt = Column<String>("created_at") }
+
+  database.selectTyped<Todo>(table = "todos") {
+      where { Todos.done eq false }
+      orderBy(Todos.createdAt, Order.DESC)
+      limit(20)
+  }
+  ```
+  - **Read** methods take a `QueryBuilder` block — `where { … }` for the predicate
+    plus `orderBy` / `limit` / `offset` / `range`. **Mutation** methods (`update`,
+    `delete`, `replace`) take a `WhereBuilder` block (predicate only). Modifiers are
+    no longer mixed into the filter block, so nonsense like `not { limit(1) }` won't
+    compile.
+  - A `Filter` is now an immutable value tree rendered by one recursive walk,
+    replacing the old internal string re-parsing.
+- Operator names follow the Exposed/Ktorm convention: `greater`/`greaterEq`/`less`/
+  `lessEq` (was `gt`/`gte`/`lt`/`lte`), `inList` (was `` `in` ``), `isNull()` /
+  `isExactly` (was `` `is` ``), `matches`/`imatches` (regex), plus `within(range)`.
+  Ordering uses `orderBy(column, Order.DESC, Nulls.LAST)`.
+
+### Removed
+
+- `FilterBuilder`, the `filters { }` entry point, and the `OrderDirection` /
+  `NullsPlacement` enums. Replace with `Column<T>` + `where { }` / `query { }` and
+  `Order` / `Nulls`.
+
+### Fixed
+
+- Calling `limit`/`offset` and `range` together no longer emits duplicate
+  `limit`/`offset` query params (the server silently honoured only one); the last
+  value now wins.
+
 ### Added
 
 - **Offline-first sync** — three new opt-in modules that keep a local database in sync with Supabase,

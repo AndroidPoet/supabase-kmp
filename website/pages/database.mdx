@@ -44,13 +44,22 @@ for how to handle the success and failure branches.
 
 Reading rows is the most common thing you'll do. `selectTyped<Todo>` fetches rows
 from a table and deserializes them into a list of your model. The trailing `{ }`
-block is where you narrow the results down — filter, sort, and limit — which we
-cover in detail under [Filter DSL](#filter-dsl) below.
+block is a **query builder**: `where { }` holds the filter, and `orderBy` / `limit`
+/ `range` shape the result — all covered under [Filter DSL](#filter-dsl) below.
+
+Columns are referenced through typed `Column<T>` tokens, so the compiler checks
+your filters against the column's type. Declare them by hand, or let
+[codegen](/codegen) emit them:
 
 ```kotlin
+object Todos {
+    val done = Column<Boolean>("done")
+    val createdAt = Column<String>("created_at")
+}
+
 val todos: SupabaseResult<List<Todo>> = database.selectTyped<Todo>(table = "todos") {
-    eq("done", false)
-    order("created_at", ascending = false)
+    where { Todos.done eq false }
+    orderBy(Todos.createdAt, Order.DESC)
     limit(25)
 }
 ```
@@ -59,7 +68,7 @@ Pick the read method that matches how many rows you expect back:
 
 | Method | Returns | Use |
 | --- | --- | --- |
-| `selectTyped<T>(table, columns, …) { filters }` | `List<T>` | the common case |
+| `selectTyped<T>(table, columns, …) { query }` | `List<T>` | the common case |
 | `selectSingleTyped<T>(…) { … }` | `T` | expects exactly one row |
 | `selectMaybeSingleTyped<T>(…) { … }` | `T?` | 0 or 1 row |
 | `selectCsv(…) { … }` | `String` (CSV) | export |
@@ -77,23 +86,26 @@ These are the writes. `insert` adds new rows, `update` changes existing ones,
 `delete` removes them, and **upsert** means "insert-or-update" — if a row with the
 same key already exists it's updated instead of creating a duplicate (handy for
 syncing, since running the same upsert twice is safe — it's *idempotent*). Note
-that `update` and `delete` take a filter block to choose which rows they affect.
+that `update` and `delete` take a **`where` block** (filter only — no ordering or
+limit) to choose which rows they affect.
 
 ```kotlin
 // A partial model for updates — only the columns you want to change:
 @Serializable
 data class TodoPatch(val done: Boolean)
 
+val id = Column<String>("id")
+
 database.insertTyped(table = "todos", value = Todo("1", "Ship it", false))
 database.insertTypedMany(table = "todos", values = listOf(/* … */))
 
 database.updateTyped(table = "todos", value = TodoPatch(done = true)) {
-    eq("id", "1")
+    id eq "1"
 }
 
 database.upsertTyped(table = "todos", value = todo, onConflict = "id")
 
-database.deleteTyped<Todo>(table = "todos") { eq("id", "1") }
+database.deleteTyped<Todo>(table = "todos") { id eq "1" }
 ```
 
 Writes come in typed, raw-string, and `*Unit` (discard the response body) forms;
@@ -108,70 +120,90 @@ the raw form when you need them.
 
 ## Filter DSL
 
-This is how you build the `WHERE` part of a query in Kotlin instead of SQL. All
-operators run inside the `filters: FilterBuilder.() -> Unit` lambda — the `{ }`
-block you saw on `selectTyped`, `update`, and `delete`. The mental model: each
-call you add inside the block is another condition, and multiple calls combine
-with **AND** (every condition must match). Use the explicit `or { }` / `and { }`
-helpers when you need different grouping.
+This is how you build the `WHERE` part of a query in Kotlin instead of SQL. The
+predicate lives in a `where { }` block (it's the whole block on `update`/`delete`).
+Operators are **infix** and run on typed `Column<T>` tokens — the value type is
+checked against the column, so `age eq "oops"` won't compile. The vocabulary mirrors
+JetBrains Exposed / Ktorm, so it reads the way Kotlin developers expect. The mental
+model: each statement is another condition, and multiple statements combine with
+**AND**. Use `or { }` / `and { }` for explicit grouping.
+
+The examples below assume typed columns are in scope (declared by hand or emitted
+by [codegen](/codegen)):
+
+```kotlin
+object Users {
+    val status = Column<String>("status"); val role = Column<String>("role")
+    val age = Column<Int>("age"); val score = Column<Int>("score")
+    val name = Column<String>("name"); val deletedAt = Column<String>("deleted_at")
+    val tags = Column<List<String>>("tags"); val body = Column<String>("body")
+}
+```
 
 ### Comparison
 
-The everyday operators — equals, not-equals, and the greater/less-than family:
+The everyday operators — equals, not-equals, and the greater/less-than family
+(`greaterEq`/`lessEq` for `>=`/`<=`):
 
 ```kotlin
-eq("status", "active");  neq("role", "admin")
-gt("age", 18);  gte("age", 21);  lt("score", 100);  lte("score", 99)
+where {
+    Users.status eq "active";  Users.role neq "admin"
+    Users.age greater 18;  Users.age greaterEq 21;  Users.score less 100;  Users.score lessEq 99
+    Users.age within 18..65          // two-sided bound (>= AND <=)
+}
 ```
 
-(Each comparison accepts a `String`, a `Number`, or a `Boolean` — so for a
-boolean column write `eq("done", false)`, not `eq("done", "false")`.)
+Because columns are typed, a boolean column takes a real `Boolean` — `Users.done eq
+false`, never `eq("done", "false")`.
 
 ### Pattern matching & membership
 
-`like`/`ilike` do SQL text matching with `%` wildcards (`ilike` is the
-case-insensitive version), and `` `in` `` checks whether a column's value is one
-of a list:
+`like`/`ilike` do SQL text matching with `%` wildcards (`ilike` is
+case-insensitive); `matches`/`imatches` are POSIX regex; `inList` checks membership;
+`isNull()` / `isNotNull()` test for `NULL`:
 
 ```kotlin
-like("name", "%ada%");       ilike("name", "%ADA%")
-likeAllOf("tag", listOf("a", "b"));  ilikeAnyOf("tag", listOf("x", "y"))
-`is`("deleted_at", null)             // IS NULL
-`in`("status", listOf("active", "pending"))
-match(mapOf("org" to "1", "role" to "member"))
+where {
+    Users.name like "%ada%";  Users.name ilike "%ADA%";  Users.name matches "^A"
+    Users.name likeAllOf listOf("%a%", "%b%");  Users.name likeAnyOf listOf("%x%", "%y%")
+    Users.deletedAt.isNull()
+    Users.status inList listOf("active", "pending")
+}
 ```
 
 ### Arrays, ranges & full-text
 
-For Postgres-specific column types — array columns, range columns, and full-text
-search over text:
+For Postgres-specific column types — array columns and full-text search over text:
 
 ```kotlin
-contains("tags", "{kotlin,kmp}");  containedBy("tags", "{a,b,c}");  overlaps("tags", "{x,y}")
-rangeGt("period", "[2024-01-01,2024-02-01)")  // also rangeGte/Lt/Lte/Adj + strictlyLeft/Right…
-textSearch("body", "kotlin & multiplatform", type = TextSearchType.Websearch)
+where {
+    Users.tags contains listOf("kotlin", "kmp")     // also containedBy / overlaps
+    Users.body.textSearch("kotlin & multiplatform", type = TextSearchType.Websearch)
+}
 ```
 
 ### Logical & raw
 
 Group conditions explicitly with `or` / `and`, negate a group with `not`, or drop
-down to `filter` to use any PostgREST operator by name when the DSL doesn't have a
+down to `raw` to use any PostgREST operator by name when the DSL doesn't have a
 dedicated helper:
 
 ```kotlin
-or { eq("status", "active"); eq("status", "pending") }
-and { gte("age", 18); lt("age", 65) }
-not { eq("archived", "true") }
-filter("price", "gte", "10")   // arbitrary PostgREST operator
+where {
+    or { Users.status eq "active"; Users.status eq "pending" }
+    and { Users.age greaterEq 18; Users.age less 65 }
+    not { Users.status eq "archived" }
+    raw(Users.score, "gte", "10")   // arbitrary PostgREST operator
+}
 ```
 
 ### Ordering & pagination
 
-Sort the results and fetch them in pages — useful for infinite-scroll lists or
-keeping responses small:
+These are **query modifiers** — they live directly in the read block, *outside*
+`where { }` (which is why they aren't available on `update`/`delete`):
 
 ```kotlin
-order("created_at", ascending = false, nullsFirst = false)
+orderBy(Users.name, Order.DESC, Nulls.LAST)   // call again for secondary sort keys
 limit(25)
 range(0, 24)   // rows 0..24 inclusive (offset pagination)
 ```

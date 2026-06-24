@@ -88,29 +88,30 @@ platform, not just the JVM.
 
 ## Versioning
 
-The library is in its **`0.9.x` series** and stays there for now — every release
-bumps the **patch** number (`0.9.1`, `0.9.2`, `0.9.3`, …). We are **not** moving to
-`1.0.0` yet; treat `0.9.x` as the rolling pre-stable line.
+The library is in its **`0.x` pre-stable line** and is **not** at `1.0.0` yet. We
+follow the `0.x` semver convention: until `1.0`, the public API is allowed to break.
 
 What that means in practice:
 
-- **Patch only.** New features and fixes both ship as a patch bump within `0.9.x`.
-  Don't bump the major (`1.x`) or minor (`0.10.x`) without an explicit decision to
-  change this policy.
-- **Stay additive.** Because there's no major-version bump to absorb breaking
-  changes, keep every change backward-compatible: append optional parameters with
-  defaults, add new declarations rather than changing existing signatures, and run
-  `./gradlew apiCheck` (regenerate with `apiDump` for intentional additions).
+- **Breaking changes bump the minor.** A release that changes or removes existing
+  public API bumps the **minor** (`0.9.x` → `0.10.0`). Fixes and additive features
+  ship as a **patch** within the current minor (`0.10.0` → `0.10.1`).
+- **Prefer additive, but don't fear a break.** Reach first for backward-compatible
+  changes (append optional parameters with defaults, add new declarations). When a
+  clean redesign is worth more than source-compatibility — as with the `0.10.0`
+  filter DSL — a breaking change is acceptable pre-1.0; just call it out in the
+  `CHANGELOG` under `### Changed` / `### Removed` and regenerate the API baseline
+  with `./gradlew apiDump` (CI gates on `apiCheck`).
 - **One version, all modules.** Every published module shares the single `VERSION`
   constant and is released together at the same number.
 
 When we're confident the API is stable, we'll revisit and cut `1.0.0` deliberately —
-until then, the next release is always the next `0.9.x` patch.
+until then, additions land as patches and breaks bump the minor.
 
 ## Releasing (maintainers)
 
 1. Bump `VERSION` in `buildSrc/src/main/kotlin/io/github/androidpoet/supabase/Configuration.kt`
-   to the next `0.9.x` patch (see [Versioning](#versioning)).
+   — patch for additive/fix releases, minor for breaking ones (see [Versioning](#versioning)).
 2. Update `CHANGELOG.md` (add a dated section for the new version) and the version
    in the `README.md` setup snippet.
 3. Run the release gates locally: `./gradlew apiCheck detekt jvmTest`.

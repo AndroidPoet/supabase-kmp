@@ -22,7 +22,7 @@ Full guides for [Authentication](https://androidpoet.github.io/supabase-kmp/auth
 
 - **Type-safe Result monad** — `SupabaseResult<T>` with `map`, `flatMap`, `recover` — no exceptions leak to callers
 - **Value class IDs** — `UserId`, `BucketId`, `SessionId`, `ChannelId` prevent mixups at compile time
-- **PostgREST filter DSL** — `eq`, `neq`, `gt`, `like`, `ilike`, `in`, `is`, `textSearch`, `contains`, and more
+- **Typed filter DSL** — `Column<T>` tokens with infix operators (`eq`, `neq`, `greater`, `like`, `ilike`, `inList`, `isNull`, `textSearch`, `contains`, …); the compiler rejects type mismatches
 - **OAuth (17 providers) + MFA** — TOTP and phone-based multi-factor auth with CSPRNG-backed PKCE
 - **Native passkeys** — cross-platform WebAuthn ceremony (Android, iOS, macOS, JVM, Wasm) behind a pluggable authenticator, or bring your own
 - **Session management** — Single-flight auto-refresh, pluggable persistence (`SessionStorage`), `SessionState` via `StateFlow`
@@ -43,7 +43,7 @@ Add the modules you need to your version catalog:
 
 ```toml
 [versions]
-supabase-kmp = "0.9.1"
+supabase-kmp = "0.10.0"
 
 [libraries]
 supabase-client = { module = "io.github.androidpoet:supabase-client", version.ref = "supabase-kmp" }
@@ -108,9 +108,15 @@ Every fallible call returns a `SupabaseResult<T>` — a sealed `Success`/`Failur
 @Serializable
 data class Todo(val id: String, val title: String, val done: Boolean)
 
+// Typed column tokens — hand-written here, or emitted by codegen.
+object Todos {
+    val done = Column<Boolean>("done")
+    val createdAt = Column<String>("created_at")
+}
+
 database.selectTyped<Todo>(table = "todos") {
-    eq("done", "false")
-    order("created_at", ascending = false)
+    where { Todos.done eq false }
+    orderBy(Todos.createdAt, Order.DESC)
     limit(25)
 }.onSuccess { todos ->
     println("Got ${todos.size} todos")

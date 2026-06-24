@@ -2,7 +2,7 @@ package io.github.androidpoet.supabase
 
 object Configuration {
     const val GROUP = "io.github.androidpoet"
-    const val VERSION = "0.9.4"
+    const val VERSION = "0.10.0"
     const val COMPILE_SDK = 35
     const val MIN_SDK = 21
 }
