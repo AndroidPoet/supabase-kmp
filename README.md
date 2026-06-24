@@ -177,6 +177,14 @@ Quality gates run in CI on every PR — run them locally before pushing:
 
 If you intentionally change the public API, regenerate the dumps with `./gradlew apiDump` and commit them. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full workflow.
 
+## Contributing
+
+Contributions are welcome! If you've found a bug, have an idea for an improvement, or want to contribute new features, please open an issue or submit a pull request.
+
+## Find this repository useful? :heart:
+Support it by joining __[stargazers](https://github.com/androidpoet/supabase-kmp/stargazers)__ for this repository. :star: <br>
+Also, __[follow me](https://github.com/androidpoet)__ on GitHub for my next creations! 🤩
+
 ## License
 
 [MIT](LICENSE) © 2026 Ranbir Singh
