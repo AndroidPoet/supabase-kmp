@@ -1,5 +1,7 @@
 package io.github.androidpoet.supabase.sync.remote
 
+import io.github.androidpoet.supabase.core.models.Column
+import io.github.androidpoet.supabase.core.models.Order
 import io.github.androidpoet.supabase.database.DatabaseClient
 import io.github.androidpoet.supabase.database.ReturnOption
 import io.github.androidpoet.supabase.realtime.RealtimeClient
@@ -57,16 +59,18 @@ public class SupabaseRemoteSource(
                     columns = "*",
                 ) {
                     if (since != null) {
-                        or {
-                            gt(columns.updatedAt, since.updatedAt)
-                            and {
-                                eq(columns.updatedAt, since.updatedAt)
-                                gt(columns.id, since.id)
+                        where {
+                            or {
+                                Column<Long>(columns.updatedAt) greater since.updatedAt
+                                and {
+                                    Column<Long>(columns.updatedAt) eq since.updatedAt
+                                    Column<String>(columns.id) greater since.id
+                                }
                             }
                         }
                     }
-                    order(columns.updatedAt, ascending = true)
-                    order(columns.id, ascending = true)
+                    orderBy(Column<Long>(columns.updatedAt), Order.ASC)
+                    orderBy(Column<String>(columns.id), Order.ASC)
                     limit(pageSize)
                 }.getOrThrow()
 

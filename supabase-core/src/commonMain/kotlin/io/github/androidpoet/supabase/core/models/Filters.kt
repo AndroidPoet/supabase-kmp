@@ -1,698 +1,396 @@
 package io.github.androidpoet.supabase.core.models
 
-import kotlin.jvm.JvmName
+import kotlin.jvm.JvmInline
 
 /**
- * Confines the receiver of nested [FilterBuilder] blocks (`not`/`or`/`and`) so an
+ * Confines the receiver of nested DSL blocks (`where`/`or`/`and`/`not`) so an
  * inner block can't accidentally call methods on an outer builder.
- *
- * Standard Kotlin DSL scoping marker; see [FilterBuilder] for the DSL it guards.
  */
 @DslMarker
 public annotation class FilterDsl
 
 /**
- * Full-text search mode for [FilterBuilder.textSearch], selecting how [query] is
- * parsed into a `tsquery`.
+ * A type-safe handle to a table column, carrying both its wire [name] and the
+ * Kotlin type [T] of the values it holds. Pass these to the infix filter
+ * operators (e.g. [WhereBuilder.eq], [WhereBuilder.greaterEq]) so the compiler
+ * rejects type-mismatched comparisons like `age eq "oops"`.
  *
- * Each constant maps to a PostgREST operator prefix: `fts` ([Raw]), `plfts`
- * ([Plain]), `phfts` ([Phrase]) or `wfts` ([Websearch]) — see the wire forms below.
+ * Declare columns by hand for ad-hoc queries, or let codegen emit a typed schema
+ * object for compile-time-checked filters:
+ *
+ * ```
+ * public object Profiles {
+ *     public val age: Column<Int> = Column("age")
+ *     public val status: Column<String> = Column("status")
+ * }
+ * ```
  */
-public enum class TextSearchType(
+@JvmInline
+public value class Column<T>(
+    public val name: String,
+)
+
+/** Sort direction for [QueryBuilder.orderBy]. */
+public enum class Order(
     internal val postgrestName: String,
 ) {
-    /**
-     * Passes [query] straight to `to_tsquery` (the bare `fts` operator). Carries no
-     * prefix, so it emits `fts.<query>` (or `fts(english).<query>` with a config).
-     */
-    Raw(""),
+    /** Ascending (`asc`). */
+    ASC("asc"),
 
-    /** Treats [query] as space-separated lexemes (`plfts`, `to_tsquery`'s plain form). */
-    Plain("pl"),
-
-    /** Matches the lexemes of [query] as an adjacent phrase (`phfts`). */
-    Phrase("ph"),
-
-    /** Parses [query] with web-search syntax such as quotes and `or` (`wfts`). */
-    Websearch("w"),
+    /** Descending (`desc`). */
+    DESC("desc"),
 }
 
-/**
- * Sort direction for [FilterBuilder.order].
- *
- * Maps to the PostgREST `asc`/`desc` tokens in the `order` query parameter
- * (e.g. `order=created_at.desc`).
- */
-public enum class OrderDirection(
+/** Placement of `NULL` values relative to non-null values for [QueryBuilder.orderBy]. */
+public enum class Nulls(
     internal val postgrestName: String,
 ) {
-    /** Ascending order (`asc`). */
-    ASCENDING("asc"),
-
-    /** Descending order (`desc`). */
-    DESCENDING("desc"),
-}
-
-/**
- * Placement of `NULL` values relative to non-null values for [FilterBuilder.order].
- *
- * Maps to the PostgREST `nullsfirst`/`nullslast` tokens in the `order` query
- * parameter (e.g. `order=name.asc.nullslast`).
- */
-public enum class NullsPlacement(
-    internal val postgrestName: String,
-) {
-    /** Sort `NULL` values before non-null values (`nullsfirst`). */
+    /** Sort `NULL` values first (`nullsfirst`). */
     FIRST("nullsfirst"),
 
-    /** Sort `NULL` values after non-null values (`nullslast`). */
+    /** Sort `NULL` values last (`nullslast`). */
     LAST("nullslast"),
 }
 
 /**
- * Builds the list of PostgREST query parameters for a request's `WHERE`/`ORDER`
- * clauses — the type-safe entry point to the filter DSL.
+ * Full-text search mode for [WhereBuilder.textSearch], selecting how the query is
+ * parsed into a `tsquery`. Maps to a PostgREST operator prefix: `fts`/`plfts`/
+ * `phfts`/`wfts`.
+ */
+public enum class TextSearchType(
+    internal val postgrestName: String,
+) {
+    /** Bare `fts` (passed straight to `to_tsquery`). */
+    Raw(""),
+
+    /** Plain `plfts`. */
+    Plain("pl"),
+
+    /** Phrase `phfts`. */
+    Phrase("ph"),
+
+    /** Web-search `wfts`. */
+    Websearch("w"),
+}
+
+/**
+ * An immutable filter expression — the value the filter DSL builds. A [Filter] is
+ * either a single column predicate or a logical combination (`and`/`or`/`not`) of
+ * other filters. Build them with the infix operators in [WhereBuilder]; they are
+ * rendered to PostgREST query parameters when a request is issued.
  *
- * Each method appends one `column to "operator.value"` pair (the wire form
- * PostgREST expects, e.g. `id=eq.7`); call [build] to get the accumulated
- * `(name, value)` pairs. String operands are run through `encodeValue` so a value
- * containing PostgREST-structural characters (comma, parentheses, quote,
- * backslash) is double-quoted rather than changing the query's meaning; numeric
- * and boolean operands are emitted verbatim. The logical combinators [not], [or]
- * and [and] take nested blocks scoped by [FilterDsl]. Prefer the [filters]
- * builder function to instantiate this. Not thread-safe — build on one coroutine.
+ * Modelling a filter as a value (rather than mutating a list of strings) keeps the
+ * logical combinators trivial: rendering is a single recursive walk over the tree,
+ * with no re-parsing of already-serialized output.
+ */
+public sealed interface Filter
+
+/** A single column predicate, e.g. `age=gte.18`. [expr] is the wire form after the
+ * `=`, including the operator (and a leading `not.` when negated). */
+internal class FilterLeaf(
+    val column: String,
+    val expr: String,
+) : Filter
+
+/** A logical group (`and`/`or`), optionally scoped to a referenced table and
+ * optionally negated. */
+internal class FilterGroup(
+    val type: String,
+    val referencedTable: String?,
+    val children: List<Filter>,
+    val negated: Boolean,
+) : Filter
+
+/**
+ * Renders a list of top-level filters (implicitly AND-ed) into PostgREST query
+ * parameters. Leaves become their own `column=expr` pair; logical groups become a
+ * single `or=(…)`/`and=(…)` (or `not.and=(…)`, `tbl.or=(…)`) pair.
+ */
+@PublishedApi
+internal fun List<Filter>.toParams(): List<Pair<String, String>> =
+    flatMap { it.toTopLevelParams() }
+
+private fun Filter.toTopLevelParams(): List<Pair<String, String>> =
+    when (this) {
+        is FilterLeaf -> listOf(column to expr)
+        is FilterGroup -> {
+            val key =
+                buildString {
+                    if (negated) append("not.")
+                    referencedTable?.let { append(it).append('.') }
+                    append(type)
+                }
+            listOf(key to "(${children.joinToString(",") { it.toGroupTerm() }})")
+        }
+    }
+
+/** Renders a filter as a term usable INSIDE a logical group: `col.op.val` for a
+ * leaf, `and(…)`/`not.or(…)` for a nested group (no dot before the parenthesis). */
+private fun Filter.toGroupTerm(): String =
+    when (this) {
+        is FilterLeaf -> "$column.$expr"
+        is FilterGroup -> {
+            val key =
+                buildString {
+                    if (negated) append("not.")
+                    referencedTable?.let { append(it).append('.') }
+                    append(type)
+                }
+            "$key(${children.joinToString(",") { it.toGroupTerm() }})"
+        }
+    }
+
+/** Negates a filter: a leaf gains a `not.` operator prefix; a group is flipped to
+ * its negated form (`not.and=(…)`). Double negation collapses. */
+private fun negate(filter: Filter): Filter =
+    when (filter) {
+        is FilterLeaf ->
+            if (filter.expr.startsWith("not.")) {
+                FilterLeaf(filter.column, filter.expr.removePrefix("not."))
+            } else {
+                FilterLeaf(filter.column, "not.${filter.expr}")
+            }
+        is FilterGroup ->
+            FilterGroup(filter.type, filter.referencedTable, filter.children, !filter.negated)
+    }
+
+/**
+ * Builds a [Filter] from column predicates combined with the infix operators. Each
+ * statement in a `where { }` block adds one predicate; multiple statements are
+ * AND-ed together. Use [or]/[and]/[not] for explicit logical groups.
+ *
+ * String operands are escaped via PostgREST's quoting rules when they contain a
+ * structural character (comma, parens, quote, backslash); numbers and booleans are
+ * emitted verbatim. Vocabulary mirrors JetBrains Exposed / Ktorm.
  */
 @FilterDsl
-public class FilterBuilder {
+public class WhereBuilder {
     @PublishedApi
-    internal val params: MutableList<Pair<String, String>> = mutableListOf()
+    internal val filters: MutableList<Filter> = mutableListOf()
 
-    /** Matches rows where [column] equals [value] (SQL `=`). Emits `column=eq.<value>`. */
-    public fun eq(column: String, value: String) {
-        params += column to "eq.${encodeValue(value)}"
+    private fun add(column: String, expr: String) {
+        filters += FilterLeaf(column, expr)
     }
 
-    /** Matches rows where [column] equals the number [value] (SQL `=`). Emits `column=eq.<value>`. */
-    public fun eq(column: String, value: Number) {
-        params += column to "eq.$value"
+    // ── Comparison ────────────────────────────────────────────────────────────
+
+    /** `column = value` (SQL `=`). */
+    public infix fun <T> Column<T>.eq(value: T): Unit = add(name, "eq.${renderValue(value)}")
+
+    /** `column <> value` (SQL `<>`). */
+    public infix fun <T> Column<T>.neq(value: T): Unit = add(name, "neq.${renderValue(value)}")
+
+    /** `column > value` (SQL `>`). */
+    public infix fun <T : Comparable<T>> Column<T>.greater(value: T): Unit = add(name, "gt.${renderValue(value)}")
+
+    /** `column >= value` (SQL `>=`). */
+    public infix fun <T : Comparable<T>> Column<T>.greaterEq(value: T): Unit = add(name, "gte.${renderValue(value)}")
+
+    /** `column < value` (SQL `<`). */
+    public infix fun <T : Comparable<T>> Column<T>.less(value: T): Unit = add(name, "lt.${renderValue(value)}")
+
+    /** `column <= value` (SQL `<=`). */
+    public infix fun <T : Comparable<T>> Column<T>.lessEq(value: T): Unit = add(name, "lte.${renderValue(value)}")
+
+    /** `column` within [range], inclusive (`>=` AND `<=`). */
+    public infix fun <T : Comparable<T>> Column<T>.within(range: ClosedRange<T>) {
+        add(name, "gte.${renderValue(range.start)}")
+        add(name, "lte.${renderValue(range.endInclusive)}")
     }
 
-    /** Matches rows where [column] equals the boolean [value] (SQL `=`). Emits `column=eq.true`/`eq.false`. */
-    public fun eq(column: String, value: Boolean) {
-        params += column to "eq.$value"
-    }
+    /** Null-aware inequality (SQL `IS DISTINCT FROM`): true when values differ OR
+     * [this] column is null, unlike [neq] which is null-unknown. */
+    public infix fun <T> Column<T>.isDistinctFrom(value: T): Unit = add(name, "isdistinct.${renderValue(value)}")
 
-    /** Matches rows where [column] does not equal [value] (SQL `<>`). Emits `column=neq.<value>`. */
-    public fun neq(column: String, value: String) {
-        params += column to "neq.${encodeValue(value)}"
-    }
+    // ── Null / boolean IS ───────────────────────────────────────────────────────
 
-    /** Matches rows where [column] does not equal the number [value] (SQL `<>`). Emits `column=neq.<value>`. */
-    public fun neq(column: String, value: Number) {
-        params += column to "neq.$value"
-    }
+    /** `column IS NULL`. */
+    public fun Column<*>.isNull(): Unit = add(name, "is.null")
 
-    /**
-     * Matches rows where [column] does not equal the boolean [value] (SQL `<>`).
-     * Emits `column=neq.true`/`neq.false`.
-     */
-    public fun neq(column: String, value: Boolean) {
-        params += column to "neq.$value"
-    }
+    /** `column IS NOT NULL`. */
+    public fun Column<*>.isNotNull(): Unit = add(name, "not.is.null")
 
-    /** Matches rows where [column] is greater than [value] (SQL `>`). Emits `column=gt.<value>`. */
-    public fun gt(column: String, value: String) {
-        params += column to "gt.${encodeValue(value)}"
-    }
+    /** `column IS TRUE/FALSE` (SQL `IS`). For nullable booleans, prefer [isNull]/[isNotNull]. */
+    public infix fun Column<Boolean>.isExactly(value: Boolean): Unit = add(name, "is.$value")
 
-    /** Matches rows where [column] is greater than the number [value] (SQL `>`). Emits `column=gt.<value>`. */
-    public fun gt(column: String, value: Number) {
-        params += column to "gt.$value"
-    }
+    // ── Pattern matching ────────────────────────────────────────────────────────
 
-    /** Matches rows where [column] is greater than or equal to [value] (SQL `>=`). Emits `column=gte.<value>`. */
-    public fun gte(column: String, value: String) {
-        params += column to "gte.${encodeValue(value)}"
-    }
+    /** Case-sensitive `LIKE` against [pattern] (`%` = any run). */
+    public infix fun Column<String>.like(pattern: String): Unit = add(name, "like.${encodeValue(pattern)}")
 
-    /**
-     * Matches rows where [column] is greater than or equal to the number [value]
-     * (SQL `>=`). Emits `column=gte.<value>`.
-     */
-    public fun gte(column: String, value: Number) {
-        params += column to "gte.$value"
-    }
+    /** Case-insensitive `ILIKE` against [pattern]. */
+    public infix fun Column<String>.ilike(pattern: String): Unit = add(name, "ilike.${encodeValue(pattern)}")
 
-    /** Matches rows where [column] is less than [value] (SQL `<`). Emits `column=lt.<value>`. */
-    public fun lt(column: String, value: String) {
-        params += column to "lt.${encodeValue(value)}"
-    }
+    /** Case-sensitive POSIX regex match (SQL `~`). */
+    public infix fun Column<String>.matches(pattern: String): Unit = add(name, "match.${encodeValue(pattern)}")
 
-    /** Matches rows where [column] is less than the number [value] (SQL `<`). Emits `column=lt.<value>`. */
-    public fun lt(column: String, value: Number) {
-        params += column to "lt.$value"
-    }
+    /** Case-insensitive POSIX regex match (SQL `~*`). */
+    public infix fun Column<String>.imatches(pattern: String): Unit = add(name, "imatch.${encodeValue(pattern)}")
 
-    /** Matches rows where [column] is less than or equal to [value] (SQL `<=`). Emits `column=lte.<value>`. */
-    public fun lte(column: String, value: String) {
-        params += column to "lte.${encodeValue(value)}"
-    }
+    /** Matches every pattern in [patterns] (`LIKE ALL`). */
+    public infix fun Column<String>.likeAllOf(patterns: List<String>): Unit =
+        add(name, "like(all).{${patterns.joinToString(",") { encodeValue(it) }}}")
 
-    /**
-     * Matches rows where [column] is less than or equal to the number [value]
-     * (SQL `<=`). Emits `column=lte.<value>`.
-     */
-    public fun lte(column: String, value: Number) {
-        params += column to "lte.$value"
-    }
+    /** Matches at least one pattern in [patterns] (`LIKE ANY`). */
+    public infix fun Column<String>.likeAnyOf(patterns: List<String>): Unit =
+        add(name, "like(any).{${patterns.joinToString(",") { encodeValue(it) }}}")
 
-    /**
-     * Matches rows where [column] matches the case-sensitive [pattern] (SQL `LIKE`,
-     * `%` = any run, `*` is accepted by PostgREST as an alias). Emits `column=like.<pattern>`.
-     */
-    public fun like(column: String, pattern: String) {
-        params += column to "like.${encodeValue(pattern)}"
-    }
+    // ── Membership ──────────────────────────────────────────────────────────────
 
-    /**
-     * Matches rows where [column] satisfies every pattern in [patterns]
-     * (case-sensitive `LIKE ALL`). Emits `column=like(all).{p1,p2}`.
-     */
-    public fun likeAllOf(column: String, patterns: List<String>) {
-        params += column to "like(all).{${patterns.joinToString(",") { encodeValue(it) }}}"
-    }
+    /** `column IN (values)` (SQL `IN`). */
+    public infix fun <T> Column<T>.inList(values: List<T>): Unit =
+        add(name, "in.(${values.joinToString(",") { renderValue(it) }})")
 
-    /**
-     * Matches rows where [column] satisfies at least one pattern in [patterns]
-     * (case-sensitive `LIKE ANY`). Emits `column=like(any).{p1,p2}`.
-     */
-    public fun likeAnyOf(column: String, patterns: List<String>) {
-        params += column to "like(any).{${patterns.joinToString(",") { encodeValue(it) }}}"
-    }
+    // ── Array / range ─────────────────────────────────────────────────────────
 
-    /**
-     * Matches rows where [column] matches the case-insensitive [pattern]
-     * (SQL `ILIKE`). Emits `column=ilike.<pattern>`.
-     */
-    public fun ilike(column: String, pattern: String) {
-        params += column to "ilike.${encodeValue(pattern)}"
-    }
+    /** Array/range column contains every element of [values] (SQL `@>`). */
+    public infix fun <T> Column<List<T>>.contains(values: List<T>): Unit = add(name, "cs.${arrayLiteral(values)}")
 
-    /**
-     * Matches rows where [column] satisfies every pattern in [patterns]
-     * (case-insensitive `ILIKE ALL`). Emits `column=ilike(all).{p1,p2}`.
-     */
-    public fun ilikeAllOf(column: String, patterns: List<String>) {
-        params += column to "ilike(all).{${patterns.joinToString(",") { encodeValue(it) }}}"
-    }
+    /** Array/range column is contained by [values] (SQL `<@`). */
+    public infix fun <T> Column<List<T>>.containedBy(values: List<T>): Unit = add(name, "cd.${arrayLiteral(values)}")
 
-    /**
-     * Matches rows where [column] satisfies at least one pattern in [patterns]
-     * (case-insensitive `ILIKE ANY`). Emits `column=ilike(any).{p1,p2}`.
-     */
-    public fun ilikeAnyOf(column: String, patterns: List<String>) {
-        params += column to "ilike(any).{${patterns.joinToString(",") { encodeValue(it) }}}"
-    }
+    /** Array/range column shares any element with [values] (SQL `&&`). */
+    public infix fun <T> Column<List<T>>.overlaps(values: List<T>): Unit = add(name, "ov.${arrayLiteral(values)}")
 
-    /**
-     * Finds all rows where the value of [column] matches the POSIX regular
-     * expression [pattern] (case-sensitive), i.e. the SQL `~` operator. Emits
-     * `column=match.<pattern>`.
-     */
-    public fun match(column: String, pattern: String) {
-        params += column to "match.${encodeValue(pattern)}"
-    }
+    // ── Full-text search ──────────────────────────────────────────────────────
 
-    /**
-     * Finds all rows where the value of [column] matches the POSIX regular
-     * expression [pattern] case-insensitively, i.e. the SQL `~*` operator. Emits
-     * `column=imatch.<pattern>`.
-     */
-    public fun imatch(column: String, pattern: String) {
-        params += column to "imatch.${encodeValue(pattern)}"
-    }
-
-    /**
-     * `IS` check against a raw token (SQL `IS`). Pass the PostgREST literal you
-     * want, e.g. `"null"`, `"true"`, `"unknown"`. Prefer the [Boolean]`?` overload
-     * for the common nullable/boolean case. Emits `column=is.<value>`.
-     */
-    public fun `is`(column: String, value: String) {
-        params += column to "is.${encodeValue(value)}"
-    }
-
-    /**
-     * `IS` check for the three values PostgREST accepts here: `null` (pass `null`),
-     * `true`, or `false`. Use this for nullable/boolean columns — e.g.
-     * `is("deleted_at", null)` → `deleted_at=is.null`.
-     */
-    public fun `is`(column: String, value: Boolean?) {
-        params += column to "is.${value ?: "null"}"
-    }
-
-    /**
-     * Matches rows where [column] is distinct from [value] — a null-aware inequality
-     * (SQL `IS DISTINCT FROM`): true when the values differ OR when [column] is null,
-     * unlike [neq] which is null-unknown. Emits `column=isdistinct.<value>`.
-     */
-    public fun isDistinct(column: String, value: String) {
-        params += column to "isdistinct.${encodeValue(value)}"
-    }
-
-    /** Null-aware inequality against the number [value] (SQL `IS DISTINCT FROM`). Emits `column=isdistinct.<value>`. */
-    public fun isDistinct(column: String, value: Number) {
-        params += column to "isdistinct.$value"
-    }
-
-    /**
-     * Null-aware inequality against `null`/`true`/`false` (SQL `IS DISTINCT FROM`);
-     * pass `null` to match rows where [column] is non-null. Emits `column=isdistinct.<value>`.
-     */
-    public fun isDistinct(column: String, value: Boolean?) {
-        params += column to "isdistinct.${value ?: "null"}"
-    }
-
-    /**
-     * Matches rows where [column] equals one of [values] (SQL `IN`). Each member is
-     * quoted/escaped if it contains a structural character. Emits `column=in.(a,b,c)`.
-     */
-    public fun `in`(column: String, values: List<String>) {
-        params += column to "in.(${values.joinToString(",") { encodeValue(it) }})"
-    }
-
-    /**
-     * Finds all rows where the value of [column] is one of [values]. Numeric
-     * members never need quoting, so each is emitted verbatim. Emits
-     * `column=in.(1,2,3)`.
-     */
-    @JvmName("inNumbers")
-    public fun `in`(column: String, values: List<Number>) {
-        params += column to "in.(${values.joinToString(",")})"
-    }
-
-    /**
-     * Finds all rows where the value of [column] is one of [values]. Each
-     * member is rendered via its `toString()` and then quoted/escaped if it
-     * contains a PostgREST-structural character. Emits `column=in.(a,b,c)`.
-     */
-    @JvmName("inAny")
-    public fun `in`(column: String, values: List<Any>) {
-        params += column to "in.(${values.joinToString(",") { encodeValue(it.toString()) }})"
-    }
-
-    /**
-     * Adds an equality filter per entry in [values], i.e. `column = value` for
-     * each `(column, value)` pair — the AND of several [eq] calls. Note this is the
-     * column/value-map overload, distinct from the regex [match] (column, pattern).
-     */
-    public fun match(values: Map<String, String>) {
-        values.forEach { (column, value) -> eq(column, value) }
-    }
-
-    // The array/range operators below take a caller-formatted PostgREST literal
-    // (e.g. `{a,b}`, `[1,10)`) whose commas/parens are structural to that literal,
-    // so the value is passed through verbatim and is NOT quoted. The caller owns
-    // formatting (and escaping individual elements) for these operators.
-
-    /**
-     * Matches rows where the array/range [column] contains [value] (SQL `@>`).
-     * [value] is a verbatim PostgREST literal such as `{a,b}` or `[1,10)` — the
-     * caller owns its formatting/escaping. Emits `column=cs.<value>`. Prefer the
-     * [List] overload to have the array literal built for you.
-     */
-    public fun contains(column: String, value: String) {
-        params += column to "cs.$value"
-    }
-
-    /**
-     * Finds all rows where the array/range column [column] contains every
-     * element of [values]. The list is rendered as a PostgREST array literal
-     * `{a,b,c}`, with each element quoted/escaped if needed. Emits
-     * `column=cs.{a,b,c}`.
-     */
-    public fun contains(column: String, values: List<Any>) {
-        params += column to "cs.${arrayLiteral(values)}"
-    }
-
-    /**
-     * Matches rows where the array/range [column] is contained by [value]
-     * (SQL `<@`). [value] is a verbatim PostgREST literal (e.g. `{a,b}`, `[1,10)`);
-     * the caller owns formatting/escaping. Emits `column=cd.<value>`. Prefer the
-     * [List] overload to have the array literal built for you.
-     */
-    public fun containedBy(column: String, value: String) {
-        params += column to "cd.$value"
-    }
-
-    /**
-     * Finds all rows where every element of the array column [column] is
-     * contained in [values]. The list is rendered as a PostgREST array literal
-     * `{a,b,c}`, with each element quoted/escaped if needed. Emits
-     * `column=cd.{a,b,c}`.
-     */
-    public fun containedBy(column: String, values: List<Any>) {
-        params += column to "cd.${arrayLiteral(values)}"
-    }
-
-    /**
-     * Matches rows where the array/range [column] shares any element with [value]
-     * (SQL `&&`). [value] is a verbatim PostgREST literal (e.g. `{a,b}`, `[1,10)`);
-     * the caller owns formatting/escaping. Emits `column=ov.<value>`. Prefer the
-     * [List] overload to have the array literal built for you.
-     */
-    public fun overlaps(column: String, value: String) {
-        params += column to "ov.$value"
-    }
-
-    /**
-     * Finds all rows where the array column [column] shares any element with
-     * [values]. The list is rendered as a PostgREST array literal `{a,b,c}`,
-     * with each element quoted/escaped if needed. Emits `column=ov.{a,b,c}`.
-     */
-    public fun overlaps(column: String, values: List<Any>) {
-        params += column to "ov.${arrayLiteral(values)}"
-    }
-
-    /**
-     * Matches rows where the range [column] is strictly right of the range [value]
-     * (operator `sr`, SQL `>>`). [value] is a verbatim range literal such as
-     * `[1,10)`. Emits `column=sr.<value>`. Aliased by [strictlyRight].
-     */
-    public fun rangeGt(column: String, value: String) {
-        params += column to "sr.$value"
-    }
-
-    /**
-     * Matches rows where the range [column] does not extend to the left of [value]
-     * (operator `nxl`, SQL `&>`). [value] is a verbatim range literal. Emits
-     * `column=nxl.<value>`. Aliased by [notExtendLeft].
-     */
-    public fun rangeGte(column: String, value: String) {
-        params += column to "nxl.$value"
-    }
-
-    /**
-     * Matches rows where the range [column] is strictly left of the range [value]
-     * (operator `sl`, SQL `<<`). [value] is a verbatim range literal such as
-     * `[1,10)`. Emits `column=sl.<value>`. Aliased by [strictlyLeft].
-     */
-    public fun rangeLt(column: String, value: String) {
-        params += column to "sl.$value"
-    }
-
-    /**
-     * Matches rows where the range [column] does not extend to the right of [value]
-     * (operator `nxr`, SQL `&<`). [value] is a verbatim range literal. Emits
-     * `column=nxr.<value>`. Aliased by [notExtendRight].
-     */
-    public fun rangeLte(column: String, value: String) {
-        params += column to "nxr.$value"
-    }
-
-    /**
-     * Matches rows where the range [column] is adjacent to the range [value]
-     * (operator `adj`, SQL `-|-`). [value] is a verbatim range literal such as
-     * `[1,10)`. Emits `column=adj.<value>`.
-     */
-    public fun rangeAdj(column: String, value: String) {
-        params += column to "adj.$value"
-    }
-
-    /**
-     * Negates every filter declared inside [block] (SQL `NOT`). Each inner pair is
-     * re-emitted with a `not.` prefix, e.g. an inner `eq` becomes
-     * `column=not.eq.<value>`. A negated nested logical group prefixes the KEY
-     * instead, e.g. `not { and { … } }` renders as `not.and=(…)`. Use the
-     * [not] (column, operator, value) overload for a single negated operator.
-     *
-     * @param block a nested DSL block whose filters are individually negated.
-     */
-    public fun not(block: FilterBuilder.() -> Unit) {
-        val inner = FilterBuilder().apply(block).build()
-        for ((key, value) in inner) {
-            if (isLogicalKey(key)) {
-                params += "not.$key" to value
-            } else {
-                params += key to "not.$value"
-            }
-        }
-    }
-
-    /**
-     * Negates a single filter expressed by raw [operator]/[value] (SQL `NOT`).
-     * Emits `column=not.<operator>.<value>`, e.g. `not("age", "gt", "18")` →
-     * `age=not.gt.18`.
-     *
-     * @param operator the bare PostgREST operator token (`eq`, `gt`, `like`, …).
-     */
-    public fun not(column: String, operator: String, value: String) {
-        params += column to "not.$operator.${encodeValue(value)}"
-    }
-
-    /**
-     * Combines the filters declared inside [block] with logical OR (SQL `OR`). The
-     * inner filters are flattened into PostgREST's grouped form, e.g.
-     * `or { eq("a", 1); eq("b", 2) }` → `or=(a.eq.1,b.eq.2)`. When
-     * [referencedTable] is set the key is scoped to that embedded/joined resource,
-     * e.g. `or(referencedTable = "authors") { … }` → `authors.or=(…)`.
-     *
-     * @param block a nested DSL block whose filters are OR-ed together.
-     * @param referencedTable scope the OR group to an embedded/joined resource when set.
-     */
-    public fun or(referencedTable: String? = null, block: FilterBuilder.() -> Unit) {
-        val inner = FilterBuilder().apply(block).build()
-        val combined = flattenLogical(inner)
-        val key = if (referencedTable == null) "or" else "$referencedTable.or"
-        params += key to "($combined)"
-    }
-
-    /**
-     * Combines the filters declared inside [block] with logical AND (SQL `AND`) as
-     * an explicit group — useful nested inside [or]. Emits the grouped form, e.g.
-     * `and { gte("a", 1); lt("a", 9) }` → `and=(a.gte.1,a.lt.9)`. When
-     * [referencedTable] is set the key is scoped to that embedded/joined resource,
-     * e.g. `and(referencedTable = "authors") { … }` → `authors.and=(…)`.
-     *
-     * @param block a nested DSL block whose filters are AND-ed together.
-     * @param referencedTable scope the AND group to an embedded/joined resource when set.
-     */
-    public fun and(referencedTable: String? = null, block: FilterBuilder.() -> Unit) {
-        val inner = FilterBuilder().apply(block).build()
-        val combined = flattenLogical(inner)
-        val key = if (referencedTable == null) "and" else "$referencedTable.and"
-        params += key to "($combined)"
-    }
-
-    /**
-     * Returns `true` when [key] denotes a nested logical group (`and`/`or`),
-     * optionally qualified by a referenced table (e.g. `tbl.and`/`tbl.or`).
-     * Such entries carry a value already wrapped in `(…)` and must NOT have a
-     * dot inserted between key and value when flattened.
-     */
-    private fun isLogicalKey(key: String): Boolean =
-        key == "and" || key == "or" || key.endsWith(".and") || key.endsWith(".or")
-
-    /**
-     * Flattens the inner pairs of a logical group into PostgREST's comma-joined
-     * form. Normal entries render as `key.value`; nested logical-group entries
-     * (whose value already begins with `(`) render as `keyvalue` with no dot.
-     */
-    private fun flattenLogical(inner: List<Pair<String, String>>): String =
-        inner.joinToString(",") { (k, v) ->
-            if (isLogicalKey(k)) "$k$v" else "$k.$v"
-        }
-
-    /**
-     * Full-text search on [column] against [query], using the parse mode [type]
-     * (see [TextSearchType]). Emits the FTS operator with an optional text-search
-     * config, e.g. `column=plfts.<query>` or `column=plfts(english).<query>`.
-     *
-     * @param config optional text-search configuration name (e.g. `english`).
-     * @param type how [query] is parsed; defaults to [TextSearchType.Plain].
-     */
-    public fun textSearch(
-        column: String,
+    /** Full-text search on [this] column against [query] using parse mode [type]. */
+    public fun Column<String>.textSearch(
         query: String,
         config: String? = null,
         type: TextSearchType = TextSearchType.Plain,
     ) {
         val configPart = if (config != null) "($config)" else ""
-        params += column to "${type.postgrestName}fts$configPart.${encodeValue(query)}"
+        add(name, "${type.postgrestName}fts$configPart.${encodeValue(query)}")
     }
 
-    /**
-     * Escape hatch for any operator not covered by a dedicated method: emits
-     * `column=<operator>.<value>` with [value] quoted/escaped. Use when PostgREST
-     * adds an operator the DSL doesn't yet expose.
-     *
-     * @param operator the bare PostgREST operator token (e.g. `eq`, `fts`).
-     */
-    public fun filter(column: String, operator: String, value: String) {
-        params += column to "$operator.${encodeValue(value)}"
+    // ── Escape hatch ─────────────────────────────────────────────────────────
+
+    /** Raw operator escape hatch: emits `column=<operator>.<value>` for operators the
+     * DSL doesn't expose yet. [value] is quoted/escaped. */
+    public fun raw(column: Column<*>, operator: String, value: String): Unit =
+        add(column.name, "$operator.${encodeValue(value)}")
+
+    // ── Logical groups ──────────────────────────────────────────────────────────
+
+    /** Combines the predicates in [block] with logical OR. */
+    public fun or(referencedTable: String? = null, block: WhereBuilder.() -> Unit) {
+        filters += FilterGroup("or", referencedTable, WhereBuilder().apply(block).filters, negated = false)
     }
 
-    /**
-     * Orders the result by [column] using a boolean direction and optional nulls
-     * placement. Emits `order=column.<asc|desc>[.<nullsfirst|nullslast>]` (or
-     * `<referencedTable>.order=...`). Prefer the type-safe [OrderDirection]
-     * overload for readability.
-     *
-     * @param ascending `true` for `asc` (default), `false` for `desc`.
-     * @param nullsFirst `true` → `nullsfirst`, `false` → `nullslast`, `null` → DB default.
-     * @param referencedTable order on an embedded/joined resource when set.
-     */
-    public fun order(
-        column: String,
-        ascending: Boolean = true,
-        nullsFirst: Boolean? = null,
-        referencedTable: String? = null,
-    ) {
-        val dir = if (ascending) "asc" else "desc"
-        val nulls =
-            when (nullsFirst) {
-                true -> ".nullsfirst"
-                false -> ".nullslast"
-                null -> ""
-            }
-        val key = if (referencedTable == null) "order" else "$referencedTable.order"
-        appendOrder(key, "$column.$dir$nulls")
+    /** Combines the predicates in [block] with logical AND as an explicit group
+     * (useful nested inside [or]). */
+    public fun and(referencedTable: String? = null, block: WhereBuilder.() -> Unit) {
+        filters += FilterGroup("and", referencedTable, WhereBuilder().apply(block).filters, negated = false)
     }
 
-    /**
-     * Orders the result by [column] using the type-safe [OrderDirection] and
-     * optional [NullsPlacement] instead of the boolean/magic-string overload.
-     * Emits `order=column.<asc|desc>[.<nullsfirst|nullslast>]` (or
-     * `<referencedTable>.order=...` when [referencedTable] is given).
-     *
-     * @param direction ascending or descending.
-     * @param nulls where to place `NULL`s; omit (`null`) to use PostgreSQL's default.
-     * @param referencedTable order on an embedded/joined resource when set.
-     */
-    public fun order(
-        column: String,
-        direction: OrderDirection,
-        nulls: NullsPlacement? = null,
-        referencedTable: String? = null,
-    ) {
-        val nullsPart = if (nulls != null) ".${nulls.postgrestName}" else ""
-        val key = if (referencedTable == null) "order" else "$referencedTable.order"
-        appendOrder(key, "$column.${direction.postgrestName}$nullsPart")
+    /** Negates every predicate declared inside [block] (SQL `NOT`). */
+    public fun not(block: WhereBuilder.() -> Unit) {
+        WhereBuilder().apply(block).filters.forEach { filters += negate(it) }
     }
 
-    /**
-     * Accumulates an order term into a SINGLE `order` (or `<table>.order`) parameter,
-     * comma-joining successive [order] calls. PostgREST expects multi-column ordering
-     * as one comma-separated `order` value (`order=a.desc,b.asc`) and honours only one
-     * of several repeated `order=` params — so emitting a separate pair per call would
-     * silently drop every sort column but one. Terms scoped to different referenced
-     * tables keep their own keys.
-     */
-    private fun appendOrder(key: String, term: String) {
-        val index = params.indexOfFirst { it.first == key }
-        if (index >= 0) {
-            params[index] = key to "${params[index].second},$term"
-        } else {
-            params += key to term
-        }
-    }
-
-    /**
-     * Caps the result at [count] rows. Emits `limit=<count>` (or
-     * `<referencedTable>.limit=<count>` for an embedded resource).
-     *
-     * @param referencedTable limit an embedded/joined resource when set.
-     */
-    public fun limit(count: Int, referencedTable: String? = null) {
-        val key = if (referencedTable == null) "limit" else "$referencedTable.limit"
-        params += key to count.toString()
-    }
-
-    /**
-     * Skips the first [count] rows. Emits `offset=<count>` (or
-     * `<referencedTable>.offset=<count>` for an embedded resource).
-     *
-     * @param referencedTable offset an embedded/joined resource when set.
-     */
-    public fun offset(count: Int, referencedTable: String? = null) {
-        val key = if (referencedTable == null) "offset" else "$referencedTable.offset"
-        params += key to count.toString()
-    }
-
-    /**
-     * Selects the inclusive, zero-based row window `[from, to]` by emitting both an
-     * `offset` and a derived `limit` (`to - from + 1`), e.g. `range(0, 9)` →
-     * `offset=0` + `limit=10`. Prefixed with [referencedTable] for embedded
-     * resources.
-     *
-     * @param from first row index, inclusive (zero-based).
-     * @param to last row index, inclusive.
-     * @param referencedTable page an embedded/joined resource when set.
-     */
-    public fun range(from: Int, to: Int, referencedTable: String? = null) {
-        require(to >= from) { "range 'to' ($to) must be >= 'from' ($from)" }
-        val offsetKey = if (referencedTable == null) "offset" else "$referencedTable.offset"
-        val limitKey = if (referencedTable == null) "limit" else "$referencedTable.limit"
-        params += offsetKey to from.toString()
-        params += limitKey to (to - from + 1).toString()
-    }
-
-    /** Range column [column] is strictly left of [value] (SQL `<<`). Alias for [rangeLt]. */
-    public fun strictlyLeft(column: String, value: String) {
-        rangeLt(column, value)
-    }
-
-    /** Range column [column] is strictly right of [value] (SQL `>>`). Alias for [rangeGt]. */
-    public fun strictlyRight(column: String, value: String) {
-        rangeGt(column, value)
-    }
-
-    /** Range column [column] does not extend right of [value] (SQL `&<`). Alias for [rangeLte]. */
-    public fun notExtendRight(column: String, value: String) {
-        rangeLte(column, value)
-    }
-
-    /** Range column [column] does not extend left of [value] (SQL `&>`). Alias for [rangeGte]. */
-    public fun notExtendLeft(column: String, value: String) {
-        rangeGte(column, value)
-    }
-
-    /** Returns a snapshot of the accumulated `(name, value)` query parameters in declaration order. */
-    public fun build(): List<Pair<String, String>> = params.toList()
+    /** Snapshot of the accumulated top-level filters, in declaration order. */
+    @PublishedApi
+    internal fun build(): List<Filter> = filters.toList()
 
     private companion object {
-        // PostgREST treats comma, parentheses and double-quote as structural
-        // (element separators in `in(...)`, grouping in `or/and`). A value that
-        // contains one must be wrapped in double quotes with `"`/`\` escaped, or
-        // it changes the meaning of the query. Plain values pass through unchanged
-        // so simple filters stay readable. Dots are left alone — PostgREST only
-        // splits the operator from the value on the first dot.
+        // PostgREST treats comma, parentheses and double-quote as structural. A value
+        // containing one must be double-quoted with `"`/`\` escaped, or it changes the
+        // query's meaning. Plain values pass through so simple filters stay readable.
         private fun encodeValue(value: String): String {
             val needsQuoting =
                 value.isEmpty() ||
-                    value.any { ch ->
-                        ch == ',' || ch == '(' || ch == ')' || ch == '"' || ch == '\\'
-                    }
+                    value.any { ch -> ch == ',' || ch == '(' || ch == ')' || ch == '"' || ch == '\\' }
             if (!needsQuoting) return value
             val escaped = value.replace("\\", "\\\\").replace("\"", "\\\"")
             return "\"$escaped\""
         }
 
-        // Renders a PostgREST array literal `{a,b,c}` from a typed list. Inside
-        // the braces a comma separates elements, so an element containing one is
-        // double-quoted/escaped exactly like a scalar value; braces are added by
-        // this method and are structural.
-        private fun arrayLiteral(values: List<Any>): String =
-            "{${values.joinToString(",") { encodeValue(it.toString()) }}}"
+        // Renders a typed operand to its wire form: numbers/booleans verbatim, anything
+        // else escaped via encodeValue on its toString().
+        private fun renderValue(value: Any?): String =
+            when (value) {
+                null -> "null"
+                is Number, is Boolean -> value.toString()
+                else -> encodeValue(value.toString())
+            }
+
+        private fun arrayLiteral(values: List<Any?>): String =
+            "{${values.joinToString(",") { renderValue(it) }}}"
     }
 }
 
 /**
- * Builds a list of PostgREST query parameters from a [FilterBuilder] [block] — the
- * idiomatic entry point to the filter DSL.
- *
- * Shorthand for `FilterBuilder().apply(block).build()`; the returned
- * `(name, value)` pairs are appended to a request's query string. See
- * [FilterBuilder] for the available operators.
+ * Builds a full read query: a `where { }` predicate plus result modifiers
+ * (`orderBy`, `limit`, `offset`, `range`). This is the receiver of the query DSL
+ * block on read methods like `select`. Modifiers are kept distinct from filters, so
+ * `not { limit(1) }` is no longer expressible.
  */
-public inline fun filters(block: FilterBuilder.() -> Unit): List<Pair<String, String>> =
-    FilterBuilder().apply(block).build()
+@FilterDsl
+public class QueryBuilder {
+    @PublishedApi
+    internal val where: WhereBuilder = WhereBuilder()
+
+    @PublishedApi
+    internal val modifiers: MutableList<Pair<String, String>> = mutableListOf()
+
+    /** Filter predicate for this query. Multiple statements are AND-ed. */
+    public fun where(block: WhereBuilder.() -> Unit) {
+        where.apply(block)
+    }
+
+    /** Order by [column]. Successive calls add secondary sort keys. */
+    public fun orderBy(
+        column: Column<*>,
+        order: Order = Order.ASC,
+        nulls: Nulls? = null,
+        referencedTable: String? = null,
+    ) {
+        val nullsPart = if (nulls != null) ".${nulls.postgrestName}" else ""
+        val key = if (referencedTable == null) "order" else "$referencedTable.order"
+        appendOrder(key, "${column.name}.${order.postgrestName}$nullsPart")
+    }
+
+    /** Cap the result at [count] rows. Last call wins. */
+    public fun limit(count: Int, referencedTable: String? = null): Unit =
+        setOnce(if (referencedTable == null) "limit" else "$referencedTable.limit", count.toString())
+
+    /** Skip the first [count] rows. Last call wins. */
+    public fun offset(count: Int, referencedTable: String? = null): Unit =
+        setOnce(if (referencedTable == null) "offset" else "$referencedTable.offset", count.toString())
+
+    /** Inclusive, zero-based row window `[from, to]`, emitted as `offset` + derived
+     * `limit` (`to - from + 1`). */
+    public fun range(from: Int, to: Int, referencedTable: String? = null) {
+        require(to >= from) { "range 'to' ($to) must be >= 'from' ($from)" }
+        setOnce(if (referencedTable == null) "offset" else "$referencedTable.offset", from.toString())
+        setOnce(if (referencedTable == null) "limit" else "$referencedTable.limit", (to - from + 1).toString())
+    }
+
+    // PostgREST honours only one `limit`/`offset` per scope, so a second call must
+    // overwrite rather than append a duplicate (the old builder silently emitted both).
+    private fun setOnce(key: String, value: String) {
+        val index = modifiers.indexOfFirst { it.first == key }
+        if (index >= 0) modifiers[index] = key to value else modifiers += key to value
+    }
+
+    // Multi-column ordering is ONE comma-separated `order` param; appending a second
+    // `order=` would be silently dropped by PostgREST, so accumulate into one.
+    private fun appendOrder(key: String, term: String) {
+        val index = modifiers.indexOfFirst { it.first == key }
+        if (index >= 0) modifiers[index] = key to "${modifiers[index].second},$term" else modifiers += key to term
+    }
+
+    /** All query parameters: filter params followed by modifier params. */
+    @PublishedApi
+    internal fun build(): List<Pair<String, String>> = where.build().toParams() + modifiers.toList()
+}
+
+/** Builds a filter predicate from a [WhereBuilder] [block] — the entry point used by
+ * mutation methods (update/delete) that take a `where`-only block. */
+public inline fun where(block: WhereBuilder.() -> Unit): List<Pair<String, String>> =
+    WhereBuilder().apply(block).build().toParams()
+
+/** Builds a full read query (filter + modifiers) from a [QueryBuilder] [block]. */
+public inline fun query(block: QueryBuilder.() -> Unit): List<Pair<String, String>> =
+    QueryBuilder().apply(block).build()

@@ -13,6 +13,8 @@ import io.github.androidpoet.supabase.auth.signOutCurrentSession
 import io.github.androidpoet.supabase.auth.signUpWithEmailAndSaveSession
 import io.github.androidpoet.supabase.client.defaultJson
 import io.github.androidpoet.supabase.client.deserialize
+import io.github.androidpoet.supabase.core.models.Column
+import io.github.androidpoet.supabase.core.models.Order
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.core.result.map
@@ -37,6 +39,16 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+
+/** Typed column tokens for the demo tables (what codegen would emit). */
+private object ChatRooms {
+    val name: Column<String> = Column("name")
+}
+
+private object ChatMessages {
+    val roomId: Column<String> = Column("room_id")
+    val createdAt: Column<String> = Column("created_at")
+}
 
 class DemoRepository(
     private val auth: AuthClient,
@@ -79,7 +91,7 @@ class DemoRepository(
 
     suspend fun loadRooms(): SupabaseResult<List<ChatRoom>> =
         database.selectTyped(table = "chat_rooms") {
-            order("name", ascending = true)
+            orderBy(ChatRooms.name, Order.ASC)
         }
 
     suspend fun createRoom(name: String): SupabaseResult<ChatRoom> =
@@ -96,9 +108,11 @@ class DemoRepository(
         pageSize: Int,
     ): SupabaseResult<List<ChatMessage>> =
         database.selectTyped(table = "chat_messages") {
-            eq("room_id", roomId)
-            if (beforeCreatedAt != null) lt("created_at", beforeCreatedAt)
-            order("created_at", ascending = false)
+            where {
+                ChatMessages.roomId eq roomId
+                if (beforeCreatedAt != null) ChatMessages.createdAt less beforeCreatedAt
+            }
+            orderBy(ChatMessages.createdAt, Order.DESC)
             limit(pageSize)
         }
 
@@ -178,13 +192,13 @@ class DemoRepository(
     suspend fun buildDatabaseReport(roomId: String): SupabaseResult<String> {
         val head =
             database.selectHead(table = "chat_messages", count = CountOption.EXACT) {
-                eq("room_id", roomId)
+                where { ChatMessages.roomId eq roomId }
             }
         if (head is SupabaseResult.Failure) return head
 
         val csv =
             database.selectCsv(table = "chat_rooms", columns = "id,name") {
-                order("name", ascending = true)
+                orderBy(ChatRooms.name, Order.ASC)
                 limit(5)
             }
         return when (csv) {

@@ -1,6 +1,7 @@
 package io.github.androidpoet.supabase.database
 
-import io.github.androidpoet.supabase.core.models.FilterBuilder
+import io.github.androidpoet.supabase.core.models.QueryBuilder
+import io.github.androidpoet.supabase.core.models.WhereBuilder
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import kotlinx.coroutines.test.runTest
@@ -700,7 +701,7 @@ private class FakeDatabaseClient(
         explain: ExplainOptions?,
         retry: Boolean,
         headers: Map<String, String>,
-        filters: FilterBuilder.() -> Unit,
+        block: QueryBuilder.() -> Unit,
     ): SupabaseResult<String> = selectResult
 
     override suspend fun selectCount(
@@ -709,7 +710,7 @@ private class FakeDatabaseClient(
         columns: String,
         count: CountOption,
         headers: Map<String, String>,
-        filters: FilterBuilder.() -> Unit,
+        block: QueryBuilder.() -> Unit,
     ): SupabaseResult<PostgrestRange> =
         when (selectResult) {
             is SupabaseResult.Success -> SupabaseResult.Success(PostgrestRange())
@@ -724,7 +725,7 @@ private class FakeDatabaseClient(
         count: CountOption,
         stripNulls: Boolean,
         headers: Map<String, String>,
-        filters: FilterBuilder.() -> Unit,
+        block: QueryBuilder.() -> Unit,
     ): SupabaseResult<Pair<String, PostgrestRange>> =
         when (selectResult) {
             is SupabaseResult.Success -> SupabaseResult.Success(selectResult.value to PostgrestRange())
@@ -762,7 +763,7 @@ private class FakeDatabaseClient(
         maxAffected: Int?,
         explain: ExplainOptions?,
         headers: Map<String, String>,
-        filters: FilterBuilder.() -> Unit,
+        block: WhereBuilder.() -> Unit,
     ): SupabaseResult<String> = updateResult
 
     override suspend fun replace(
@@ -770,7 +771,7 @@ private class FakeDatabaseClient(
         body: String,
         returning: ReturnOption,
         columns: String,
-        filters: FilterBuilder.() -> Unit,
+        block: WhereBuilder.() -> Unit,
     ): SupabaseResult<String> = replaceResult
 
     override suspend fun delete(
@@ -783,7 +784,7 @@ private class FakeDatabaseClient(
         maxAffected: Int?,
         explain: ExplainOptions?,
         headers: Map<String, String>,
-        filters: FilterBuilder.() -> Unit,
+        block: WhereBuilder.() -> Unit,
     ): SupabaseResult<String> = deleteResult
 
     override suspend fun rpc(
@@ -800,7 +801,7 @@ private class FakeDatabaseClient(
         explain: ExplainOptions?,
         contentType: String,
         headers: Map<String, String>,
-        filters: FilterBuilder.() -> Unit,
+        block: QueryBuilder.() -> Unit,
     ): SupabaseResult<String> {
         lastRpcParams = params
         return rpcResult

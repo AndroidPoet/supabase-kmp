@@ -1,6 +1,7 @@
 package io.github.androidpoet.supabase.e2e
 
 import io.github.androidpoet.supabase.client.Supabase
+import io.github.androidpoet.supabase.core.models.Column
 import io.github.androidpoet.supabase.database.createDatabaseClient
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -42,7 +43,7 @@ class DatabaseE2eTest {
                     .select(
                         table = E2E_MESSAGES_TABLE,
                     ) {
-                        eq("body", messageBody)
+                        where { Column<String>("body") eq messageBody }
                     }.unwrap("select")
 
             client.close()

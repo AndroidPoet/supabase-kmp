@@ -1,6 +1,7 @@
 package io.github.androidpoet.supabase.database
 
 import io.github.androidpoet.supabase.client.SupabaseClient
+import io.github.androidpoet.supabase.core.models.Column
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import kotlinx.coroutines.test.runTest
@@ -558,7 +559,7 @@ class DatabaseClientImplTest {
 
             runSuspend {
                 sut.rpc(function = "list_messages") {
-                    eq("status", "active")
+                    where { Column<String>("status") eq "active" }
                     limit(5)
                 }
             }

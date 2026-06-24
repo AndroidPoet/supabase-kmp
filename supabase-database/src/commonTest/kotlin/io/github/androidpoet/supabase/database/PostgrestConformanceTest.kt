@@ -3,8 +3,9 @@ package io.github.androidpoet.supabase.database
 import io.github.androidpoet.supabase.client.SupabaseClient
 import io.github.androidpoet.supabase.client.SupabaseHttpMethod
 import io.github.androidpoet.supabase.client.SupabaseHttpResponse
-import io.github.androidpoet.supabase.core.models.NullsPlacement
-import io.github.androidpoet.supabase.core.models.OrderDirection
+import io.github.androidpoet.supabase.core.models.Column
+import io.github.androidpoet.supabase.core.models.Nulls
+import io.github.androidpoet.supabase.core.models.Order
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import kotlinx.coroutines.test.runTest
@@ -206,8 +207,8 @@ class PostgrestConformanceTest {
         runTest {
             val client = RecordingClient()
             DatabaseClientImpl(client).select(table = "todos", columns = "id,title") {
-                eq("status", "active")
-                order("created_at", ascending = false)
+                where { T.status eq "active" }
+                orderBy(T.createdAt, Order.DESC)
                 limit(10)
             }
             assertEquals(
@@ -223,7 +224,7 @@ class PostgrestConformanceTest {
             // one must be double-quoted to keep its meaning.
             val client = RecordingClient()
             DatabaseClientImpl(client).select(table = "todos") {
-                eq("tag", "a,b")
+                where { T.tag eq "a,b" }
             }
             assertEquals("""/rest/v1/todos?select=*&tag=eq."a,b"""", client.getEndpoint)
         }
@@ -235,7 +236,7 @@ class PostgrestConformanceTest {
             // https://postgrest.org/en/stable/references/api/tables_views.html#operators
             val client = RecordingClient()
             DatabaseClientImpl(client).select(table = "todos") {
-                match("title", "^Buy")
+                where { T.title matches "^Buy" }
             }
             assertEquals("/rest/v1/todos?select=*&title=match.^Buy", client.getEndpoint)
         }
@@ -245,7 +246,7 @@ class PostgrestConformanceTest {
         runTest {
             val client = RecordingClient()
             DatabaseClientImpl(client).select(table = "todos") {
-                imatch("title", "^buy")
+                where { T.title imatches "^buy" }
             }
             assertEquals("/rest/v1/todos?select=*&title=imatch.^buy", client.getEndpoint)
         }
@@ -255,7 +256,7 @@ class PostgrestConformanceTest {
         runTest {
             val client = RecordingClient()
             DatabaseClientImpl(client).select(table = "todos") {
-                `in`("priority", listOf(1, 2, 3))
+                where { T.priority inList listOf(1, 2, 3) }
             }
             assertEquals("/rest/v1/todos?select=*&priority=in.(1,2,3)", client.getEndpoint)
         }
@@ -265,7 +266,7 @@ class PostgrestConformanceTest {
         runTest {
             val client = RecordingClient()
             DatabaseClientImpl(client).select(table = "todos") {
-                contains("tags", listOf("urgent", "home"))
+                where { T.tags contains listOf("urgent", "home") }
             }
             assertEquals("/rest/v1/todos?select=*&tags=cs.{urgent,home}", client.getEndpoint)
         }
@@ -275,7 +276,7 @@ class PostgrestConformanceTest {
         runTest {
             val client = RecordingClient()
             DatabaseClientImpl(client).select(table = "todos") {
-                order("created_at", OrderDirection.DESCENDING, NullsPlacement.LAST)
+                orderBy(T.createdAt, Order.DESC, Nulls.LAST)
             }
             assertEquals("/rest/v1/todos?select=*&order=created_at.desc.nullslast", client.getEndpoint)
         }
@@ -287,6 +288,15 @@ class PostgrestConformanceTest {
             DatabaseClientImpl(client).insert(table = "todos", body = "{}")
             assertEquals("application/json", client.postHeaders["Content-Type"])
         }
+}
+
+private object T {
+    val status: Column<String> = Column("status")
+    val createdAt: Column<String> = Column("created_at")
+    val tag: Column<String> = Column("tag")
+    val title: Column<String> = Column("title")
+    val priority: Column<Int> = Column("priority")
+    val tags: Column<List<String>> = Column("tags")
 }
 
 private class RecordingClient : SupabaseClient {

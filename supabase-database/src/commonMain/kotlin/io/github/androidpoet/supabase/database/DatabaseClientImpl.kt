@@ -3,7 +3,10 @@ package io.github.androidpoet.supabase.database
 import io.github.androidpoet.supabase.client.SupabaseClient
 import io.github.androidpoet.supabase.client.SupabaseHttpMethod
 import io.github.androidpoet.supabase.client.defaultJson
-import io.github.androidpoet.supabase.core.models.FilterBuilder
+import io.github.androidpoet.supabase.core.models.QueryBuilder
+import io.github.androidpoet.supabase.core.models.WhereBuilder
+import io.github.androidpoet.supabase.core.models.query
+import io.github.androidpoet.supabase.core.models.where
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -26,7 +29,7 @@ internal class DatabaseClientImpl(
         explain: ExplainOptions?,
         retry: Boolean,
         headers: Map<String, String>,
-        filters: FilterBuilder.() -> Unit,
+        block: QueryBuilder.() -> Unit,
     ): SupabaseResult<String> {
         require(!(single && csv)) { "single and csv cannot both be true" }
         require(!(csv && stripNulls)) { "stripNulls cannot be used with csv" }
@@ -38,7 +41,7 @@ internal class DatabaseClientImpl(
         val queryParams =
             buildList {
                 add("select" to columns)
-                addAll(FilterBuilder().apply(filters).build())
+                addAll(query(block))
             }
         val requestHeaders =
             headers +
@@ -75,14 +78,14 @@ internal class DatabaseClientImpl(
         columns: String,
         count: CountOption,
         headers: Map<String, String>,
-        filters: FilterBuilder.() -> Unit,
+        block: QueryBuilder.() -> Unit,
     ): SupabaseResult<PostgrestRange> {
         val safeTable = validatePathSegment(table, "table")
         val safeSchema = schema?.let { validatePathSegment(it, "schema") }
         val queryParams =
             buildList {
                 add("select" to columns)
-                addAll(FilterBuilder().apply(filters).build())
+                addAll(query(block))
             }
         val requestHeaders =
             headers +
@@ -112,14 +115,14 @@ internal class DatabaseClientImpl(
         count: CountOption,
         stripNulls: Boolean,
         headers: Map<String, String>,
-        filters: FilterBuilder.() -> Unit,
+        block: QueryBuilder.() -> Unit,
     ): SupabaseResult<Pair<String, PostgrestRange>> {
         val safeTable = validatePathSegment(table, "table")
         val safeSchema = schema?.let { validatePathSegment(it, "schema") }
         val queryParams =
             buildList {
                 add("select" to columns)
-                addAll(FilterBuilder().apply(filters).build())
+                addAll(query(block))
             }
         val requestHeaders =
             headers +
@@ -217,12 +220,12 @@ internal class DatabaseClientImpl(
         maxAffected: Int?,
         explain: ExplainOptions?,
         headers: Map<String, String>,
-        filters: FilterBuilder.() -> Unit,
+        block: WhereBuilder.() -> Unit,
     ): SupabaseResult<String> {
         maxAffected?.let { require(it > 0) { "maxAffected must be greater than 0" } }
         val safeTable = validatePathSegment(table, "table")
         val safeSchema = schema?.let { validatePathSegment(it, "schema") }
-        val filterParams = FilterBuilder().apply(filters).build()
+        val filterParams = where(block)
         val endpoint = buildEndpoint("${DatabasePaths.BASE}/$safeTable", filterParams)
         val requestHeaders =
             headers +
@@ -250,10 +253,10 @@ internal class DatabaseClientImpl(
         body: String,
         returning: ReturnOption,
         columns: String,
-        filters: FilterBuilder.() -> Unit,
+        block: WhereBuilder.() -> Unit,
     ): SupabaseResult<String> {
         val safeTable = validatePathSegment(table, "table")
-        val filterParams = FilterBuilder().apply(filters).build()
+        val filterParams = where(block)
         val endpoint =
             buildEndpoint("${DatabasePaths.BASE}/$safeTable", filterParams) {
                 add("select" to columns)
@@ -282,12 +285,12 @@ internal class DatabaseClientImpl(
         maxAffected: Int?,
         explain: ExplainOptions?,
         headers: Map<String, String>,
-        filters: FilterBuilder.() -> Unit,
+        block: WhereBuilder.() -> Unit,
     ): SupabaseResult<String> {
         maxAffected?.let { require(it > 0) { "maxAffected must be greater than 0" } }
         val safeTable = validatePathSegment(table, "table")
         val safeSchema = schema?.let { validatePathSegment(it, "schema") }
-        val filterParams = FilterBuilder().apply(filters).build()
+        val filterParams = where(block)
         val endpoint = buildEndpoint("${DatabasePaths.BASE}/$safeTable", filterParams)
         val requestHeaders =
             headers +
@@ -322,14 +325,14 @@ internal class DatabaseClientImpl(
         explain: ExplainOptions?,
         contentType: String,
         headers: Map<String, String>,
-        filters: FilterBuilder.() -> Unit,
+        block: QueryBuilder.() -> Unit,
     ): SupabaseResult<String> {
         require(!(single && csv)) { "single and csv cannot both be true" }
         require(!(csv && stripNulls)) { "stripNulls cannot be used with csv" }
         maxAffected?.let { require(it > 0) { "maxAffected must be greater than 0" } }
         val safeFunction = validatePathSegment(function, "function")
         val safeSchema = schema?.let { validatePathSegment(it, "schema") }
-        val filterParams = FilterBuilder().apply(filters).build()
+        val filterParams = query(block)
         val endpoint = buildEndpoint("${DatabasePaths.RPC}/$safeFunction", filterParams)
         val requestHeaders =
             headers +

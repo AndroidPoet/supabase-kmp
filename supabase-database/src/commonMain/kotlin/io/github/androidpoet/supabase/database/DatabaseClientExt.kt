@@ -1,7 +1,8 @@
 package io.github.androidpoet.supabase.database
 import io.github.androidpoet.supabase.client.defaultJson
 import io.github.androidpoet.supabase.client.deserialize
-import io.github.androidpoet.supabase.core.models.FilterBuilder
+import io.github.androidpoet.supabase.core.models.QueryBuilder
+import io.github.androidpoet.supabase.core.models.WhereBuilder
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseErrorCategory
 import io.github.androidpoet.supabase.core.result.SupabaseErrorCodes
@@ -43,9 +44,9 @@ public suspend inline fun <reified T> DatabaseClient.selectTyped(
     schema: String? = null,
     columns: String = "*",
     single: Boolean = false,
-    noinline filters: FilterBuilder.() -> Unit = {},
+    noinline block: QueryBuilder.() -> Unit = {},
 ): SupabaseResult<List<T>> {
-    val result = select(table = table, schema = schema, columns = columns, single = single, filters = filters)
+    val result = select(table = table, schema = schema, columns = columns, single = single, block = block)
     return if (single) result.deserialize<T>().map { listOf(it) } else result.deserialize()
 }
 
@@ -60,8 +61,8 @@ public suspend inline fun <reified T> DatabaseClient.selectTypedOrThrow(
     schema: String? = null,
     columns: String = "*",
     single: Boolean = false,
-    noinline filters: FilterBuilder.() -> Unit = {},
-): List<T> = selectTyped<T>(table = table, schema = schema, columns = columns, single = single, filters = filters).getOrThrow()
+    noinline block: QueryBuilder.() -> Unit = {},
+): List<T> = selectTyped<T>(table = table, schema = schema, columns = columns, single = single, block = block).getOrThrow()
 
 /**
  * Selects rows and decodes them into a [PostgrestPage] carrying the total
@@ -73,11 +74,11 @@ public suspend inline fun <reified T> DatabaseClient.selectWithCount(
     schema: String? = null,
     columns: String = "*",
     count: CountOption = CountOption.EXACT,
-    noinline filters: FilterBuilder.() -> Unit = {},
+    noinline block: QueryBuilder.() -> Unit = {},
 ): SupabaseResult<PostgrestPage<T>> =
     when (
         val result =
-            selectRange(table = table, schema = schema, columns = columns, count = count, filters = filters)
+            selectRange(table = table, schema = schema, columns = columns, count = count, block = block)
     ) {
         is SupabaseResult.Success ->
             when (val rows = SupabaseResult.Success(result.value.first).deserialize<List<T>>()) {
@@ -103,7 +104,7 @@ public suspend fun DatabaseClient.selectGeoJson(
     schema: String? = null,
     columns: String = "*",
     headers: Map<String, String> = emptyMap(),
-    filters: FilterBuilder.() -> Unit = {},
+    block: QueryBuilder.() -> Unit = {},
 ): SupabaseResult<String> =
     select(
         table = table,
@@ -111,7 +112,7 @@ public suspend fun DatabaseClient.selectGeoJson(
         columns = columns,
         geojson = true,
         headers = headers,
-        filters = filters,
+        block = block,
     )
 
 /**
@@ -125,9 +126,9 @@ public suspend inline fun <reified T> DatabaseClient.selectSingleTyped(
     table: String,
     schema: String? = null,
     columns: String = "*",
-    noinline filters: FilterBuilder.() -> Unit = {},
+    noinline block: QueryBuilder.() -> Unit = {},
 ): SupabaseResult<T> =
-    select(table = table, schema = schema, columns = columns, single = true, filters = filters).deserialize()
+    select(table = table, schema = schema, columns = columns, single = true, block = block).deserialize()
 
 /**
  * Reads at most one row matching [filters], returning `null` instead of failing
@@ -141,9 +142,9 @@ public suspend inline fun <reified T> DatabaseClient.selectMaybeSingleTyped(
     table: String,
     schema: String? = null,
     columns: String = "*",
-    noinline filters: FilterBuilder.() -> Unit = {},
+    noinline block: QueryBuilder.() -> Unit = {},
 ): SupabaseResult<T?> {
-    val result = select(table = table, schema = schema, columns = columns, single = true, filters = filters)
+    val result = select(table = table, schema = schema, columns = columns, single = true, block = block)
     return when (result) {
         is SupabaseResult.Success -> result.deserialize<T>().map { it as T? }
         is SupabaseResult.Failure ->
@@ -163,9 +164,9 @@ public suspend fun DatabaseClient.selectCsv(
     table: String,
     schema: String? = null,
     columns: String = "*",
-    filters: FilterBuilder.() -> Unit = {},
+    block: QueryBuilder.() -> Unit = {},
 ): SupabaseResult<String> =
-    select(table = table, schema = schema, columns = columns, csv = true, filters = filters)
+    select(table = table, schema = schema, columns = columns, csv = true, block = block)
 
 /**
  * Issues a `HEAD` request to test existence or fetch a count without
@@ -180,7 +181,7 @@ public suspend fun DatabaseClient.selectHead(
     schema: String? = null,
     columns: String = "*",
     count: CountOption? = null,
-    filters: FilterBuilder.() -> Unit = {},
+    block: QueryBuilder.() -> Unit = {},
 ): SupabaseResult<Unit> =
     select(
         table = table,
@@ -188,7 +189,7 @@ public suspend fun DatabaseClient.selectHead(
         columns = columns,
         head = true,
         count = count,
-        filters = filters,
+        block = block,
     ).map { }
 
 /**
@@ -380,13 +381,13 @@ public suspend inline fun <reified T> DatabaseClient.updateTyped(
     table: String,
     schema: String? = null,
     value: T,
-    noinline filters: FilterBuilder.() -> Unit = {},
+    noinline block: WhereBuilder.() -> Unit = {},
 ): SupabaseResult<List<T>> =
     update(
         table = table,
         schema = schema,
         body = defaultJson.encodeToString(value),
-        filters = filters,
+        block = block,
     ).deserialize()
 
 /**
@@ -401,7 +402,7 @@ public suspend fun DatabaseClient.updateUnit(
     schema: String? = null,
     body: String,
     count: CountOption? = null,
-    filters: FilterBuilder.() -> Unit = {},
+    block: WhereBuilder.() -> Unit = {},
 ): SupabaseResult<Unit> =
     update(
         table = table,
@@ -409,7 +410,7 @@ public suspend fun DatabaseClient.updateUnit(
         body = body,
         returning = ReturnOption.MINIMAL,
         count = count,
-        filters = filters,
+        block = block,
     ).map { }
 
 /**
@@ -424,14 +425,14 @@ public suspend inline fun <reified T> DatabaseClient.updateUnitTyped(
     schema: String? = null,
     value: T,
     count: CountOption? = null,
-    noinline filters: FilterBuilder.() -> Unit = {},
+    noinline block: WhereBuilder.() -> Unit = {},
 ): SupabaseResult<Unit> =
     updateUnit(
         table = table,
         schema = schema,
         body = defaultJson.encodeToString(value),
         count = count,
-        filters = filters,
+        block = block,
     )
 
 /**
@@ -448,14 +449,14 @@ public suspend inline fun <reified T> DatabaseClient.deleteTyped(
     schema: String? = null,
     returning: ReturnOption = ReturnOption.REPRESENTATION,
     count: CountOption? = null,
-    noinline filters: FilterBuilder.() -> Unit = {},
+    noinline block: WhereBuilder.() -> Unit = {},
 ): SupabaseResult<List<T>> =
     delete(
         table = table,
         schema = schema,
         returning = returning,
         count = count,
-        filters = filters,
+        block = block,
     ).deserialize()
 
 /**
@@ -469,14 +470,14 @@ public suspend fun DatabaseClient.deleteUnit(
     table: String,
     schema: String? = null,
     count: CountOption? = null,
-    filters: FilterBuilder.() -> Unit = {},
+    block: WhereBuilder.() -> Unit = {},
 ): SupabaseResult<Unit> =
     delete(
         table = table,
         schema = schema,
         returning = ReturnOption.MINIMAL,
         count = count,
-        filters = filters,
+        block = block,
     ).map { }
 
 /**

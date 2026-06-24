@@ -1,6 +1,7 @@
 package io.github.androidpoet.supabase.sync.remote
 
-import io.github.androidpoet.supabase.core.models.FilterBuilder
+import io.github.androidpoet.supabase.core.models.QueryBuilder
+import io.github.androidpoet.supabase.core.models.WhereBuilder
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.database.CountOption
 import io.github.androidpoet.supabase.database.DatabaseClient
@@ -159,10 +160,10 @@ private class FakeDatabaseClient(
         explain: ExplainOptions?,
         retry: Boolean,
         headers: Map<String, String>,
-        filters: FilterBuilder.() -> Unit,
+        block: QueryBuilder.() -> Unit,
     ): SupabaseResult<String> {
         lastSelectTable = table
-        FilterBuilder().apply(filters) // run the builder so the keyset lambda is exercised
+        QueryBuilder().apply(block) // run the builder so the keyset lambda is exercised
         return SupabaseResult.Success(selectBody)
     }
 
@@ -194,7 +195,7 @@ private class FakeDatabaseClient(
         columns: String,
         count: CountOption,
         headers: Map<String, String>,
-        filters: FilterBuilder.() -> Unit,
+        block: QueryBuilder.() -> Unit,
     ): SupabaseResult<PostgrestRange> = error("unused")
 
     override suspend fun selectRange(
@@ -205,7 +206,7 @@ private class FakeDatabaseClient(
         count: CountOption,
         stripNulls: Boolean,
         headers: Map<String, String>,
-        filters: FilterBuilder.() -> Unit,
+        block: QueryBuilder.() -> Unit,
     ): SupabaseResult<Pair<String, PostgrestRange>> = error("unused")
 
     override suspend fun update(
@@ -219,7 +220,7 @@ private class FakeDatabaseClient(
         maxAffected: Int?,
         explain: ExplainOptions?,
         headers: Map<String, String>,
-        filters: FilterBuilder.() -> Unit,
+        block: WhereBuilder.() -> Unit,
     ): SupabaseResult<String> = error("unused")
 
     override suspend fun replace(
@@ -227,7 +228,7 @@ private class FakeDatabaseClient(
         body: String,
         returning: ReturnOption,
         columns: String,
-        filters: FilterBuilder.() -> Unit,
+        block: WhereBuilder.() -> Unit,
     ): SupabaseResult<String> = error("unused")
 
     override suspend fun delete(
@@ -240,7 +241,7 @@ private class FakeDatabaseClient(
         maxAffected: Int?,
         explain: ExplainOptions?,
         headers: Map<String, String>,
-        filters: FilterBuilder.() -> Unit,
+        block: WhereBuilder.() -> Unit,
     ): SupabaseResult<String> = error("unused")
 
     override suspend fun rpc(
@@ -257,7 +258,7 @@ private class FakeDatabaseClient(
         explain: ExplainOptions?,
         contentType: String,
         headers: Map<String, String>,
-        filters: FilterBuilder.() -> Unit,
+        block: QueryBuilder.() -> Unit,
     ): SupabaseResult<String> = error("unused")
 
     override suspend fun rpcGet(

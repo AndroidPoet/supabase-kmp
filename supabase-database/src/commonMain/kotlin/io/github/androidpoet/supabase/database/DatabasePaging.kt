@@ -1,6 +1,6 @@
 package io.github.androidpoet.supabase.database
 
-import io.github.androidpoet.supabase.core.models.FilterBuilder
+import io.github.androidpoet.supabase.core.models.QueryBuilder
 import io.github.androidpoet.supabase.core.paging.Paginator
 
 /**
@@ -9,14 +9,14 @@ import io.github.androidpoet.supabase.core.paging.Paginator
  *
  * The returned paginator exposes the accumulated rows, loading/end/error state as
  * `StateFlow`s for a scroll UI to observe — nothing is fetched until you call
- * [Paginator.loadNext]. Express ordering and predicates in [filters] (always
- * [FilterBuilder.order] by a stable column); do **not** add your own
+ * [Paginator.loadNext]. Express ordering and predicates in [block] (always
+ * [QueryBuilder.orderBy] by a stable column); do **not** add your own
  * `range`/`limit`/`offset`, the paginator owns the window. A page failure surfaces
  * via [Paginator.error] (the call throws internally and the paginator captures it).
  *
  * ```
  * val pager = database.paginator<Todo>("todos", pageSize = 20) {
- *     order("created_at", ascending = false)
+ *     orderBy(Todo.createdAt, order = Order.DESC)
  * }
  * // observe pager.items in the UI; near the bottom:
  * LaunchedEffect(reachedBottom) { if (reachedBottom) pager.loadNext() }
@@ -32,11 +32,11 @@ public inline fun <reified T> DatabaseClient.paginator(
     pageSize: Int = 20,
     schema: String? = null,
     columns: String = "*",
-    crossinline filters: FilterBuilder.() -> Unit = {},
+    crossinline block: QueryBuilder.() -> Unit = {},
 ): Paginator<T> =
     Paginator(pageSize) { offset, limit ->
         selectTypedOrThrow<T>(table = table, schema = schema, columns = columns) {
-            filters()
+            block()
             limit(limit)
             offset(offset)
         }

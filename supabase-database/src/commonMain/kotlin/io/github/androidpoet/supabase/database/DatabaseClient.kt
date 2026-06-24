@@ -1,5 +1,6 @@
 package io.github.androidpoet.supabase.database
-import io.github.androidpoet.supabase.core.models.FilterBuilder
+import io.github.androidpoet.supabase.core.models.QueryBuilder
+import io.github.androidpoet.supabase.core.models.WhereBuilder
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 
 /**
@@ -125,8 +126,8 @@ public data class PostgrestPage<T>(
  * around them. Obtain an instance via [createDatabaseClient] or the
  * [SupabaseClient.database] accessor.
  *
- * [WHERE]-style row filters are expressed through the [FilterBuilder] receiver
- * and translated to PostgREST query parameters; common options surface as the
+ * [WHERE]-style row filters are expressed through the [WhereBuilder]/[QueryBuilder]
+ * receivers and translated to PostgREST query parameters; common options surface as the
  * `Prefer` header ([CountOption], [ReturnOption], [UpsertResolution]).
  */
 public interface DatabaseClient {
@@ -135,7 +136,7 @@ public interface DatabaseClient {
      * body as a raw string (typically a JSON array).
      *
      * The [columns] selector becomes `select=` (supporting embedded resources and
-     * renames); [filters] add the row predicates, ordering, and range. The body
+     * renames); [block] adds the row predicates, ordering, and range. The body
      * shape is chosen by the request's `Accept` header: [single] expects exactly
      * one row (`application/vnd.pgrst.object+json`, a 406 if not), [csv] returns
      * `text/csv`, [geojson] returns a PostGIS `FeatureCollection`, and [stripNulls]
@@ -162,7 +163,7 @@ public interface DatabaseClient {
         explain: ExplainOptions? = null,
         retry: Boolean = true,
         headers: Map<String, String> = emptyMap(),
-        filters: FilterBuilder.() -> Unit = {},
+        block: QueryBuilder.() -> Unit = {},
     ): SupabaseResult<String>
 
     /**
@@ -177,7 +178,7 @@ public interface DatabaseClient {
         columns: String = "*",
         count: CountOption = CountOption.EXACT,
         headers: Map<String, String> = emptyMap(),
-        filters: FilterBuilder.() -> Unit = {},
+        block: QueryBuilder.() -> Unit = {},
     ): SupabaseResult<PostgrestRange>
 
     /**
@@ -194,7 +195,7 @@ public interface DatabaseClient {
         count: CountOption = CountOption.EXACT,
         stripNulls: Boolean = false,
         headers: Map<String, String> = emptyMap(),
-        filters: FilterBuilder.() -> Unit = {},
+        block: QueryBuilder.() -> Unit = {},
     ): SupabaseResult<Pair<String, PostgrestRange>>
 
     /**
@@ -261,7 +262,7 @@ public interface DatabaseClient {
         maxAffected: Int? = null,
         explain: ExplainOptions? = null,
         headers: Map<String, String> = emptyMap(),
-        filters: FilterBuilder.() -> Unit = {},
+        block: WhereBuilder.() -> Unit = {},
     ): SupabaseResult<String>
 
     /**
@@ -284,7 +285,7 @@ public interface DatabaseClient {
         body: String,
         returning: ReturnOption = ReturnOption.REPRESENTATION,
         columns: String = "*",
-        filters: FilterBuilder.() -> Unit = {},
+        block: WhereBuilder.() -> Unit = {},
     ): SupabaseResult<String>
 
     /**
@@ -311,7 +312,7 @@ public interface DatabaseClient {
         maxAffected: Int? = null,
         explain: ExplainOptions? = null,
         headers: Map<String, String> = emptyMap(),
-        filters: FilterBuilder.() -> Unit = {},
+        block: WhereBuilder.() -> Unit = {},
     ): SupabaseResult<String>
 
     /**
@@ -331,8 +332,8 @@ public interface DatabaseClient {
      * @param maxAffected must be greater than 0 when set; caps rows the function may modify.
      * @param contentType the request body's `Content-Type`; defaults to JSON, but lets callers send a
      *   scalar-typed body (e.g. `text/plain`, `application/octet-stream`) to a single-parameter function. [params] is sent verbatim.
-     * @param filters PostgREST filters/ordering/pagination applied to the rows a set-returning
-     *   function returns, threaded into the query string exactly as for [select]/[update].
+     * @param block PostgREST filters/ordering/pagination applied to the rows a set-returning
+     *   function returns, threaded into the query string exactly as for [select].
      */
     public suspend fun rpc(
         function: String,
@@ -348,7 +349,7 @@ public interface DatabaseClient {
         explain: ExplainOptions? = null,
         contentType: String = "application/json",
         headers: Map<String, String> = emptyMap(),
-        filters: FilterBuilder.() -> Unit = {},
+        block: QueryBuilder.() -> Unit = {},
     ): SupabaseResult<String>
 
     /**
