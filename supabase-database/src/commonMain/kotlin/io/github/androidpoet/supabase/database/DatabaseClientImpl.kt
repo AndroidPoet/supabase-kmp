@@ -20,10 +20,7 @@ internal class DatabaseClientImpl(
         table: String,
         schema: String?,
         columns: String,
-        head: Boolean,
-        single: Boolean,
-        csv: Boolean,
-        geojson: Boolean,
+        format: ResponseFormat,
         count: CountOption?,
         stripNulls: Boolean,
         explain: ExplainOptions?,
@@ -31,11 +28,16 @@ internal class DatabaseClientImpl(
         headers: Map<String, String>,
         block: QueryBuilder.() -> Unit,
     ): SupabaseResult<String> {
-        require(!(single && csv)) { "single and csv cannot both be true" }
+        // The format-vs-format combinations that used to need runtime require() checks are now
+        // unrepresentable — ResponseFormat is a single choice. stripNulls is the one orthogonal
+        // body modifier left, and it only shapes the JSON formats (ROWS/SINGLE); reject it against
+        // the non-JSON ones rather than silently ignoring it.
+        val head = format == ResponseFormat.HEAD
+        val single = format == ResponseFormat.SINGLE
+        val csv = format == ResponseFormat.CSV
+        val geojson = format == ResponseFormat.GEOJSON
         require(!(csv && stripNulls)) { "stripNulls cannot be used with csv" }
         require(!(geojson && stripNulls)) { "stripNulls cannot be used with geojson" }
-        require(!(geojson && csv)) { "geojson and csv cannot both be true" }
-        require(!(geojson && single)) { "geojson and single cannot both be true" }
         val safeTable = validatePathSegment(table, "table")
         val safeSchema = schema?.let { validatePathSegment(it, "schema") }
         val queryParams =
@@ -111,12 +113,13 @@ internal class DatabaseClientImpl(
         table: String,
         schema: String?,
         columns: String,
-        single: Boolean,
+        format: ResponseFormat,
         count: CountOption,
         stripNulls: Boolean,
         headers: Map<String, String>,
         block: QueryBuilder.() -> Unit,
     ): SupabaseResult<Pair<String, PostgrestRange>> {
+        val single = format == ResponseFormat.SINGLE
         val safeTable = validatePathSegment(table, "table")
         val safeSchema = schema?.let { validatePathSegment(it, "schema") }
         val queryParams =
@@ -315,9 +318,7 @@ internal class DatabaseClientImpl(
         function: String,
         schema: String?,
         params: String?,
-        head: Boolean,
-        single: Boolean,
-        csv: Boolean,
+        format: ResponseFormat,
         count: CountOption?,
         stripNulls: Boolean,
         rollback: Boolean,
@@ -327,7 +328,9 @@ internal class DatabaseClientImpl(
         headers: Map<String, String>,
         block: QueryBuilder.() -> Unit,
     ): SupabaseResult<String> {
-        require(!(single && csv)) { "single and csv cannot both be true" }
+        val head = format == ResponseFormat.HEAD
+        val single = format == ResponseFormat.SINGLE
+        val csv = format == ResponseFormat.CSV
         require(!(csv && stripNulls)) { "stripNulls cannot be used with csv" }
         maxAffected?.let { require(it > 0) { "maxAffected must be greater than 0" } }
         val safeFunction = validatePathSegment(function, "function")
@@ -378,16 +381,16 @@ internal class DatabaseClientImpl(
         function: String,
         schema: String?,
         queryParams: List<Pair<String, String>>,
-        head: Boolean,
-        single: Boolean,
-        csv: Boolean,
+        format: ResponseFormat,
         count: CountOption?,
         stripNulls: Boolean,
         explain: ExplainOptions?,
         retry: Boolean,
         headers: Map<String, String>,
     ): SupabaseResult<String> {
-        require(!(single && csv)) { "single and csv cannot both be true" }
+        val head = format == ResponseFormat.HEAD
+        val single = format == ResponseFormat.SINGLE
+        val csv = format == ResponseFormat.CSV
         require(!(csv && stripNulls)) { "stripNulls cannot be used with csv" }
         val safeFunction = validatePathSegment(function, "function")
         val safeSchema = schema?.let { validatePathSegment(it, "schema") }

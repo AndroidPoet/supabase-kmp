@@ -100,6 +100,14 @@ handled in source.
 - `MAX_PULL_PAGES` / `DEFAULT_PAGE_SIZE` no longer leak as public static fields.
 - `asFlow()` relabeled hot (was mislabeled "Cold"); `streamLines` / `invokeSSE` defaults defer
   their throw into the cold `flow { }` instead of throwing eagerly.
+- **Database query response shape unified into `ResponseFormat`** — `select` / `rpc` / `rpcGet` /
+  `selectRange` took 4 mutually-exclusive `head`/`single`/`csv`/`geojson` booleans (illegal combos
+  caught at runtime by `require()`); now a single `format: ResponseFormat` enum makes the illegal
+  combinations unrepresentable. The thin wrappers (`selectCsv`/`selectHead`/`rpcCsv`/`rpcGetSingleTyped`/…)
+  just pin a `format`. The redundant `selectTyped(single = …)` flag was dropped (the typed terminal
+  `selectSingleTyped` already covers the single-row case). The one orthogonal modifier left,
+  `stripNulls`, is still rejected at runtime against CSV/GEOJSON (a format-vs-modifier guard, not a
+  format-vs-format one).
 
 **Won't-fix (industry says current design is correct):**
 - Realtime + sync are **not** converted to `SupabaseResult`. Reactive in-band (status `StateFlow`
@@ -107,12 +115,12 @@ handled in source.
 - `SupabaseResult` stays (not `kotlin.Result`).
 
 **Do before 1.0 (breaking — free now, expensive later):**
-- **Database query surface:** fold the raw `select`/`rpc` exclusive response booleans
-  (head/single/csv/geojson — all return `String`) into one `ResponseFormat`/`Accept` enum; keep
-  the *typed* terminals (`selectTyped`/`selectSingleTyped`/`selectMaybeSingleTyped`) as separate
-  methods (cardinality changes the return type — an enum can't). Trim the `rpcGet × List/Map ×
-  csv/head/unit` matrix (~66 → ~30–35 public fns) via generic `<T>` + a few terminal decoders +
-  builder flags.
+- ~~**Database query surface (format enum):**~~ **DONE** — `select`/`rpc`/`rpcGet`/`selectRange`
+  now take one `ResponseFormat` enum instead of the exclusive booleans; the *typed* terminals stay
+  separate (cardinality changes the return type). See the Done section above.
+- **Database method sprawl (still open):** trim the `rpcGet × List/Map × csv/head/unit` matrix
+  (~66 → ~30–35 public fns) — standardize on `Map` args (drop the `List<Pair>` duplicates) and lean
+  on generic `<T>` decoders. Separable from the format-enum change above; do as its own pass.
 - **Naming sweep:** one verb per concept (`get`/`list`/`create`/`update`/`delete`; drop
   `fetch`/`load`/`remove`/`getAll`); collapse `WithResult`/`Unit`/`OrThrow` twins into one method
   + a `returning` param (PostgREST `Prefer`); make `accessToken` position consistent; align auth

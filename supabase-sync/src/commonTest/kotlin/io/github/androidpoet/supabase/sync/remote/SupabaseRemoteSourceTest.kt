@@ -7,6 +7,7 @@ import io.github.androidpoet.supabase.database.CountOption
 import io.github.androidpoet.supabase.database.DatabaseClient
 import io.github.androidpoet.supabase.database.ExplainOptions
 import io.github.androidpoet.supabase.database.PostgrestRange
+import io.github.androidpoet.supabase.database.ResponseFormat
 import io.github.androidpoet.supabase.database.ReturnOption
 import io.github.androidpoet.supabase.database.UpsertResolution
 import io.github.androidpoet.supabase.realtime.ConnectionState
@@ -151,10 +152,7 @@ private class FakeDatabaseClient(
         table: String,
         schema: String?,
         columns: String,
-        head: Boolean,
-        single: Boolean,
-        csv: Boolean,
-        geojson: Boolean,
+        format: ResponseFormat,
         count: CountOption?,
         stripNulls: Boolean,
         explain: ExplainOptions?,
@@ -202,7 +200,7 @@ private class FakeDatabaseClient(
         table: String,
         schema: String?,
         columns: String,
-        single: Boolean,
+        format: ResponseFormat,
         count: CountOption,
         stripNulls: Boolean,
         headers: Map<String, String>,
@@ -248,9 +246,7 @@ private class FakeDatabaseClient(
         function: String,
         schema: String?,
         params: String?,
-        head: Boolean,
-        single: Boolean,
-        csv: Boolean,
+        format: ResponseFormat,
         count: CountOption?,
         stripNulls: Boolean,
         rollback: Boolean,
@@ -265,9 +261,7 @@ private class FakeDatabaseClient(
         function: String,
         schema: String?,
         queryParams: List<Pair<String, String>>,
-        head: Boolean,
-        single: Boolean,
-        csv: Boolean,
+        format: ResponseFormat,
         count: CountOption?,
         stripNulls: Boolean,
         explain: ExplainOptions?,

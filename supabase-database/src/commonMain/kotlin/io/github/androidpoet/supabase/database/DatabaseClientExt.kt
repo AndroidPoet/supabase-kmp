@@ -34,21 +34,17 @@ internal fun SupabaseError.isSingleObjectNoRows(): Boolean {
  * wrapper over [DatabaseClient.select].
  *
  * Deserialization failures and HTTP errors both come back as
- * [SupabaseResult.Failure]; nothing is thrown. When [single] is true the request
- * expects exactly one row (`application/vnd.pgrst.object+json`) and the decoded
- * object is wrapped in a single-element list; otherwise the body is decoded as a
- * JSON array. [columns] is the PostgREST `select=` projection.
+ * [SupabaseResult.Failure]; nothing is thrown. The body is decoded as a JSON
+ * array; for the single-row case use [selectSingleTyped] (which returns the
+ * decoded `T` directly). [columns] is the PostgREST `select=` projection.
  */
 public suspend inline fun <reified T> DatabaseClient.selectTyped(
     table: String,
     schema: String? = null,
     columns: String = "*",
-    single: Boolean = false,
     noinline block: QueryBuilder.() -> Unit = {},
-): SupabaseResult<List<T>> {
-    val result = select(table = table, schema = schema, columns = columns, single = single, block = block)
-    return if (single) result.deserialize<T>().map { listOf(it) } else result.deserialize()
-}
+): SupabaseResult<List<T>> =
+    select(table = table, schema = schema, columns = columns, block = block).deserialize()
 
 /**
  * The plain (no-[SupabaseResult]) form of [selectTyped]: returns the decoded
@@ -60,9 +56,8 @@ public suspend inline fun <reified T> DatabaseClient.selectTypedOrThrow(
     table: String,
     schema: String? = null,
     columns: String = "*",
-    single: Boolean = false,
     noinline block: QueryBuilder.() -> Unit = {},
-): List<T> = selectTyped<T>(table = table, schema = schema, columns = columns, single = single, block = block).getOrThrow()
+): List<T> = selectTyped<T>(table = table, schema = schema, columns = columns, block = block).getOrThrow()
 
 /**
  * Selects rows and decodes them into a [PostgrestPage] carrying the total
@@ -110,7 +105,7 @@ public suspend fun DatabaseClient.selectGeoJson(
         table = table,
         schema = schema,
         columns = columns,
-        geojson = true,
+        format = ResponseFormat.GEOJSON,
         headers = headers,
         block = block,
     )
@@ -128,7 +123,7 @@ public suspend inline fun <reified T> DatabaseClient.selectSingleTyped(
     columns: String = "*",
     noinline block: QueryBuilder.() -> Unit = {},
 ): SupabaseResult<T> =
-    select(table = table, schema = schema, columns = columns, single = true, block = block).deserialize()
+    select(table = table, schema = schema, columns = columns, format = ResponseFormat.SINGLE, block = block).deserialize()
 
 /**
  * Reads at most one row matching [filters], returning `null` instead of failing
@@ -144,7 +139,7 @@ public suspend inline fun <reified T> DatabaseClient.selectMaybeSingleTyped(
     columns: String = "*",
     noinline block: QueryBuilder.() -> Unit = {},
 ): SupabaseResult<T?> {
-    val result = select(table = table, schema = schema, columns = columns, single = true, block = block)
+    val result = select(table = table, schema = schema, columns = columns, format = ResponseFormat.SINGLE, block = block)
     return when (result) {
         is SupabaseResult.Success -> result.deserialize<T>().map { it as T? }
         is SupabaseResult.Failure ->
@@ -166,7 +161,7 @@ public suspend fun DatabaseClient.selectCsv(
     columns: String = "*",
     block: QueryBuilder.() -> Unit = {},
 ): SupabaseResult<String> =
-    select(table = table, schema = schema, columns = columns, csv = true, block = block)
+    select(table = table, schema = schema, columns = columns, format = ResponseFormat.CSV, block = block)
 
 /**
  * Issues a `HEAD` request to test existence or fetch a count without
@@ -187,7 +182,7 @@ public suspend fun DatabaseClient.selectHead(
         table = table,
         schema = schema,
         columns = columns,
-        head = true,
+        format = ResponseFormat.HEAD,
         count = count,
         block = block,
     ).map { }
@@ -574,7 +569,7 @@ public suspend inline fun <reified T> DatabaseClient.rpcSingleTyped(
     schema: String? = null,
     params: String? = null,
 ): SupabaseResult<T> =
-    rpc(function = function, schema = schema, params = params, single = true).deserialize()
+    rpc(function = function, schema = schema, params = params, format = ResponseFormat.SINGLE).deserialize()
 
 /**
  * Calls single-result stored procedure [function] (POST) with a serializable
@@ -590,7 +585,7 @@ public suspend inline fun <reified Request : Any, reified Response> DatabaseClie
         function = function,
         schema = schema,
         params = defaultJson.encodeToString(params),
-        single = true,
+        format = ResponseFormat.SINGLE,
     ).deserialize()
 
 /**
@@ -606,7 +601,7 @@ public suspend inline fun <reified T> DatabaseClient.rpcMaybeSingleTyped(
     schema: String? = null,
     params: String? = null,
 ): SupabaseResult<T?> {
-    val result = rpc(function = function, schema = schema, params = params, single = true)
+    val result = rpc(function = function, schema = schema, params = params, format = ResponseFormat.SINGLE)
     return when (result) {
         is SupabaseResult.Success -> result.deserialize<T>().map { it as T? }
         is SupabaseResult.Failure ->
@@ -634,7 +629,7 @@ public suspend inline fun <reified Request : Any, reified Response> DatabaseClie
                 function = function,
                 schema = schema,
                 params = defaultJson.encodeToString(params),
-                single = true,
+                format = ResponseFormat.SINGLE,
             )
     ) {
         is SupabaseResult.Success -> result.deserialize<Response>().map { it as Response? }
@@ -655,7 +650,7 @@ public suspend fun DatabaseClient.rpcCsv(
     schema: String? = null,
     params: String? = null,
 ): SupabaseResult<String> =
-    rpc(function = function, schema = schema, params = params, csv = true)
+    rpc(function = function, schema = schema, params = params, format = ResponseFormat.CSV)
 
 /**
  * Calls stored procedure [function] (POST) requesting CSV, with a serializable
@@ -682,7 +677,7 @@ public suspend fun DatabaseClient.rpcHead(
     params: String? = null,
     count: CountOption? = null,
 ): SupabaseResult<Unit> =
-    rpc(function = function, schema = schema, params = params, head = true, count = count).map { }
+    rpc(function = function, schema = schema, params = params, format = ResponseFormat.HEAD, count = count).map { }
 
 /**
  * Issues stored procedure [function] (POST) as a `HEAD` request with a
@@ -742,25 +737,21 @@ public suspend inline fun <reified Request : Any> DatabaseClient.rpcGet(
 
 /**
  * Calls read-only stored procedure [function] (GET) with [Map] arguments and the
- * full set of response options ([head], [single], [csv], [count]) — the
- * `Map`-based counterpart of [DatabaseClient.rpcGet].
+ * full set of response options ([format], [count]) — the `Map`-based counterpart
+ * of [DatabaseClient.rpcGet].
  */
 public suspend fun DatabaseClient.rpcGet(
     function: String,
     schema: String? = null,
     queryParams: Map<String, String>,
-    head: Boolean = false,
-    single: Boolean = false,
-    csv: Boolean = false,
+    format: ResponseFormat = ResponseFormat.ROWS,
     count: CountOption? = null,
 ): SupabaseResult<String> =
     rpcGet(
         function = function,
         schema = schema,
         queryParams = queryParams.toPairList(),
-        head = head,
-        single = single,
-        csv = csv,
+        format = format,
         count = count,
     )
 
@@ -865,7 +856,7 @@ public suspend inline fun <reified T> DatabaseClient.rpcGetSingleTyped(
     schema: String? = null,
     queryParams: List<Pair<String, String>> = emptyList(),
 ): SupabaseResult<T> =
-    rpcGet(function = function, schema = schema, queryParams = queryParams, single = true).deserialize()
+    rpcGet(function = function, schema = schema, queryParams = queryParams, format = ResponseFormat.SINGLE).deserialize()
 
 /**
  * Calls single-result read-only stored procedure [function] (GET) with [Map]
@@ -900,7 +891,7 @@ public suspend inline fun <reified T> DatabaseClient.rpcGetMaybeSingleTyped(
     schema: String? = null,
     queryParams: List<Pair<String, String>> = emptyList(),
 ): SupabaseResult<T?> {
-    val result = rpcGet(function = function, schema = schema, queryParams = queryParams, single = true)
+    val result = rpcGet(function = function, schema = schema, queryParams = queryParams, format = ResponseFormat.SINGLE)
     return when (result) {
         is SupabaseResult.Success -> result.deserialize<T>().map { it as T? }
         is SupabaseResult.Failure ->
@@ -943,7 +934,7 @@ public suspend fun DatabaseClient.rpcGetCsv(
     schema: String? = null,
     queryParams: List<Pair<String, String>> = emptyList(),
 ): SupabaseResult<String> =
-    rpcGet(function = function, schema = schema, queryParams = queryParams, csv = true)
+    rpcGet(function = function, schema = schema, queryParams = queryParams, format = ResponseFormat.CSV)
 
 /**
  * Calls read-only stored procedure [function] (GET) requesting CSV with [Map]
@@ -978,7 +969,7 @@ public suspend fun DatabaseClient.rpcGetHead(
     queryParams: List<Pair<String, String>> = emptyList(),
     count: CountOption? = null,
 ): SupabaseResult<Unit> =
-    rpcGet(function = function, schema = schema, queryParams = queryParams, head = true, count = count).map { }
+    rpcGet(function = function, schema = schema, queryParams = queryParams, format = ResponseFormat.HEAD, count = count).map { }
 
 /**
  * Issues read-only stored procedure [function] (GET) as a `HEAD` request with
