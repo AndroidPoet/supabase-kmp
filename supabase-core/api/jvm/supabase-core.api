@@ -137,6 +137,8 @@ public final class io/github/androidpoet/supabase/core/models/WhereBuilder {
 	public final fun greater--PLe0oE (Ljava/lang/String;Ljava/lang/Comparable;)V
 	public final fun greaterEq--PLe0oE (Ljava/lang/String;Ljava/lang/Comparable;)V
 	public final fun ilike--PLe0oE (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun ilikeAllOf--PLe0oE (Ljava/lang/String;Ljava/util/List;)V
+	public final fun ilikeAnyOf--PLe0oE (Ljava/lang/String;Ljava/util/List;)V
 	public final fun imatches--PLe0oE (Ljava/lang/String;Ljava/lang/String;)V
 	public final fun inList--PLe0oE (Ljava/lang/String;Ljava/util/List;)V
 	public final fun isDistinctFrom--PLe0oE (Ljava/lang/String;Ljava/lang/Object;)V
@@ -151,9 +153,15 @@ public final class io/github/androidpoet/supabase/core/models/WhereBuilder {
 	public final fun matches--PLe0oE (Ljava/lang/String;Ljava/lang/String;)V
 	public final fun neq--PLe0oE (Ljava/lang/String;Ljava/lang/Object;)V
 	public final fun not (Lkotlin/jvm/functions/Function1;)V
+	public final fun notInList--PLe0oE (Ljava/lang/String;Ljava/util/List;)V
 	public final fun or (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
 	public static synthetic fun or$default (Lio/github/androidpoet/supabase/core/models/WhereBuilder;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 	public final fun overlaps--PLe0oE (Ljava/lang/String;Ljava/util/List;)V
+	public final fun rangeAdjacent--PLe0oE (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun rangeGt--PLe0oE (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun rangeGte--PLe0oE (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun rangeLt--PLe0oE (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun rangeLte--PLe0oE (Ljava/lang/String;Ljava/lang/String;)V
 	public final fun raw-elUkyCk (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
 	public final fun textSearch-7Jr2Q9A (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/core/models/TextSearchType;)V
 	public static synthetic fun textSearch-7Jr2Q9A$default (Lio/github/androidpoet/supabase/core/models/WhereBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/core/models/TextSearchType;ILjava/lang/Object;)V

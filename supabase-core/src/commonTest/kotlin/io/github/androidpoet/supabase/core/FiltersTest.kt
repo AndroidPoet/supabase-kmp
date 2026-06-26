@@ -15,6 +15,7 @@ private val status = Column<String>("status")
 private val active = Column<Boolean>("active")
 private val deletedAt = Column<String>("deleted_at")
 private val tags = Column<List<String>>("tags")
+private val period = Column<String>("period")
 
 class FiltersTest {
     @Test
@@ -125,6 +126,29 @@ class FiltersTest {
     @Test
     fun arrayContains() {
         assertEquals(listOf("tags" to "cs.{a,b}"), where { tags contains listOf("a", "b") })
+    }
+
+    @Test
+    fun notInListNegatesMembership() {
+        assertEquals(listOf("status" to "not.in.(a,b)"), where { status notInList listOf("a", "b") })
+        assertEquals(listOf("id" to "not.in.(1,2)"), where { id notInList listOf(1L, 2L) })
+    }
+
+    @Test
+    fun ilikeAllAndAnyOf() {
+        assertEquals(listOf("name" to "ilike(all).{a%,%b}"), where { name ilikeAllOf listOf("a%", "%b") })
+        assertEquals(listOf("name" to "ilike(any).{a%,%b}"), where { name ilikeAnyOf listOf("a%", "%b") })
+    }
+
+    @Test
+    fun rangeOperatorsMatchSupabaseJsTokens() {
+        // Mapping verified against postgrest-js: rangeGte→nxl and rangeLte→nxr are the
+        // non-obvious ones. Range literals (brackets/comma) pass through verbatim.
+        assertEquals(listOf("period" to "sr.[1,10)"), where { period rangeGt "[1,10)" })
+        assertEquals(listOf("period" to "nxl.[1,10)"), where { period rangeGte "[1,10)" })
+        assertEquals(listOf("period" to "sl.[1,10)"), where { period rangeLt "[1,10)" })
+        assertEquals(listOf("period" to "nxr.[1,10)"), where { period rangeLte "[1,10)" })
+        assertEquals(listOf("period" to "adj.[1,10)"), where { period rangeAdjacent "[1,10)" })
     }
 
     @Test
