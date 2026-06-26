@@ -284,25 +284,25 @@ class AuthClientImplTest {
         }
 
     @Test
-    fun test_retrieveSsoUrl_requiresDomainOrProviderId() =
+    fun test_getSsoUrl_requiresDomainOrProviderId() =
         runTest {
             val client = FakeSupabaseClient()
             val sut = AuthClientImpl(client)
 
             // A Result-returning API must not throw on bad input — it returns Failure.
-            val result = sut.retrieveSsoUrl(accessToken = "token-1")
+            val result = sut.getSsoUrl(accessToken = "token-1")
             assertTrue(result is SupabaseResult.Failure)
             assertEquals(null, client.lastPostEndpoint)
         }
 
     @Test
-    fun test_retrieveSsoUrl_rejectsBothDomainAndProviderId() =
+    fun test_getSsoUrl_rejectsBothDomainAndProviderId() =
         runTest {
             val client = FakeSupabaseClient()
             val sut = AuthClientImpl(client)
 
             val result =
-                sut.retrieveSsoUrl(
+                sut.getSsoUrl(
                     accessToken = "token-1",
                     domain = "example.com",
                     providerId = "provider-1",
@@ -544,13 +544,13 @@ class AuthClientImplTest {
         }
 
     @Test
-    fun test_retrieveSsoUrl_withoutAccessToken_usesNoAuthorizationHeader() =
+    fun test_getSsoUrl_withoutAccessToken_usesNoAuthorizationHeader() =
         runTest {
             val client = FakeSupabaseClient()
             val sut = AuthClientImpl(client)
 
             val result =
-                sut.retrieveSsoUrl(
+                sut.getSsoUrl(
                     accessToken = null,
                     domain = "example.com",
                 )
@@ -720,12 +720,12 @@ class AuthClientImplTest {
     // ---- A1: POST /sso additive fields ----
 
     @Test
-    fun test_retrieveSsoUrl_defaultsSkipHttpRedirectTrue() =
+    fun test_getSsoUrl_defaultsSkipHttpRedirectTrue() =
         runTest {
             val client = FakeSupabaseClient()
             val sut = AuthClientImpl(client)
 
-            val result = sut.retrieveSsoUrl(domain = "example.com")
+            val result = sut.getSsoUrl(domain = "example.com")
 
             assertTrue(result is SupabaseResult.Success)
             assertEquals("/auth/v1/sso", client.lastPostEndpoint)
@@ -734,12 +734,12 @@ class AuthClientImplTest {
         }
 
     @Test
-    fun test_retrieveSsoUrl_emitsPkceAndCaptcha() =
+    fun test_getSsoUrl_emitsPkceAndCaptcha() =
         runTest {
             val client = FakeSupabaseClient()
             val sut = AuthClientImpl(client)
 
-            sut.retrieveSsoUrl(
+            sut.getSsoUrl(
                 domain = "example.com",
                 pkceParams = PkceParams(codeVerifier = "v", codeChallenge = "sso-chal", codeChallengeMethod = "S256"),
                 captchaToken = "captcha-sso",

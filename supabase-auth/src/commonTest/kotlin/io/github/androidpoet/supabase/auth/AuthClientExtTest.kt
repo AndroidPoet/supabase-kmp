@@ -775,13 +775,13 @@ class AuthClientExtTest {
         }
 
     @Test
-    fun test_retrieveSsoUrlForCurrentSession_usesSessionAccessToken() =
+    fun test_getSsoUrlForCurrentSession_usesSessionAccessToken() =
         runTest {
             val auth = FakeAuthClient()
             val sessionManager = FakeSessionManager(session = auth.dummySession.copy(accessToken = "sso-token"))
 
             val result =
-                auth.retrieveSsoUrlForCurrentSession(
+                auth.getSsoUrlForCurrentSession(
                     sessionManager = sessionManager,
                     domain = "example.com",
                 )
@@ -1192,7 +1192,7 @@ private class FakeAuthClient : AuthClient {
             lastGetUserAccessToken = accessToken
         }
 
-    override suspend fun fetchJwks(): SupabaseResult<String> = jwksResponse
+    override suspend fun getJwks(): SupabaseResult<String> = jwksResponse
 
     override suspend fun getSettings(): SupabaseResult<AuthSettings> = SupabaseResult.Success(AuthSettings())
 
@@ -1262,7 +1262,7 @@ private class FakeAuthClient : AuthClient {
             lastUnlinkIdentityId = identityId
         }
 
-    override suspend fun retrieveSsoUrl(accessToken: String?, domain: String?, providerId: String?, redirectTo: String?, pkceParams: PkceParams?, captchaToken: String?): SupabaseResult<SsoResponse> =
+    override suspend fun getSsoUrl(accessToken: String?, domain: String?, providerId: String?, redirectTo: String?, pkceParams: PkceParams?, captchaToken: String?): SupabaseResult<SsoResponse> =
         SupabaseResult.Success(SsoResponse(url = "https://example.com/sso")).also {
             lastRetrieveSsoAccessToken = accessToken
         }
@@ -1297,19 +1297,19 @@ private class FakeAuthClient : AuthClient {
                 lastExchangeCodeVerifier = codeVerifier
             }
 
-    override suspend fun mfaEnroll(factorType: MfaFactorType, friendlyName: String?, issuer: String?, phone: String?, accessToken: String): SupabaseResult<MfaEnrollResponse> =
+    override suspend fun mfaEnroll(accessToken: String, factorType: MfaFactorType, friendlyName: String?, issuer: String?, phone: String?): SupabaseResult<MfaEnrollResponse> =
         SupabaseResult.Failure(SupabaseError("not used"))
 
-    override suspend fun mfaChallenge(factorId: String, accessToken: String, channel: MessagingChannel?): SupabaseResult<MfaChallengeResponse> =
+    override suspend fun mfaChallenge(accessToken: String, factorId: String, channel: MessagingChannel?): SupabaseResult<MfaChallengeResponse> =
         SupabaseResult.Success(MfaChallengeResponse(id = "challenge-1", type = "totp")).also {
             lastMfaChallengeFactorId = factorId
         }
 
     override suspend fun mfaVerify(
+        accessToken: String,
         factorId: String,
         challengeId: String,
         code: String,
-        accessToken: String,
         webauthn: io.github.androidpoet.supabase.auth.models.MfaWebauthnVerification?,
     ): SupabaseResult<MfaVerifyResponse> =
         SupabaseResult
@@ -1327,7 +1327,7 @@ private class FakeAuthClient : AuthClient {
                 lastMfaVerifyAccessToken = accessToken
             }
 
-    override suspend fun mfaUnenroll(factorId: String, accessToken: String): SupabaseResult<MfaUnenrollResponse> =
+    override suspend fun mfaUnenroll(accessToken: String, factorId: String): SupabaseResult<MfaUnenrollResponse> =
         SupabaseResult.Failure(SupabaseError("not used"))
 
     override suspend fun mfaListFactors(accessToken: String): SupabaseResult<MfaListFactorsResponse> =

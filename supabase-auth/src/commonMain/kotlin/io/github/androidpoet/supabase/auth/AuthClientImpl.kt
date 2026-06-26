@@ -423,7 +423,7 @@ internal class AuthClientImpl(
                 headers = bearerHeaders(accessToken),
             ).deserialize()
 
-    override suspend fun fetchJwks(): SupabaseResult<String> = client.get(endpoint = AuthPaths.JWKS)
+    override suspend fun getJwks(): SupabaseResult<String> = client.get(endpoint = AuthPaths.JWKS)
 
     override suspend fun getSettings(): SupabaseResult<AuthSettings> =
         client.get(endpoint = AuthPaths.SETTINGS).deserialize()
@@ -439,7 +439,7 @@ internal class AuthClientImpl(
             // cache, or a fresh cache missing this kid — e.g. a rotated key) forces one refetch.
             jwksCache[kid]?.let { if (fresh) return@withLock SupabaseResult.Success(it) }
             val raw =
-                when (val result = fetchJwks()) {
+                when (val result = getJwks()) {
                     is SupabaseResult.Failure -> return@withLock result
                     is SupabaseResult.Success -> result.value
                 }
@@ -568,7 +568,7 @@ internal class AuthClientImpl(
                 headers = bearerHeaders(accessToken),
             ).map { }
 
-    override suspend fun retrieveSsoUrl(
+    override suspend fun getSsoUrl(
         accessToken: String?,
         domain: String?,
         providerId: String?,
@@ -719,11 +719,11 @@ internal class AuthClientImpl(
     }
 
     override suspend fun mfaEnroll(
+        accessToken: String,
         factorType: MfaFactorType,
         friendlyName: String?,
         issuer: String?,
         phone: String?,
-        accessToken: String,
     ): SupabaseResult<MfaEnrollResponse> {
         val body =
             defaultJson.encodeToString(
@@ -743,8 +743,8 @@ internal class AuthClientImpl(
     }
 
     override suspend fun mfaChallenge(
-        factorId: String,
         accessToken: String,
+        factorId: String,
         channel: MessagingChannel?,
     ): SupabaseResult<MfaChallengeResponse> =
         client
@@ -755,10 +755,10 @@ internal class AuthClientImpl(
             ).deserialize()
 
     override suspend fun mfaVerify(
+        accessToken: String,
         factorId: String,
         challengeId: String,
         code: String,
-        accessToken: String,
         webauthn: MfaWebauthnVerification?,
     ): SupabaseResult<MfaVerifyResponse> {
         val body =
@@ -778,8 +778,8 @@ internal class AuthClientImpl(
     }
 
     override suspend fun mfaUnenroll(
-        factorId: String,
         accessToken: String,
+        factorId: String,
     ): SupabaseResult<MfaUnenrollResponse> =
         client
             .delete(

@@ -406,14 +406,14 @@ public suspend fun AuthClient.importAuthToken(
     return SupabaseResult.Success(session)
 }
 
-/** Resolves an SSO sign-in URL using the current session's token. See [AuthClient.retrieveSsoUrl]. */
-public suspend fun AuthClient.retrieveSsoUrlForCurrentSession(
+/** Resolves an SSO sign-in URL using the current session's token. See [AuthClient.getSsoUrl]. */
+public suspend fun AuthClient.getSsoUrlForCurrentSession(
     sessionManager: SessionManager,
     domain: String? = null,
     providerId: String? = null,
     redirectTo: String? = null,
 ): SupabaseResult<SsoResponse> =
-    retrieveSsoUrl(
+    getSsoUrl(
         accessToken = sessionManager.accessToken,
         domain = domain,
         providerId = providerId,
@@ -941,7 +941,7 @@ private fun decodeJwt(jwt: String): SupabaseResult<JwtClaimsResult> {
  * non-standard claim). When [verify] is true the token's signature is checked:
  *
  * - For asymmetric `ES256` (ECDSA P-256) tokens the signature is verified **locally** against the
- *   project's JWKS (fetched via [AuthClient.fetchJwks]), avoiding a network round-trip — this is
+ *   project's JWKS (fetched via [AuthClient.getJwks]), avoiding a network round-trip — this is
  *   what distinguishes `getClaims` from [AuthClient.getUser].
  * - For any other case (symmetric `HS256`, other asymmetric algorithms, a missing `kid`, an
  *   unreachable JWKS endpoint, or a platform without local crypto), it falls back to validating the

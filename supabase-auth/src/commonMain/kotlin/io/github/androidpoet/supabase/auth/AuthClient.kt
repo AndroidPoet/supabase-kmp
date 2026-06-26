@@ -351,7 +351,7 @@ public interface AuthClient {
      * Fetches the raw JSON Web Key Set (JWKS) from `/auth/v1/.well-known/jwks.json`. Used by
      * [getClaims] to verify asymmetric token signatures locally without an Auth server round-trip.
      */
-    public suspend fun fetchJwks(): SupabaseResult<String>
+    public suspend fun getJwks(): SupabaseResult<String>
 
     /**
      * Fetches the Auth server's public settings (`GET /auth/v1/settings`) — which providers and flows
@@ -463,7 +463,7 @@ public interface AuthClient {
      *   `code_challenge_method` in the body.
      * @param captchaToken captcha response when bot protection is enabled.
      */
-    public suspend fun retrieveSsoUrl(
+    public suspend fun getSsoUrl(
         accessToken: String? = null,
         domain: String? = null,
         providerId: String? = null,
@@ -538,11 +538,11 @@ public interface AuthClient {
      * @param phone destination number for a phone factor.
      */
     public suspend fun mfaEnroll(
+        accessToken: String,
         factorType: MfaFactorType,
         friendlyName: String? = null,
         issuer: String? = null,
         phone: String? = null,
-        accessToken: String,
     ): SupabaseResult<MfaEnrollResponse>
 
     /**
@@ -553,8 +553,8 @@ public interface AuthClient {
      * @param channel phone delivery channel ([MessagingChannel.SMS]/`WHATSAPP`); ignored for TOTP.
      */
     public suspend fun mfaChallenge(
-        factorId: String,
         accessToken: String,
+        factorId: String,
         channel: MessagingChannel? = null,
     ): SupabaseResult<MfaChallengeResponse>
 
@@ -567,17 +567,17 @@ public interface AuthClient {
      * @param webauthn for a WebAuthn factor, the device's credential response (stands in for [code]).
      */
     public suspend fun mfaVerify(
+        accessToken: String,
         factorId: String,
         challengeId: String,
         code: String,
-        accessToken: String,
         webauthn: MfaWebauthnVerification? = null,
     ): SupabaseResult<MfaVerifyResponse>
 
     /** Removes an enrolled factor by [factorId] (`DELETE /factors/{id}`). */
     public suspend fun mfaUnenroll(
-        factorId: String,
         accessToken: String,
+        factorId: String,
     ): SupabaseResult<MfaUnenrollResponse>
 
     /**
