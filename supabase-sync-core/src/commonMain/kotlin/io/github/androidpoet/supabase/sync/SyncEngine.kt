@@ -112,14 +112,14 @@ public class SyncEngine(
         val MAX_PULL_PAGES = 10_000
     }
 
-    public fun observe(table: String): Flow<RemoteChange> =
-        remote.changes(table).onEach { change ->
-            val localPending = local.pending(table).firstOrNull { it.record.id == change.record.id }?.record
+    public fun observe(table: String): Flow<Record> =
+        remote.changes(table).onEach { incoming ->
+            val localPending = local.pending(table).firstOrNull { it.record.id == incoming.id }?.record
             val winner =
                 if (localPending == null) {
-                    change.record
+                    incoming
                 } else {
-                    resolvers.forTable(table).resolve(localPending, change.record)
+                    resolvers.forTable(table).resolve(localPending, incoming)
                 }
             local.upsert(table, listOf(winner))
         }

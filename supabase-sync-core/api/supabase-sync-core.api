@@ -131,17 +131,6 @@ public final class io/github/androidpoet/supabase/sync/Record {
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class io/github/androidpoet/supabase/sync/RemoteChange {
-	public fun <init> (Lio/github/androidpoet/supabase/sync/Record;)V
-	public final fun component1 ()Lio/github/androidpoet/supabase/sync/Record;
-	public final fun copy (Lio/github/androidpoet/supabase/sync/Record;)Lio/github/androidpoet/supabase/sync/RemoteChange;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/sync/RemoteChange;Lio/github/androidpoet/supabase/sync/Record;ILjava/lang/Object;)Lio/github/androidpoet/supabase/sync/RemoteChange;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getRecord ()Lio/github/androidpoet/supabase/sync/Record;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
 public abstract interface class io/github/androidpoet/supabase/sync/RemoteSource {
 	public abstract fun changes (Ljava/lang/String;)Lkotlinx/coroutines/flow/Flow;
 	public abstract fun pull (Ljava/lang/String;Lio/github/androidpoet/supabase/sync/Cursor;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

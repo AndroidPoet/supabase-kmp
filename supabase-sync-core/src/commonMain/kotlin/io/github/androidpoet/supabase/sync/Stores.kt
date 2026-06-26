@@ -67,6 +67,6 @@ public interface RemoteSource {
     /** Sends local [changes] to the server and reports which were accepted. */
     public suspend fun push(table: String, changes: List<PendingChange>): PushResult
 
-    /** A live stream of remote changes for [table] (e.g. Supabase Realtime). */
-    public fun changes(table: String): Flow<RemoteChange>
+    /** A live stream of remote changes for [table] (e.g. Supabase Realtime), one [Record] per change. */
+    public fun changes(table: String): Flow<Record>
 }

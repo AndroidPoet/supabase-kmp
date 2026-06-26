@@ -109,7 +109,7 @@ class SyncEngineTest {
             val local = FakeLocalStore()
             local.upsert("todos", listOf(rec("a", 100)))
             local.enqueue("todos", PendingChange(rec("a", 100), ChangeKind.UPSERT))
-            val remote = FakeRemoteSource().withChanges(RemoteChange(rec("a", 50)))
+            val remote = FakeRemoteSource().withChanges(rec("a", 50))
 
             SyncEngine(local, remote).observe("todos").collect {}
 
@@ -169,9 +169,9 @@ private class FakeRemoteSource(
 ) : RemoteSource {
     val pushed = mutableListOf<PendingChange>()
     private var pullIndex = 0
-    private var changeFlow: Flow<RemoteChange> = emptyFlow()
+    private var changeFlow: Flow<Record> = emptyFlow()
 
-    fun withChanges(vararg changes: RemoteChange): FakeRemoteSource {
+    fun withChanges(vararg changes: Record): FakeRemoteSource {
         changeFlow = flowOf(*changes)
         return this
     }
@@ -184,5 +184,5 @@ private class FakeRemoteSource(
         return PushResult(accepted = changes.map { it.record.id })
     }
 
-    override fun changes(table: String): Flow<RemoteChange> = changeFlow
+    override fun changes(table: String): Flow<Record> = changeFlow
 }

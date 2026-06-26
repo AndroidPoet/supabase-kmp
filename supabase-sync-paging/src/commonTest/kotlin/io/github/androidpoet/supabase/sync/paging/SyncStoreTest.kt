@@ -8,7 +8,6 @@ import io.github.androidpoet.supabase.sync.PendingChange
 import io.github.androidpoet.supabase.sync.PullResult
 import io.github.androidpoet.supabase.sync.PushResult
 import io.github.androidpoet.supabase.sync.Record
-import io.github.androidpoet.supabase.sync.RemoteChange
 import io.github.androidpoet.supabase.sync.RemoteSource
 import io.github.androidpoet.supabase.sync.SyncEngine
 import kotlinx.coroutines.flow.first
@@ -183,5 +182,5 @@ private class MemRemote(
     override suspend fun push(table: String, changes: List<PendingChange>): PushResult =
         PushResult(accepted = changes.map { it.record.id })
 
-    override fun changes(table: String) = kotlinx.coroutines.flow.emptyFlow<RemoteChange>()
+    override fun changes(table: String) = kotlinx.coroutines.flow.emptyFlow<Record>()
 }
