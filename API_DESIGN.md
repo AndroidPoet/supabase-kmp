@@ -124,12 +124,32 @@ handled in source.
   (RPC arguments are *named*, so they are Map-shaped; the pair-list seam stays on the raw
   `DatabaseClient.rpcGet` interface method for the rare ordered case). The `Request`-object typed
   overloads are unchanged.
-- **Naming sweep:** one verb per concept (`get`/`list`/`create`/`update`/`delete`; drop
-  `fetch`/`load`/`remove`/`getAll`); collapse `WithResult`/`Unit`/`OrThrow` twins into one method
-  + a `returning` param (PostgREST `Prefer`); make `accessToken` position consistent; align auth
-  vs auth-admin verbs; `MessagingChannel`/`LogLevel` enums for the remaining stringly-typed sets.
+- ~~**Naming sweep:**~~ **DONE** — landed across modules:
+  - *Closed sets → enums:* `MessagingChannel` (auth phone channel) and `HttpLogLevel` (client config)
+    replace the stringly-typed values; Ktor's `LogLevel` no longer leaks through config.
+  - *Wire DTOs internalized:* ~46 request/response data classes in auth + storage are now `internal`.
+  - *One verb / consistent nouns:* auth `fetchJwks`→`getJwks`, `retrieveSsoUrl`→`getSsoUrl`;
+    auth-admin `auditLogEvents`→`listAuditLogEvents`, `signOut(jwt=)`→`signOut(accessToken=)`;
+    storage `emptyBucket`→`clearBucket`, Iceberg `load*`→`get*` / `drop*`→`delete*`, duplicate
+    `commitTable` folded into `updateTable`; realtime unified on the **Subscription** noun
+    (`removeChannel*`→`removeSubscription*`, `removeAllChannels`→`removeAllSubscriptions`) with a
+    `get*` prefix for snapshots (`activeChannels`→`getActiveChannelNames`,
+    `activeChannelDetails`→`getActiveChannels`).
+  - *`accessToken` position consistent:* MFA methods take `accessToken` first.
+  - *Result-shaping twins collapsed (Rule 2 — base name returns the rich/safe type):*
+    storage `remove`+`removeWithResult`→`deleteObjects` (rich `List<FileObject>`); auth
+    `verifyOtp`/`verifyOtpWithTokenHash` (and their shorthands + `*AndSaveSession`) now return
+    `OtpVerifyResult`, deleting every `*WithResult` twin; functions `invokeUnit`/`invokeWithBodyUnit`
+    dropped (`invoke`/`invokeWithBody` already return a branchable `SupabaseResult`).
+  - *Factory/accessor parity:* auth-admin `authAdmin(key)`→`createAuthAdminClient(client, key)`;
+    added `SupabaseClient.functions` accessor (mirrors `.auth`/`.database`/`.storage`); sync gained
+    `createSyncEngine` / `createSupabaseRemoteSource` factories. (Realtime stays factory-only by
+    design — it owns a live WebSocket, so a fresh-per-access property would drop subscriptions.)
+  - *SQLDelight leakage closed:* `SqlDelightLocalStore`'s generated-type constructor is `internal`
+    (consumers use the `SqlDriver` ctor / `openOfflineSyncStore`) and the generated `…sync.store.db`
+    package — including the `Cursor` that collided with the hand-written `sync.Cursor` — is excluded
+    from the tracked ABI.
 
 **Decide before 1.0 (additive, can land in 1.x but design now):**
 - Storage streaming: add `kotlinx.io` `Source`/`Sink` (file-backed) overloads so large
   upload/download isn't forced through an in-memory `ByteArray`.
-- Add `getFunctions()` / `getRealtime()` accessors for construction parity.
