@@ -26,7 +26,7 @@ import kotlinx.serialization.json.JsonObject
  * so the same code runs on iOS, macOS, and the JVM. Create the schema once on the driver before
  * constructing the store (`OfflineSyncDb.Schema.create(driver)`), or use [openOfflineSyncStore].
  */
-public class SqlDelightLocalStore(
+public class SqlDelightLocalStore internal constructor(
     private val db: OfflineSyncDb,
     private val adapters: Map<String, TableAdapter> = emptyMap(),
 ) : LocalStore {

@@ -215,3 +215,5 @@ final class io.github.androidpoet.supabase.sync/SyncResult { // io.github.androi
 final object io.github.androidpoet.supabase.sync/LastWriteWins : io.github.androidpoet.supabase.sync/ConflictResolver { // io.github.androidpoet.supabase.sync/LastWriteWins|null[0]
     final fun resolve(io.github.androidpoet.supabase.sync/Record, io.github.androidpoet.supabase.sync/Record): io.github.androidpoet.supabase.sync/Record // io.github.androidpoet.supabase.sync/LastWriteWins.resolve|resolve(io.github.androidpoet.supabase.sync.Record;io.github.androidpoet.supabase.sync.Record){}[0]
 }
+
+final fun io.github.androidpoet.supabase.sync/createSyncEngine(io.github.androidpoet.supabase.sync/LocalStore, io.github.androidpoet.supabase.sync/RemoteSource, io.github.androidpoet.supabase.sync/ResolverRegistry = ...): io.github.androidpoet.supabase.sync/SyncEngine // io.github.androidpoet.supabase.sync/createSyncEngine|createSyncEngine(io.github.androidpoet.supabase.sync.LocalStore;io.github.androidpoet.supabase.sync.RemoteSource;io.github.androidpoet.supabase.sync.ResolverRegistry){}[0]

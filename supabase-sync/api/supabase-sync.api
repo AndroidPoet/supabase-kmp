@@ -6,6 +6,11 @@ public final class io/github/androidpoet/supabase/sync/remote/SupabaseRemoteSour
 	public fun push (Ljava/lang/String;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
+public final class io/github/androidpoet/supabase/sync/remote/SupabaseRemoteSourceFactoryKt {
+	public static final fun createSupabaseRemoteSource (Lio/github/androidpoet/supabase/database/DatabaseClient;Lio/github/androidpoet/supabase/realtime/RealtimeClient;Lio/github/androidpoet/supabase/sync/remote/SyncColumns;Ljava/lang/String;I)Lio/github/androidpoet/supabase/sync/remote/SupabaseRemoteSource;
+	public static synthetic fun createSupabaseRemoteSource$default (Lio/github/androidpoet/supabase/database/DatabaseClient;Lio/github/androidpoet/supabase/realtime/RealtimeClient;Lio/github/androidpoet/supabase/sync/remote/SyncColumns;Ljava/lang/String;IILjava/lang/Object;)Lio/github/androidpoet/supabase/sync/remote/SupabaseRemoteSource;
+}
+
 public final class io/github/androidpoet/supabase/sync/remote/SyncColumns {
 	public fun <init> ()V
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V

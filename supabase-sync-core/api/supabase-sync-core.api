@@ -153,6 +153,11 @@ public final class io/github/androidpoet/supabase/sync/SyncEngine {
 	public final fun sync (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
+public final class io/github/androidpoet/supabase/sync/SyncEngineFactoryKt {
+	public static final fun createSyncEngine (Lio/github/androidpoet/supabase/sync/LocalStore;Lio/github/androidpoet/supabase/sync/RemoteSource;Lio/github/androidpoet/supabase/sync/ResolverRegistry;)Lio/github/androidpoet/supabase/sync/SyncEngine;
+	public static synthetic fun createSyncEngine$default (Lio/github/androidpoet/supabase/sync/LocalStore;Lio/github/androidpoet/supabase/sync/RemoteSource;Lio/github/androidpoet/supabase/sync/ResolverRegistry;ILjava/lang/Object;)Lio/github/androidpoet/supabase/sync/SyncEngine;
+}
+
 public final class io/github/androidpoet/supabase/sync/SyncResult {
 	public fun <init> (III)V
 	public final fun component1 ()I
