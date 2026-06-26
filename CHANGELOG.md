@@ -1,8 +1,27 @@
 # Changelog
 
-## Unreleased
+## 1.0.0 - 2026-06-26
+
+> **First stable release.** The public API is now committed and follows semantic
+> versioning — breaking changes will only land in a future major. To get here we ran a
+> full-SDK API-surface audit and a deliberate **pre-1.0 breaking sweep** (see the
+> "Changed (breaking)" and "Removed" sections): one verb per concept, the rich/safe
+> type as every method's default return, consistent factories, and no wire-internal or
+> generated types leaking into the public surface. The design rationale lives in
+> [`API_DESIGN.md`](API_DESIGN.md). If you are upgrading from `0.10.x`, expect to touch
+> call sites — the renames are mechanical and the compiler will point at each one.
 
 ### Added
+
+- **`SupabaseClient.functions` accessor** — reach Edge Functions as `client.functions`,
+  mirroring `client.auth` / `client.database` / `client.storage`. (Realtime stays
+  factory-only by design, since it owns a live WebSocket connection.)
+- **Sync factories** `createSyncEngine(...)` and `createSupabaseRemoteSource(...)` so the
+  sync modules match the SDK's `create*` entry-point convention.
+- **`MessagingChannel`** enum (`SMS` / `WHATSAPP`) and **`HttpLogLevel`** enum replace
+  the previously stringly-typed phone-OTP channel and the leaked Ktor `LogLevel`.
+- **`PostgrestRawPage`** — the named raw-string analogue of `PostgrestPage<T>`, returned
+  by `selectRange` (see breaking change below).
 
 - **Codegen emits typed `Column<T>` filter tokens.** Each generated table data class
   now carries a `companion object` of `Column<T>` tokens — one per column — so a
@@ -51,6 +70,65 @@
   Implementors of the `LocalStore` interface must add these three methods (the bundled
   `supabase-sync-sqldelight` store already does). They back keyset/offset paging and the
   live row count; `pageAfter` and `page` return only live (non-tombstone) rows.
+
+### Changed (breaking — 1.0 API hardening)
+
+The renames below are the bulk of the 1.0 break. They are mechanical; the compiler flags
+each call site.
+
+- **Database — `ResponseFormat` enum replaces the response booleans.** `select` / `rpc` /
+  `rpcGet` / `selectRange` took four mutually-exclusive `head` / `single` / `csv` /
+  `geojson` booleans (illegal combinations caught at runtime). They now take a single
+  `format: ResponseFormat = ResponseFormat.ROWS`, making bad combinations unrepresentable.
+  The redundant `selectTyped(single = …)` flag was dropped (`selectSingleTyped` covers it).
+- **Database — `selectRange` returns `PostgrestRawPage`** (was
+  `Pair<String, PostgrestRange>`); read `.body` / `.count` / `.range` instead of
+  `.first` / `.second`.
+- **Database — `rpcGet` typed terminals** dropped their redundant `List<Pair>` overload and
+  standardized on one `Map<String, String> = emptyMap()` named-arguments form.
+- **Auth — verb + parameter consistency.** `fetchJwks` → `getJwks`; `retrieveSsoUrl` →
+  `getSsoUrl`; the phone-OTP `channel: String?` is now `MessagingChannel?`; the MFA methods
+  take `accessToken` as their **first** parameter.
+- **Auth — `verifyOtp` returns the rich `OtpVerifyResult`** (was `Session`), as do
+  `verifyOtpWithTokenHash`, the `verifyEmail/PhoneOtp` shorthands, and the `*AndSaveSession`
+  helpers. A code can verify without minting a session (e.g. email-change confirmations);
+  the result models that as `VerifiedNoSession` instead of a confusing failure, and the
+  session is reached via `OtpVerifyResult.Authenticated.session`.
+- **Auth-admin — factory + verbs.** `client.authAdmin(serviceRoleKey)` →
+  `createAuthAdminClient(client, serviceRoleKey)`; `auditLogEvents` → `listAuditLogEvents`;
+  `signOut(jwt = …)` → `signOut(accessToken = …)`.
+- **Client — `logLevel` is now `HttpLogLevel`** (was Ktor's `LogLevel`); Ktor no longer
+  leaks through `SupabaseConfig`.
+- **Storage — verb consistency.** `emptyBucket` → `clearBucket`; the Iceberg catalog
+  `load*` reads → `get*`, `drop*` → `delete*`, and the duplicate `commitTable` /
+  `commitTableTyped` fold into `updateTable` / `updateTableTyped`.
+- **Realtime — unified on the `Subscription` noun + `get*` snapshots.**
+  `removeChannel(name)` / `removeChannelsByTopic` / `removeAllChannels` →
+  `removeSubscription(name)` / `removeSubscriptionsByTopic` / `removeAllSubscriptions`;
+  `activeChannels` / `activeChannelDetails` → `getActiveChannelNames` / `getActiveChannels`.
+- **Sync — `SupabaseRemoteSource.changes()` returns `Flow<Record>`** directly (the
+  single-field `RemoteChange` wrapper was removed), and the orphaned default
+  `CoroutineScope` constructor parameter is gone.
+- **SQLDelight store no longer leaks generated types.**
+  `SqlDelightLocalStore`'s `OfflineSyncDb` constructor is now `internal` — construct from
+  your own `SqlDriver` (or `openOfflineSyncStore`). The generated `…sync.store.db` package
+  (including a `Cursor` that collided with the public `sync.Cursor`) is no longer part of
+  the published API.
+
+### Removed (breaking)
+
+- **Result-shaping twins** collapsed into their base method (the base now returns the
+  rich/safe type): storage `remove` + `removeWithResult` → **`deleteObjects`** (returns
+  `List<FileObject>`); auth `verifyOtpWithResult` / `verifyOtpWithTokenHashWithResult` and
+  every `verify*WithResult` / `*WithResultAndSaveSession` shorthand (the base `verifyOtp`
+  family now returns `OtpVerifyResult`).
+- **Functions `invokeUnit` / `invokeWithBodyUnit`** — `invoke` / `invokeWithBody` already
+  return a branchable `SupabaseResult`; ignore the value (or `.map {}` it) for
+  fire-and-forget.
+- **Realtime `removeChannel(subscription)`** — the deprecated duplicate of
+  `removeSubscription(subscription)`.
+- **~46 wire-only request/response DTOs** in `supabase-auth` and `supabase-storage` are now
+  `internal` (they were never meant to be constructed by callers).
 
 ### Fixed
 
