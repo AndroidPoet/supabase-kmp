@@ -3,7 +3,7 @@ package io.github.androidpoet.supabase.sync.remote
 /**
  * Names of the three columns the sync engine needs to find on every synced Supabase table.
  *
- * The engine is transport-neutral: a [io.github.androidpoet.supabase.sync.Record] carries an [id],
+ * The engine is transport-neutral: a [io.github.androidpoet.supabase.sync.SyncRecord] carries an [id],
  * a server-set [updatedAt] (epoch millis), and a soft-delete [deleted] tombstone. This maps those
  * concepts onto your actual Postgres columns so the same table can use whatever naming you already
  * have. Everything *except* [updatedAt] and [deleted] is treated as a domain field and mirrored

@@ -26,7 +26,7 @@ import kotlinx.serialization.json.JsonPrimitive
 internal fun SupabaseError.isSingleObjectNoRows(): Boolean {
     val singular = httpStatus == 406 || code == SupabaseErrorCodes.Database.SINGULAR_RESPONSE_VIOLATION
     val zeroRows = (details as? JsonPrimitive)?.content?.contains("0 rows") == true
-    return (singular && zeroRows) || category == SupabaseErrorCategory.NotFound
+    return (singular && zeroRows) || category == SupabaseErrorCategory.NOT_FOUND
 }
 
 /**
@@ -114,7 +114,7 @@ public suspend fun DatabaseClient.selectGeoJson(
  * Reads the single row matching [filters] and decodes it into [T].
  *
  * Requests `single = true`, so PostgREST returns 406 (a [SupabaseResult.Failure]
- * with [SupabaseErrorCategory.NotFound]) when zero or more than one row matches —
+ * with [SupabaseErrorCategory.NOT_FOUND]) when zero or more than one row matches —
  * use [selectMaybeSingleTyped] if "no row" should be a success with `null`.
  */
 public suspend inline fun <reified T> DatabaseClient.selectSingleTyped(
@@ -129,7 +129,7 @@ public suspend inline fun <reified T> DatabaseClient.selectSingleTyped(
  * Reads at most one row matching [filters], returning `null` instead of failing
  * when none exists — the lenient variant of [selectSingleTyped].
  *
- * On a "no rows" response (HTTP 406 / [SupabaseErrorCategory.NotFound]) this maps
+ * On a "no rows" response (HTTP 406 / [SupabaseErrorCategory.NOT_FOUND]) this maps
  * to `SupabaseResult.Success(null)`; any other failure is propagated unchanged.
  * Still fails if more than one row matches.
  */
@@ -561,7 +561,7 @@ public suspend inline fun <reified Request : Any, reified Response> DatabaseClie
  * decoded into [T].
  *
  * Requests `single = true`, so a result of zero or more than one row fails with
- * HTTP 406 / [SupabaseErrorCategory.NotFound]; use [rpcMaybeSingleTyped] to treat
+ * HTTP 406 / [SupabaseErrorCategory.NOT_FOUND]; use [rpcMaybeSingleTyped] to treat
  * "no row" as `null`.
  */
 public suspend inline fun <reified T> DatabaseClient.rpcSingleTyped(
@@ -593,7 +593,7 @@ public suspend inline fun <reified Request : Any, reified Response> DatabaseClie
  * `null` instead of failing when none is produced — the lenient variant of
  * [rpcSingleTyped].
  *
- * A "no rows" response (HTTP 406 / [SupabaseErrorCategory.NotFound]) maps to
+ * A "no rows" response (HTTP 406 / [SupabaseErrorCategory.NOT_FOUND]) maps to
  * `SupabaseResult.Success(null)`; other failures propagate unchanged.
  */
 public suspend inline fun <reified T> DatabaseClient.rpcMaybeSingleTyped(
@@ -817,7 +817,7 @@ public suspend inline fun <reified Request : Any, reified Response> DatabaseClie
 /**
  * Calls read-only stored procedure [function] (GET) expecting exactly one
  * row/scalar, decoded into [T] — the GET counterpart of [rpcSingleTyped]. Fails
- * with HTTP 406 / [SupabaseErrorCategory.NotFound] when not exactly one row is
+ * with HTTP 406 / [SupabaseErrorCategory.NOT_FOUND] when not exactly one row is
  * returned.
  */
 public suspend inline fun <reified T> DatabaseClient.rpcGetSingleTyped(
@@ -841,7 +841,7 @@ public suspend inline fun <reified Request : Any, reified Response> DatabaseClie
 /**
  * Calls read-only stored procedure [function] (GET) expecting at most one row,
  * returning `null` instead of failing when none is produced — the GET, lenient
- * counterpart of [rpcSingleTyped] (HTTP 406 / [SupabaseErrorCategory.NotFound]
+ * counterpart of [rpcSingleTyped] (HTTP 406 / [SupabaseErrorCategory.NOT_FOUND]
  * maps to `null`).
  */
 public suspend inline fun <reified T> DatabaseClient.rpcGetMaybeSingleTyped(

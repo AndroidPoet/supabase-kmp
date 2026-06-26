@@ -385,7 +385,7 @@ class SupabaseResultTest {
             val notFoundError = SupabaseError(message = "table not found", code = "PGRST205")
             var called = false
             SupabaseResult.Failure(notFoundError).onFailureCategorySuspend(
-                category = io.github.androidpoet.supabase.core.result.SupabaseErrorCategory.NotFound,
+                category = io.github.androidpoet.supabase.core.result.SupabaseErrorCategory.NOT_FOUND,
             ) { called = true }
             assertTrue(called)
         }
@@ -406,7 +406,7 @@ class SupabaseResultTest {
         runTest {
             var called = false
             SupabaseResult.Failure(error).onFailureCategorySuspend(
-                category = io.github.androidpoet.supabase.core.result.SupabaseErrorCategory.Conflict,
+                category = io.github.androidpoet.supabase.core.result.SupabaseErrorCategory.CONFLICT,
             ) { called = true }
             assertFalse(called)
         }

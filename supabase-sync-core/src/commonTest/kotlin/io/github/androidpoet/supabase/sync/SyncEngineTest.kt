@@ -12,19 +12,19 @@ import kotlin.test.assertTrue
 
 class SyncEngineTest {
     private fun rec(id: String, ts: Long, deleted: Boolean = false) =
-        Record(id = id, updatedAt = ts, deleted = deleted, fields = JsonObject(mapOf("v" to JsonPrimitive(ts))))
+        SyncRecord(id = id, updatedAt = ts, deleted = deleted, fields = JsonObject(mapOf("v" to JsonPrimitive(ts))))
 
     @Test
     fun pull_stores_records_and_advances_the_cursor() =
         runTest {
             val local = FakeLocalStore()
-            val remote = FakeRemoteSource(PullResult(listOf(rec("a", 10), rec("b", 20)), Cursor(20)))
+            val remote = FakeRemoteSource(PullResult(listOf(rec("a", 10), rec("b", 20)), SyncCursor(20)))
 
             val result = SyncEngine(local, remote).sync("todos")
 
             assertEquals(2, result.pulled)
             assertEquals(rec("a", 10), local.get("todos", "a"))
-            assertEquals(Cursor(20), local.cursor("todos"))
+            assertEquals(SyncCursor(20), local.cursor("todos"))
         }
 
     @Test
@@ -46,7 +46,7 @@ class SyncEngineTest {
         runTest {
             val local = FakeLocalStore()
             local.enqueue("todos", PendingChange(rec("a", 100), ChangeKind.UPSERT))
-            val remote = FakeRemoteSource(PullResult(listOf(rec("a", 50)), Cursor(50)))
+            val remote = FakeRemoteSource(PullResult(listOf(rec("a", 50)), SyncCursor(50)))
 
             val result = SyncEngine(local, remote).sync("todos")
 
@@ -65,7 +65,7 @@ class SyncEngineTest {
         runTest {
             val local = FakeLocalStore()
             local.enqueue("todos", PendingChange(rec("a", 50), ChangeKind.UPSERT))
-            val remote = FakeRemoteSource(PullResult(listOf(rec("a", 100)), Cursor(100)))
+            val remote = FakeRemoteSource(PullResult(listOf(rec("a", 100)), SyncCursor(100)))
 
             val result = SyncEngine(local, remote).sync("todos")
 
@@ -81,7 +81,7 @@ class SyncEngineTest {
             val resolvers = ResolverRegistry().register("todos") { _, _ -> merged }
             val local = FakeLocalStore()
             local.enqueue("todos", PendingChange(rec("a", 60), ChangeKind.UPSERT))
-            val remote = FakeRemoteSource(PullResult(listOf(rec("a", 50)), Cursor(50)))
+            val remote = FakeRemoteSource(PullResult(listOf(rec("a", 50)), SyncCursor(50)))
 
             val result = SyncEngine(local, remote, resolvers).sync("todos")
 
@@ -95,12 +95,12 @@ class SyncEngineTest {
     fun empty_pull_with_null_cursor_keeps_the_existing_cursor() =
         runTest {
             val local = FakeLocalStore()
-            local.setCursor("todos", Cursor(99))
+            local.setCursor("todos", SyncCursor(99))
             val remote = FakeRemoteSource(PullResult(emptyList(), null))
 
             SyncEngine(local, remote).sync("todos")
 
-            assertEquals(Cursor(99), local.cursor("todos")) // not reset to null
+            assertEquals(SyncCursor(99), local.cursor("todos")) // not reset to null
         }
 
     @Test
@@ -118,20 +118,20 @@ class SyncEngineTest {
 }
 
 private class FakeLocalStore : LocalStore {
-    private val tables = mutableMapOf<String, MutableMap<String, Record>>()
-    private val cursors = mutableMapOf<String, Cursor?>()
+    private val tables = mutableMapOf<String, MutableMap<String, SyncRecord>>()
+    private val cursors = mutableMapOf<String, SyncCursor?>()
     private val outbox = mutableMapOf<String, MutableList<PendingChange>>()
 
-    override suspend fun upsert(table: String, records: List<Record>) {
+    override suspend fun upsert(table: String, records: List<SyncRecord>) {
         val t = tables.getOrPut(table) { mutableMapOf() }
         records.forEach { t[it.id] = it }
     }
 
-    override suspend fun get(table: String, id: String): Record? = tables[table]?.get(id)
+    override suspend fun get(table: String, id: String): SyncRecord? = tables[table]?.get(id)
 
-    override suspend fun cursor(table: String): Cursor? = cursors[table]
+    override suspend fun cursor(table: String): SyncCursor? = cursors[table]
 
-    override suspend fun setCursor(table: String, cursor: Cursor?) {
+    override suspend fun setCursor(table: String, cursor: SyncCursor?) {
         cursors[table] = cursor
     }
 
@@ -150,15 +150,15 @@ private class FakeLocalStore : LocalStore {
         outbox[table]?.removeAll { it.record.id in ids }
     }
 
-    private fun live(table: String): List<Record> =
+    private fun live(table: String): List<SyncRecord> =
         tables[table]?.values?.filterNot { it.deleted }?.sortedBy { it.id } ?: emptyList()
 
-    override suspend fun page(table: String, limit: Long, offset: Long): Page<Record> {
+    override suspend fun page(table: String, limit: Long, offset: Long): Page<SyncRecord> {
         val all = live(table)
         return Page(all.drop(offset.toInt()).take(limit.toInt()), offset, limit, all.size.toLong())
     }
 
-    override suspend fun pageAfter(table: String, afterId: String?, limit: Long): List<Record> =
+    override suspend fun pageAfter(table: String, afterId: String?, limit: Long): List<SyncRecord> =
         live(table).filter { afterId == null || it.id > afterId }.take(limit.toInt())
 
     override suspend fun count(table: String): Long = live(table).size.toLong()
@@ -169,14 +169,14 @@ private class FakeRemoteSource(
 ) : RemoteSource {
     val pushed = mutableListOf<PendingChange>()
     private var pullIndex = 0
-    private var changeFlow: Flow<Record> = emptyFlow()
+    private var changeFlow: Flow<SyncRecord> = emptyFlow()
 
-    fun withChanges(vararg changes: Record): FakeRemoteSource {
+    fun withChanges(vararg changes: SyncRecord): FakeRemoteSource {
         changeFlow = flowOf(*changes)
         return this
     }
 
-    override suspend fun pull(table: String, since: Cursor?): PullResult =
+    override suspend fun pull(table: String, since: SyncCursor?): PullResult =
         scriptedPulls.getOrNull(pullIndex++) ?: PullResult(emptyList(), since)
 
     override suspend fun push(table: String, changes: List<PendingChange>): PushResult {
@@ -184,5 +184,5 @@ private class FakeRemoteSource(
         return PushResult(accepted = changes.map { it.record.id })
     }
 
-    override fun changes(table: String): Flow<Record> = changeFlow
+    override fun changes(table: String): Flow<SyncRecord> = changeFlow
 }

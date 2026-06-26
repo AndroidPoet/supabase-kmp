@@ -1,7 +1,7 @@
 package io.github.androidpoet.supabase.sync.remote
 
-import io.github.androidpoet.supabase.sync.Cursor
-import io.github.androidpoet.supabase.sync.Record
+import io.github.androidpoet.supabase.sync.SyncCursor
+import io.github.androidpoet.supabase.sync.SyncRecord
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -66,7 +66,7 @@ class MappingTest {
                 record("c", 20),
                 record("b", 20), // same updatedAt, larger id wins on the keyset
             )
-        assertEquals(Cursor(20, "c"), pullCursor(records))
+        assertEquals(SyncCursor(20, "c"), pullCursor(records))
     }
 
     @Test
@@ -97,8 +97,8 @@ class MappingTest {
         assertEquals("hi", obj["title"]?.jsonPrimitive?.content)
     }
 
-    private fun record(id: String, updatedAt: Long, deleted: Boolean = false): Record =
-        Record(
+    private fun record(id: String, updatedAt: Long, deleted: Boolean = false): SyncRecord =
+        SyncRecord(
             id = id,
             updatedAt = updatedAt,
             deleted = deleted,

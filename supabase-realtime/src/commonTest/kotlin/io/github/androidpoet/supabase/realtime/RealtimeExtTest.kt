@@ -97,7 +97,7 @@ private class FakeSubscription : RealtimeSubscription {
     private val flow = MutableSharedFlow<RealtimeEvent>(replay = 8, extraBufferCapacity = 8)
     private val statusState = MutableStateFlow(RealtimeSubscription.Status.SUBSCRIBING)
 
-    override val channel: String = "room"
+    override val channelName: String = "room"
     override val status: StateFlow<RealtimeSubscription.Status> =
         statusState
 

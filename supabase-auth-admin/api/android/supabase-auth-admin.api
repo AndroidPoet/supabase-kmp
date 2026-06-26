@@ -106,16 +106,16 @@ public final class io/github/androidpoet/supabase/auth/admin/models/AdminUserAtt
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class io/github/androidpoet/supabase/auth/admin/models/AuditLogEntry {
-	public static final field Companion Lio/github/androidpoet/supabase/auth/admin/models/AuditLogEntry$Companion;
+public final class io/github/androidpoet/supabase/auth/admin/models/AuditLogEvent {
+	public static final field Companion Lio/github/androidpoet/supabase/auth/admin/models/AuditLogEvent$Companion;
 	public fun <init> (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;)V
 	public synthetic fun <init> (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Lkotlinx/serialization/json/JsonObject;
 	public final fun component3 ()Ljava/lang/String;
 	public final fun component4 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;)Lio/github/androidpoet/supabase/auth/admin/models/AuditLogEntry;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/auth/admin/models/AuditLogEntry;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/auth/admin/models/AuditLogEntry;
+	public final fun copy (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;)Lio/github/androidpoet/supabase/auth/admin/models/AuditLogEvent;
+	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/auth/admin/models/AuditLogEvent;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/auth/admin/models/AuditLogEvent;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getCreatedAt ()Ljava/lang/String;
 	public final fun getId ()Ljava/lang/String;
@@ -125,18 +125,18 @@ public final class io/github/androidpoet/supabase/auth/admin/models/AuditLogEntr
 	public fun toString ()Ljava/lang/String;
 }
 
-public final synthetic class io/github/androidpoet/supabase/auth/admin/models/AuditLogEntry$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/auth/admin/models/AuditLogEntry$$serializer;
+public final synthetic class io/github/androidpoet/supabase/auth/admin/models/AuditLogEvent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lio/github/androidpoet/supabase/auth/admin/models/AuditLogEvent$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/auth/admin/models/AuditLogEntry;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/auth/admin/models/AuditLogEvent;
 	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/auth/admin/models/AuditLogEntry;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/auth/admin/models/AuditLogEvent;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
 	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
-public final class io/github/androidpoet/supabase/auth/admin/models/AuditLogEntry$Companion {
+public final class io/github/androidpoet/supabase/auth/admin/models/AuditLogEvent$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
@@ -190,7 +190,7 @@ public final class io/github/androidpoet/supabase/auth/admin/models/CustomProvid
 	public final fun getSkipNonceCheck ()Ljava/lang/Boolean;
 	public final fun getTokenUrl ()Ljava/lang/String;
 	public final fun getUpdatedAt ()Ljava/lang/String;
-	public final fun getUserinfoUrl ()Ljava/lang/String;
+	public final fun getUserInfoUrl ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -254,7 +254,7 @@ public final class io/github/androidpoet/supabase/auth/admin/models/CustomProvid
 	public final fun getScopes ()Ljava/util/List;
 	public final fun getSkipNonceCheck ()Ljava/lang/Boolean;
 	public final fun getTokenUrl ()Ljava/lang/String;
-	public final fun getUserinfoUrl ()Ljava/lang/String;
+	public final fun getUserInfoUrl ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -359,7 +359,7 @@ public final class io/github/androidpoet/supabase/auth/admin/models/CustomProvid
 	public final fun getScopes ()Ljava/util/List;
 	public final fun getSkipNonceCheck ()Ljava/lang/Boolean;
 	public final fun getTokenUrl ()Ljava/lang/String;
-	public final fun getUserinfoUrl ()Ljava/lang/String;
+	public final fun getUserInfoUrl ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }

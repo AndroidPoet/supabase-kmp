@@ -30,11 +30,11 @@ public enum class HttpLogLevel {
  */
 @SupabaseDsl
 public class SupabaseConfigBuilder {
-    /** Enable HTTP wire logging at [logLevel]. Off by default. */
+    /** Enable HTTP wire logging at [httpLogLevel]. Off by default. */
     public var logging: Boolean = false
 
     /** Verbosity of the wire log when [logging] is on. */
-    public var logLevel: HttpLogLevel = HttpLogLevel.NONE
+    public var httpLogLevel: HttpLogLevel = HttpLogLevel.NONE
 
     /** Extra headers attached to every request, merged under any per-call headers. */
     public val headers: MutableMap<String, String> = mutableMapOf()
@@ -98,7 +98,7 @@ public class SupabaseConfigBuilder {
     internal fun build(): SupabaseConfig =
         SupabaseConfig(
             logging = logging,
-            logLevel = logLevel,
+            httpLogLevel = httpLogLevel,
             headers = headers.toMap(),
             retry = retry,
             logger = logger,
@@ -127,8 +127,8 @@ public class SupabaseConfigBuilder {
 public class SupabaseConfig(
     /** Whether HTTP wire logging is enabled. See [SupabaseConfigBuilder.logging]. */
     public val logging: Boolean,
-    /** Verbosity of the wire log. See [SupabaseConfigBuilder.logLevel]. */
-    public val logLevel: HttpLogLevel,
+    /** Verbosity of the wire log. See [SupabaseConfigBuilder.httpLogLevel]. */
+    public val httpLogLevel: HttpLogLevel,
     /** Extra headers attached to every request. See [SupabaseConfigBuilder.headers]. */
     public val headers: Map<String, String>,
     /** Retry policy for transient failures. See [RetryConfig]. */

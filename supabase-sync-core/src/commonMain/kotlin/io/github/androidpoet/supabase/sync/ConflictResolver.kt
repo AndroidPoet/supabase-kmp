@@ -6,12 +6,12 @@ package io.github.androidpoet.supabase.sync
  * [ResolverRegistry] to do field-level merges or any other policy your app needs.
  */
 public fun interface ConflictResolver {
-    public fun resolve(local: Record, remote: Record): Record
+    public fun resolve(local: SyncRecord, remote: SyncRecord): SyncRecord
 }
 
-/** Higher [Record.updatedAt] wins; ties go to the remote, since the server is authoritative. */
+/** Higher [SyncRecord.updatedAt] wins; ties go to the remote, since the server is authoritative. */
 public object LastWriteWins : ConflictResolver {
-    override fun resolve(local: Record, remote: Record): Record =
+    override fun resolve(local: SyncRecord, remote: SyncRecord): SyncRecord =
         if (local.updatedAt > remote.updatedAt) local else remote
 }
 

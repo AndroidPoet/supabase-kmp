@@ -83,10 +83,10 @@ public final class io/github/androidpoet/supabase/core/models/QueryBuilder {
 }
 
 public final class io/github/androidpoet/supabase/core/models/TextSearchType : java/lang/Enum {
-	public static final field Phrase Lio/github/androidpoet/supabase/core/models/TextSearchType;
-	public static final field Plain Lio/github/androidpoet/supabase/core/models/TextSearchType;
-	public static final field Raw Lio/github/androidpoet/supabase/core/models/TextSearchType;
-	public static final field Websearch Lio/github/androidpoet/supabase/core/models/TextSearchType;
+	public static final field PHRASE Lio/github/androidpoet/supabase/core/models/TextSearchType;
+	public static final field PLAIN Lio/github/androidpoet/supabase/core/models/TextSearchType;
+	public static final field RAW Lio/github/androidpoet/supabase/core/models/TextSearchType;
+	public static final field WEB_SEARCH Lio/github/androidpoet/supabase/core/models/TextSearchType;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/core/models/TextSearchType;
 	public static fun values ()[Lio/github/androidpoet/supabase/core/models/TextSearchType;
@@ -183,14 +183,14 @@ public final class io/github/androidpoet/supabase/core/result/SupabaseError$Comp
 }
 
 public final class io/github/androidpoet/supabase/core/result/SupabaseErrorCategory : java/lang/Enum {
-	public static final field Conflict Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
-	public static final field Internal Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
-	public static final field Network Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
-	public static final field NotFound Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
-	public static final field RateLimited Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
-	public static final field Unauthorized Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
-	public static final field Unknown Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
-	public static final field Validation Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
+	public static final field CONFLICT Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
+	public static final field INTERNAL Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
+	public static final field NETWORK Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
+	public static final field NOT_FOUND Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
+	public static final field RATE_LIMITED Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
+	public static final field UNAUTHORIZED Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
+	public static final field UNKNOWN Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
+	public static final field VALIDATION Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;
 	public static fun values ()[Lio/github/androidpoet/supabase/core/result/SupabaseErrorCategory;

@@ -189,15 +189,30 @@ fixed; the rest are deliberate, recorded decisions.
 - Removed two exact duplicates: core `toResultFlow()` (≡ `asFlow()`) and realtime `statusFlow()`
   (≡ the `status` property).
 
+**Perfection pass — every enum now one casing, every remaining outlier resolved:**
+- **All enum entries are now `UPPER_SNAKE`, SDK-wide.** The two PascalCase hold-outs
+  (`SupabaseErrorCategory` = `CONFLICT`/`NOT_FOUND`/… and `TextSearchType` = `RAW`/`PLAIN`/`PHRASE`/
+  `WEB_SEARCH`) were converted to match the ~38 other enums. Both were verified non-wire
+  (`SupabaseErrorCategory` is derived from HTTP status; `TextSearchType` carries its PostgREST token
+  in a constructor arg), so the change is name-only.
+- `RealtimeSubscription.channel: String` → **`channelName`** — it returns a name, not a
+  `RealtimeChannel`; this also aligns it with the builder's existing `channelName`.
+- `sync.Record` / `sync.Cursor` → **`SyncRecord`** / **`SyncCursor`** — qualified domain nouns
+  (matching `PendingChange`/`PullResult`), and `SyncCursor` no longer collides with the generated
+  `…store.db.Cursor`.
+- storage `ObjectListV2Result` → **`ObjectListV2Response`** (the lone `*Result` among `*Response`
+  list DTOs); auth-admin `AuditLogEntry` → **`AuditLogEvent`** (the method is `listAuditLogEvents`);
+  auth-admin OIDC `userinfoUrl` → **`userInfoUrl`** (camelCase, siblings `authorizationUrl`/
+  `tokenUrl`; `@SerialName` keeps the `userinfo_url` wire field); client config `logLevel` →
+  **`httpLogLevel`** (disambiguates the wire-verbosity `HttpLogLevel` from logger-severity
+  `SupabaseLogLevel`).
+
 **Deliberate — kept by design (recorded so they aren't "fixed" later):**
-- **Enum-entry casing is intentionally mixed.** Wire-mapped / option / SQL-keyword enums use
-  `UPPER_SNAKE` (`Order.ASC`, `ResponseFormat.GEOJSON`, every `@SerialName`-backed enum); the two
-  pure-domain category sets — `SupabaseErrorCategory` and `TextSearchType` — use `PascalCase`
-  because they read as a closed set of named conditions at a `when`/`onFailureCategory` call site.
-  Both styles are sanctioned by the Kotlin style guide; the split is by role, not by accident.
 - **Filter-operator vocabulary** (`eq`/`neq` abbreviated, `greater`/`greaterEq` spelled, range
   ops `rangeGt`/`rangeGte`) is kept — the query DSL was reviewed and blessed in the main audit;
-  the equality/ordering shorthands match what query-DSL users reach for. Not reopened.
+  the range ops are a distinct PostgREST range-operator family ("strictly right of", "doesn't
+  extend left") deliberately mirroring the supabase-js range tokens, so `rangeGreater` would
+  wrongly imply scalar-greater semantics. Not reopened.
 - **Factory verbs differ by what they return**, on purpose: `Supabase.create` (root builder),
   `createXClient` (feature clients), `googleAuthProvider`/`appleAuthProvider` (return a provider
   *descriptor* you hand to config, not a client), `openOfflineSyncStore` (opens a DB-backed
@@ -210,10 +225,14 @@ fixed; the rest are deliberate, recorded decisions.
 - **`*OrThrow` / `*WithResult` / `*WithAck` suffixes** are the deliberate explicit-exception /
   await-confirmation escape hatches on top of the Result-first defaults — kept, not collapsed.
 
-**Deferred (real but not worth pre-freeze churn; the sync surface isn't published in 1.0):**
-- `sync-core` `Record`/`Cursor` → `SyncRecord`/`SyncCursor` (collide with `java.lang.Record`) —
-  ~285 references across the sync tree; the sync modules' publishing is deferred, so this can ride
-  the same train as their first publish.
-- `RealtimeSubscription.channel: String` → `channelName` (a name-trap, but `.channel` is too
-  ambiguous to rename mechanically without risk) and storage `ObjectListV2Result`→`*Response`
-  (suffix polish, 69 references) — both additive-safe to revisit.
+**Still deliberately kept (renaming would not be an improvement):**
+- **Factory verbs differ by what they return**, on purpose: `Supabase.create` (root builder),
+  `createXClient` (feature clients), `googleAuthProvider`/`appleAuthProvider` (return a provider
+  *descriptor* you hand to config, not a client), `openOfflineSyncStore` (opens a DB-backed resource).
+- **`rpcTyped`=single vs `selectTyped`=list** — an RPC returns one value by nature, a `select`
+  returns rows; `rpcListTyped`/`rpcSingleTyped` make the other cardinalities explicit.
+- **Pseudo-namespaced auth methods** (`mfa*`/`oauth*`/`passkey*`) read noun-first by design — a
+  flattened stand-in for sub-clients; admin stays verb-first CRUD. `getUserById`/`updateUserById`
+  keep `ById` because the non-admin `getUser` already means "by access token."
+- **`*OrThrow` / `*WithResult` / `*WithAck` suffixes** are the deliberate explicit-exception /
+  await-confirmation escape hatches on top of the Result-first defaults.

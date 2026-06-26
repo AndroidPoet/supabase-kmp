@@ -1,7 +1,7 @@
 package io.github.androidpoet.supabase.auth.admin
 
 import io.github.androidpoet.supabase.auth.admin.models.AdminUserAttributes
-import io.github.androidpoet.supabase.auth.admin.models.AuditLogEntry
+import io.github.androidpoet.supabase.auth.admin.models.AuditLogEvent
 import io.github.androidpoet.supabase.auth.admin.models.CustomProvider
 import io.github.androidpoet.supabase.auth.admin.models.CustomProviderCreateRequest
 import io.github.androidpoet.supabase.auth.admin.models.CustomProviderListResponse
@@ -150,13 +150,13 @@ public interface AuthAdminClient {
     /**
      * Fetches audit-log events.
      *
-     * Requires the service-role key. The endpoint returns a bare JSON array of [AuditLogEntry].
+     * Requires the service-role key. The endpoint returns a bare JSON array of [AuditLogEvent].
      * [page] and [perPage] are sent as `page` / `per_page` query params only when non-null.
      */
     public suspend fun listAuditLogEvents(
         page: Int? = null,
         perPage: Int? = null,
-    ): SupabaseResult<List<AuditLogEntry>>
+    ): SupabaseResult<List<AuditLogEvent>>
 
     public suspend fun listPasskeys(userId: String): SupabaseResult<List<Passkey>>
 

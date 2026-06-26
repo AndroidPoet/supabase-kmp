@@ -28,7 +28,7 @@ import io.github.androidpoet.supabase.storage.models.IcebergUpdateNamespacePrope
 import io.github.androidpoet.supabase.storage.models.MoveRequest
 import io.github.androidpoet.supabase.storage.models.ObjectListRequest
 import io.github.androidpoet.supabase.storage.models.ObjectListV2Request
-import io.github.androidpoet.supabase.storage.models.ObjectListV2Result
+import io.github.androidpoet.supabase.storage.models.ObjectListV2Response
 import io.github.androidpoet.supabase.storage.models.ObjectSortByRequest
 import io.github.androidpoet.supabase.storage.models.SignedUrlItemResponse
 import io.github.androidpoet.supabase.storage.models.SignedUrlRequest
@@ -315,7 +315,7 @@ internal class StorageClientImpl(
         when (val result = info(bucket, path)) {
             is SupabaseResult.Success -> SupabaseResult.Success(true)
             is SupabaseResult.Failure ->
-                if (result.error.category == SupabaseErrorCategory.NotFound) {
+                if (result.error.category == SupabaseErrorCategory.NOT_FOUND) {
                     SupabaseResult.Success(false)
                 } else {
                     result
@@ -326,7 +326,7 @@ internal class StorageClientImpl(
         when (val result = infoPublic(bucket, path)) {
             is SupabaseResult.Success -> SupabaseResult.Success(true)
             is SupabaseResult.Failure ->
-                if (result.error.category == SupabaseErrorCategory.NotFound) {
+                if (result.error.category == SupabaseErrorCategory.NOT_FOUND) {
                     SupabaseResult.Success(false)
                 } else {
                     result
@@ -366,7 +366,7 @@ internal class StorageClientImpl(
         withDelimiter: Boolean?,
         sortBy: String?,
         sortOrder: SortOrder,
-    ): SupabaseResult<ObjectListV2Result> {
+    ): SupabaseResult<ObjectListV2Response> {
         val body =
             defaultJson.encodeToString(
                 ObjectListV2Request(

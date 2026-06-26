@@ -144,9 +144,9 @@ internal class SessionManagerImpl(
                 val transient =
                     result.error.category in
                         setOf(
-                            SupabaseErrorCategory.Network,
-                            SupabaseErrorCategory.Internal,
-                            SupabaseErrorCategory.RateLimited,
+                            SupabaseErrorCategory.NETWORK,
+                            SupabaseErrorCategory.INTERNAL,
+                            SupabaseErrorCategory.RATE_LIMITED,
                         )
                 if (transient) {
                     // A transient failure (offline, 5xx, 429) leaves the refresh token

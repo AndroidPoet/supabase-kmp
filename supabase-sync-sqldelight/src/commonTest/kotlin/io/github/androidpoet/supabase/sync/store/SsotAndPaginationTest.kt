@@ -2,7 +2,7 @@ package io.github.androidpoet.supabase.sync.store
 
 import io.github.androidpoet.supabase.sync.ChangeKind
 import io.github.androidpoet.supabase.sync.PendingChange
-import io.github.androidpoet.supabase.sync.Record
+import io.github.androidpoet.supabase.sync.SyncRecord
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -21,8 +21,8 @@ class SsotAndPaginationTest {
     @AfterTest
     fun tearDown() = driver.close()
 
-    private fun record(id: String, updatedAt: Long, deleted: Boolean = false, title: String = "t"): Record =
-        Record(id, updatedAt, deleted, buildJsonObject { put("title", JsonPrimitive(title)) })
+    private fun record(id: String, updatedAt: Long, deleted: Boolean = false, title: String = "t"): SyncRecord =
+        SyncRecord(id, updatedAt, deleted, buildJsonObject { put("title", JsonPrimitive(title)) })
 
     private fun JsonObject.title(): String? = (this["title"] as? JsonPrimitive)?.content
 

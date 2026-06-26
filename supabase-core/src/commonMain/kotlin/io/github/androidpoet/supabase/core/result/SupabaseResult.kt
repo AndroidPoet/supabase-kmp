@@ -236,23 +236,23 @@ public inline fun <T, C> SupabaseResult<T>.onFailureCategory(
 
 public inline fun <T> SupabaseResult<T>.onConflict(
     action: (SupabaseError) -> Unit,
-): SupabaseResult<T> = onFailureCategory(SupabaseErrorCategory.Conflict, action)
+): SupabaseResult<T> = onFailureCategory(SupabaseErrorCategory.CONFLICT, action)
 
 public inline fun <T> SupabaseResult<T>.onNotFound(
     action: (SupabaseError) -> Unit,
-): SupabaseResult<T> = onFailureCategory(SupabaseErrorCategory.NotFound, action)
+): SupabaseResult<T> = onFailureCategory(SupabaseErrorCategory.NOT_FOUND, action)
 
 public inline fun <T> SupabaseResult<T>.onUnauthorized(
     action: (SupabaseError) -> Unit,
-): SupabaseResult<T> = onFailureCategory(SupabaseErrorCategory.Unauthorized, action)
+): SupabaseResult<T> = onFailureCategory(SupabaseErrorCategory.UNAUTHORIZED, action)
 
 public inline fun <T> SupabaseResult<T>.onRateLimited(
     action: (SupabaseError) -> Unit,
-): SupabaseResult<T> = onFailureCategory(SupabaseErrorCategory.RateLimited, action)
+): SupabaseResult<T> = onFailureCategory(SupabaseErrorCategory.RATE_LIMITED, action)
 
 public inline fun <T> SupabaseResult<T>.onNetworkError(
     action: (SupabaseError) -> Unit,
-): SupabaseResult<T> = onFailureCategory(SupabaseErrorCategory.Network, action)
+): SupabaseResult<T> = onFailureCategory(SupabaseErrorCategory.NETWORK, action)
 
 public inline fun <T> SupabaseResult<T>.mapError(
     transform: (SupabaseError) -> SupabaseError,

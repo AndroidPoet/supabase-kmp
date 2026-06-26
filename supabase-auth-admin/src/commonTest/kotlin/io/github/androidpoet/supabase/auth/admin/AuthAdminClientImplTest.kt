@@ -185,7 +185,7 @@ class AuthAdminClientImplTest {
             assertEquals(listOf("page" to "2", "per_page" to "50"), client.lastGetQueryParams)
             assertEquals("Bearer service-role", client.lastGetHeaders["Authorization"])
             val value = success.value as List<*>
-            val entry = value.first() as io.github.androidpoet.supabase.auth.admin.models.AuditLogEntry
+            val entry = value.first() as io.github.androidpoet.supabase.auth.admin.models.AuditLogEvent
             assertEquals("audit1", entry.id)
             assertEquals("203.0.113.7", entry.ipAddress)
             assertEquals(

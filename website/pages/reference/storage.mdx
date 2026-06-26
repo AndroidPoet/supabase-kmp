@@ -571,7 +571,7 @@ val entries = storage.list(bucket = "avatars", prefix = "jane")
 ### listV2
 
 Cursor-paged object listing (`POST /object/list-v2`) returning an
-[`ObjectListV2Result`](#objectlistv2result) that separates folders from objects
+[`ObjectListV2Response`](#objectlistv2result) that separates folders from objects
 and carries a `nextCursor`/`hasNext` for continuation. Prefer this over
 [`list`](#list) for large buckets or delimiter-style folder navigation.
 
@@ -584,7 +584,7 @@ suspend fun listV2(
     withDelimiter: Boolean? = null,
     sortBy: String? = null,
     sortOrder: SortOrder = SortOrder.ASC,
-): SupabaseResult<ObjectListV2Result>
+): SupabaseResult<ObjectListV2Response>
 ```
 
 - `bucket` — bucket to list.
@@ -595,7 +595,7 @@ suspend fun listV2(
 - `sortBy` — column to sort by; `null` leaves the server default. Default `null`.
 - `sortOrder` — order applied when `sortBy` is set. Default `SortOrder.ASC`.
 
-**Returns** `SupabaseResult<ObjectListV2Result>` — `Success` with the page, `Failure` on error.
+**Returns** `SupabaseResult<ObjectListV2Response>` — `Success` with the page, `Failure` on error.
 
 ```kotlin
 var page = storage.listV2(bucket = "avatars", withDelimiter = true).getOrThrow()
@@ -1987,13 +1987,13 @@ data class FileObject(
 - `etag` — the entity tag, when reported.
 - `cacheControl` — the stored cache-control directive, when reported.
 
-### ObjectListV2Result
+### ObjectListV2Response
 
 Result of a cursor-paged v2 listing ([`listV2`](#listv2)), separating folders from
 objects and carrying continuation state.
 
 ```kotlin
-data class ObjectListV2Result(
+data class ObjectListV2Response(
     val hasNext: Boolean,
     val folders: List<ObjectListV2Folder>,
     val objects: List<ObjectListV2Object>,

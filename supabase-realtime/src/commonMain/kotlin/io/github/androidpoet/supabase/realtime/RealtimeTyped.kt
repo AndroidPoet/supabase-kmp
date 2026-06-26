@@ -45,14 +45,14 @@ public inline fun <reified T> RealtimeChannelBuilder.onPostgresChange(
  * skip-on-mismatch semantics.
  */
 public suspend inline fun <reified T> RealtimeClient.subscribeToPostgresChanges(
-    channel: String,
+    channelName: String,
     schema: String = "public",
     table: String? = null,
     filter: String? = null,
     event: PostgresChangeEvent = PostgresChangeEvent.ALL,
     crossinline onRow: suspend (T) -> Unit,
 ): RealtimeSubscription =
-    subscribe(channel) {
+    subscribe(channelName) {
         onPostgresChange<T>(
             schema = schema,
             table = table,

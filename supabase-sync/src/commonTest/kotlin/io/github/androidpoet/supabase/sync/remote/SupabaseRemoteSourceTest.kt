@@ -19,9 +19,9 @@ import io.github.androidpoet.supabase.realtime.RealtimeDebugState
 import io.github.androidpoet.supabase.realtime.RealtimeSubscription
 import io.github.androidpoet.supabase.realtime.models.RealtimeChannel
 import io.github.androidpoet.supabase.sync.ChangeKind
-import io.github.androidpoet.supabase.sync.Cursor
 import io.github.androidpoet.supabase.sync.PendingChange
-import io.github.androidpoet.supabase.sync.Record
+import io.github.androidpoet.supabase.sync.SyncCursor
+import io.github.androidpoet.supabase.sync.SyncRecord
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -65,14 +65,14 @@ class SupabaseRemoteSourceTest {
                     .first()
                     .fields.keys,
             ) // metadata stripped
-            assertEquals(Cursor(20, "b"), result.nextCursor)
+            assertEquals(SyncCursor(20, "b"), result.nextCursor)
         }
 
     @Test
     fun pull_empty_does_not_advance_cursor() =
         runTest {
             val remote = SupabaseRemoteSource(FakeDatabaseClient(selectBody = "[]"), FakeRealtimeClient())
-            val result = remote.pull("notes", since = Cursor(5, "a"))
+            val result = remote.pull("notes", since = SyncCursor(5, "a"))
             assertTrue(result.changed.isEmpty())
             assertEquals(null, result.nextCursor)
         }
@@ -85,7 +85,7 @@ class SupabaseRemoteSourceTest {
 
             val change =
                 PendingChange(
-                    Record("a", updatedAt = 7, deleted = false, fields = row("a", "hi")),
+                    SyncRecord("a", updatedAt = 7, deleted = false, fields = row("a", "hi")),
                     ChangeKind.UPSERT,
                 )
             val result = remote.push("notes", listOf(change))
@@ -112,7 +112,7 @@ class SupabaseRemoteSourceTest {
 
             val change =
                 PendingChange(
-                    Record("a", updatedAt = 9, deleted = true, fields = row("a", "hi")),
+                    SyncRecord("a", updatedAt = 9, deleted = true, fields = row("a", "hi")),
                     ChangeKind.DELETE,
                 )
             remote.push("notes", listOf(change))

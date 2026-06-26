@@ -121,7 +121,7 @@ internal class HttpTransport(
             }
             if (config.logging) {
                 install(Logging) {
-                    level = config.logLevel.toKtorLogLevel()
+                    level = config.httpLogLevel.toKtorLogLevel()
                     // Route wire logs into the caller's framework when a logger is supplied;
                     // otherwise fall back to Ktor's default sink.
                     config.logger?.let { sink ->
@@ -494,7 +494,7 @@ internal class HttpTransport(
     // A request that throws (rather than returning a response) never reached a
     // usable server response: offline, DNS/TLS failure, connection refused, or a
     // timeout. Tag it with a synthetic [SupabaseErrorCodes.Client] code so
-    // callers see [SupabaseErrorCategory.Network] instead of Unknown.
+    // callers see [SupabaseErrorCategory.NETWORK] instead of Unknown.
     private fun networkError(
         throwable: Throwable? = null,
         message: String? = null,

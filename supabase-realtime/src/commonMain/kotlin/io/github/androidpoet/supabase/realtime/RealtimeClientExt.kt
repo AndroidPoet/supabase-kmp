@@ -7,32 +7,32 @@ import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.JsonObject
 
 /**
- * One-call channel subscribe: builds the channel [channel], applies [configure]
+ * One-call channel subscribe: builds the channel [channelName], applies [configure]
  * (where you register `onPostgresChange`/`onBroadcast`/`onPresence` and channel
  * options), and joins it. The lambda form of [RealtimeClient.channel] +
  * [RealtimeChannelBuilder.subscribe]; returns as soon as the join is sent.
  */
 public suspend fun RealtimeClient.subscribe(
-    channel: String,
+    channelName: String,
     configure: RealtimeChannelBuilder.() -> Unit = {},
 ): RealtimeSubscription =
-    this.channel(channel).apply(configure).subscribe()
+    this.channel(channelName).apply(configure).subscribe()
 
 /**
- * Subscribes to [channel] and registers a single raw `postgres_changes` callback
+ * Subscribes to [channelName] and registers a single raw `postgres_changes` callback
  * in one call — the shortcut for the common "watch this table" case. See
  * [RealtimeChannelBuilder.onPostgresChange] for the parameters and use
  * [realtimeFilter] to build [filter].
  */
 public suspend fun RealtimeClient.subscribeToPostgresChanges(
-    channel: String,
+    channelName: String,
     schema: String = "public",
     table: String? = null,
     filter: String? = null,
     event: PostgresChangeEvent = PostgresChangeEvent.ALL,
     callback: suspend (JsonObject) -> Unit,
 ): RealtimeSubscription =
-    subscribe(channel) {
+    subscribe(channelName) {
         onPostgresChange(
             schema = schema,
             table = table,
@@ -48,14 +48,14 @@ public suspend fun RealtimeClient.subscribeToPostgresChanges(
  * INSERT/UPDATE/DELETE.
  */
 public suspend fun RealtimeClient.subscribeToPostgresChanges(
-    channel: String,
+    channelName: String,
     schema: String = "public",
     table: String? = null,
     filter: String? = null,
     event: PostgresChangeEvent = PostgresChangeEvent.ALL,
     callback: suspend (PostgresChangeEvent, JsonObject) -> Unit,
 ): RealtimeSubscription =
-    subscribe(channel) {
+    subscribe(channelName) {
         onPostgresChange(
             schema = schema,
             table = table,
@@ -66,28 +66,28 @@ public suspend fun RealtimeClient.subscribeToPostgresChanges(
     }
 
 /**
- * Subscribes to [channel] and registers a single broadcast [callback] for the
+ * Subscribes to [channelName] and registers a single broadcast [callback] for the
  * named [event] in one call. See [RealtimeChannelBuilder.onBroadcast].
  */
 public suspend fun RealtimeClient.subscribeToBroadcast(
-    channel: String,
+    channelName: String,
     event: String,
     callback: suspend (JsonObject) -> Unit,
 ): RealtimeSubscription =
-    subscribe(channel) {
+    subscribe(channelName) {
         onBroadcast(event = event, callback = callback)
     }
 
 /**
- * Subscribes to [channel] and registers a single presence sync [callback] in one
+ * Subscribes to [channelName] and registers a single presence sync [callback] in one
  * call, invoked with the full [PresenceState]. See
  * [RealtimeChannelBuilder.onPresence].
  */
 public suspend fun RealtimeClient.subscribeToPresence(
-    channel: String,
+    channelName: String,
     callback: suspend (PresenceState) -> Unit,
 ): RealtimeSubscription =
-    subscribe(channel) {
+    subscribe(channelName) {
         onPresence(callback = callback)
     }
 

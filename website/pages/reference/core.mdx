@@ -105,7 +105,7 @@ public inline fun <T> SupabaseResult<T>.flatMapError(transform: (SupabaseError) 
 
 ```kotlin
 val profile = api.fetchProfile()
-    .flatMapError { err -> if (err.category == SupabaseErrorCategory.Unauthorized) refreshAndRetry() else SupabaseResult.Failure(err) }
+    .flatMapError { err -> if (err.category == SupabaseErrorCategory.UNAUTHORIZED) refreshAndRetry() else SupabaseResult.Failure(err) }
     .recover { Profile.GUEST }   // never fails after this
 ```
 
@@ -297,7 +297,7 @@ The throwable form of a `SupabaseError`, thrown by `getOrThrow()` / `dataFlow` a
 
 ```kotlin
 public enum class SupabaseErrorCategory {
-    Conflict, NotFound, Unauthorized, RateLimited, Validation, Internal, Network, Unknown
+    CONFLICT, NOT_FOUND, UNAUTHORIZED, RATE_LIMITED, VALIDATION, INTERNAL, NETWORK, UNKNOWN
 }
 
 public val SupabaseError.category: SupabaseErrorCategory
@@ -306,18 +306,18 @@ public val SupabaseErrorCategory.isRetryable: Boolean
 
 A coarse classification of a failure so callers can branch on the **kind** of error without matching individual codes.
 
-- **`Conflict`** — uniqueness/foreign-key clash or already-existing resource (HTTP 409).
-- **`NotFound`** — the table, row, user or object does not exist (HTTP 404).
-- **`Unauthorized`** — missing/invalid/insufficient credentials or permissions (HTTP 401/403).
-- **`RateLimited`** — a rate limit was exceeded; back off and retry (HTTP 429).
-- **`Validation`** — the request was malformed or failed validation (HTTP 400/406/416/422).
-- **`Internal`** — a server-side failure unrelated to request content (HTTP 5xx, plus transient 408/425).
-- **`Network`** — the request never reached the server or never produced a usable response (offline, timeout, connection or decode failure). Distinct from `Unknown` so you can show offline/retry UI.
-- **`Unknown`** — the catch-all fallback when nothing more specific applied.
+- **`CONFLICT`** — uniqueness/foreign-key clash or already-existing resource (HTTP 409).
+- **`NOT_FOUND`** — the table, row, user or object does not exist (HTTP 404).
+- **`UNAUTHORIZED`** — missing/invalid/insufficient credentials or permissions (HTTP 401/403).
+- **`RATE_LIMITED`** — a rate limit was exceeded; back off and retry (HTTP 429).
+- **`VALIDATION`** — the request was malformed or failed validation (HTTP 400/406/416/422).
+- **`INTERNAL`** — a server-side failure unrelated to request content (HTTP 5xx, plus transient 408/425).
+- **`NETWORK`** — the request never reached the server or never produced a usable response (offline, timeout, connection or decode failure). Distinct from `UNKNOWN` so you can show offline/retry UI.
+- **`UNKNOWN`** — the catch-all fallback when nothing more specific applied.
 
 **`category`** resolves from the textual `code` first (matched against the per-service code sets in [`SupabaseErrorCodes`](#supabaseerrorcodes)), then falls back to `httpStatus` (or a numeric `code` in the HTTP range), so structured bodies without a textual code are still classified.
 
-**`isRetryable`** is `true` for the transient categories — `RateLimited`, `Internal`, `Network` — and `false` for client-fault categories that would fail again unchanged.
+**`isRetryable`** is `true` for the transient categories — `RATE_LIMITED`, `INTERNAL`, `NETWORK` — and `false` for client-fault categories that would fail again unchanged.
 
 ```kotlin
 result.onFailure { err ->
@@ -360,7 +360,7 @@ A catalog of the string error codes Supabase services return, grouped by service
 - **`Storage`** — object/bucket and S3-compatibility codes: `NO_SUCH_BUCKET`, `NO_SUCH_KEY`, `KEY_ALREADY_EXISTS`, `ENTITY_TOO_LARGE`, `INVALID_MIME_TYPE`, `ACCESS_DENIED`, `THROTTLING`, `INTERNAL_ERROR`, and more.
 - **`Realtime`** — WebSocket codes: `CHANNEL_RATE_LIMIT_REACHED`, `CONNECTION_RATE_LIMIT_REACHED`, `ERROR_AUTHORIZING_WEBSOCKET`, `AUTH_EXPIRED`, `INVALID_TOPIC`, `PAYLOAD_TOO_LARGE`, and others.
 - **`Functions`** — Edge Functions codes: `BOOT_ERROR`, `WORKER_ERROR`, `WORKER_LIMIT`, `DEPLOYMENT_FAILED`, `UNSUPPORTED_NODE_VERSION`, `FUNCTION_NOT_RETURNING_RESPONSE`.
-- **`Client`** — the only group **not** emitted by a server; synthesized by the SDK when a request never produced a response: `NETWORK_ERROR`, `TIMEOUT`, `CONNECTION_FAILED`. These let `category` resolve to `Network` instead of `Unknown`.
+- **`Client`** — the only group **not** emitted by a server; synthesized by the SDK when a request never produced a response: `NETWORK_ERROR`, `TIMEOUT`, `CONNECTION_FAILED`. These let `category` resolve to `NETWORK` instead of `UNKNOWN`.
 - **`Management`** — Management API codes: `PROJECT_NOT_FOUND`, `ORGANIZATION_NOT_FOUND`, `INVALID_PROJECT_REF`, `UNAUTHORIZED`, `FORBIDDEN`, `RATE_LIMIT_EXCEEDED`.
 
 ```kotlin
@@ -508,12 +508,12 @@ public infix fun Column<*>.rangeAdjacent(range: String)  // -|- adjacent to
 **Full-text search:**
 
 ```kotlin
-public fun Column<String>.textSearch(query: String, config: String? = null, type: TextSearchType = TextSearchType.Plain)
+public fun Column<String>.textSearch(query: String, config: String? = null, type: TextSearchType = TextSearchType.PLAIN)
 ```
 
 - `query` — the search string.
 - `config` — an optional text-search configuration (e.g. `"english"`), wrapped in parentheses on the wire. Default `null`.
-- `type` — the parse mode; default `TextSearchType.Plain`.
+- `type` — the parse mode; default `TextSearchType.PLAIN`.
 
 **Logical grouping and escape hatch:**
 

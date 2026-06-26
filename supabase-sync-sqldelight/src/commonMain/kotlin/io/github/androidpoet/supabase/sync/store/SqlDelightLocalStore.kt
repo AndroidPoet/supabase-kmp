@@ -2,11 +2,11 @@ package io.github.androidpoet.supabase.sync.store
 
 import app.cash.sqldelight.db.SqlDriver
 import io.github.androidpoet.supabase.sync.ChangeKind
-import io.github.androidpoet.supabase.sync.Cursor
 import io.github.androidpoet.supabase.sync.LocalStore
 import io.github.androidpoet.supabase.sync.Page
 import io.github.androidpoet.supabase.sync.PendingChange
-import io.github.androidpoet.supabase.sync.Record
+import io.github.androidpoet.supabase.sync.SyncCursor
+import io.github.androidpoet.supabase.sync.SyncRecord
 import io.github.androidpoet.supabase.sync.TableAdapter
 import io.github.androidpoet.supabase.sync.store.db.OfflineSyncDb
 import kotlinx.serialization.json.Json
@@ -39,7 +39,7 @@ public class SqlDelightLocalStore internal constructor(
 
     // --- remote rows landing locally (these become what get()/page() read) ---
 
-    override suspend fun upsert(table: String, records: List<Record>) {
+    override suspend fun upsert(table: String, records: List<SyncRecord>) {
         if (records.isEmpty()) return
         val adapter = adapterFor(table)
         db.transaction {
@@ -53,10 +53,10 @@ public class SqlDelightLocalStore internal constructor(
         }
     }
 
-    override suspend fun get(table: String, id: String): Record? {
+    override suspend fun get(table: String, id: String): SyncRecord? {
         val adapter = adapterFor(table) ?: return blobGet(table, id)
         val meta = db.syncMetaQueries.get(table, id).executeAsOneOrNull() ?: return null
-        return Record(
+        return SyncRecord(
             id = id,
             updatedAt = meta.updatedAt,
             deleted = meta.deleted.toBoolean(),
@@ -66,13 +66,13 @@ public class SqlDelightLocalStore internal constructor(
 
     // --- pull cursor (always generic) ---
 
-    override suspend fun cursor(table: String): Cursor? =
+    override suspend fun cursor(table: String): SyncCursor? =
         db.syncCursorQueries
             .cursor(table)
             .executeAsOneOrNull()
-            ?.let { Cursor(it.updatedAt, it.id) }
+            ?.let { SyncCursor(it.updatedAt, it.id) }
 
-    override suspend fun setCursor(table: String, cursor: Cursor?) {
+    override suspend fun setCursor(table: String, cursor: SyncCursor?) {
         if (cursor == null) {
             db.syncCursorQueries.clearCursor(table)
         } else {
@@ -85,7 +85,7 @@ public class SqlDelightLocalStore internal constructor(
     override suspend fun pending(table: String): List<PendingChange> =
         db.outboxQueries.pending(table).executeAsList().map { row ->
             PendingChange(
-                record = Record(row.id, row.updatedAt, row.deleted.toBoolean(), decode(row.fields)),
+                record = SyncRecord(row.id, row.updatedAt, row.deleted.toBoolean(), decode(row.fields)),
                 kind = ChangeKind.valueOf(row.kind),
             )
         }
@@ -120,7 +120,7 @@ public class SqlDelightLocalStore internal constructor(
     // --- pagination: three list slots (offset page / keyset page / count) ---
 
     /** Offset pagination — a [Page] of [limit] rows starting at [offset], with the table's total. */
-    override suspend fun page(table: String, limit: Long, offset: Long): Page<Record> {
+    override suspend fun page(table: String, limit: Long, offset: Long): Page<SyncRecord> {
         val adapter = adapterFor(table)
         if (adapter != null) {
             val items = adapter.page(limit, offset).map { (id, fields) -> typedRecord(table, id, fields) }
@@ -130,12 +130,12 @@ public class SqlDelightLocalStore internal constructor(
             db.syncRecordQueries
                 .page(table, limit, offset)
                 .executeAsList()
-                .map { Record(it.id, it.updatedAt, it.deleted.toBoolean(), decode(it.fields)) }
+                .map { SyncRecord(it.id, it.updatedAt, it.deleted.toBoolean(), decode(it.fields)) }
         return Page(items, offset, limit, db.syncRecordQueries.countAll(table).executeAsOne())
     }
 
     /** Keyset pagination — the next [limit] rows after [afterId] (`null` = first page). */
-    override suspend fun pageAfter(table: String, afterId: String?, limit: Long): List<Record> {
+    override suspend fun pageAfter(table: String, afterId: String?, limit: Long): List<SyncRecord> {
         val adapter = adapterFor(table)
         if (adapter != null) {
             return adapter.pageAfter(afterId, limit).map { (id, fields) -> typedRecord(table, id, fields) }
@@ -143,7 +143,7 @@ public class SqlDelightLocalStore internal constructor(
         return db.syncRecordQueries
             .pageAfter(table, afterId ?: "", limit)
             .executeAsList()
-            .map { Record(it.id, it.updatedAt, it.deleted.toBoolean(), decode(it.fields)) }
+            .map { SyncRecord(it.id, it.updatedAt, it.deleted.toBoolean(), decode(it.fields)) }
     }
 
     /** Total row count for [table] (drives [Page.total] / "page x of y"). */
@@ -166,23 +166,23 @@ public class SqlDelightLocalStore internal constructor(
                 ?.updatedAt ?: Long.MIN_VALUE
         }
 
-    private fun applyToTyped(adapter: TableAdapter, table: String, record: Record) {
+    private fun applyToTyped(adapter: TableAdapter, table: String, record: SyncRecord) {
         if (record.deleted) adapter.delete(record.id) else adapter.upsert(record.id, record.fields)
         db.syncMetaQueries.put(table, record.id, record.updatedAt, record.deleted.toLong())
     }
 
-    private fun blobUpsert(table: String, record: Record) {
+    private fun blobUpsert(table: String, record: SyncRecord) {
         db.syncRecordQueries.upsert(table, record.id, record.updatedAt, record.deleted.toLong(), encode(record.fields))
     }
 
-    private fun blobGet(table: String, id: String): Record? =
+    private fun blobGet(table: String, id: String): SyncRecord? =
         db.syncRecordQueries.selectById(table, id).executeAsOneOrNull()?.let {
-            Record(id, it.updatedAt, it.deleted.toBoolean(), decode(it.fields))
+            SyncRecord(id, it.updatedAt, it.deleted.toBoolean(), decode(it.fields))
         }
 
-    private fun typedRecord(table: String, id: String, fields: JsonObject): Record {
+    private fun typedRecord(table: String, id: String, fields: JsonObject): SyncRecord {
         val meta = db.syncMetaQueries.get(table, id).executeAsOneOrNull()
-        return Record(id, meta?.updatedAt ?: 0L, meta?.deleted.toBoolean(), fields)
+        return SyncRecord(id, meta?.updatedAt ?: 0L, meta?.deleted.toBoolean(), fields)
     }
 
     private fun encode(fields: JsonObject): String = json.encodeToString(JsonObject.serializer(), fields)

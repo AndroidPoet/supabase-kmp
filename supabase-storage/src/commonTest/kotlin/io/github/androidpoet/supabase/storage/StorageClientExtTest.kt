@@ -4,7 +4,7 @@ import io.github.androidpoet.supabase.core.result.SupabaseResult
 import io.github.androidpoet.supabase.storage.models.AnalyticsBucket
 import io.github.androidpoet.supabase.storage.models.Bucket
 import io.github.androidpoet.supabase.storage.models.FileObject
-import io.github.androidpoet.supabase.storage.models.ObjectListV2Result
+import io.github.androidpoet.supabase.storage.models.ObjectListV2Response
 import io.github.androidpoet.supabase.storage.models.VectorBucket
 import io.github.androidpoet.supabase.storage.models.VectorBucketListResponse
 import io.github.androidpoet.supabase.storage.models.VectorData
@@ -511,7 +511,7 @@ private class FakeStorageClient : StorageClient {
         withDelimiter: Boolean?,
         sortBy: String?,
         sortOrder: SortOrder,
-    ): SupabaseResult<ObjectListV2Result> = error("not used")
+    ): SupabaseResult<ObjectListV2Response> = error("not used")
 
     override suspend fun move(bucket: String, fromPath: String, toPath: String, destinationBucket: String?): SupabaseResult<Unit> = error("not used")
 

@@ -1,15 +1,15 @@
 package io.github.androidpoet.supabase.sync.paging
 
 import io.github.androidpoet.supabase.sync.ChangeKind
-import io.github.androidpoet.supabase.sync.Cursor
 import io.github.androidpoet.supabase.sync.LocalStore
 import io.github.androidpoet.supabase.sync.Page
 import io.github.androidpoet.supabase.sync.PendingChange
 import io.github.androidpoet.supabase.sync.PullResult
 import io.github.androidpoet.supabase.sync.PushResult
-import io.github.androidpoet.supabase.sync.Record
 import io.github.androidpoet.supabase.sync.RemoteSource
+import io.github.androidpoet.supabase.sync.SyncCursor
 import io.github.androidpoet.supabase.sync.SyncEngine
+import io.github.androidpoet.supabase.sync.SyncRecord
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
@@ -83,7 +83,7 @@ class SyncStoreTest {
     fun pullPage_drains_pages_until_empty() =
         runTest {
             val (local, engine, remote) = testEnv()
-            remote.seed("notes", List(3) { Record("$it", it.toLong(), false, fieldsOf("$it")) })
+            remote.seed("notes", List(3) { SyncRecord("$it", it.toLong(), false, fieldsOf("$it")) })
 
             val first = engine.pullPage("notes")
             assertEquals(3, first.pulled)
@@ -99,7 +99,7 @@ class SyncStoreTest {
             // Remote paginates 2 rows at a time; a single sync() must pull all 5, not just page 1.
             val local = MemLocalStore()
             val remote = MemRemote(pageSize = 2)
-            remote.seed("notes", List(5) { Record("id$it", it.toLong(), false, fieldsOf("id$it")) })
+            remote.seed("notes", List(5) { SyncRecord("id$it", it.toLong(), false, fieldsOf("id$it")) })
             val engine = SyncEngine(local, remote)
 
             val result = engine.sync("notes")
@@ -114,20 +114,20 @@ private fun fieldsOf(id: String) =
 
 /** Minimal in-memory [LocalStore] for tests — mirrors the SQLDelight store's contract. */
 private class MemLocalStore : LocalStore {
-    private val rows = mutableMapOf<String, MutableMap<String, Record>>()
-    private val cursors = mutableMapOf<String, Cursor?>()
+    private val rows = mutableMapOf<String, MutableMap<String, SyncRecord>>()
+    private val cursors = mutableMapOf<String, SyncCursor?>()
     private val outbox = mutableMapOf<String, MutableList<PendingChange>>()
 
-    override suspend fun upsert(table: String, records: List<Record>) {
+    override suspend fun upsert(table: String, records: List<SyncRecord>) {
         val t = rows.getOrPut(table) { mutableMapOf() }
         records.forEach { t[it.id] = it }
     }
 
-    override suspend fun get(table: String, id: String): Record? = rows[table]?.get(id)
+    override suspend fun get(table: String, id: String): SyncRecord? = rows[table]?.get(id)
 
-    override suspend fun cursor(table: String): Cursor? = cursors[table]
+    override suspend fun cursor(table: String): SyncCursor? = cursors[table]
 
-    override suspend fun setCursor(table: String, cursor: Cursor?) {
+    override suspend fun setCursor(table: String, cursor: SyncCursor?) {
         cursors[table] = cursor
     }
 
@@ -148,12 +148,12 @@ private class MemLocalStore : LocalStore {
 
     private fun live(table: String) = rows[table]?.values?.filterNot { it.deleted }?.sortedBy { it.id } ?: emptyList()
 
-    override suspend fun page(table: String, limit: Long, offset: Long): Page<Record> {
+    override suspend fun page(table: String, limit: Long, offset: Long): Page<SyncRecord> {
         val all = live(table)
         return Page(all.drop(offset.toInt()).take(limit.toInt()), offset, limit, all.size.toLong())
     }
 
-    override suspend fun pageAfter(table: String, afterId: String?, limit: Long): List<Record> =
+    override suspend fun pageAfter(table: String, afterId: String?, limit: Long): List<SyncRecord> =
         live(table).filter { afterId == null || it.id > afterId }.take(limit.toInt())
 
     override suspend fun count(table: String): Long = live(table).size.toLong()
@@ -163,24 +163,24 @@ private class MemLocalStore : LocalStore {
 private class MemRemote(
     private val pageSize: Int = Int.MAX_VALUE,
 ) : RemoteSource {
-    private val seeded = mutableMapOf<String, List<Record>>()
+    private val seeded = mutableMapOf<String, List<SyncRecord>>()
 
-    fun seed(table: String, records: List<Record>) {
+    fun seed(table: String, records: List<SyncRecord>) {
         seeded[table] = records.sortedWith(compareBy({ it.updatedAt }, { it.id }))
     }
 
-    override suspend fun pull(table: String, since: Cursor?): PullResult {
+    override suspend fun pull(table: String, since: SyncCursor?): PullResult {
         val all = seeded[table].orEmpty()
         val rows =
             all
                 .filter { since == null || it.updatedAt > since.updatedAt || (it.updatedAt == since.updatedAt && it.id > since.id) }
                 .take(pageSize)
-        val next = rows.lastOrNull()?.let { Cursor(it.updatedAt, it.id) }
+        val next = rows.lastOrNull()?.let { SyncCursor(it.updatedAt, it.id) }
         return PullResult(rows, next)
     }
 
     override suspend fun push(table: String, changes: List<PendingChange>): PushResult =
         PushResult(accepted = changes.map { it.record.id })
 
-    override fun changes(table: String) = kotlinx.coroutines.flow.emptyFlow<Record>()
+    override fun changes(table: String) = kotlinx.coroutines.flow.emptyFlow<SyncRecord>()
 }

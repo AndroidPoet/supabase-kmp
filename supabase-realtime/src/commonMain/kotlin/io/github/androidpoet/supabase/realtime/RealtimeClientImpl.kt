@@ -171,11 +171,11 @@ internal class RealtimeClientImpl(
         synchronized(subscriptionsLock) { activeSubscriptions.values.toSet() }
 
     override fun getActiveChannelNames(): Set<String> =
-        synchronized(subscriptionsLock) { activeSubscriptions.values.mapTo(mutableSetOf()) { it.channel } }
+        synchronized(subscriptionsLock) { activeSubscriptions.values.mapTo(mutableSetOf()) { it.channelName } }
 
     override fun getActiveChannels(): Set<RealtimeChannel> =
         synchronized(subscriptionsLock) {
-            activeSubscriptions.values.mapTo(mutableSetOf()) { RealtimeChannel(name = it.channel, topic = it.topic) }
+            activeSubscriptions.values.mapTo(mutableSetOf()) { RealtimeChannel(name = it.channelName, topic = it.topic) }
         }
 
     override suspend fun removeSubscription(subscription: RealtimeSubscription) {
@@ -272,7 +272,7 @@ internal class RealtimeClientImpl(
     }
 
     override suspend fun broadcast(
-        channel: String,
+        channelName: String,
         event: String,
         payload: JsonObject,
         private: Boolean,
@@ -284,7 +284,7 @@ internal class RealtimeClientImpl(
                     JsonArray(
                         listOf(
                             buildJsonObject {
-                                put("topic", JsonPrimitive(channel))
+                                put("topic", JsonPrimitive(channelName))
                                 put("event", JsonPrimitive(event))
                                 put("payload", payload)
                                 put("private", JsonPrimitive(private))
@@ -341,7 +341,7 @@ internal class RealtimeClientImpl(
         val topic = "realtime:${builder.channelName}"
         val subscription =
             ChannelSubscriptionImpl(
-                channel = builder.channelName,
+                channelName = builder.channelName,
                 topic = topic,
                 client = this,
                 postgresCallbacks = builder.postgresCallbacks.toList(),
@@ -869,7 +869,7 @@ internal class RealtimeClientImpl(
 }
 
 internal class ChannelSubscriptionImpl(
-    override val channel: String,
+    override val channelName: String,
     internal val topic: String,
     private val client: RealtimeClientImpl,
     internal val postgresCallbacks: List<PostgresCallbackConfig>,
@@ -1008,7 +1008,7 @@ internal class ChannelSubscriptionImpl(
 
     override suspend fun unsubscribe() {
         _status.value = RealtimeSubscription.Status.UNSUBSCRIBING
-        failPendingAcks("Channel '$channel' left before broadcast was acknowledged")
+        failPendingAcks("Channel '$channelName' left before broadcast was acknowledged")
         client.leaveChannel(topic)
         _status.value = RealtimeSubscription.Status.UNSUBSCRIBED
     }
@@ -1063,7 +1063,7 @@ internal class ChannelSubscriptionImpl(
     ): SupabaseResult<Unit> {
         if (_status.value != RealtimeSubscription.Status.SUBSCRIBED) {
             return SupabaseResult.Failure(
-                SupabaseError(message = "Channel '$channel' is not subscribed; cannot await broadcast ack"),
+                SupabaseError(message = "Channel '$channelName' is not subscribed; cannot await broadcast ack"),
             )
         }
         val ref = client.nextRef()
@@ -1129,7 +1129,7 @@ internal class ChannelSubscriptionImpl(
             "phx_reply" -> handleSystemReply(message.payload, message.ref)
             "phx_error" -> {
                 _status.value = RealtimeSubscription.Status.ERROR
-                failPendingAcks("Channel '$channel' errored before broadcast was acknowledged")
+                failPendingAcks("Channel '$channelName' errored before broadcast was acknowledged")
                 val event =
                     RealtimeEvent.SystemEvent(
                         status = "error",
@@ -1153,7 +1153,7 @@ internal class ChannelSubscriptionImpl(
     // path is left untouched.
     private suspend fun handleChannelClose(payload: JsonObject) {
         _status.value = RealtimeSubscription.Status.UNSUBSCRIBED
-        failPendingAcks("Channel '$channel' closed before broadcast was acknowledged")
+        failPendingAcks("Channel '$channelName' closed before broadcast was acknowledged")
         publish(
             RealtimeEvent.SystemEvent(
                 status = "closed",
@@ -1173,7 +1173,7 @@ internal class ChannelSubscriptionImpl(
         val isError = status == "error" || systemMessage?.contains("Token has expired") == true
         if (isError) {
             _status.value = RealtimeSubscription.Status.ERROR
-            failPendingAcks("Channel '$channel' errored before broadcast was acknowledged")
+            failPendingAcks("Channel '$channelName' errored before broadcast was acknowledged")
         }
         publish(
             RealtimeEvent.SystemEvent(

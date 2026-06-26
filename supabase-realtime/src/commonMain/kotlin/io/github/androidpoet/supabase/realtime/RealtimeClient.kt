@@ -11,7 +11,7 @@ import kotlinx.serialization.json.JsonObject
  * multiplexing many Phoenix channels, each carrying `postgres_changes`,
  * `broadcast` and/or `presence`.
  *
- * Build a channel with [channel] (returning a [RealtimeChannelBuilder] you
+ * Build a channel with [channelName] (returning a [RealtimeChannelBuilder] you
  * configure then `subscribe()`), and the socket connects lazily on the first
  * subscription. The connection auto-reconnects per [RealtimeConfig] and replays
  * its joins; observe its lifecycle through [connectionState]. Subscriptions are
@@ -113,12 +113,12 @@ public interface RealtimeClient {
      * Sends a broadcast message over HTTP to the realtime broadcast endpoint
      * (`/realtime/v1/api/broadcast`) without joining a channel or opening a
      * WebSocket. Useful for fire-and-forget server-to-client fan-out where the
-     * sender doesn't need to subscribe. [channel] is the channel name (without
+     * sender doesn't need to subscribe. [channelName] is the channel name (without
      * the `realtime:` prefix). For a private channel, the caller's session JWT
      * (or apikey) is attached automatically.
      */
     public suspend fun broadcast(
-        channel: String,
+        channelName: String,
         event: String,
         payload: JsonObject,
         private: Boolean = false,

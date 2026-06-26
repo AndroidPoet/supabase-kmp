@@ -1,6 +1,6 @@
 package io.github.androidpoet.supabase.sync.store
 
-import io.github.androidpoet.supabase.sync.Record
+import io.github.androidpoet.supabase.sync.SyncRecord
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
@@ -95,7 +95,7 @@ class SqlDelightTableAdapterTest {
     fun works_as_the_stores_source_of_truth() =
         runTest {
             val store = SqlDelightLocalStore(driver, adapters = mapOf("todos" to adapter))
-            store.upsert("todos", listOf(Record("a", updatedAt = 7, fields = row("a", "synced", 1))))
+            store.upsert("todos", listOf(SyncRecord("a", updatedAt = 7, fields = row("a", "synced", 1))))
 
             val got = store.get("todos", "a")
             assertEquals(7, got?.updatedAt)

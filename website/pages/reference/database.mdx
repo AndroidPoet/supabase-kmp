@@ -180,7 +180,7 @@ public suspend inline fun <reified T> DatabaseClient.selectSingleTyped(
 
 Reads the single row matching the filters and decodes it into `T`. Requests
 `format = SINGLE`, so PostgREST returns HTTP 406 (a `Failure` with
-`SupabaseErrorCategory.NotFound`) when zero or more than one row matches.
+`SupabaseErrorCategory.NOT_FOUND`) when zero or more than one row matches.
 
 - Parameters as for [`selectTyped`](#selecttyped).
 
@@ -202,7 +202,7 @@ public suspend inline fun <reified T> DatabaseClient.selectMaybeSingleTyped(
 ```
 
 The lenient variant of `selectSingleTyped`: reads at most one row, mapping a "no
-rows" response (HTTP 406 / `NotFound`) to `Success(null)` instead of a failure.
+rows" response (HTTP 406 / `NOT_FOUND`) to `Success(null)` instead of a failure.
 Still fails if more than one row matches.
 
 - Parameters as for [`selectTyped`](#selecttyped).
@@ -966,7 +966,7 @@ public suspend inline fun <reified Request : Any, reified Response> DatabaseClie
 ```
 
 Calls a procedure expecting exactly one row/scalar, decoded into `T`. Requests
-`format = SINGLE`, so zero or more than one row fails with HTTP 406 / `NotFound`.
+`format = SINGLE`, so zero or more than one row fails with HTTP 406 / `NOT_FOUND`.
 
 - Parameters as on [`rpcTyped`](#rpctyped).
 
@@ -989,7 +989,7 @@ public suspend inline fun <reified Request : Any, reified Response> DatabaseClie
 ```
 
 The lenient variant of `rpcSingleTyped`: a "no rows" response (HTTP 406 /
-`NotFound`) maps to `Success(null)`; other failures propagate.
+`NOT_FOUND`) maps to `Success(null)`; other failures propagate.
 
 - Parameters as on [`rpcTyped`](#rpctyped).
 
@@ -1201,7 +1201,7 @@ public suspend inline fun <reified Request : Any, reified Response> DatabaseClie
 ): SupabaseResult<Response>
 ```
 
-The GET counterpart of `rpcSingleTyped`. Fails with HTTP 406 / `NotFound` when not
+The GET counterpart of `rpcSingleTyped`. Fails with HTTP 406 / `NOT_FOUND` when not
 exactly one row is returned.
 
 - Parameters as on [`rpcGetTyped`](#rpcgettyped).
@@ -1225,7 +1225,7 @@ public suspend inline fun <reified Request : Any, reified Response> DatabaseClie
 ): SupabaseResult<Response?>
 ```
 
-The GET, lenient counterpart of `rpcSingleTyped`: "no rows" (HTTP 406 / `NotFound`)
+The GET, lenient counterpart of `rpcSingleTyped`: "no rows" (HTTP 406 / `NOT_FOUND`)
 maps to `Success(null)`.
 
 - Parameters as on [`rpcGetTyped`](#rpcgettyped).
@@ -1360,7 +1360,7 @@ escaped per PostgREST's quoting rules; numbers and booleans are emitted verbatim
 **Range columns:** `rangeGt` (`sr`), `rangeGte` (`nxl`), `rangeLt` (`sl`),
 `rangeLte` (`nxr`), `rangeAdjacent` (`adj`) — each takes a range literal `String`.
 
-**Full-text search:** `textSearch(query: String, config: String? = null, type: TextSearchType = TextSearchType.Plain)`.
+**Full-text search:** `textSearch(query: String, config: String? = null, type: TextSearchType = TextSearchType.PLAIN)`.
 
 **Escape hatch:** `raw(column: Column<*>, operator: String, value: String)` — emits `column=<operator>.<value>` for operators the DSL doesn't expose yet.
 

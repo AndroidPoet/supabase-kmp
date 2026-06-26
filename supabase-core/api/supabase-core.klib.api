@@ -33,10 +33,10 @@ final enum class io.github.androidpoet.supabase.core.models/Order : kotlin/Enum<
 }
 
 final enum class io.github.androidpoet.supabase.core.models/TextSearchType : kotlin/Enum<io.github.androidpoet.supabase.core.models/TextSearchType> { // io.github.androidpoet.supabase.core.models/TextSearchType|null[0]
-    enum entry Phrase // io.github.androidpoet.supabase.core.models/TextSearchType.Phrase|null[0]
-    enum entry Plain // io.github.androidpoet.supabase.core.models/TextSearchType.Plain|null[0]
-    enum entry Raw // io.github.androidpoet.supabase.core.models/TextSearchType.Raw|null[0]
-    enum entry Websearch // io.github.androidpoet.supabase.core.models/TextSearchType.Websearch|null[0]
+    enum entry PHRASE // io.github.androidpoet.supabase.core.models/TextSearchType.PHRASE|null[0]
+    enum entry PLAIN // io.github.androidpoet.supabase.core.models/TextSearchType.PLAIN|null[0]
+    enum entry RAW // io.github.androidpoet.supabase.core.models/TextSearchType.RAW|null[0]
+    enum entry WEB_SEARCH // io.github.androidpoet.supabase.core.models/TextSearchType.WEB_SEARCH|null[0]
 
     final val entries // io.github.androidpoet.supabase.core.models/TextSearchType.entries|#static{}entries[0]
         final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.androidpoet.supabase.core.models/TextSearchType> // io.github.androidpoet.supabase.core.models/TextSearchType.entries.<get-entries>|<get-entries>#static(){}[0]
@@ -46,14 +46,14 @@ final enum class io.github.androidpoet.supabase.core.models/TextSearchType : kot
 }
 
 final enum class io.github.androidpoet.supabase.core.result/SupabaseErrorCategory : kotlin/Enum<io.github.androidpoet.supabase.core.result/SupabaseErrorCategory> { // io.github.androidpoet.supabase.core.result/SupabaseErrorCategory|null[0]
-    enum entry Conflict // io.github.androidpoet.supabase.core.result/SupabaseErrorCategory.Conflict|null[0]
-    enum entry Internal // io.github.androidpoet.supabase.core.result/SupabaseErrorCategory.Internal|null[0]
-    enum entry Network // io.github.androidpoet.supabase.core.result/SupabaseErrorCategory.Network|null[0]
-    enum entry NotFound // io.github.androidpoet.supabase.core.result/SupabaseErrorCategory.NotFound|null[0]
-    enum entry RateLimited // io.github.androidpoet.supabase.core.result/SupabaseErrorCategory.RateLimited|null[0]
-    enum entry Unauthorized // io.github.androidpoet.supabase.core.result/SupabaseErrorCategory.Unauthorized|null[0]
-    enum entry Unknown // io.github.androidpoet.supabase.core.result/SupabaseErrorCategory.Unknown|null[0]
-    enum entry Validation // io.github.androidpoet.supabase.core.result/SupabaseErrorCategory.Validation|null[0]
+    enum entry CONFLICT // io.github.androidpoet.supabase.core.result/SupabaseErrorCategory.CONFLICT|null[0]
+    enum entry INTERNAL // io.github.androidpoet.supabase.core.result/SupabaseErrorCategory.INTERNAL|null[0]
+    enum entry NETWORK // io.github.androidpoet.supabase.core.result/SupabaseErrorCategory.NETWORK|null[0]
+    enum entry NOT_FOUND // io.github.androidpoet.supabase.core.result/SupabaseErrorCategory.NOT_FOUND|null[0]
+    enum entry RATE_LIMITED // io.github.androidpoet.supabase.core.result/SupabaseErrorCategory.RATE_LIMITED|null[0]
+    enum entry UNAUTHORIZED // io.github.androidpoet.supabase.core.result/SupabaseErrorCategory.UNAUTHORIZED|null[0]
+    enum entry UNKNOWN // io.github.androidpoet.supabase.core.result/SupabaseErrorCategory.UNKNOWN|null[0]
+    enum entry VALIDATION // io.github.androidpoet.supabase.core.result/SupabaseErrorCategory.VALIDATION|null[0]
 
     final val entries // io.github.androidpoet.supabase.core.result/SupabaseErrorCategory.entries|#static{}entries[0]
         final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.androidpoet.supabase.core.result/SupabaseErrorCategory> // io.github.androidpoet.supabase.core.result/SupabaseErrorCategory.entries.<get-entries>|<get-entries>#static(){}[0]

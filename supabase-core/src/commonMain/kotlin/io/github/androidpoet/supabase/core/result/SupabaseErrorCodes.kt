@@ -147,8 +147,8 @@ public object SupabaseErrorCodes {
      * Client-side (non-HTTP) error codes synthesized by the SDK when a request
      * never produced a server response — e.g. the device is offline, the
      * connection timed out, or a response body could not be parsed. These let
-     * [SupabaseError.category] resolve to [SupabaseErrorCategory.Network] instead
-     * of the catch-all [SupabaseErrorCategory.Unknown].
+     * [SupabaseError.category] resolve to [SupabaseErrorCategory.NETWORK] instead
+     * of the catch-all [SupabaseErrorCategory.UNKNOWN].
      */
     public object Client {
         public const val NETWORK_ERROR: String = "network_error"
