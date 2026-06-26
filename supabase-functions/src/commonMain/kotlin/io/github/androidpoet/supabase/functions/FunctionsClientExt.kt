@@ -50,24 +50,6 @@ public suspend inline fun <reified Request : Any, reified Response> FunctionsCli
     )
 
 /**
- * Invokes [functionName] for its side effect and discards the response body,
- * yielding `SupabaseResult<Unit>`. Use over [invokeTyped] for fire-and-forget
- * functions that return nothing meaningful; a non-2xx response still surfaces as
- * [SupabaseResult.Failure].
- */
-public suspend fun FunctionsClient.invokeUnit(
-    functionName: String,
-    body: String? = null,
-    method: FunctionMethod = FunctionMethod.POST,
-    headers: Map<String, String> = emptyMap(),
-    region: FunctionRegion? = null,
-): SupabaseResult<Unit> =
-    when (val result = invoke(functionName, body, method, headers, region)) {
-        is SupabaseResult.Success -> SupabaseResult.Success(Unit)
-        is SupabaseResult.Failure -> result
-    }
-
-/**
  * Posts a raw binary [body] to [functionName] and decodes the JSON response into
  * [T], within a [SupabaseResult]. The byte-body analogue of [invokeTyped],
  * wrapping [FunctionsClient.invokeWithBody]; a decode failure becomes a
@@ -98,35 +80,5 @@ public suspend inline fun <reified T> FunctionsClient.invokeWithBodyTyped(
             SupabaseResult.catching {
                 defaultJson.decodeFromString<T>(result.value)
             }
-        is SupabaseResult.Failure -> result
-    }
-
-/**
- * Posts a raw binary [body] to [functionName] for its side effect and discards
- * the response, yielding `SupabaseResult<Unit>`. The byte-body analogue of
- * [invokeUnit]; a non-2xx response surfaces as [SupabaseResult.Failure].
- *
- * @param contentType the `Content-Type` for the uploaded bytes.
- */
-public suspend fun FunctionsClient.invokeWithBodyUnit(
-    functionName: String,
-    body: ByteArray,
-    contentType: String = "application/octet-stream",
-    method: FunctionMethod = FunctionMethod.POST,
-    headers: Map<String, String> = emptyMap(),
-    region: FunctionRegion? = null,
-): SupabaseResult<Unit> =
-    when (
-        val result =
-            invokeWithBody(
-                functionName = functionName,
-                body = body,
-                contentType = contentType,
-                method = method,
-                headers = headers,
-                region = region,
-            )
-    ) {
-        is SupabaseResult.Success -> SupabaseResult.Success(Unit)
         is SupabaseResult.Failure -> result
     }

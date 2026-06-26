@@ -38,14 +38,6 @@ class FunctionsClientExtTest {
             assertTrue(result is SupabaseResult.Success)
             assertEquals("binary-ok", result.value.value)
         }
-
-    @Test
-    fun test_invokeUnit_mapsSuccessToUnit() =
-        runTest {
-            val client = FakeFunctionsClient()
-            val result = client.invokeUnit(functionName = "ping")
-            assertTrue(result is SupabaseResult.Success)
-        }
 }
 
 @Serializable

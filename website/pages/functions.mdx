@@ -53,14 +53,13 @@ back. Pick the row that matches your case:
 | `invokeTyped<Req, Resp>(functionName, request, …)` | `@Serializable Req` | `Resp` |
 | `invokeTyped<Resp>(functionName, body?, …)` | JSON `String?` | `Resp` |
 | `invokeWithBodyTyped<Resp>(functionName, body, contentType, …)` | `ByteArray` (raw bytes) | `Resp` |
-| `invokeUnit(functionName, body?, …)` | JSON `String?` | `Unit` (fire-and-forget) |
 | `invoke(functionName, body?, headers, region?)` | JSON `String?` | raw `String` |
 
-A couple of those terms are worth unpacking. *Fire-and-forget* (`invokeUnit`) means
-you call the function but don't care about the response body — you only need to know
-it succeeded, as when triggering a background job. The plain `invoke` hands you the
-response as a raw `String`, which is useful when the function returns something that
-isn't JSON, or when you'd rather parse it yourself.
+The plain `invoke` hands you the response as a raw `String`, which is useful when the
+function returns something that isn't JSON, or when you'd rather parse it yourself.
+For *fire-and-forget* calls — where you only need to know the call succeeded, as when
+triggering a background job — call `invoke` and ignore the value (or `.map {}` it to
+`Unit`); the `SupabaseResult` still surfaces a non-2xx response as a failure.
 
 ## Regions
 

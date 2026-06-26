@@ -70,13 +70,6 @@ public final class io/github/androidpoet/supabase/functions/FunctionsClient$Defa
 	public static synthetic fun invokeWithBody$default (Lio/github/androidpoet/supabase/functions/FunctionsClient;Ljava/lang/String;[BLjava/lang/String;Lio/github/androidpoet/supabase/functions/FunctionMethod;Ljava/util/Map;Lio/github/androidpoet/supabase/functions/FunctionRegion;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 }
 
-public final class io/github/androidpoet/supabase/functions/FunctionsClientExtKt {
-	public static final fun invokeUnit (Lio/github/androidpoet/supabase/functions/FunctionsClient;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/functions/FunctionMethod;Ljava/util/Map;Lio/github/androidpoet/supabase/functions/FunctionRegion;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun invokeUnit$default (Lio/github/androidpoet/supabase/functions/FunctionsClient;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/functions/FunctionMethod;Ljava/util/Map;Lio/github/androidpoet/supabase/functions/FunctionRegion;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static final fun invokeWithBodyUnit (Lio/github/androidpoet/supabase/functions/FunctionsClient;Ljava/lang/String;[BLjava/lang/String;Lio/github/androidpoet/supabase/functions/FunctionMethod;Ljava/util/Map;Lio/github/androidpoet/supabase/functions/FunctionRegion;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun invokeWithBodyUnit$default (Lio/github/androidpoet/supabase/functions/FunctionsClient;Ljava/lang/String;[BLjava/lang/String;Lio/github/androidpoet/supabase/functions/FunctionMethod;Ljava/util/Map;Lio/github/androidpoet/supabase/functions/FunctionRegion;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-}
-
 public final class io/github/androidpoet/supabase/functions/FunctionsFactoryKt {
 	public static final fun createFunctionsClient (Lio/github/androidpoet/supabase/client/SupabaseClient;)Lio/github/androidpoet/supabase/functions/FunctionsClient;
 }
