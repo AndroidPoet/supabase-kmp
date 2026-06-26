@@ -224,7 +224,7 @@ class DatabaseClientExtTest {
             val result =
                 client.rpcGetTyped<TestItem>(
                     function = "get_item",
-                    queryParams = listOf("id" to "3"),
+                    queryParams = mapOf("id" to "3"),
                 )
 
             assertTrue(result is SupabaseResult.Success)
@@ -260,7 +260,7 @@ class DatabaseClientExtTest {
             client.rpcGet(
                 function = "get_item",
                 queryParams = linkedMapOf("id" to "3", "active" to "true"),
-                head = true,
+                format = ResponseFormat.HEAD,
                 count = CountOption.EXACT,
             )
 
@@ -692,10 +692,7 @@ private class FakeDatabaseClient(
         table: String,
         schema: String?,
         columns: String,
-        head: Boolean,
-        single: Boolean,
-        csv: Boolean,
-        geojson: Boolean,
+        format: ResponseFormat,
         count: CountOption?,
         stripNulls: Boolean,
         explain: ExplainOptions?,
@@ -721,14 +718,14 @@ private class FakeDatabaseClient(
         table: String,
         schema: String?,
         columns: String,
-        single: Boolean,
+        format: ResponseFormat,
         count: CountOption,
         stripNulls: Boolean,
         headers: Map<String, String>,
         block: QueryBuilder.() -> Unit,
-    ): SupabaseResult<Pair<String, PostgrestRange>> =
+    ): SupabaseResult<PostgrestRawPage> =
         when (selectResult) {
-            is SupabaseResult.Success -> SupabaseResult.Success(selectResult.value to PostgrestRange())
+            is SupabaseResult.Success -> SupabaseResult.Success(PostgrestRawPage(body = selectResult.value))
             is SupabaseResult.Failure -> selectResult
         }
 
@@ -791,9 +788,7 @@ private class FakeDatabaseClient(
         function: String,
         schema: String?,
         params: String?,
-        head: Boolean,
-        single: Boolean,
-        csv: Boolean,
+        format: ResponseFormat,
         count: CountOption?,
         stripNulls: Boolean,
         rollback: Boolean,
@@ -811,9 +806,7 @@ private class FakeDatabaseClient(
         function: String,
         schema: String?,
         queryParams: List<Pair<String, String>>,
-        head: Boolean,
-        single: Boolean,
-        csv: Boolean,
+        format: ResponseFormat,
         count: CountOption?,
         stripNulls: Boolean,
         explain: ExplainOptions?,

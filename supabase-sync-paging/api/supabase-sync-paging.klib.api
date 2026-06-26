@@ -1,0 +1,37 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, macosArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <supabase-kmp:supabase-sync-paging>
+final enum class io.github.androidpoet.supabase.sync.paging/SyncStatus : kotlin/Enum<io.github.androidpoet.supabase.sync.paging/SyncStatus> { // io.github.androidpoet.supabase.sync.paging/SyncStatus|null[0]
+    enum entry ERROR // io.github.androidpoet.supabase.sync.paging/SyncStatus.ERROR|null[0]
+    enum entry IDLE // io.github.androidpoet.supabase.sync.paging/SyncStatus.IDLE|null[0]
+    enum entry SYNCING // io.github.androidpoet.supabase.sync.paging/SyncStatus.SYNCING|null[0]
+
+    final val entries // io.github.androidpoet.supabase.sync.paging/SyncStatus.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.androidpoet.supabase.sync.paging/SyncStatus> // io.github.androidpoet.supabase.sync.paging/SyncStatus.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.androidpoet.supabase.sync.paging/SyncStatus // io.github.androidpoet.supabase.sync.paging/SyncStatus.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.androidpoet.supabase.sync.paging/SyncStatus> // io.github.androidpoet.supabase.sync.paging/SyncStatus.values|values#static(){}[0]
+}
+
+final class <#A: kotlin/Any> io.github.androidpoet.supabase.sync.paging/SyncStore { // io.github.androidpoet.supabase.sync.paging/SyncStore|null[0]
+    constructor <init>(kotlin/String, io.github.androidpoet.supabase.sync/LocalStore, io.github.androidpoet.supabase.sync/SyncEngine, kotlinx.serialization/KSerializer<#A>, kotlin/Function1<#A, kotlin/String>, kotlinx.coroutines/CoroutineScope, kotlin/Function0<kotlin/Long>, kotlinx.serialization.json/Json = ...) // io.github.androidpoet.supabase.sync.paging/SyncStore.<init>|<init>(kotlin.String;io.github.androidpoet.supabase.sync.LocalStore;io.github.androidpoet.supabase.sync.SyncEngine;kotlinx.serialization.KSerializer<1:0>;kotlin.Function1<1:0,kotlin.String>;kotlinx.coroutines.CoroutineScope;kotlin.Function0<kotlin.Long>;kotlinx.serialization.json.Json){}[0]
+
+    final val status // io.github.androidpoet.supabase.sync.paging/SyncStore.status|{}status[0]
+        final fun <get-status>(): kotlinx.coroutines.flow/StateFlow<io.github.androidpoet.supabase.sync.paging/SyncStatus> // io.github.androidpoet.supabase.sync.paging/SyncStore.status.<get-status>|<get-status>(){}[0]
+
+    final fun observe(kotlin/String): kotlinx.coroutines.flow/Flow<#A?> // io.github.androidpoet.supabase.sync.paging/SyncStore.observe|observe(kotlin.String){}[0]
+    final fun paged(kotlin/Int = ...): kotlinx.coroutines.flow/Flow<androidx.paging/PagingData<#A>> // io.github.androidpoet.supabase.sync.paging/SyncStore.paged|paged(kotlin.Int){}[0]
+    final fun pagedSynced(kotlin/Int = ...): kotlinx.coroutines.flow/Flow<androidx.paging/PagingData<#A>> // io.github.androidpoet.supabase.sync.paging/SyncStore.pagedSynced|pagedSynced(kotlin.Int){}[0]
+    final suspend fun delete(kotlin/String) // io.github.androidpoet.supabase.sync.paging/SyncStore.delete|delete(kotlin.String){}[0]
+    final suspend fun get(kotlin/String): #A? // io.github.androidpoet.supabase.sync.paging/SyncStore.get|get(kotlin.String){}[0]
+    final suspend fun sync(): io.github.androidpoet.supabase.sync/SyncResult // io.github.androidpoet.supabase.sync.paging/SyncStore.sync|sync(){}[0]
+    final suspend fun upsert(#A) // io.github.androidpoet.supabase.sync.paging/SyncStore.upsert|upsert(1:0){}[0]
+}
+
+final val io.github.androidpoet.supabase.sync.paging/DefaultJson // io.github.androidpoet.supabase.sync.paging/DefaultJson|{}DefaultJson[0]
+    final fun <get-DefaultJson>(): kotlinx.serialization.json/Json // io.github.androidpoet.supabase.sync.paging/DefaultJson.<get-DefaultJson>|<get-DefaultJson>(){}[0]

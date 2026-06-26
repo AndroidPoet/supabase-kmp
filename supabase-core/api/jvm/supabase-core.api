@@ -12,41 +12,6 @@ public final class io/github/androidpoet/supabase/core/models/Column {
 	public final synthetic fun unbox-impl ()Ljava/lang/String;
 }
 
-public final class io/github/androidpoet/supabase/core/models/ErrorResponse {
-	public static final field Companion Lio/github/androidpoet/supabase/core/models/ErrorResponse$Companion;
-	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Ljava/lang/String;
-	public final fun component3 ()Ljava/lang/String;
-	public final fun component4 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lio/github/androidpoet/supabase/core/models/ErrorResponse;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/core/models/ErrorResponse;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/core/models/ErrorResponse;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getCode ()Ljava/lang/String;
-	public final fun getDetails ()Ljava/lang/String;
-	public final fun getHint ()Ljava/lang/String;
-	public final fun getMessage ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/core/models/ErrorResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/core/models/ErrorResponse$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/core/models/ErrorResponse;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/core/models/ErrorResponse;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/core/models/ErrorResponse$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
 public abstract interface class io/github/androidpoet/supabase/core/models/Filter {
 }
 
@@ -137,6 +102,8 @@ public final class io/github/androidpoet/supabase/core/models/WhereBuilder {
 	public final fun greater--PLe0oE (Ljava/lang/String;Ljava/lang/Comparable;)V
 	public final fun greaterEq--PLe0oE (Ljava/lang/String;Ljava/lang/Comparable;)V
 	public final fun ilike--PLe0oE (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun ilikeAllOf--PLe0oE (Ljava/lang/String;Ljava/util/List;)V
+	public final fun ilikeAnyOf--PLe0oE (Ljava/lang/String;Ljava/util/List;)V
 	public final fun imatches--PLe0oE (Ljava/lang/String;Ljava/lang/String;)V
 	public final fun inList--PLe0oE (Ljava/lang/String;Ljava/util/List;)V
 	public final fun isDistinctFrom--PLe0oE (Ljava/lang/String;Ljava/lang/Object;)V
@@ -151,9 +118,15 @@ public final class io/github/androidpoet/supabase/core/models/WhereBuilder {
 	public final fun matches--PLe0oE (Ljava/lang/String;Ljava/lang/String;)V
 	public final fun neq--PLe0oE (Ljava/lang/String;Ljava/lang/Object;)V
 	public final fun not (Lkotlin/jvm/functions/Function1;)V
+	public final fun notInList--PLe0oE (Ljava/lang/String;Ljava/util/List;)V
 	public final fun or (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
 	public static synthetic fun or$default (Lio/github/androidpoet/supabase/core/models/WhereBuilder;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 	public final fun overlaps--PLe0oE (Ljava/lang/String;Ljava/util/List;)V
+	public final fun rangeAdjacent--PLe0oE (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun rangeGt--PLe0oE (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun rangeGte--PLe0oE (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun rangeLt--PLe0oE (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun rangeLte--PLe0oE (Ljava/lang/String;Ljava/lang/String;)V
 	public final fun raw-elUkyCk (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
 	public final fun textSearch-7Jr2Q9A (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/core/models/TextSearchType;)V
 	public static synthetic fun textSearch-7Jr2Q9A$default (Lio/github/androidpoet/supabase/core/models/WhereBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/core/models/TextSearchType;ILjava/lang/Object;)V
@@ -510,161 +483,6 @@ public final class io/github/androidpoet/supabase/core/result/SupabaseResultKt {
 	public static final fun validate (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
 	public static final fun zip (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function3;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
 	public static final fun zip (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function2;)Lio/github/androidpoet/supabase/core/result/SupabaseResult;
-}
-
-public final class io/github/androidpoet/supabase/core/types/BucketId {
-	public static final field Companion Lio/github/androidpoet/supabase/core/types/BucketId$Companion;
-	public static final synthetic fun box-impl (Ljava/lang/String;)Lio/github/androidpoet/supabase/core/types/BucketId;
-	public static fun constructor-impl (Ljava/lang/String;)Ljava/lang/String;
-	public fun equals (Ljava/lang/Object;)Z
-	public static fun equals-impl (Ljava/lang/String;Ljava/lang/Object;)Z
-	public static final fun equals-impl0 (Ljava/lang/String;Ljava/lang/String;)Z
-	public final fun getValue ()Ljava/lang/String;
-	public fun hashCode ()I
-	public static fun hashCode-impl (Ljava/lang/String;)I
-	public fun toString ()Ljava/lang/String;
-	public static fun toString-impl (Ljava/lang/String;)Ljava/lang/String;
-	public final synthetic fun unbox-impl ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/core/types/BucketId$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/core/types/BucketId$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun deserialize-CqYDMo0 (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/String;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public final fun serialize-h-AVPUU (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/String;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/core/types/BucketId$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/core/types/ChannelId {
-	public static final field Companion Lio/github/androidpoet/supabase/core/types/ChannelId$Companion;
-	public static final synthetic fun box-impl (Ljava/lang/String;)Lio/github/androidpoet/supabase/core/types/ChannelId;
-	public static fun constructor-impl (Ljava/lang/String;)Ljava/lang/String;
-	public fun equals (Ljava/lang/Object;)Z
-	public static fun equals-impl (Ljava/lang/String;Ljava/lang/Object;)Z
-	public static final fun equals-impl0 (Ljava/lang/String;Ljava/lang/String;)Z
-	public final fun getValue ()Ljava/lang/String;
-	public fun hashCode ()I
-	public static fun hashCode-impl (Ljava/lang/String;)I
-	public fun toString ()Ljava/lang/String;
-	public static fun toString-impl (Ljava/lang/String;)Ljava/lang/String;
-	public final synthetic fun unbox-impl ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/core/types/ChannelId$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/core/types/ChannelId$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun deserialize-gnRX0vI (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/String;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public final fun serialize-1pB_3NQ (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/String;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/core/types/ChannelId$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/core/types/ProjectUrl {
-	public static final field Companion Lio/github/androidpoet/supabase/core/types/ProjectUrl$Companion;
-	public static final synthetic fun box-impl (Ljava/lang/String;)Lio/github/androidpoet/supabase/core/types/ProjectUrl;
-	public static fun constructor-impl (Ljava/lang/String;)Ljava/lang/String;
-	public fun equals (Ljava/lang/Object;)Z
-	public static fun equals-impl (Ljava/lang/String;Ljava/lang/Object;)Z
-	public static final fun equals-impl0 (Ljava/lang/String;Ljava/lang/String;)Z
-	public static final fun getAuthUrl-impl (Ljava/lang/String;)Ljava/lang/String;
-	public static final fun getFunctionsUrl-impl (Ljava/lang/String;)Ljava/lang/String;
-	public static final fun getRealtimeUrl-impl (Ljava/lang/String;)Ljava/lang/String;
-	public static final fun getRestUrl-impl (Ljava/lang/String;)Ljava/lang/String;
-	public static final fun getStorageUrl-impl (Ljava/lang/String;)Ljava/lang/String;
-	public final fun getValue ()Ljava/lang/String;
-	public fun hashCode ()I
-	public static fun hashCode-impl (Ljava/lang/String;)I
-	public fun toString ()Ljava/lang/String;
-	public static fun toString-impl (Ljava/lang/String;)Ljava/lang/String;
-	public final synthetic fun unbox-impl ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/core/types/ProjectUrl$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/core/types/ProjectUrl$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun deserialize-sQLzz_Y (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/String;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public final fun serialize-T9SveD8 (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/String;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/core/types/ProjectUrl$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/core/types/SessionId {
-	public static final field Companion Lio/github/androidpoet/supabase/core/types/SessionId$Companion;
-	public static final synthetic fun box-impl (Ljava/lang/String;)Lio/github/androidpoet/supabase/core/types/SessionId;
-	public static fun constructor-impl (Ljava/lang/String;)Ljava/lang/String;
-	public fun equals (Ljava/lang/Object;)Z
-	public static fun equals-impl (Ljava/lang/String;Ljava/lang/Object;)Z
-	public static final fun equals-impl0 (Ljava/lang/String;Ljava/lang/String;)Z
-	public final fun getValue ()Ljava/lang/String;
-	public fun hashCode ()I
-	public static fun hashCode-impl (Ljava/lang/String;)I
-	public fun toString ()Ljava/lang/String;
-	public static fun toString-impl (Ljava/lang/String;)Ljava/lang/String;
-	public final synthetic fun unbox-impl ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/core/types/SessionId$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/core/types/SessionId$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun deserialize-aczIC98 (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/String;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public final fun serialize-LqNKX84 (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/String;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/core/types/SessionId$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/core/types/UserId {
-	public static final field Companion Lio/github/androidpoet/supabase/core/types/UserId$Companion;
-	public static final synthetic fun box-impl (Ljava/lang/String;)Lio/github/androidpoet/supabase/core/types/UserId;
-	public static fun constructor-impl (Ljava/lang/String;)Ljava/lang/String;
-	public fun equals (Ljava/lang/Object;)Z
-	public static fun equals-impl (Ljava/lang/String;Ljava/lang/Object;)Z
-	public static final fun equals-impl0 (Ljava/lang/String;Ljava/lang/String;)Z
-	public final fun getValue ()Ljava/lang/String;
-	public fun hashCode ()I
-	public static fun hashCode-impl (Ljava/lang/String;)I
-	public fun toString ()Ljava/lang/String;
-	public static fun toString-impl (Ljava/lang/String;)Ljava/lang/String;
-	public final synthetic fun unbox-impl ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/core/types/UserId$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/core/types/UserId$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun deserialize-a_8GvxQ (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/String;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public final fun serialize-w2-PR-8 (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/String;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/core/types/UserId$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public final class io/github/androidpoet/supabase/core/util/UrlEncodingKt {

@@ -34,16 +34,17 @@ Full guides for [Authentication](https://androidpoet.github.io/supabase-kmp/auth
 ## Setup
 
 > **Requirements:** the published Android/JVM artifacts are compiled for **Java 17**
-> and ship inline functions, so consuming modules must build with **`jvmTarget = 17`**
-> (Android `compileOptions`/`kotlinOptions` JVM 17, or JVM `jvmToolchain(17)`).
-> Building at a lower target fails with *"cannot inline bytecode built with JVM
-> target 17 into bytecode being built with JVM target 11"*.
+> and ship inline functions, so consuming modules must build with a **`jvmTarget` of
+> 17 or higher** (Android `compileOptions`/`kotlinOptions` JVM 17+, or JVM
+> `jvmToolchain(17)` or newer — Java 21 is fine). Only a *lower* target fails, with
+> *"cannot inline bytecode built with JVM target 17 into bytecode being built with
+> JVM target 11"*; matching or higher targets inline cleanly.
 
 Add the modules you need to your version catalog:
 
 ```toml
 [versions]
-supabase-kmp = "0.10.0"
+supabase-kmp = "1.0.0"
 
 [libraries]
 supabase-client = { module = "io.github.androidpoet:supabase-client", version.ref = "supabase-kmp" }

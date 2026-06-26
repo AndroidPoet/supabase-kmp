@@ -49,14 +49,15 @@ public data class PushResult(
     public val rejected: List<String> = emptyList(),
 )
 
-/** A single live change streamed from the remote (e.g. Supabase Realtime). */
-public data class RemoteChange(
-    public val record: Record,
-)
-
 /** Summary of one [SyncEngine.sync] cycle. */
 public data class SyncResult(
     public val pulled: Int,
     public val pushed: Int,
     public val rejected: Int,
+)
+
+/** Outcome of one [SyncEngine.pullPage]: rows merged, and whether another page likely follows. */
+public data class PullProgress(
+    public val pulled: Int,
+    public val hasMore: Boolean,
 )

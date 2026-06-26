@@ -10,15 +10,13 @@ import io.github.androidpoet.supabase.sync.Cursor
 import io.github.androidpoet.supabase.sync.PendingChange
 import io.github.androidpoet.supabase.sync.PullResult
 import io.github.androidpoet.supabase.sync.PushResult
-import io.github.androidpoet.supabase.sync.RemoteChange
+import io.github.androidpoet.supabase.sync.Record
 import io.github.androidpoet.supabase.sync.RemoteSource
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * The [RemoteSource] backed by Supabase: incremental pulls and bulk upserts over PostgREST
@@ -33,8 +31,6 @@ import kotlinx.coroutines.launch
  * @param schema the Postgres schema the tables live in (`public` by default).
  * @param pageSize max rows fetched per [pull]; if more changed, the advanced cursor lets the next
  *   [io.github.androidpoet.supabase.sync.SyncEngine.sync] pick up the remainder.
- * @param scope used only to best-effort tear down a realtime channel when a [changes] flow is
- *   cancelled.
  */
 public class SupabaseRemoteSource(
     private val database: DatabaseClient,
@@ -42,7 +38,6 @@ public class SupabaseRemoteSource(
     private val columns: SyncColumns = SyncColumns(),
     private val schema: String = "public",
     private val pageSize: Int = 1000,
-    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
 ) : RemoteSource {
     /**
      * Fetches rows whose `(updatedAt, id)` is greater than [since] (all rows when `null`), ordered
@@ -99,22 +94,29 @@ public class SupabaseRemoteSource(
     }
 
     /**
-     * A cold [Flow] of [table]'s realtime `postgres_changes`, each mapped to a [RemoteChange].
+     * A cold [Flow] of [table]'s realtime `postgres_changes`, each emitted as a [Record].
      * INSERT/UPDATE carry the new row; a DELETE is surfaced as a tombstone. Connects the client if
      * needed and tears the channel down when collection stops. Pair with periodic [pull] to
      * backfill anything missed while disconnected.
      */
-    override fun changes(table: String): Flow<RemoteChange> =
+    override fun changes(table: String): Flow<Record> =
         callbackFlow {
             if (!realtime.isConnected) realtime.connect()
             val subscription =
                 realtime
                     .channel("offline-sync:$table")
                     .onPostgresChange(schema = schema, table = table) { event, row ->
-                        trySend(RemoteChange(rowToRecord(row, columns, forceDeleted = event == PostgresChangeEvent.DELETE)))
+                        trySend(rowToRecord(row, columns, forceDeleted = event == PostgresChangeEvent.DELETE))
                     }.subscribe()
-            awaitClose {
-                scope.launch { runCatching { realtime.removeSubscription(subscription) } }
+            try {
+                awaitClose { }
+            } finally {
+                // Tear the channel down on cancellation. removeSubscription is suspend, so run it in
+                // this flow's own (now-cancelling) coroutine under NonCancellable — no orphan
+                // CoroutineScope and no hardcoded dispatcher.
+                withContext(NonCancellable) {
+                    runCatching { realtime.removeSubscription(subscription) }
+                }
             }
         }
 }

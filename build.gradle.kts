@@ -33,6 +33,7 @@ val publishedModules =
         "supabase-sync-core",
         "supabase-sync-sqldelight",
         "supabase-sync",
+        "supabase-sync-paging",
     )
 
 // Validate the binary (ABI) compatibility of every published module so an
@@ -42,6 +43,14 @@ apiValidation {
         subprojects.map { it.name }.filterNot { it in publishedModules },
     )
     nonPublicMarkers.add("kotlin.PublishedApi")
+
+    // SQLDelight generates its database, query, and row types into `…sync.store.db`.
+    // Stable SQLDelight can't mark generated code `internal`, so these types are
+    // technically public, but they are implementation plumbing — not part of the
+    // curated sync-sqldelight API (consumers go through SqlDelightLocalStore /
+    // openOfflineSyncStore). Keep the generated package out of the tracked ABI so
+    // schema edits don't churn the API dump or read as public-surface changes.
+    ignoredPackages.add("io.github.androidpoet.supabase.sync.store.db")
 
     // Also track the native/JS klib ABI, not just JVM + Android.
     @OptIn(kotlinx.validation.ExperimentalBCVApi::class)

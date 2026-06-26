@@ -18,7 +18,7 @@ import kotlinx.serialization.json.JsonObject
  * deduplicated by topic — subscribing to the same channel name twice returns the
  * existing one. Operations that touch the network ([broadcast], lifecycle calls)
  * are Result-first or suspend until settled; queries ([getSubscription],
- * [activeChannels]) are synchronous snapshots. Create one with
+ * [getActiveChannelNames]) are synchronous snapshots. Create one with
  * [createRealtimeClient]; call [close] when done to release the engine.
  */
 public interface RealtimeClient {
@@ -63,10 +63,10 @@ public interface RealtimeClient {
     public fun getSubscriptions(): Set<RealtimeSubscription>
 
     /** Returns the names of all currently subscribed channels. */
-    public fun activeChannels(): Set<String>
+    public fun getActiveChannelNames(): Set<String>
 
     /** Returns name+topic details for all active channels. See [RealtimeChannel]. */
-    public fun activeChannelDetails(): Set<RealtimeChannel>
+    public fun getActiveChannels(): Set<RealtimeChannel>
 
     /** Unsubscribes [subscription] and removes it, leaving (`UNSUBSCRIBED`) its
      * Phoenix channel. Suspends until the leave is sent. */
@@ -75,25 +75,20 @@ public interface RealtimeClient {
     /** Unsubscribes and removes each of [subscriptions]; see [removeSubscription]. */
     public suspend fun removeSubscriptions(subscriptions: List<RealtimeSubscription>)
 
-    /** @deprecated channel/subscription terminology was unified; use
-     * [removeSubscription]. */
-    @Deprecated("Use removeSubscription instead", ReplaceWith("removeSubscription(subscription)"))
-    public suspend fun removeChannel(subscription: RealtimeSubscription)
-
     /** Unsubscribes and removes the subscription on the fully-qualified Phoenix
      * [topic] (e.g. `realtime:room1`), if any. */
     public suspend fun removeSubscriptionByTopic(topic: String)
 
     /** Unsubscribes and removes the subscriptions on each of [topics]; see
      * [removeSubscriptionByTopic]. */
-    public suspend fun removeChannelsByTopic(topics: List<String>)
+    public suspend fun removeSubscriptionsByTopic(topics: List<String>)
 
     /** Unsubscribes and removes the subscription on channel [name], if any. */
-    public suspend fun removeChannel(name: String)
+    public suspend fun removeSubscription(name: String)
 
     /** Unsubscribes and removes every active subscription, leaving the socket
      * open. */
-    public suspend fun removeAllChannels()
+    public suspend fun removeAllSubscriptions()
 
     /**
      * Updates the auth token used for channel authorization and rejoins active

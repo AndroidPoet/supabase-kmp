@@ -282,12 +282,12 @@ class StorageClientExtTest {
         }
 
     @Test
-    fun test_remove_vararg_routesToListOverload() =
+    fun test_deleteObjects_vararg_routesToListOverload() =
         runTest {
             val client = FakeStorageClient()
 
             val result =
-                client.remove(
+                client.deleteObjects(
                     bucket = "avatars",
                     "a.png",
                     "b.png",
@@ -295,21 +295,6 @@ class StorageClientExtTest {
 
             assertTrue(result is SupabaseResult.Success)
             assertEquals(listOf("a.png", "b.png"), client.lastRemovedPaths)
-        }
-
-    @Test
-    fun test_removeWithResult_vararg_routesToListOverload() =
-        runTest {
-            val client = FakeStorageClient()
-
-            val result =
-                client.removeWithResult(
-                    bucket = "avatars",
-                    "a.png",
-                )
-
-            assertTrue(result is SupabaseResult.Success)
-            assertEquals(listOf("a.png"), client.lastRemovedPaths)
         }
 
     @Test
@@ -436,7 +421,7 @@ private class FakeStorageClient : StorageClient {
 
     override suspend fun deleteBucket(id: String): SupabaseResult<Unit> = error("not used")
 
-    override suspend fun emptyBucket(id: String): SupabaseResult<Unit> = error("not used")
+    override suspend fun clearBucket(id: String): SupabaseResult<Unit> = error("not used")
 
     override suspend fun upload(
         bucket: String,
@@ -534,12 +519,7 @@ private class FakeStorageClient : StorageClient {
 
     override suspend fun copy(bucket: String, fromPath: String, toPath: String, destinationBucket: String?, copyMetadata: Boolean?): SupabaseResult<Unit> = error("not used")
 
-    override suspend fun remove(bucket: String, paths: List<String>): SupabaseResult<Unit> {
-        lastRemovedPaths = paths
-        return SupabaseResult.Success(Unit)
-    }
-
-    override suspend fun removeWithResult(bucket: String, paths: List<String>): SupabaseResult<List<FileObject>> {
+    override suspend fun deleteObjects(bucket: String, paths: List<String>): SupabaseResult<List<FileObject>> {
         lastRemovedPaths = paths
         return SupabaseResult.Success(emptyList())
     }

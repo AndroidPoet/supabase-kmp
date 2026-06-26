@@ -275,19 +275,12 @@ public suspend fun StorageClient.createSignedRenderUrlsByPath(
         transform = transform,
     )
 
-/** `vararg` overload of [StorageClient.remove] for deleting several object paths in one call. */
-public suspend fun StorageClient.remove(
-    bucket: String,
-    vararg paths: String,
-): SupabaseResult<Unit> =
-    remove(bucket = bucket, paths = paths.toList())
-
-/** `vararg` overload of [StorageClient.removeWithResult], returning the deleted objects. */
-public suspend fun StorageClient.removeWithResult(
+/** `vararg` overload of [StorageClient.deleteObjects], returning the deleted objects. */
+public suspend fun StorageClient.deleteObjects(
     bucket: String,
     vararg paths: String,
 ): SupabaseResult<List<io.github.androidpoet.supabase.storage.models.FileObject>> =
-    removeWithResult(bucket = bucket, paths = paths.toList())
+    deleteObjects(bucket = bucket, paths = paths.toList())
 
 /**
  * Builds public URLs for many [paths] at once via [StorageClient.getPublicUrl], returning them in

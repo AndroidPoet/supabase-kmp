@@ -23,16 +23,19 @@ abstract fun interface io.github.androidpoet.supabase.sync/ConflictResolver { //
 
 abstract interface io.github.androidpoet.supabase.sync/LocalStore { // io.github.androidpoet.supabase.sync/LocalStore|null[0]
     abstract suspend fun clearPending(kotlin/String, kotlin.collections/List<kotlin/String>) // io.github.androidpoet.supabase.sync/LocalStore.clearPending|clearPending(kotlin.String;kotlin.collections.List<kotlin.String>){}[0]
+    abstract suspend fun count(kotlin/String): kotlin/Long // io.github.androidpoet.supabase.sync/LocalStore.count|count(kotlin.String){}[0]
     abstract suspend fun cursor(kotlin/String): io.github.androidpoet.supabase.sync/Cursor? // io.github.androidpoet.supabase.sync/LocalStore.cursor|cursor(kotlin.String){}[0]
     abstract suspend fun enqueue(kotlin/String, io.github.androidpoet.supabase.sync/PendingChange) // io.github.androidpoet.supabase.sync/LocalStore.enqueue|enqueue(kotlin.String;io.github.androidpoet.supabase.sync.PendingChange){}[0]
     abstract suspend fun get(kotlin/String, kotlin/String): io.github.androidpoet.supabase.sync/Record? // io.github.androidpoet.supabase.sync/LocalStore.get|get(kotlin.String;kotlin.String){}[0]
+    abstract suspend fun page(kotlin/String, kotlin/Long, kotlin/Long): io.github.androidpoet.supabase.sync/Page<io.github.androidpoet.supabase.sync/Record> // io.github.androidpoet.supabase.sync/LocalStore.page|page(kotlin.String;kotlin.Long;kotlin.Long){}[0]
+    abstract suspend fun pageAfter(kotlin/String, kotlin/String?, kotlin/Long): kotlin.collections/List<io.github.androidpoet.supabase.sync/Record> // io.github.androidpoet.supabase.sync/LocalStore.pageAfter|pageAfter(kotlin.String;kotlin.String?;kotlin.Long){}[0]
     abstract suspend fun pending(kotlin/String): kotlin.collections/List<io.github.androidpoet.supabase.sync/PendingChange> // io.github.androidpoet.supabase.sync/LocalStore.pending|pending(kotlin.String){}[0]
     abstract suspend fun setCursor(kotlin/String, io.github.androidpoet.supabase.sync/Cursor?) // io.github.androidpoet.supabase.sync/LocalStore.setCursor|setCursor(kotlin.String;io.github.androidpoet.supabase.sync.Cursor?){}[0]
     abstract suspend fun upsert(kotlin/String, kotlin.collections/List<io.github.androidpoet.supabase.sync/Record>) // io.github.androidpoet.supabase.sync/LocalStore.upsert|upsert(kotlin.String;kotlin.collections.List<io.github.androidpoet.supabase.sync.Record>){}[0]
 }
 
 abstract interface io.github.androidpoet.supabase.sync/RemoteSource { // io.github.androidpoet.supabase.sync/RemoteSource|null[0]
-    abstract fun changes(kotlin/String): kotlinx.coroutines.flow/Flow<io.github.androidpoet.supabase.sync/RemoteChange> // io.github.androidpoet.supabase.sync/RemoteSource.changes|changes(kotlin.String){}[0]
+    abstract fun changes(kotlin/String): kotlinx.coroutines.flow/Flow<io.github.androidpoet.supabase.sync/Record> // io.github.androidpoet.supabase.sync/RemoteSource.changes|changes(kotlin.String){}[0]
     abstract suspend fun pull(kotlin/String, io.github.androidpoet.supabase.sync/Cursor?): io.github.androidpoet.supabase.sync/PullResult // io.github.androidpoet.supabase.sync/RemoteSource.pull|pull(kotlin.String;io.github.androidpoet.supabase.sync.Cursor?){}[0]
     abstract suspend fun push(kotlin/String, kotlin.collections/List<io.github.androidpoet.supabase.sync/PendingChange>): io.github.androidpoet.supabase.sync/PushResult // io.github.androidpoet.supabase.sync/RemoteSource.push|push(kotlin.String;kotlin.collections.List<io.github.androidpoet.supabase.sync.PendingChange>){}[0]
 }
@@ -105,6 +108,22 @@ final class io.github.androidpoet.supabase.sync/PendingChange { // io.github.and
     final fun toString(): kotlin/String // io.github.androidpoet.supabase.sync/PendingChange.toString|toString(){}[0]
 }
 
+final class io.github.androidpoet.supabase.sync/PullProgress { // io.github.androidpoet.supabase.sync/PullProgress|null[0]
+    constructor <init>(kotlin/Int, kotlin/Boolean) // io.github.androidpoet.supabase.sync/PullProgress.<init>|<init>(kotlin.Int;kotlin.Boolean){}[0]
+
+    final val hasMore // io.github.androidpoet.supabase.sync/PullProgress.hasMore|{}hasMore[0]
+        final fun <get-hasMore>(): kotlin/Boolean // io.github.androidpoet.supabase.sync/PullProgress.hasMore.<get-hasMore>|<get-hasMore>(){}[0]
+    final val pulled // io.github.androidpoet.supabase.sync/PullProgress.pulled|{}pulled[0]
+        final fun <get-pulled>(): kotlin/Int // io.github.androidpoet.supabase.sync/PullProgress.pulled.<get-pulled>|<get-pulled>(){}[0]
+
+    final fun component1(): kotlin/Int // io.github.androidpoet.supabase.sync/PullProgress.component1|component1(){}[0]
+    final fun component2(): kotlin/Boolean // io.github.androidpoet.supabase.sync/PullProgress.component2|component2(){}[0]
+    final fun copy(kotlin/Int = ..., kotlin/Boolean = ...): io.github.androidpoet.supabase.sync/PullProgress // io.github.androidpoet.supabase.sync/PullProgress.copy|copy(kotlin.Int;kotlin.Boolean){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.sync/PullProgress.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.sync/PullProgress.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.androidpoet.supabase.sync/PullProgress.toString|toString(){}[0]
+}
+
 final class io.github.androidpoet.supabase.sync/PullResult { // io.github.androidpoet.supabase.sync/PullResult|null[0]
     constructor <init>(kotlin.collections/List<io.github.androidpoet.supabase.sync/Record>, io.github.androidpoet.supabase.sync/Cursor?) // io.github.androidpoet.supabase.sync/PullResult.<init>|<init>(kotlin.collections.List<io.github.androidpoet.supabase.sync.Record>;io.github.androidpoet.supabase.sync.Cursor?){}[0]
 
@@ -159,19 +178,6 @@ final class io.github.androidpoet.supabase.sync/Record { // io.github.androidpoe
     final fun toString(): kotlin/String // io.github.androidpoet.supabase.sync/Record.toString|toString(){}[0]
 }
 
-final class io.github.androidpoet.supabase.sync/RemoteChange { // io.github.androidpoet.supabase.sync/RemoteChange|null[0]
-    constructor <init>(io.github.androidpoet.supabase.sync/Record) // io.github.androidpoet.supabase.sync/RemoteChange.<init>|<init>(io.github.androidpoet.supabase.sync.Record){}[0]
-
-    final val record // io.github.androidpoet.supabase.sync/RemoteChange.record|{}record[0]
-        final fun <get-record>(): io.github.androidpoet.supabase.sync/Record // io.github.androidpoet.supabase.sync/RemoteChange.record.<get-record>|<get-record>(){}[0]
-
-    final fun component1(): io.github.androidpoet.supabase.sync/Record // io.github.androidpoet.supabase.sync/RemoteChange.component1|component1(){}[0]
-    final fun copy(io.github.androidpoet.supabase.sync/Record = ...): io.github.androidpoet.supabase.sync/RemoteChange // io.github.androidpoet.supabase.sync/RemoteChange.copy|copy(io.github.androidpoet.supabase.sync.Record){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.sync/RemoteChange.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.sync/RemoteChange.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.sync/RemoteChange.toString|toString(){}[0]
-}
-
 final class io.github.androidpoet.supabase.sync/ResolverRegistry { // io.github.androidpoet.supabase.sync/ResolverRegistry|null[0]
     constructor <init>(io.github.androidpoet.supabase.sync/ConflictResolver = ...) // io.github.androidpoet.supabase.sync/ResolverRegistry.<init>|<init>(io.github.androidpoet.supabase.sync.ConflictResolver){}[0]
 
@@ -182,7 +188,8 @@ final class io.github.androidpoet.supabase.sync/ResolverRegistry { // io.github.
 final class io.github.androidpoet.supabase.sync/SyncEngine { // io.github.androidpoet.supabase.sync/SyncEngine|null[0]
     constructor <init>(io.github.androidpoet.supabase.sync/LocalStore, io.github.androidpoet.supabase.sync/RemoteSource, io.github.androidpoet.supabase.sync/ResolverRegistry = ...) // io.github.androidpoet.supabase.sync/SyncEngine.<init>|<init>(io.github.androidpoet.supabase.sync.LocalStore;io.github.androidpoet.supabase.sync.RemoteSource;io.github.androidpoet.supabase.sync.ResolverRegistry){}[0]
 
-    final fun observe(kotlin/String): kotlinx.coroutines.flow/Flow<io.github.androidpoet.supabase.sync/RemoteChange> // io.github.androidpoet.supabase.sync/SyncEngine.observe|observe(kotlin.String){}[0]
+    final fun observe(kotlin/String): kotlinx.coroutines.flow/Flow<io.github.androidpoet.supabase.sync/Record> // io.github.androidpoet.supabase.sync/SyncEngine.observe|observe(kotlin.String){}[0]
+    final suspend fun pullPage(kotlin/String): io.github.androidpoet.supabase.sync/PullProgress // io.github.androidpoet.supabase.sync/SyncEngine.pullPage|pullPage(kotlin.String){}[0]
     final suspend fun sync(kotlin/String): io.github.androidpoet.supabase.sync/SyncResult // io.github.androidpoet.supabase.sync/SyncEngine.sync|sync(kotlin.String){}[0]
 }
 
@@ -208,3 +215,5 @@ final class io.github.androidpoet.supabase.sync/SyncResult { // io.github.androi
 final object io.github.androidpoet.supabase.sync/LastWriteWins : io.github.androidpoet.supabase.sync/ConflictResolver { // io.github.androidpoet.supabase.sync/LastWriteWins|null[0]
     final fun resolve(io.github.androidpoet.supabase.sync/Record, io.github.androidpoet.supabase.sync/Record): io.github.androidpoet.supabase.sync/Record // io.github.androidpoet.supabase.sync/LastWriteWins.resolve|resolve(io.github.androidpoet.supabase.sync.Record;io.github.androidpoet.supabase.sync.Record){}[0]
 }
+
+final fun io.github.androidpoet.supabase.sync/createSyncEngine(io.github.androidpoet.supabase.sync/LocalStore, io.github.androidpoet.supabase.sync/RemoteSource, io.github.androidpoet.supabase.sync/ResolverRegistry = ...): io.github.androidpoet.supabase.sync/SyncEngine // io.github.androidpoet.supabase.sync/createSyncEngine|createSyncEngine(io.github.androidpoet.supabase.sync.LocalStore;io.github.androidpoet.supabase.sync.RemoteSource;io.github.androidpoet.supabase.sync.ResolverRegistry){}[0]

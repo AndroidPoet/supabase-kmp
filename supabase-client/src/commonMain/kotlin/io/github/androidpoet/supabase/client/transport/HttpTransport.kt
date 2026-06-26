@@ -1,4 +1,5 @@
 package io.github.androidpoet.supabase.client.transport
+import io.github.androidpoet.supabase.client.HttpLogLevel
 import io.github.androidpoet.supabase.client.SupabaseConfig
 import io.github.androidpoet.supabase.client.SupabaseHttpResponse
 import io.github.androidpoet.supabase.client.SupabaseLogLevel
@@ -46,6 +47,7 @@ import kotlinx.serialization.json.contentOrNull
 import kotlin.concurrent.Volatile
 import kotlin.time.Clock
 import kotlin.time.TimeSource
+import io.ktor.client.plugins.logging.LogLevel as KtorLogLevel
 import io.ktor.client.plugins.logging.Logger as KtorLogger
 
 private const val CLIENT_VERSION = "supabase-kmp/0.6.0"
@@ -119,7 +121,7 @@ internal class HttpTransport(
             }
             if (config.logging) {
                 install(Logging) {
-                    level = config.logLevel
+                    level = config.logLevel.toKtorLogLevel()
                     // Route wire logs into the caller's framework when a logger is supplied;
                     // otherwise fall back to Ktor's default sink.
                     config.logger?.let { sink ->
@@ -624,6 +626,17 @@ private fun monthIndex(name: String): Int? {
     val index = months.indexOf(name)
     return if (index >= 0) index + 1 else null
 }
+
+// Maps the SDK-owned [HttpLogLevel] to Ktor's logging level, keeping the transport library
+// out of the public config surface.
+private fun HttpLogLevel.toKtorLogLevel(): KtorLogLevel =
+    when (this) {
+        HttpLogLevel.NONE -> KtorLogLevel.NONE
+        HttpLogLevel.INFO -> KtorLogLevel.INFO
+        HttpLogLevel.HEADERS -> KtorLogLevel.HEADERS
+        HttpLogLevel.BODY -> KtorLogLevel.BODY
+        HttpLogLevel.ALL -> KtorLogLevel.ALL
+    }
 
 // Days from 1970-01-01 (the Unix epoch) using Howard Hinnant's days_from_civil
 // algorithm — pure integer math, valid for any proleptic Gregorian date.

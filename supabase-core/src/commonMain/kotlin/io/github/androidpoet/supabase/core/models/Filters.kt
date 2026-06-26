@@ -235,13 +235,25 @@ public class WhereBuilder {
     public infix fun Column<String>.likeAnyOf(patterns: List<String>): Unit =
         add(name, "like(any).{${patterns.joinToString(",") { encodeValue(it) }}}")
 
+    /** Case-insensitively matches every pattern in [patterns] (`ILIKE ALL`). */
+    public infix fun Column<String>.ilikeAllOf(patterns: List<String>): Unit =
+        add(name, "ilike(all).{${patterns.joinToString(",") { encodeValue(it) }}}")
+
+    /** Case-insensitively matches at least one pattern in [patterns] (`ILIKE ANY`). */
+    public infix fun Column<String>.ilikeAnyOf(patterns: List<String>): Unit =
+        add(name, "ilike(any).{${patterns.joinToString(",") { encodeValue(it) }}}")
+
     // ── Membership ──────────────────────────────────────────────────────────────
 
     /** `column IN (values)` (SQL `IN`). */
     public infix fun <T> Column<T>.inList(values: List<T>): Unit =
         add(name, "in.(${values.joinToString(",") { renderValue(it) }})")
 
-    // ── Array / range ─────────────────────────────────────────────────────────
+    /** `column NOT IN (values)` (SQL `NOT IN`). */
+    public infix fun <T> Column<T>.notInList(values: List<T>): Unit =
+        add(name, "not.in.(${values.joinToString(",") { renderValue(it) }})")
+
+    // ── Array ─────────────────────────────────────────────────────────────────
 
     /** Array/range column contains every element of [values] (SQL `@>`). */
     public infix fun <T> Column<List<T>>.contains(values: List<T>): Unit = add(name, "cs.${arrayLiteral(values)}")
@@ -251,6 +263,27 @@ public class WhereBuilder {
 
     /** Array/range column shares any element with [values] (SQL `&&`). */
     public infix fun <T> Column<List<T>>.overlaps(values: List<T>): Unit = add(name, "ov.${arrayLiteral(values)}")
+
+    // ── Range columns ───────────────────────────────────────────────────────────
+    // Operators for Postgres range types (int4range, tstzrange, …). [range] is a range
+    // literal whose bounds-brackets and comma are part of the value, e.g. "[1,10)" or
+    // "[2000-01-01,2000-01-15)" — passed through verbatim (PostgREST quotes nothing here).
+    // Names mirror the supabase-js client; the SQL operator and PostgREST token are noted.
+
+    /** Range strictly right of [range] (SQL `>>`, PostgREST `sr`). */
+    public infix fun Column<*>.rangeGt(range: String): Unit = add(name, "sr.$range")
+
+    /** Range does not extend to the left of [range] (SQL `&>`, PostgREST `nxl`). */
+    public infix fun Column<*>.rangeGte(range: String): Unit = add(name, "nxl.$range")
+
+    /** Range strictly left of [range] (SQL `<<`, PostgREST `sl`). */
+    public infix fun Column<*>.rangeLt(range: String): Unit = add(name, "sl.$range")
+
+    /** Range does not extend to the right of [range] (SQL `&<`, PostgREST `nxr`). */
+    public infix fun Column<*>.rangeLte(range: String): Unit = add(name, "nxr.$range")
+
+    /** Range is adjacent to [range] (SQL `-|-`, PostgREST `adj`). */
+    public infix fun Column<*>.rangeAdjacent(range: String): Unit = add(name, "adj.$range")
 
     // ── Full-text search ──────────────────────────────────────────────────────
 

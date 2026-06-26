@@ -1,6 +1,7 @@
 package io.github.androidpoet.supabase.auth
 
 import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevel
+import io.github.androidpoet.supabase.auth.models.MessagingChannel
 import io.github.androidpoet.supabase.auth.models.OAuthProvider
 import io.github.androidpoet.supabase.auth.models.OtpVerifyResult
 import io.github.androidpoet.supabase.auth.models.PkceParams
@@ -24,7 +25,7 @@ class AuthClientImplTest {
             val client = FakeSupabaseClient()
             val sut = AuthClientImpl(client)
 
-            val result = sut.mfaChallenge(factorId = "factor-1", accessToken = "tok", channel = "whatsapp")
+            val result = sut.mfaChallenge(factorId = "factor-1", accessToken = "tok", channel = MessagingChannel.WHATSAPP)
 
             assertTrue(result is SupabaseResult.Success)
             assertEquals("/auth/v1/factors/factor-1/challenge", client.lastPostEndpoint)
@@ -156,7 +157,7 @@ class AuthClientImplTest {
                 phone = "+15555550100",
                 createUser = false,
                 captchaToken = "captcha-otp",
-                channel = "whatsapp",
+                channel = MessagingChannel.WHATSAPP,
             )
 
             assertEquals("/auth/v1/otp", client.lastPostEndpoint)
@@ -170,14 +171,14 @@ class AuthClientImplTest {
         }
 
     @Test
-    fun test_verifyOtpWithResult_returnsVerifiedNoSessionWhenNoAccessToken() =
+    fun test_verifyOtp_returnsVerifiedNoSessionWhenNoAccessToken() =
         runTest {
             val client = FakeSupabaseClient()
             client.verifyResponse = "{}"
             val sut = AuthClientImpl(client)
 
             val result =
-                sut.verifyOtpWithResult(
+                sut.verifyOtp(
                     email = "a@b.com",
                     token = "123456",
                     type = io.github.androidpoet.supabase.auth.models.OtpType.EMAIL,
@@ -207,13 +208,13 @@ class AuthClientImplTest {
         }
 
     @Test
-    fun test_verifyOtpWithTokenHashWithResult_returnsAuthenticatedWhenSessionPayloadPresent() =
+    fun test_verifyOtpWithTokenHash_returnsAuthenticatedWhenSessionPayloadPresent() =
         runTest {
             val client = FakeSupabaseClient()
             val sut = AuthClientImpl(client)
 
             val result =
-                sut.verifyOtpWithTokenHashWithResult(
+                sut.verifyOtpWithTokenHash(
                     tokenHash = "hash-123",
                     type = io.github.androidpoet.supabase.auth.models.OtpType.EMAIL,
                     captchaToken = null,
@@ -283,25 +284,25 @@ class AuthClientImplTest {
         }
 
     @Test
-    fun test_retrieveSsoUrl_requiresDomainOrProviderId() =
+    fun test_getSsoUrl_requiresDomainOrProviderId() =
         runTest {
             val client = FakeSupabaseClient()
             val sut = AuthClientImpl(client)
 
             // A Result-returning API must not throw on bad input — it returns Failure.
-            val result = sut.retrieveSsoUrl(accessToken = "token-1")
+            val result = sut.getSsoUrl(accessToken = "token-1")
             assertTrue(result is SupabaseResult.Failure)
             assertEquals(null, client.lastPostEndpoint)
         }
 
     @Test
-    fun test_retrieveSsoUrl_rejectsBothDomainAndProviderId() =
+    fun test_getSsoUrl_rejectsBothDomainAndProviderId() =
         runTest {
             val client = FakeSupabaseClient()
             val sut = AuthClientImpl(client)
 
             val result =
-                sut.retrieveSsoUrl(
+                sut.getSsoUrl(
                     accessToken = "token-1",
                     domain = "example.com",
                     providerId = "provider-1",
@@ -543,13 +544,13 @@ class AuthClientImplTest {
         }
 
     @Test
-    fun test_retrieveSsoUrl_withoutAccessToken_usesNoAuthorizationHeader() =
+    fun test_getSsoUrl_withoutAccessToken_usesNoAuthorizationHeader() =
         runTest {
             val client = FakeSupabaseClient()
             val sut = AuthClientImpl(client)
 
             val result =
-                sut.retrieveSsoUrl(
+                sut.getSsoUrl(
                     accessToken = null,
                     domain = "example.com",
                 )
@@ -719,12 +720,12 @@ class AuthClientImplTest {
     // ---- A1: POST /sso additive fields ----
 
     @Test
-    fun test_retrieveSsoUrl_defaultsSkipHttpRedirectTrue() =
+    fun test_getSsoUrl_defaultsSkipHttpRedirectTrue() =
         runTest {
             val client = FakeSupabaseClient()
             val sut = AuthClientImpl(client)
 
-            val result = sut.retrieveSsoUrl(domain = "example.com")
+            val result = sut.getSsoUrl(domain = "example.com")
 
             assertTrue(result is SupabaseResult.Success)
             assertEquals("/auth/v1/sso", client.lastPostEndpoint)
@@ -733,12 +734,12 @@ class AuthClientImplTest {
         }
 
     @Test
-    fun test_retrieveSsoUrl_emitsPkceAndCaptcha() =
+    fun test_getSsoUrl_emitsPkceAndCaptcha() =
         runTest {
             val client = FakeSupabaseClient()
             val sut = AuthClientImpl(client)
 
-            sut.retrieveSsoUrl(
+            sut.getSsoUrl(
                 domain = "example.com",
                 pkceParams = PkceParams(codeVerifier = "v", codeChallenge = "sso-chal", codeChallengeMethod = "S256"),
                 captchaToken = "captcha-sso",
@@ -757,7 +758,7 @@ class AuthClientImplTest {
             val client = FakeSupabaseClient()
             val sut = AuthClientImpl(client)
 
-            sut.signUpWithPhone(phone = "+15555550100", password = "pw", channel = "whatsapp")
+            sut.signUpWithPhone(phone = "+15555550100", password = "pw", channel = MessagingChannel.WHATSAPP)
 
             assertEquals("/auth/v1/signup", client.lastPostEndpoint)
             assertTrue(client.lastPostBody?.contains("\"channel\":\"whatsapp\"") == true)

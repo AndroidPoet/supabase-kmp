@@ -39,7 +39,7 @@ class ErrorParsingConformanceTest {
                 headersOf("Content-Type", "application/json")
             }
         return HttpTransport(
-            config = SupabaseConfig(logging = false, logLevel = io.ktor.client.plugins.logging.LogLevel.NONE, headers = emptyMap()),
+            config = SupabaseConfig(logging = false, logLevel = io.github.androidpoet.supabase.client.HttpLogLevel.NONE, headers = emptyMap()),
             engineFactory = TestMockEngineFactory { respond(content = body, status = status, headers = headers) },
             projectUrl = "https://example.supabase.co",
             apiKey = "anon",

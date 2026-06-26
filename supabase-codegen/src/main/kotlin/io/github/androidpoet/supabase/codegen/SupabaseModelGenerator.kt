@@ -31,6 +31,11 @@ public data class GeneratedFile(
  * this only ever *reads* the schema and emits Kotlin source; it never writes anything
  * back to the database.
  *
+ * Each data class carries a `companion object` of [io.github.androidpoet.supabase.core.models.Column]
+ * tokens — one per column — so the generated type can be used directly with the typed filter
+ * DSL: `database.selectTyped<Todos> { where { Todos.done eq false }; orderBy(Todos.createdAt) }`.
+ * The token name shadows nothing: `Todos.done` is the companion token, `row.done` the row value.
+ *
  * The generated files are fully owned by the generator and overwritten on every run, so
  * never hand-edit them. To add behaviour, write extension functions/properties on the
  * generated types in your OWN file — that survives regeneration.
@@ -45,6 +50,11 @@ public object SupabaseModelGenerator {
     private val serializable = ClassName("kotlinx.serialization", "Serializable")
     private val serialName = ClassName("kotlinx.serialization", "SerialName")
     private val jsonElement = ClassName("kotlinx.serialization.json", "JsonElement")
+
+    // The typed filter-DSL column token (supabase-core). Each generated data class gets a
+    // companion object of these so the row type doubles as its own column namespace — e.g.
+    // `select { where { Todos.done eq false } }` — without anyone hand-writing the tokens.
+    private val column = ClassName("io.github.androidpoet.supabase.core.models", "Column")
 
     // Sub-packages each kind of model is emitted into, so a large schema stays navigable and
     // a table and an enum that share a Kotlin name (e.g. `order_status`) land in different
@@ -136,9 +146,13 @@ public object SupabaseModelGenerator {
         // fast with an actionable message — mirroring the table- and enum-name collision checks.
         val claimedProps = mutableMapOf<String, String>()
 
-        for ((columnName, column) in definition.properties) {
+        // Column tokens for the typed filter DSL, emitted into a companion object below.
+        val columnTokens = mutableListOf<PropertySpec>()
+
+        for ((columnName, columnProp) in definition.properties) {
             val nullable = columnName !in definition.required
-            val type = kotlinType(enumsPackage, tableName, columnName, column, enums).copy(nullable = nullable)
+            val baseType = kotlinType(enumsPackage, tableName, columnName, columnProp, enums)
+            val type = baseType.copy(nullable = nullable)
             val propName = Naming.camel(columnName)
 
             val clash = claimedProps.put(propName, columnName)
@@ -160,8 +174,27 @@ public object SupabaseModelGenerator {
             if (nullable) param.defaultValue("null")
             ctor.addParameter(param.build())
             typeBuilder.addProperty(prop.build())
+
+            // Column<T> token carries the *non-nullable* element type: `Column<T>.eq(value: T)`
+            // takes a bare `T`, and `isNull()`/`isNotNull()` cover the null cases, so wrapping
+            // the token in `T?` would only force needless `as T?` casts at the call site.
+            columnTokens +=
+                PropertySpec
+                    .builder(propName, column.parameterizedBy(baseType))
+                    .initializer("%T(%S)", column, columnName)
+                    .build()
         }
-        return typeBuilder.primaryConstructor(ctor.build()).build()
+        typeBuilder.primaryConstructor(ctor.build())
+
+        // The row type doubles as its own column namespace: `Todos.done` resolves to this
+        // companion token, while `row.done` stays the data property — same name, different scope.
+        typeBuilder.addType(
+            TypeSpec
+                .companionObjectBuilder()
+                .addProperties(columnTokens)
+                .build(),
+        )
+        return typeBuilder.build()
     }
 
     private fun buildEnum(name: String, values: List<String>): TypeSpec {

@@ -28,7 +28,7 @@ import kotlinx.serialization.json.JsonObject
 
 public interface AuthAdminClient {
     public suspend fun signOut(
-        jwt: String,
+        accessToken: String,
         scope: SignOutScope = SignOutScope.LOCAL,
     ): SupabaseResult<Unit>
 
@@ -153,7 +153,7 @@ public interface AuthAdminClient {
      * Requires the service-role key. The endpoint returns a bare JSON array of [AuditLogEntry].
      * [page] and [perPage] are sent as `page` / `per_page` query params only when non-null.
      */
-    public suspend fun auditLogEvents(
+    public suspend fun listAuditLogEvents(
         page: Int? = null,
         perPage: Int? = null,
     ): SupabaseResult<List<AuditLogEntry>>

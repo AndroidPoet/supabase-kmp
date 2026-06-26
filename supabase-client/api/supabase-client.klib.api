@@ -10,6 +10,20 @@ open annotation class io.github.androidpoet.supabase.client/SupabaseDsl : kotlin
     constructor <init>() // io.github.androidpoet.supabase.client/SupabaseDsl.<init>|<init>(){}[0]
 }
 
+final enum class io.github.androidpoet.supabase.client/HttpLogLevel : kotlin/Enum<io.github.androidpoet.supabase.client/HttpLogLevel> { // io.github.androidpoet.supabase.client/HttpLogLevel|null[0]
+    enum entry ALL // io.github.androidpoet.supabase.client/HttpLogLevel.ALL|null[0]
+    enum entry BODY // io.github.androidpoet.supabase.client/HttpLogLevel.BODY|null[0]
+    enum entry HEADERS // io.github.androidpoet.supabase.client/HttpLogLevel.HEADERS|null[0]
+    enum entry INFO // io.github.androidpoet.supabase.client/HttpLogLevel.INFO|null[0]
+    enum entry NONE // io.github.androidpoet.supabase.client/HttpLogLevel.NONE|null[0]
+
+    final val entries // io.github.androidpoet.supabase.client/HttpLogLevel.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.androidpoet.supabase.client/HttpLogLevel> // io.github.androidpoet.supabase.client/HttpLogLevel.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.androidpoet.supabase.client/HttpLogLevel // io.github.androidpoet.supabase.client/HttpLogLevel.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.androidpoet.supabase.client/HttpLogLevel> // io.github.androidpoet.supabase.client/HttpLogLevel.values|values#static(){}[0]
+}
+
 final enum class io.github.androidpoet.supabase.client/SupabaseHttpMethod : kotlin/Enum<io.github.androidpoet.supabase.client/SupabaseHttpMethod> { // io.github.androidpoet.supabase.client/SupabaseHttpMethod|null[0]
     enum entry DELETE // io.github.androidpoet.supabase.client/SupabaseHttpMethod.DELETE|null[0]
     enum entry GET // io.github.androidpoet.supabase.client/SupabaseHttpMethod.GET|null[0]
@@ -145,7 +159,7 @@ final class io.github.androidpoet.supabase.client/RetryConfig { // io.github.and
 }
 
 final class io.github.androidpoet.supabase.client/SupabaseConfig { // io.github.androidpoet.supabase.client/SupabaseConfig|null[0]
-    constructor <init>(kotlin/Boolean, io.ktor.client.plugins.logging/LogLevel, kotlin.collections/Map<kotlin/String, kotlin/String>, io.github.androidpoet.supabase.client/RetryConfig = ..., io.github.androidpoet.supabase.client/SupabaseLogger? = ..., io.github.androidpoet.supabase.client/SupabaseInterceptor? = ..., kotlin/Long? = ..., kotlin/Long? = ..., kotlin/Long? = ..., kotlin/Function1<io.ktor.client/HttpClientConfig<*>, kotlin/Unit>? = ..., kotlin.coroutines/SuspendFunction0<kotlin/String?>? = ...) // io.github.androidpoet.supabase.client/SupabaseConfig.<init>|<init>(kotlin.Boolean;io.ktor.client.plugins.logging.LogLevel;kotlin.collections.Map<kotlin.String,kotlin.String>;io.github.androidpoet.supabase.client.RetryConfig;io.github.androidpoet.supabase.client.SupabaseLogger?;io.github.androidpoet.supabase.client.SupabaseInterceptor?;kotlin.Long?;kotlin.Long?;kotlin.Long?;kotlin.Function1<io.ktor.client.HttpClientConfig<*>,kotlin.Unit>?;kotlin.coroutines.SuspendFunction0<kotlin.String?>?){}[0]
+    constructor <init>(kotlin/Boolean, io.github.androidpoet.supabase.client/HttpLogLevel, kotlin.collections/Map<kotlin/String, kotlin/String>, io.github.androidpoet.supabase.client/RetryConfig = ..., io.github.androidpoet.supabase.client/SupabaseLogger? = ..., io.github.androidpoet.supabase.client/SupabaseInterceptor? = ..., kotlin/Long? = ..., kotlin/Long? = ..., kotlin/Long? = ..., kotlin/Function1<io.ktor.client/HttpClientConfig<*>, kotlin/Unit>? = ..., kotlin.coroutines/SuspendFunction0<kotlin/String?>? = ...) // io.github.androidpoet.supabase.client/SupabaseConfig.<init>|<init>(kotlin.Boolean;io.github.androidpoet.supabase.client.HttpLogLevel;kotlin.collections.Map<kotlin.String,kotlin.String>;io.github.androidpoet.supabase.client.RetryConfig;io.github.androidpoet.supabase.client.SupabaseLogger?;io.github.androidpoet.supabase.client.SupabaseInterceptor?;kotlin.Long?;kotlin.Long?;kotlin.Long?;kotlin.Function1<io.ktor.client.HttpClientConfig<*>,kotlin.Unit>?;kotlin.coroutines.SuspendFunction0<kotlin.String?>?){}[0]
 
     final val accessTokenProvider // io.github.androidpoet.supabase.client/SupabaseConfig.accessTokenProvider|{}accessTokenProvider[0]
         final fun <get-accessTokenProvider>(): kotlin.coroutines/SuspendFunction0<kotlin/String?>? // io.github.androidpoet.supabase.client/SupabaseConfig.accessTokenProvider.<get-accessTokenProvider>|<get-accessTokenProvider>(){}[0]
@@ -158,7 +172,7 @@ final class io.github.androidpoet.supabase.client/SupabaseConfig { // io.github.
     final val interceptor // io.github.androidpoet.supabase.client/SupabaseConfig.interceptor|{}interceptor[0]
         final fun <get-interceptor>(): io.github.androidpoet.supabase.client/SupabaseInterceptor? // io.github.androidpoet.supabase.client/SupabaseConfig.interceptor.<get-interceptor>|<get-interceptor>(){}[0]
     final val logLevel // io.github.androidpoet.supabase.client/SupabaseConfig.logLevel|{}logLevel[0]
-        final fun <get-logLevel>(): io.ktor.client.plugins.logging/LogLevel // io.github.androidpoet.supabase.client/SupabaseConfig.logLevel.<get-logLevel>|<get-logLevel>(){}[0]
+        final fun <get-logLevel>(): io.github.androidpoet.supabase.client/HttpLogLevel // io.github.androidpoet.supabase.client/SupabaseConfig.logLevel.<get-logLevel>|<get-logLevel>(){}[0]
     final val logger // io.github.androidpoet.supabase.client/SupabaseConfig.logger|{}logger[0]
         final fun <get-logger>(): io.github.androidpoet.supabase.client/SupabaseLogger? // io.github.androidpoet.supabase.client/SupabaseConfig.logger.<get-logger>|<get-logger>(){}[0]
     final val logging // io.github.androidpoet.supabase.client/SupabaseConfig.logging|{}logging[0]
@@ -169,22 +183,6 @@ final class io.github.androidpoet.supabase.client/SupabaseConfig { // io.github.
         final fun <get-retry>(): io.github.androidpoet.supabase.client/RetryConfig // io.github.androidpoet.supabase.client/SupabaseConfig.retry.<get-retry>|<get-retry>(){}[0]
     final val socketTimeoutMillis // io.github.androidpoet.supabase.client/SupabaseConfig.socketTimeoutMillis|{}socketTimeoutMillis[0]
         final fun <get-socketTimeoutMillis>(): kotlin/Long? // io.github.androidpoet.supabase.client/SupabaseConfig.socketTimeoutMillis.<get-socketTimeoutMillis>|<get-socketTimeoutMillis>(){}[0]
-
-    final fun component1(): kotlin/Boolean // io.github.androidpoet.supabase.client/SupabaseConfig.component1|component1(){}[0]
-    final fun component10(): kotlin/Function1<io.ktor.client/HttpClientConfig<*>, kotlin/Unit>? // io.github.androidpoet.supabase.client/SupabaseConfig.component10|component10(){}[0]
-    final fun component11(): kotlin.coroutines/SuspendFunction0<kotlin/String?>? // io.github.androidpoet.supabase.client/SupabaseConfig.component11|component11(){}[0]
-    final fun component2(): io.ktor.client.plugins.logging/LogLevel // io.github.androidpoet.supabase.client/SupabaseConfig.component2|component2(){}[0]
-    final fun component3(): kotlin.collections/Map<kotlin/String, kotlin/String> // io.github.androidpoet.supabase.client/SupabaseConfig.component3|component3(){}[0]
-    final fun component4(): io.github.androidpoet.supabase.client/RetryConfig // io.github.androidpoet.supabase.client/SupabaseConfig.component4|component4(){}[0]
-    final fun component5(): io.github.androidpoet.supabase.client/SupabaseLogger? // io.github.androidpoet.supabase.client/SupabaseConfig.component5|component5(){}[0]
-    final fun component6(): io.github.androidpoet.supabase.client/SupabaseInterceptor? // io.github.androidpoet.supabase.client/SupabaseConfig.component6|component6(){}[0]
-    final fun component7(): kotlin/Long? // io.github.androidpoet.supabase.client/SupabaseConfig.component7|component7(){}[0]
-    final fun component8(): kotlin/Long? // io.github.androidpoet.supabase.client/SupabaseConfig.component8|component8(){}[0]
-    final fun component9(): kotlin/Long? // io.github.androidpoet.supabase.client/SupabaseConfig.component9|component9(){}[0]
-    final fun copy(kotlin/Boolean = ..., io.ktor.client.plugins.logging/LogLevel = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., io.github.androidpoet.supabase.client/RetryConfig = ..., io.github.androidpoet.supabase.client/SupabaseLogger? = ..., io.github.androidpoet.supabase.client/SupabaseInterceptor? = ..., kotlin/Long? = ..., kotlin/Long? = ..., kotlin/Long? = ..., kotlin/Function1<io.ktor.client/HttpClientConfig<*>, kotlin/Unit>? = ..., kotlin.coroutines/SuspendFunction0<kotlin/String?>? = ...): io.github.androidpoet.supabase.client/SupabaseConfig // io.github.androidpoet.supabase.client/SupabaseConfig.copy|copy(kotlin.Boolean;io.ktor.client.plugins.logging.LogLevel;kotlin.collections.Map<kotlin.String,kotlin.String>;io.github.androidpoet.supabase.client.RetryConfig;io.github.androidpoet.supabase.client.SupabaseLogger?;io.github.androidpoet.supabase.client.SupabaseInterceptor?;kotlin.Long?;kotlin.Long?;kotlin.Long?;kotlin.Function1<io.ktor.client.HttpClientConfig<*>,kotlin.Unit>?;kotlin.coroutines.SuspendFunction0<kotlin.String?>?){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.client/SupabaseConfig.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.client/SupabaseConfig.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.client/SupabaseConfig.toString|toString(){}[0]
 }
 
 final class io.github.androidpoet.supabase.client/SupabaseConfigBuilder { // io.github.androidpoet.supabase.client/SupabaseConfigBuilder|null[0]
@@ -206,8 +204,8 @@ final class io.github.androidpoet.supabase.client/SupabaseConfigBuilder { // io.
         final fun <get-interceptor>(): io.github.androidpoet.supabase.client/SupabaseInterceptor? // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.interceptor.<get-interceptor>|<get-interceptor>(){}[0]
         final fun <set-interceptor>(io.github.androidpoet.supabase.client/SupabaseInterceptor?) // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.interceptor.<set-interceptor>|<set-interceptor>(io.github.androidpoet.supabase.client.SupabaseInterceptor?){}[0]
     final var logLevel // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.logLevel|{}logLevel[0]
-        final fun <get-logLevel>(): io.ktor.client.plugins.logging/LogLevel // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.logLevel.<get-logLevel>|<get-logLevel>(){}[0]
-        final fun <set-logLevel>(io.ktor.client.plugins.logging/LogLevel) // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.logLevel.<set-logLevel>|<set-logLevel>(io.ktor.client.plugins.logging.LogLevel){}[0]
+        final fun <get-logLevel>(): io.github.androidpoet.supabase.client/HttpLogLevel // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.logLevel.<get-logLevel>|<get-logLevel>(){}[0]
+        final fun <set-logLevel>(io.github.androidpoet.supabase.client/HttpLogLevel) // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.logLevel.<set-logLevel>|<set-logLevel>(io.github.androidpoet.supabase.client.HttpLogLevel){}[0]
     final var logger // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.logger|{}logger[0]
         final fun <get-logger>(): io.github.androidpoet.supabase.client/SupabaseLogger? // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.logger.<get-logger>|<get-logger>(){}[0]
         final fun <set-logger>(io.github.androidpoet.supabase.client/SupabaseLogger?) // io.github.androidpoet.supabase.client/SupabaseConfigBuilder.logger.<set-logger>|<set-logger>(io.github.androidpoet.supabase.client.SupabaseLogger?){}[0]

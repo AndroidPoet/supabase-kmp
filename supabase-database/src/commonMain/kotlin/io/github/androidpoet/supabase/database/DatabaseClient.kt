@@ -53,6 +53,25 @@ public enum class UpsertResolution(
 }
 
 /**
+ * The body shape a read requests via its `Accept` header — the mutually-exclusive response
+ * formats for [DatabaseClient.select] / [DatabaseClient.rpc] / [DatabaseClient.rpcGet]. Modeling
+ * this as one enum (rather than parallel `single`/`csv`/`geojson`/`head` booleans) makes the
+ * illegal combinations unrepresentable instead of rejected at runtime.
+ *
+ * [ROWS] is the default JSON array; [SINGLE] expects exactly one row
+ * (`application/vnd.pgrst.object+json`, a 406 if not); [CSV] returns `text/csv`; [GEOJSON]
+ * returns a PostGIS `FeatureCollection`; [HEAD] issues the request for its headers only and
+ * yields an empty body — pair it with a `count` to fetch just a total.
+ */
+public enum class ResponseFormat {
+    ROWS,
+    SINGLE,
+    CSV,
+    GEOJSON,
+    HEAD,
+}
+
+/**
  * Output format for an `EXPLAIN` plan, selecting the `application/vnd.pgrst.plan+<format>`
  * media type requested via [ExplainOptions].
  */
@@ -114,6 +133,18 @@ public data class PostgrestPage<T>(
 )
 
 /**
+ * The raw response [body] of a [DatabaseClient.selectRange] together with the total
+ * [count] and fetched [range] from PostgREST's `Content-Range` header. The string
+ * analogue of [PostgrestPage]; the typed `selectWithCount` helper decodes [body]
+ * into a [PostgrestPage].
+ */
+public data class PostgrestRawPage(
+    public val body: String,
+    public val count: Long? = null,
+    public val range: LongRange? = null,
+)
+
+/**
  * Thin, stateless client over a Supabase project's PostgREST (`/rest/v1`) API.
  *
  * Every call maps to a single HTTP request and returns the raw response body as
@@ -136,14 +167,10 @@ public interface DatabaseClient {
      * body as a raw string (typically a JSON array).
      *
      * The [columns] selector becomes `select=` (supporting embedded resources and
-     * renames); [block] adds the row predicates, ordering, and range. The body
-     * shape is chosen by the request's `Accept` header: [single] expects exactly
-     * one row (`application/vnd.pgrst.object+json`, a 406 if not), [csv] returns
-     * `text/csv`, [geojson] returns a PostGIS `FeatureCollection`, and [stripNulls]
-     * omits null fields. [head] issues the request for its headers only and yields
-     * an empty body — pair it with [count] to fetch just a total. [explain] returns
-     * the query plan instead of data. Mutually exclusive combinations (e.g. [single]
-     * with [csv]) are rejected before the request is sent.
+     * renames); [block] adds the row predicates, ordering, and range. [format] chooses
+     * the body shape via the request's `Accept` header (rows / single / csv / geojson /
+     * head — see [ResponseFormat]); [stripNulls] omits null fields; [explain] returns the
+     * query plan instead of data.
      *
      * @param schema target Postgres schema; sent as `Accept-Profile` when non-null, otherwise the default schema.
      * @param count adds a `count=` preference so the total appears in `Content-Range`.
@@ -154,10 +181,7 @@ public interface DatabaseClient {
         table: String,
         schema: String? = null,
         columns: String = "*",
-        head: Boolean = false,
-        single: Boolean = false,
-        csv: Boolean = false,
-        geojson: Boolean = false,
+        format: ResponseFormat = ResponseFormat.ROWS,
         count: CountOption? = null,
         stripNulls: Boolean = false,
         explain: ExplainOptions? = null,
@@ -182,21 +206,21 @@ public interface DatabaseClient {
     ): SupabaseResult<PostgrestRange>
 
     /**
-     * Like [select], but also returns the total [PostgrestRange.count] and the
-     * fetched [PostgrestRange.range] from the `Content-Range` header alongside
-     * the (string) body. Use the `selectWithCount` typed helper to decode rows
-     * into a [PostgrestPage].
+     * Like [select], but also returns the total [PostgrestRawPage.count] and the
+     * fetched [PostgrestRawPage.range] from the `Content-Range` header alongside
+     * the raw [PostgrestRawPage.body]. Use the `selectWithCount` typed helper to
+     * decode rows into a [PostgrestPage].
      */
     public suspend fun selectRange(
         table: String,
         schema: String? = null,
         columns: String = "*",
-        single: Boolean = false,
+        format: ResponseFormat = ResponseFormat.ROWS,
         count: CountOption = CountOption.EXACT,
         stripNulls: Boolean = false,
         headers: Map<String, String> = emptyMap(),
         block: QueryBuilder.() -> Unit = {},
-    ): SupabaseResult<Pair<String, PostgrestRange>>
+    ): SupabaseResult<PostgrestRawPage>
 
     /**
      * Inserts (or upserts) into [table] via `POST /rest/v1/{table}`, with [body]
@@ -321,12 +345,12 @@ public interface DatabaseClient {
      *
      * This is the mutating/POST form, suitable for functions with side effects or
      * large argument payloads; for a read-only function prefer [rpcGet], which is
-     * cacheable. [single] expects a scalar/object result, [csv] requests `text/csv`,
-     * and [explain] returns the plan. The typed wrappers ([rpcTyped],
+     * cacheable. [format] selects the body shape (see [ResponseFormat] — `SINGLE` for a
+     * scalar/object result, `CSV` for `text/csv`, `HEAD` for headers/count only), and
+     * [explain] returns the plan. The typed wrappers ([rpcTyped],
      * [rpcSingleTyped], [rpcListTyped], [rpcUnit]) decode the body for you.
      *
      * @param params JSON object of named arguments, or null for a no-argument call.
-     * @param head issue the request for headers/count only, yielding an empty body.
      * @param count adds a `count=` preference, surfacing the total in `Content-Range`.
      * @param rollback when true sends `tx=rollback` so any writes are rolled back.
      * @param maxAffected must be greater than 0 when set; caps rows the function may modify.
@@ -339,9 +363,7 @@ public interface DatabaseClient {
         function: String,
         schema: String? = null,
         params: String? = null,
-        head: Boolean = false,
-        single: Boolean = false,
-        csv: Boolean = false,
+        format: ResponseFormat = ResponseFormat.ROWS,
         count: CountOption? = null,
         stripNulls: Boolean = false,
         rollback: Boolean = false,
@@ -359,10 +381,9 @@ public interface DatabaseClient {
      *
      * Each pair becomes a query-string argument; the extensions in `DatabaseClientExt`
      * accept a `Map` or a serializable request object and flatten it into these pairs.
-     * [single], [csv], and [explain] behave as on [rpc]; typed decoding is provided by
+     * [format] and [explain] behave as on [rpc]; typed decoding is provided by
      * [rpcGetTyped] and friends.
      *
-     * @param head issue the request for headers/count only, yielding an empty body.
      * @param count adds a `count=` preference, surfacing the total in `Content-Range`.
      * @param retry whether this read may be transparently retried by the transport.
      */
@@ -370,9 +391,7 @@ public interface DatabaseClient {
         function: String,
         schema: String? = null,
         queryParams: List<Pair<String, String>> = emptyList(),
-        head: Boolean = false,
-        single: Boolean = false,
-        csv: Boolean = false,
+        format: ResponseFormat = ResponseFormat.ROWS,
         count: CountOption? = null,
         stripNulls: Boolean = false,
         explain: ExplainOptions? = null,

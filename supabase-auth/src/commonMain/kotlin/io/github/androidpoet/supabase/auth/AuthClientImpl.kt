@@ -11,6 +11,7 @@ import io.github.androidpoet.supabase.auth.models.Jwk
 import io.github.androidpoet.supabase.auth.models.JwkSet
 import io.github.androidpoet.supabase.auth.models.JwtClaims
 import io.github.androidpoet.supabase.auth.models.LinkIdentityResponse
+import io.github.androidpoet.supabase.auth.models.MessagingChannel
 import io.github.androidpoet.supabase.auth.models.MfaChallengeRequest
 import io.github.androidpoet.supabase.auth.models.MfaChallengeResponse
 import io.github.androidpoet.supabase.auth.models.MfaEnrollRequest
@@ -110,7 +111,7 @@ internal class AuthClientImpl(
         redirectTo: String?,
         captchaToken: String?,
         pkceParams: PkceParams?,
-        channel: String?,
+        channel: MessagingChannel?,
     ): SupabaseResult<Session> {
         if (phone.isBlank()) return SupabaseResult.Failure(SupabaseError("phone must not be blank"))
         val body =
@@ -122,7 +123,7 @@ internal class AuthClientImpl(
                     captchaToken = captchaToken,
                     codeChallenge = pkceParams?.codeChallenge,
                     codeChallengeMethod = pkceParams?.codeChallengeMethod,
-                    channel = channel,
+                    channel = channel?.wireValue,
                 ),
             )
         return client.post(signUpEndpoint(redirectTo), body = body).deserialize()
@@ -236,7 +237,7 @@ internal class AuthClientImpl(
         createUser: Boolean?,
         captchaToken: String?,
         emailRedirectTo: String?,
-        channel: String?,
+        channel: MessagingChannel?,
         data: JsonObject?,
         pkceParams: PkceParams?,
     ): SupabaseResult<Unit> {
@@ -246,7 +247,7 @@ internal class AuthClientImpl(
                     email = email,
                     phone = phone,
                     createUser = createUser,
-                    channel = channel,
+                    channel = channel?.wireValue,
                     data = data,
                     captchaToken = captchaToken,
                     codeChallenge = pkceParams?.codeChallenge,
@@ -257,44 +258,6 @@ internal class AuthClientImpl(
     }
 
     override suspend fun verifyOtp(
-        email: String?,
-        phone: String?,
-        token: String,
-        type: OtpType,
-        captchaToken: String?,
-        redirectTo: String?,
-    ): SupabaseResult<Session> {
-        val body =
-            defaultJson.encodeToString(
-                OtpVerifyRequest(
-                    email = email,
-                    phone = phone,
-                    token = token,
-                    type = type,
-                    captchaToken = captchaToken,
-                    redirectTo = redirectTo,
-                ),
-            )
-        return verifyOtpSessionFromRawResponse(client.post(AuthPaths.VERIFY, body = body))
-    }
-
-    override suspend fun verifyOtpWithTokenHash(
-        tokenHash: String,
-        type: OtpType,
-        captchaToken: String?,
-    ): SupabaseResult<Session> {
-        val body =
-            defaultJson.encodeToString(
-                OtpVerifyRequest(
-                    tokenHash = tokenHash,
-                    type = type,
-                    captchaToken = captchaToken,
-                ),
-            )
-        return verifyOtpSessionFromRawResponse(client.post(AuthPaths.VERIFY, body = body))
-    }
-
-    override suspend fun verifyOtpWithResult(
         email: String?,
         phone: String?,
         token: String,
@@ -316,7 +279,7 @@ internal class AuthClientImpl(
         return verifyOtpResultFromRawResponse(client.post(AuthPaths.VERIFY, body = body))
     }
 
-    override suspend fun verifyOtpWithTokenHashWithResult(
+    override suspend fun verifyOtpWithTokenHash(
         tokenHash: String,
         type: OtpType,
         captchaToken: String?,
@@ -422,7 +385,7 @@ internal class AuthClientImpl(
                 headers = bearerHeaders(accessToken),
             ).deserialize()
 
-    override suspend fun fetchJwks(): SupabaseResult<String> = client.get(endpoint = AuthPaths.JWKS)
+    override suspend fun getJwks(): SupabaseResult<String> = client.get(endpoint = AuthPaths.JWKS)
 
     override suspend fun getSettings(): SupabaseResult<AuthSettings> =
         client.get(endpoint = AuthPaths.SETTINGS).deserialize()
@@ -438,7 +401,7 @@ internal class AuthClientImpl(
             // cache, or a fresh cache missing this kid — e.g. a rotated key) forces one refetch.
             jwksCache[kid]?.let { if (fresh) return@withLock SupabaseResult.Success(it) }
             val raw =
-                when (val result = fetchJwks()) {
+                when (val result = getJwks()) {
                     is SupabaseResult.Failure -> return@withLock result
                     is SupabaseResult.Success -> result.value
                 }
@@ -567,7 +530,7 @@ internal class AuthClientImpl(
                 headers = bearerHeaders(accessToken),
             ).map { }
 
-    override suspend fun retrieveSsoUrl(
+    override suspend fun getSsoUrl(
         accessToken: String?,
         domain: String?,
         providerId: String?,
@@ -718,11 +681,11 @@ internal class AuthClientImpl(
     }
 
     override suspend fun mfaEnroll(
+        accessToken: String,
         factorType: MfaFactorType,
         friendlyName: String?,
         issuer: String?,
         phone: String?,
-        accessToken: String,
     ): SupabaseResult<MfaEnrollResponse> {
         val body =
             defaultJson.encodeToString(
@@ -742,22 +705,22 @@ internal class AuthClientImpl(
     }
 
     override suspend fun mfaChallenge(
-        factorId: String,
         accessToken: String,
-        channel: String?,
+        factorId: String,
+        channel: MessagingChannel?,
     ): SupabaseResult<MfaChallengeResponse> =
         client
             .post(
                 endpoint = "${AuthPaths.FACTORS}/$factorId/challenge",
-                body = channel?.let { defaultJson.encodeToString(MfaChallengeRequest(channel = it)) },
+                body = channel?.let { defaultJson.encodeToString(MfaChallengeRequest(channel = it.wireValue)) },
                 headers = bearerHeaders(accessToken),
             ).deserialize()
 
     override suspend fun mfaVerify(
+        accessToken: String,
         factorId: String,
         challengeId: String,
         code: String,
-        accessToken: String,
         webauthn: MfaWebauthnVerification?,
     ): SupabaseResult<MfaVerifyResponse> {
         val body =
@@ -777,8 +740,8 @@ internal class AuthClientImpl(
     }
 
     override suspend fun mfaUnenroll(
-        factorId: String,
         accessToken: String,
+        factorId: String,
     ): SupabaseResult<MfaUnenrollResponse> =
         client
             .delete(
@@ -1032,37 +995,6 @@ internal class AuthClientImpl(
                             "resend only supports signup, email_change, sms or phone_change; got $type",
                     ),
                 )
-        }
-
-    // The plain verifyOtp variants promise a Session, but some confirmations (e.g. email_change /
-    // phone_change) verify without minting one, so the body has no access_token. Detect that and
-    // return a clear failure pointing at verifyOtpWithResult rather than a confusing decode error.
-    private fun verifyOtpSessionFromRawResponse(response: SupabaseResult<String>): SupabaseResult<Session> =
-        when (response) {
-            is SupabaseResult.Failure -> SupabaseResult.Failure(response.error)
-            is SupabaseResult.Success -> {
-                val element =
-                    runCatching { defaultJson.parseToJsonElement(response.value) }.getOrElse {
-                        return SupabaseResult.Failure(SupabaseError(message = "Invalid verify response: ${it.message}"))
-                    }
-                val obj =
-                    element as? JsonObject
-                        ?: return SupabaseResult.Failure(SupabaseError(message = "Invalid verify response shape"))
-                if ("access_token" in obj) {
-                    runCatching { defaultJson.decodeFromJsonElement<Session>(obj) }.fold(
-                        onSuccess = { SupabaseResult.Success(it) },
-                        onFailure = {
-                            SupabaseResult.Failure(SupabaseError(message = "Invalid verify session payload: ${it.message}"))
-                        },
-                    )
-                } else {
-                    SupabaseResult.Failure(
-                        SupabaseError(
-                            message = "verification succeeded but produced no session; use verifyOtpWithResult",
-                        ),
-                    )
-                }
-            }
         }
 
     private fun verifyOtpResultFromRawResponse(response: SupabaseResult<String>): SupabaseResult<OtpVerifyResult> =

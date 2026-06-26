@@ -33,7 +33,7 @@ class AuthAdminClientImplTest {
     fun test_createUser_sendsAdminUserAttributes_expectedEndpointBodyAndHeader() =
         runTest {
             val client = FakeSupabaseClient()
-            val sut = client.authAdmin(serviceRoleKey = "service-role")
+            val sut = createAuthAdminClient(client, serviceRoleKey = "service-role")
 
             val result =
                 sut.createUser(
@@ -66,7 +66,7 @@ class AuthAdminClientImplTest {
     fun test_listUsers_withPaging_decodesUsersAndSendsQueryParams() =
         runTest {
             val client = FakeSupabaseClient()
-            val sut = client.authAdmin(serviceRoleKey = "service-role")
+            val sut = createAuthAdminClient(client, serviceRoleKey = "service-role")
 
             val result = sut.listUsers(page = 2, perPage = 50)
 
@@ -83,7 +83,7 @@ class AuthAdminClientImplTest {
     fun test_getUserById_decodesUserResponse() =
         runTest {
             val client = FakeSupabaseClient()
-            val sut = client.authAdmin(serviceRoleKey = "service-role")
+            val sut = createAuthAdminClient(client, serviceRoleKey = "service-role")
 
             val result = sut.getUserById("u1")
 
@@ -96,7 +96,7 @@ class AuthAdminClientImplTest {
     fun test_updateUserById_sendsPutBody() =
         runTest {
             val client = FakeSupabaseClient()
-            val sut = client.authAdmin(serviceRoleKey = "service-role")
+            val sut = createAuthAdminClient(client, serviceRoleKey = "service-role")
 
             val result = sut.updateUserById("u1", AdminUserAttributes(phone = "+15555550100", phoneConfirm = true))
 
@@ -112,7 +112,7 @@ class AuthAdminClientImplTest {
     fun test_deleteUser_sendsAdminDelete() =
         runTest {
             val client = FakeSupabaseClient()
-            val sut = client.authAdmin(serviceRoleKey = "service-role")
+            val sut = createAuthAdminClient(client, serviceRoleKey = "service-role")
 
             val result = sut.deleteUser(userId = "u1", shouldSoftDelete = true)
 
@@ -127,7 +127,7 @@ class AuthAdminClientImplTest {
     fun test_listFactors_decodesAdminMfaFactors() =
         runTest {
             val client = FakeSupabaseClient()
-            val sut = client.authAdmin(serviceRoleKey = "service-role")
+            val sut = createAuthAdminClient(client, serviceRoleKey = "service-role")
 
             val result = sut.listFactors("u1")
 
@@ -143,7 +143,7 @@ class AuthAdminClientImplTest {
     fun test_deleteFactor_sendsAdminMfaDeleteAndDecodesId() =
         runTest {
             val client = FakeSupabaseClient()
-            val sut = client.authAdmin(serviceRoleKey = "service-role")
+            val sut = createAuthAdminClient(client, serviceRoleKey = "service-role")
 
             val result = sut.deleteFactor(userId = "u1", factorId = "factor1")
 
@@ -158,7 +158,7 @@ class AuthAdminClientImplTest {
     fun test_updateFactor_sendsPutWithFriendlyNameAndDecodesFactor() =
         runTest {
             val client = FakeSupabaseClient()
-            val sut = client.authAdmin(serviceRoleKey = "service-role")
+            val sut = createAuthAdminClient(client, serviceRoleKey = "service-role")
 
             val result = sut.updateFactor(userId = "u1", factorId = "factor1", friendlyName = "Renamed Key")
 
@@ -176,9 +176,9 @@ class AuthAdminClientImplTest {
     fun test_auditLogEvents_parsesBareArrayAndSendsQueryParams() =
         runTest {
             val client = FakeSupabaseClient()
-            val sut = client.authAdmin(serviceRoleKey = "service-role")
+            val sut = createAuthAdminClient(client, serviceRoleKey = "service-role")
 
-            val result = sut.auditLogEvents(page = 2, perPage = 50)
+            val result = sut.listAuditLogEvents(page = 2, perPage = 50)
 
             val success = assertIs<SupabaseResult.Success<*>>(result)
             assertEquals("/auth/v1/admin/audit", client.lastGetEndpoint)
@@ -201,7 +201,7 @@ class AuthAdminClientImplTest {
     fun test_listPasskeys_decodesAdminPasskeyArray() =
         runTest {
             val client = FakeSupabaseClient()
-            val sut = client.authAdmin(serviceRoleKey = "service-role")
+            val sut = createAuthAdminClient(client, serviceRoleKey = "service-role")
 
             val result = sut.listPasskeys("u1")
 
@@ -218,7 +218,7 @@ class AuthAdminClientImplTest {
     fun test_deletePasskey_sendsAdminPasskeyDelete() =
         runTest {
             val client = FakeSupabaseClient()
-            val sut = client.authAdmin(serviceRoleKey = "service-role")
+            val sut = createAuthAdminClient(client, serviceRoleKey = "service-role")
 
             val result = sut.deletePasskey(userId = "u1", passkeyId = "passkey1")
 
@@ -231,7 +231,7 @@ class AuthAdminClientImplTest {
     fun test_inviteUserByEmail_sendsRedirectQueryAndData() =
         runTest {
             val client = FakeSupabaseClient()
-            val sut = client.authAdmin(serviceRoleKey = "service-role")
+            val sut = createAuthAdminClient(client, serviceRoleKey = "service-role")
 
             val result =
                 sut.inviteUserByEmail(
@@ -258,7 +258,7 @@ class AuthAdminClientImplTest {
     fun test_generateLink_mapsRequestAndDecodesProperties() =
         runTest {
             val client = FakeSupabaseClient()
-            val sut = client.authAdmin(serviceRoleKey = "service-role")
+            val sut = createAuthAdminClient(client, serviceRoleKey = "service-role")
 
             val result =
                 sut.generateLink(
@@ -291,9 +291,9 @@ class AuthAdminClientImplTest {
     fun test_signOut_usesProvidedJwtNotAdminKey() =
         runTest {
             val client = FakeSupabaseClient()
-            val sut = client.authAdmin(serviceRoleKey = "service-role")
+            val sut = createAuthAdminClient(client, serviceRoleKey = "service-role")
 
-            val result = sut.signOut(jwt = "user-jwt", scope = SignOutScope.GLOBAL)
+            val result = sut.signOut(accessToken = "user-jwt", scope = SignOutScope.GLOBAL)
 
             assertIs<SupabaseResult.Success<*>>(result)
             assertEquals("/auth/v1/logout?scope=global", client.lastPostEndpoint)
@@ -304,7 +304,7 @@ class AuthAdminClientImplTest {
     fun test_listOAuthClients_withPaging_decodesClientsAndSendsQueryParams() =
         runTest {
             val client = FakeSupabaseClient()
-            val sut = client.authAdmin(serviceRoleKey = "service-role")
+            val sut = createAuthAdminClient(client, serviceRoleKey = "service-role")
 
             val result = sut.listOAuthClients(page = 3, perPage = 25)
 
@@ -319,7 +319,7 @@ class AuthAdminClientImplTest {
     fun test_createOAuthClient_sendsCreatePayload() =
         runTest {
             val client = FakeSupabaseClient()
-            val sut = client.authAdmin(serviceRoleKey = "service-role")
+            val sut = createAuthAdminClient(client, serviceRoleKey = "service-role")
 
             val result =
                 sut.createOAuthClient(
@@ -345,7 +345,7 @@ class AuthAdminClientImplTest {
     fun test_updateOAuthClient_sendsUpdatePayload() =
         runTest {
             val client = FakeSupabaseClient()
-            val sut = client.authAdmin(serviceRoleKey = "service-role")
+            val sut = createAuthAdminClient(client, serviceRoleKey = "service-role")
 
             val result =
                 sut.updateOAuthClient(
@@ -363,7 +363,7 @@ class AuthAdminClientImplTest {
     fun test_getDeleteAndRegenerateOAuthClient_useExpectedEndpoints() =
         runTest {
             val client = FakeSupabaseClient()
-            val sut = client.authAdmin(serviceRoleKey = "service-role")
+            val sut = createAuthAdminClient(client, serviceRoleKey = "service-role")
 
             val getResult = sut.getOAuthClient("oauth-client-1")
             val regenerateResult = sut.regenerateOAuthClientSecret("oauth-client-1")
@@ -380,7 +380,7 @@ class AuthAdminClientImplTest {
     fun test_listCustomProviders_withTypeFilter_decodesProviders() =
         runTest {
             val client = FakeSupabaseClient()
-            val sut = client.authAdmin(serviceRoleKey = "service-role")
+            val sut = createAuthAdminClient(client, serviceRoleKey = "service-role")
 
             val result = sut.listCustomProviders(type = CustomProviderType.OIDC)
 
@@ -395,7 +395,7 @@ class AuthAdminClientImplTest {
     fun test_createCustomProvider_sendsProviderPayload() =
         runTest {
             val client = FakeSupabaseClient()
-            val sut = client.authAdmin(serviceRoleKey = "service-role")
+            val sut = createAuthAdminClient(client, serviceRoleKey = "service-role")
 
             val result =
                 sut.createCustomProvider(
@@ -423,7 +423,7 @@ class AuthAdminClientImplTest {
     fun test_getUpdateAndDeleteCustomProvider_useExpectedEndpoints() =
         runTest {
             val client = FakeSupabaseClient()
-            val sut = client.authAdmin(serviceRoleKey = "service-role")
+            val sut = createAuthAdminClient(client, serviceRoleKey = "service-role")
 
             val getResult = sut.getCustomProvider("custom:acme")
             val updateResult =
@@ -446,7 +446,7 @@ class AuthAdminClientImplTest {
     fun test_listSsoProviders_unwrapsItemsWrapper() =
         runTest {
             val client = FakeSupabaseClient()
-            val sut = client.authAdmin(serviceRoleKey = "service-role")
+            val sut = createAuthAdminClient(client, serviceRoleKey = "service-role")
 
             val result = sut.listSsoProviders()
 
@@ -465,7 +465,7 @@ class AuthAdminClientImplTest {
     fun test_createSsoProvider_sendsSamlPayload() =
         runTest {
             val client = FakeSupabaseClient()
-            val sut = client.authAdmin(serviceRoleKey = "service-role")
+            val sut = createAuthAdminClient(client, serviceRoleKey = "service-role")
 
             val result =
                 sut.createSsoProvider(
@@ -488,7 +488,7 @@ class AuthAdminClientImplTest {
     fun test_getUpdateAndDeleteSsoProvider_useExpectedEndpoints() =
         runTest {
             val client = FakeSupabaseClient()
-            val sut = client.authAdmin(serviceRoleKey = "service-role")
+            val sut = createAuthAdminClient(client, serviceRoleKey = "service-role")
 
             val getResult = sut.getSsoProvider("sso-provider-1")
             val updateResult =

@@ -9,6 +9,7 @@ import io.github.androidpoet.supabase.auth.models.JwtClaims
 import io.github.androidpoet.supabase.auth.models.JwtClaimsResult
 import io.github.androidpoet.supabase.auth.models.JwtHeader
 import io.github.androidpoet.supabase.auth.models.LinkIdentityResponse
+import io.github.androidpoet.supabase.auth.models.MessagingChannel
 import io.github.androidpoet.supabase.auth.models.MfaVerifyResponse
 import io.github.androidpoet.supabase.auth.models.OAuthProvider
 import io.github.androidpoet.supabase.auth.models.OtpType
@@ -67,11 +68,11 @@ public suspend fun AuthClient.sendOtp(email: String): SupabaseResult<Unit> =
 /**
  * Sends a phone OTP. Shorthand for [AuthClient.signInWithOtp] with just a phone.
  *
- * @param channel delivery channel: `"sms"` (server default) or `"whatsapp"`.
+ * @param channel delivery channel ([MessagingChannel.SMS] server default, or `WHATSAPP`).
  */
 public suspend fun AuthClient.sendPhoneOtp(
     phone: String,
-    channel: String? = null,
+    channel: MessagingChannel? = null,
 ): SupabaseResult<Unit> =
     signInWithOtp(phone = phone, channel = channel)
 
@@ -105,7 +106,7 @@ public suspend fun AuthClient.verifyEmailOtp(
     token: String,
     type: OtpType,
     captchaToken: String? = null,
-): SupabaseResult<Session> =
+): SupabaseResult<OtpVerifyResult> =
     verifyOtp(email = email, token = token, type = type, captchaToken = captchaToken)
 
 /** Verifies a phone OTP. Shorthand for [AuthClient.verifyOtp] keyed by phone. */
@@ -114,7 +115,7 @@ public suspend fun AuthClient.verifyPhoneOtp(
     token: String,
     type: OtpType,
     captchaToken: String? = null,
-): SupabaseResult<Session> =
+): SupabaseResult<OtpVerifyResult> =
     verifyOtp(phone = phone, token = token, type = type, captchaToken = captchaToken)
 
 /** Verifies a sign-up email OTP with [OtpType.EMAIL] fixed. See [verifyEmailOtp]. */
@@ -122,7 +123,7 @@ public suspend fun AuthClient.verifyEmailSignUpOtp(
     email: String,
     token: String,
     captchaToken: String? = null,
-): SupabaseResult<Session> =
+): SupabaseResult<OtpVerifyResult> =
     verifyEmailOtp(email = email, token = token, type = OtpType.EMAIL, captchaToken = captchaToken)
 
 /** Verifies a phone sign-in OTP with [OtpType.SMS] fixed. See [verifyPhoneOtp]. */
@@ -130,7 +131,7 @@ public suspend fun AuthClient.verifyPhoneSignInOtp(
     phone: String,
     token: String,
     captchaToken: String? = null,
-): SupabaseResult<Session> =
+): SupabaseResult<OtpVerifyResult> =
     verifyPhoneOtp(phone = phone, token = token, type = OtpType.SMS, captchaToken = captchaToken)
 
 /** Verifies an email-link confirmation by token hash. Shorthand for [AuthClient.verifyOtpWithTokenHash]. */
@@ -138,74 +139,8 @@ public suspend fun AuthClient.verifyEmailOtpWithTokenHash(
     tokenHash: String,
     type: OtpType,
     captchaToken: String? = null,
-): SupabaseResult<Session> =
+): SupabaseResult<OtpVerifyResult> =
     verifyOtpWithTokenHash(
-        tokenHash = tokenHash,
-        type = type,
-        captchaToken = captchaToken,
-    )
-
-/** Email-keyed [AuthClient.verifyOtpWithResult] that distinguishes session vs. no-session outcomes. */
-public suspend fun AuthClient.verifyEmailOtpWithResult(
-    email: String,
-    token: String,
-    type: OtpType,
-    captchaToken: String? = null,
-): SupabaseResult<OtpVerifyResult> =
-    verifyOtpWithResult(
-        email = email,
-        token = token,
-        type = type,
-        captchaToken = captchaToken,
-    )
-
-/** Phone-keyed [AuthClient.verifyOtpWithResult] that distinguishes session vs. no-session outcomes. */
-public suspend fun AuthClient.verifyPhoneOtpWithResult(
-    phone: String,
-    token: String,
-    type: OtpType,
-    captchaToken: String? = null,
-): SupabaseResult<OtpVerifyResult> =
-    verifyOtpWithResult(
-        phone = phone,
-        token = token,
-        type = type,
-        captchaToken = captchaToken,
-    )
-
-/** Sign-up email verification returning an [OtpVerifyResult], with [OtpType.EMAIL] fixed. See [verifyEmailOtpWithResult]. */
-public suspend fun AuthClient.verifyEmailSignUpOtpWithResult(
-    email: String,
-    token: String,
-    captchaToken: String? = null,
-): SupabaseResult<OtpVerifyResult> =
-    verifyEmailOtpWithResult(
-        email = email,
-        token = token,
-        type = OtpType.EMAIL,
-        captchaToken = captchaToken,
-    )
-
-/** Phone sign-in verification returning an [OtpVerifyResult], with [OtpType.SMS] fixed. See [verifyPhoneOtpWithResult]. */
-public suspend fun AuthClient.verifyPhoneSignInOtpWithResult(
-    phone: String,
-    token: String,
-    captchaToken: String? = null,
-): SupabaseResult<OtpVerifyResult> =
-    verifyPhoneOtpWithResult(
-        phone = phone,
-        token = token,
-        type = OtpType.SMS,
-        captchaToken = captchaToken,
-    )
-
-/** Token-hash verification returning an [OtpVerifyResult]. Shorthand for [AuthClient.verifyOtpWithTokenHashWithResult]. */
-public suspend fun AuthClient.verifyEmailOtpWithTokenHashWithResult(
-    tokenHash: String,
-    type: OtpType,
-    captchaToken: String? = null,
-): SupabaseResult<OtpVerifyResult> =
-    verifyOtpWithTokenHashWithResult(
         tokenHash = tokenHash,
         type = type,
         captchaToken = captchaToken,
@@ -405,14 +340,14 @@ public suspend fun AuthClient.importAuthToken(
     return SupabaseResult.Success(session)
 }
 
-/** Resolves an SSO sign-in URL using the current session's token. See [AuthClient.retrieveSsoUrl]. */
-public suspend fun AuthClient.retrieveSsoUrlForCurrentSession(
+/** Resolves an SSO sign-in URL using the current session's token. See [AuthClient.getSsoUrl]. */
+public suspend fun AuthClient.getSsoUrlForCurrentSession(
     sessionManager: SessionManager,
     domain: String? = null,
     providerId: String? = null,
     redirectTo: String? = null,
 ): SupabaseResult<SsoResponse> =
-    retrieveSsoUrl(
+    getSsoUrl(
         accessToken = sessionManager.accessToken,
         domain = domain,
         providerId = providerId,
@@ -480,46 +415,12 @@ public suspend fun AuthClient.signInWithIdTokenAndSaveSession(
         )
     }
 
-/** Verifies an OTP and saves the resulting session on success. See [AuthClient.verifyOtp]. */
-public suspend fun AuthClient.verifyOtpAndSaveSession(
-    sessionManager: SessionManager,
-    email: String? = null,
-    phone: String? = null,
-    token: String,
-    type: OtpType,
-    captchaToken: String? = null,
-): SupabaseResult<Session> =
-    saveSessionOnSuccess(sessionManager) {
-        verifyOtp(
-            email = email,
-            phone = phone,
-            token = token,
-            type = type,
-            captchaToken = captchaToken,
-        )
-    }
-
-/** Verifies a token-hash confirmation and saves the resulting session on success. See [AuthClient.verifyOtpWithTokenHash]. */
-public suspend fun AuthClient.verifyOtpWithTokenHashAndSaveSession(
-    sessionManager: SessionManager,
-    tokenHash: String,
-    type: OtpType,
-    captchaToken: String? = null,
-): SupabaseResult<Session> =
-    saveSessionOnSuccess(sessionManager) {
-        verifyOtpWithTokenHash(
-            tokenHash = tokenHash,
-            type = type,
-            captchaToken = captchaToken,
-        )
-    }
-
 /**
  * Verifies an OTP and, only when the result is [OtpVerifyResult.Authenticated],
  * saves its session — a no-session verification is returned untouched. See
- * [AuthClient.verifyOtpWithResult].
+ * [AuthClient.verifyOtp].
  */
-public suspend fun AuthClient.verifyOtpWithResultAndSaveSession(
+public suspend fun AuthClient.verifyOtpAndSaveSession(
     sessionManager: SessionManager,
     email: String? = null,
     phone: String? = null,
@@ -529,7 +430,7 @@ public suspend fun AuthClient.verifyOtpWithResultAndSaveSession(
 ): SupabaseResult<OtpVerifyResult> =
     when (
         val result =
-            verifyOtpWithResult(
+            verifyOtp(
                 email = email,
                 phone = phone,
                 token = token,
@@ -547,8 +448,12 @@ public suspend fun AuthClient.verifyOtpWithResultAndSaveSession(
         }
     }
 
-/** Token-hash counterpart to [verifyOtpWithResultAndSaveSession]. See [AuthClient.verifyOtpWithTokenHashWithResult]. */
-public suspend fun AuthClient.verifyOtpWithTokenHashWithResultAndSaveSession(
+/**
+ * Verifies a token-hash confirmation and, only when the result is
+ * [OtpVerifyResult.Authenticated], saves its session — a no-session verification is
+ * returned untouched. See [AuthClient.verifyOtpWithTokenHash].
+ */
+public suspend fun AuthClient.verifyOtpWithTokenHashAndSaveSession(
     sessionManager: SessionManager,
     tokenHash: String,
     type: OtpType,
@@ -556,7 +461,7 @@ public suspend fun AuthClient.verifyOtpWithTokenHashWithResultAndSaveSession(
 ): SupabaseResult<OtpVerifyResult> =
     when (
         val result =
-            verifyOtpWithTokenHashWithResult(
+            verifyOtpWithTokenHash(
                 tokenHash = tokenHash,
                 type = type,
                 captchaToken = captchaToken,
@@ -940,7 +845,7 @@ private fun decodeJwt(jwt: String): SupabaseResult<JwtClaimsResult> {
  * non-standard claim). When [verify] is true the token's signature is checked:
  *
  * - For asymmetric `ES256` (ECDSA P-256) tokens the signature is verified **locally** against the
- *   project's JWKS (fetched via [AuthClient.fetchJwks]), avoiding a network round-trip — this is
+ *   project's JWKS (fetched via [AuthClient.getJwks]), avoiding a network round-trip — this is
  *   what distinguishes `getClaims` from [AuthClient.getUser].
  * - For any other case (symmetric `HS256`, other asymmetric algorithms, a missing `kid`, an
  *   unreachable JWKS endpoint, or a platform without local crypto), it falls back to validating the

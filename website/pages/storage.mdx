@@ -28,7 +28,7 @@ val storage = createStorageClient(client)
 A bucket is the container your files live in, and you create it once before
 uploading anything. Setting `public = true` makes its files readable by URL with
 no expiry; `public = false` keeps them private (you'll hand out signed links
-instead). `emptyBucket` clears the files but keeps the bucket; `deleteBucket`
+instead). `clearBucket` clears the files but keeps the bucket; `deleteBucket`
 removes the bucket itself.
 
 ```kotlin
@@ -36,7 +36,7 @@ storage.createBucket(id = "avatars", name = "avatars", public = true)
 storage.getBucket("avatars")
 storage.listBuckets()
 storage.updateBucket(id = "avatars", public = false)
-storage.emptyBucket("avatars")
+storage.clearBucket("avatars")
 storage.deleteBucket("avatars")
 ```
 
@@ -69,7 +69,7 @@ The full set of file operations:
 | `update(bucket, path, data, …)` | overwrite an existing file |
 | `download(bucket, path)` | fetch the file contents |
 | `move(bucket, fromPath, toPath)` / `copy(bucket, fromPath, toPath)` | relocate / duplicate |
-| `remove(bucket, paths)` / `removeWithResult(…)` | delete one or many |
+| `deleteObject(bucket, path)` / `deleteObjects(bucket, paths)` | delete one or many |
 | `info(bucket, path)` / `exists(bucket, path)` | metadata / existence |
 
 ## Resumable uploads

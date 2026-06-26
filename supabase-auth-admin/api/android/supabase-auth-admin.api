@@ -6,8 +6,6 @@ public final class io/github/androidpoet/supabase/auth/admin/AdminPagingKt {
 }
 
 public abstract interface class io/github/androidpoet/supabase/auth/admin/AuthAdminClient {
-	public abstract fun auditLogEvents (Ljava/lang/Integer;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun auditLogEvents$default (Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;Ljava/lang/Integer;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun createCustomProvider (Lio/github/androidpoet/supabase/auth/admin/models/CustomProviderCreateRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun createOAuthClient (Lio/github/androidpoet/supabase/auth/admin/models/OAuthClientCreateRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun createSsoProvider (Lio/github/androidpoet/supabase/auth/admin/models/SsoProviderCreateRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -26,6 +24,8 @@ public abstract interface class io/github/androidpoet/supabase/auth/admin/AuthAd
 	public abstract fun getUserById (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun inviteUserByEmail (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun inviteUserByEmail$default (Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun listAuditLogEvents (Ljava/lang/Integer;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun listAuditLogEvents$default (Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;Ljava/lang/Integer;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun listCustomProviders (Lio/github/androidpoet/supabase/auth/admin/models/CustomProviderType;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun listCustomProviders$default (Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;Lio/github/androidpoet/supabase/auth/admin/models/CustomProviderType;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun listFactors (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -47,9 +47,9 @@ public abstract interface class io/github/androidpoet/supabase/auth/admin/AuthAd
 }
 
 public final class io/github/androidpoet/supabase/auth/admin/AuthAdminClient$DefaultImpls {
-	public static synthetic fun auditLogEvents$default (Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;Ljava/lang/Integer;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun deleteUser$default (Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;Ljava/lang/String;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun inviteUserByEmail$default (Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun listAuditLogEvents$default (Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;Ljava/lang/Integer;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun listCustomProviders$default (Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;Lio/github/androidpoet/supabase/auth/admin/models/CustomProviderType;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun listOAuthClients$default (Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;Ljava/lang/Integer;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun listUsers$default (Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;Ljava/lang/Integer;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
@@ -58,7 +58,7 @@ public final class io/github/androidpoet/supabase/auth/admin/AuthAdminClient$Def
 }
 
 public final class io/github/androidpoet/supabase/auth/admin/AuthAdminClientExtKt {
-	public static final fun authAdmin (Lio/github/androidpoet/supabase/client/SupabaseClient;Ljava/lang/String;)Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;
+	public static final fun createAuthAdminClient (Lio/github/androidpoet/supabase/client/SupabaseClient;Ljava/lang/String;)Lio/github/androidpoet/supabase/auth/admin/AuthAdminClient;
 }
 
 public final class io/github/androidpoet/supabase/auth/admin/models/AdminUserAttributes {

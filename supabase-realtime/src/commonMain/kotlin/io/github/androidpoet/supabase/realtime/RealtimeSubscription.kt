@@ -43,8 +43,11 @@ public interface RealtimeSubscription {
     public val status: StateFlow<Status>
 
     /**
-     * Cold [Flow] of every decoded inbound [RealtimeEvent] for this channel —
-     * postgres changes, broadcasts and presence events interleaved. Under
+     * **Hot** [Flow] of every decoded inbound [RealtimeEvent] for this channel —
+     * postgres changes, broadcasts and presence events interleaved. This is a shared,
+     * best-effort multicast, **not** a cold flow: collecting it does **not** start or stop
+     * the subscription (lifecycle is owned by [RealtimeClient.subscribe]/[unsubscribe]), and
+     * events delivered before a collector attaches are not replayed (`replay = 0`). Under
      * backpressure a slow collector loses oldest events (signaled by
      * [RealtimeDebugEvent.InboundEventDropped]) rather than stalling the socket.
      * For one event kind, prefer the typed flows in `RealtimeExt`.

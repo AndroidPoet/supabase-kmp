@@ -5,6 +5,7 @@ import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevel
 import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevels
 import io.github.androidpoet.supabase.auth.models.Jwk
 import io.github.androidpoet.supabase.auth.models.LinkIdentityResponse
+import io.github.androidpoet.supabase.auth.models.MessagingChannel
 import io.github.androidpoet.supabase.auth.models.MfaChallengeResponse
 import io.github.androidpoet.supabase.auth.models.MfaEnrollResponse
 import io.github.androidpoet.supabase.auth.models.MfaFactorType
@@ -81,7 +82,7 @@ public interface AuthClient {
      * @param pkceParams PKCE challenge to bind a PKCE-flow sign-up; pair with
      *   [generatePkceParams] and complete via [exchangeCodeForSession]. Null for the
      *   implicit flow.
-     * @param channel phone delivery channel: `"sms"` (server default) or `"whatsapp"`.
+     * @param channel phone delivery channel ([MessagingChannel.SMS] server default, or `WHATSAPP`).
      */
     public suspend fun signUpWithPhone(
         phone: String,
@@ -90,7 +91,7 @@ public interface AuthClient {
         redirectTo: String? = null,
         captchaToken: String? = null,
         pkceParams: PkceParams? = null,
-        channel: String? = null,
+        channel: MessagingChannel? = null,
     ): SupabaseResult<Session>
 
     /**
@@ -201,8 +202,8 @@ public interface AuthClient {
      *   (server default applies when null).
      * @param captchaToken captcha response when bot protection is enabled.
      * @param emailRedirectTo magic-link redirect for the email channel.
-     * @param channel phone delivery channel: `"sms"` (server default) or
-     *   `"whatsapp"`; ignored for email.
+     * @param channel phone delivery channel ([MessagingChannel.SMS] server default, or
+     *   `WHATSAPP`); ignored for email.
      * @param data optional `user_metadata` stored when the user is auto-created.
      * @param pkceParams PKCE challenge to bind a PKCE-flow magic link; pair with
      *   [generatePkceParams] and complete via [exchangeCodeForSession]. Null for the
@@ -214,20 +215,22 @@ public interface AuthClient {
         createUser: Boolean? = null,
         captchaToken: String? = null,
         emailRedirectTo: String? = null,
-        // Phone OTP delivery channel: "sms" (server default) or "whatsapp". Ignored for email OTP.
-        channel: String? = null,
+        // Phone OTP delivery channel; ignored for email OTP.
+        channel: MessagingChannel? = null,
         data: JsonObject? = null,
         pkceParams: PkceParams? = null,
     ): SupabaseResult<Unit>
 
     /**
      * Verifies an OTP / magic-link code against `POST /verify`, completing a flow
-     * started by [signInWithOtp], a confirmation, or a recovery, and returning the
-     * resulting [Session]. Pass the same [email] or [phone] the code was sent to.
+     * started by [signInWithOtp], a confirmation, or a recovery. Pass the same
+     * [email] or [phone] the code was sent to.
      *
-     * Note: a code may verify without producing a session (e.g. some email-change
-     * confirmations); when you need to distinguish that, prefer
-     * [verifyOtpWithResult].
+     * Returns an [OtpVerifyResult] that distinguishes a verification which produced
+     * a session ([OtpVerifyResult.Authenticated], the common case) from one that
+     * succeeded without one ([OtpVerifyResult.VerifiedNoSession], e.g. some
+     * email-change confirmations), so a no-session success isn't reported as a
+     * failure. Reach the session via [OtpVerifyResult.Authenticated.session].
      *
      * @param type which OTP flow the [token] belongs to (signup, recovery, …).
      * @param captchaToken captcha response when bot protection is enabled.
@@ -240,41 +243,17 @@ public interface AuthClient {
         type: OtpType,
         captchaToken: String? = null,
         redirectTo: String? = null,
-    ): SupabaseResult<Session>
+    ): SupabaseResult<OtpVerifyResult>
 
     /**
      * Verifies an email-link confirmation by its `token_hash` (the value embedded in
      * a Supabase confirmation/recovery link) rather than a user-entered code, via
-     * `POST /verify`. Use this when handling a deep link the user clicked.
+     * `POST /verify`. Use this when handling a deep link the user clicked. Returns an
+     * [OtpVerifyResult] like [verifyOtp].
      *
      * @param captchaToken captcha response when bot protection is enabled.
      */
     public suspend fun verifyOtpWithTokenHash(
-        tokenHash: String,
-        type: OtpType,
-        captchaToken: String? = null,
-    ): SupabaseResult<Session>
-
-    /**
-     * Like [verifyOtp] but returns an [OtpVerifyResult] that distinguishes a
-     * verification which produced a session ([OtpVerifyResult.Authenticated]) from
-     * one that succeeded without one ([OtpVerifyResult.VerifiedNoSession]) — useful
-     * for email-change confirmations that don't mint a new session.
-     *
-     * @param captchaToken captcha response when bot protection is enabled.
-     * @param redirectTo post-verification redirect (`redirect_to`), used by link-style flows.
-     */
-    public suspend fun verifyOtpWithResult(
-        email: String? = null,
-        phone: String? = null,
-        token: String,
-        type: OtpType,
-        captchaToken: String? = null,
-        redirectTo: String? = null,
-    ): SupabaseResult<OtpVerifyResult>
-
-    /** Token-hash counterpart to [verifyOtpWithResult]; see [verifyOtpWithTokenHash]. */
-    public suspend fun verifyOtpWithTokenHashWithResult(
         tokenHash: String,
         type: OtpType,
         captchaToken: String? = null,
@@ -350,7 +329,7 @@ public interface AuthClient {
      * Fetches the raw JSON Web Key Set (JWKS) from `/auth/v1/.well-known/jwks.json`. Used by
      * [getClaims] to verify asymmetric token signatures locally without an Auth server round-trip.
      */
-    public suspend fun fetchJwks(): SupabaseResult<String>
+    public suspend fun getJwks(): SupabaseResult<String>
 
     /**
      * Fetches the Auth server's public settings (`GET /auth/v1/settings`) — which providers and flows
@@ -462,7 +441,7 @@ public interface AuthClient {
      *   `code_challenge_method` in the body.
      * @param captchaToken captcha response when bot protection is enabled.
      */
-    public suspend fun retrieveSsoUrl(
+    public suspend fun getSsoUrl(
         accessToken: String? = null,
         domain: String? = null,
         providerId: String? = null,
@@ -537,11 +516,11 @@ public interface AuthClient {
      * @param phone destination number for a phone factor.
      */
     public suspend fun mfaEnroll(
+        accessToken: String,
         factorType: MfaFactorType,
         friendlyName: String? = null,
         issuer: String? = null,
         phone: String? = null,
-        accessToken: String,
     ): SupabaseResult<MfaEnrollResponse>
 
     /**
@@ -549,12 +528,12 @@ public interface AuthClient {
      * returning a [MfaChallengeResponse] whose `id` is passed to [mfaVerify]. For a
      * phone factor this dispatches the code.
      *
-     * @param channel phone delivery channel (`"sms"`/`"whatsapp"`); ignored for TOTP.
+     * @param channel phone delivery channel ([MessagingChannel.SMS]/`WHATSAPP`); ignored for TOTP.
      */
     public suspend fun mfaChallenge(
-        factorId: String,
         accessToken: String,
-        channel: String? = null,
+        factorId: String,
+        channel: MessagingChannel? = null,
     ): SupabaseResult<MfaChallengeResponse>
 
     /**
@@ -566,17 +545,17 @@ public interface AuthClient {
      * @param webauthn for a WebAuthn factor, the device's credential response (stands in for [code]).
      */
     public suspend fun mfaVerify(
+        accessToken: String,
         factorId: String,
         challengeId: String,
         code: String,
-        accessToken: String,
         webauthn: MfaWebauthnVerification? = null,
     ): SupabaseResult<MfaVerifyResponse>
 
     /** Removes an enrolled factor by [factorId] (`DELETE /factors/{id}`). */
     public suspend fun mfaUnenroll(
-        factorId: String,
         accessToken: String,
+        factorId: String,
     ): SupabaseResult<MfaUnenrollResponse>
 
     /**

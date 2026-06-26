@@ -1,9 +1,14 @@
 public final class io/github/androidpoet/supabase/sync/remote/SupabaseRemoteSource : io/github/androidpoet/supabase/sync/RemoteSource {
-	public fun <init> (Lio/github/androidpoet/supabase/database/DatabaseClient;Lio/github/androidpoet/supabase/realtime/RealtimeClient;Lio/github/androidpoet/supabase/sync/remote/SyncColumns;Ljava/lang/String;ILkotlinx/coroutines/CoroutineScope;)V
-	public synthetic fun <init> (Lio/github/androidpoet/supabase/database/DatabaseClient;Lio/github/androidpoet/supabase/realtime/RealtimeClient;Lio/github/androidpoet/supabase/sync/remote/SyncColumns;Ljava/lang/String;ILkotlinx/coroutines/CoroutineScope;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lio/github/androidpoet/supabase/database/DatabaseClient;Lio/github/androidpoet/supabase/realtime/RealtimeClient;Lio/github/androidpoet/supabase/sync/remote/SyncColumns;Ljava/lang/String;I)V
+	public synthetic fun <init> (Lio/github/androidpoet/supabase/database/DatabaseClient;Lio/github/androidpoet/supabase/realtime/RealtimeClient;Lio/github/androidpoet/supabase/sync/remote/SyncColumns;Ljava/lang/String;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun changes (Ljava/lang/String;)Lkotlinx/coroutines/flow/Flow;
 	public fun pull (Ljava/lang/String;Lio/github/androidpoet/supabase/sync/Cursor;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun push (Ljava/lang/String;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/github/androidpoet/supabase/sync/remote/SupabaseRemoteSourceFactoryKt {
+	public static final fun createSupabaseRemoteSource (Lio/github/androidpoet/supabase/database/DatabaseClient;Lio/github/androidpoet/supabase/realtime/RealtimeClient;Lio/github/androidpoet/supabase/sync/remote/SyncColumns;Ljava/lang/String;I)Lio/github/androidpoet/supabase/sync/remote/SupabaseRemoteSource;
+	public static synthetic fun createSupabaseRemoteSource$default (Lio/github/androidpoet/supabase/database/DatabaseClient;Lio/github/androidpoet/supabase/realtime/RealtimeClient;Lio/github/androidpoet/supabase/sync/remote/SyncColumns;Ljava/lang/String;IILjava/lang/Object;)Lio/github/androidpoet/supabase/sync/remote/SupabaseRemoteSource;
 }
 
 public final class io/github/androidpoet/supabase/sync/remote/SyncColumns {

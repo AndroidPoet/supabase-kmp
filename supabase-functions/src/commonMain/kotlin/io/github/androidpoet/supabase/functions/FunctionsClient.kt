@@ -1,6 +1,7 @@
 package io.github.androidpoet.supabase.functions
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -174,5 +175,5 @@ public interface FunctionsClient {
         headers: Map<String, String> = emptyMap(),
         region: FunctionRegion? = null,
     ): Flow<FunctionServerSentEvent> =
-        throw UnsupportedOperationException("invokeSSE is not supported by this FunctionsClient")
+        flow { throw UnsupportedOperationException("invokeSSE is not supported by this FunctionsClient") }
 }

@@ -19,7 +19,7 @@ class DatabaseClientImplTest {
 
             val result =
                 runSuspend {
-                    sut.select(table = "messages", columns = "*", head = true, count = null) {}
+                    sut.select(table = "messages", columns = "*", format = ResponseFormat.HEAD, count = null) {}
                 }
 
             assertTrue(result is SupabaseResult.Failure)
@@ -34,7 +34,7 @@ class DatabaseClientImplTest {
             val client = FakeSupabaseClient(rawResult = SupabaseResult.Success(ok))
             val sut = DatabaseClientImpl(client)
 
-            val result = runSuspend { sut.select(table = "messages", columns = "*", head = true, count = null) {} }
+            val result = runSuspend { sut.select(table = "messages", columns = "*", format = ResponseFormat.HEAD, count = null) {} }
 
             assertTrue(result is SupabaseResult.Success)
             assertEquals(io.github.androidpoet.supabase.client.SupabaseHttpMethod.HEAD, client.lastRawMethod)
@@ -137,7 +137,7 @@ class DatabaseClientImplTest {
             val sut = DatabaseClientImpl(client)
 
             runSuspend {
-                sut.select(table = "messages", single = true) {}
+                sut.select(table = "messages", format = ResponseFormat.SINGLE) {}
             }
 
             assertEquals("application/vnd.pgrst.object+json", client.lastGetHeaders["Accept"])
@@ -174,7 +174,7 @@ class DatabaseClientImplTest {
             val sut = DatabaseClientImpl(client)
 
             runSuspend {
-                sut.select(table = "messages", csv = true) {}
+                sut.select(table = "messages", format = ResponseFormat.CSV) {}
             }
 
             assertEquals("text/csv", client.lastGetHeaders["Accept"])
@@ -220,7 +220,7 @@ class DatabaseClientImplTest {
 
             assertFailsWith<IllegalArgumentException> {
                 runSuspend {
-                    sut.select(table = "messages", csv = true, stripNulls = true) {}
+                    sut.select(table = "messages", format = ResponseFormat.CSV, stripNulls = true) {}
                 }
             }
         }
@@ -460,7 +460,7 @@ class DatabaseClientImplTest {
 
             val result =
                 runSuspend {
-                    sut.rpcGet(function = "get_messages", head = true)
+                    sut.rpcGet(function = "get_messages", format = ResponseFormat.HEAD)
                 }
 
             assertTrue(result is SupabaseResult.Failure)
@@ -473,7 +473,7 @@ class DatabaseClientImplTest {
             val sut = DatabaseClientImpl(client)
 
             runSuspend {
-                sut.rpc(function = "get_one", single = true)
+                sut.rpc(function = "get_one", format = ResponseFormat.SINGLE)
             }
 
             assertEquals("application/vnd.pgrst.object+json", client.lastPostHeaders["Accept"])
@@ -502,7 +502,7 @@ class DatabaseClientImplTest {
             val sut = DatabaseClientImpl(client)
 
             runSuspend {
-                sut.rpcGet(function = "get_many", csv = true)
+                sut.rpcGet(function = "get_many", format = ResponseFormat.CSV)
             }
 
             assertEquals("text/csv", client.lastGetHeaders["Accept"])
@@ -528,7 +528,7 @@ class DatabaseClientImplTest {
             val sut = DatabaseClientImpl(client)
 
             runSuspend {
-                sut.rpcGet(function = "get_one", single = true, stripNulls = true)
+                sut.rpcGet(function = "get_one", format = ResponseFormat.SINGLE, stripNulls = true)
             }
 
             assertEquals("application/vnd.pgrst.object+json;nulls=stripped", client.lastGetHeaders["Accept"])

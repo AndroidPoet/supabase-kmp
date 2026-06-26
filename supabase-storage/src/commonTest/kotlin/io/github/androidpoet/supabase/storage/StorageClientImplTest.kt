@@ -473,12 +473,12 @@ class StorageClientImplTest {
         }
 
     @Test
-    fun test_removeWithResult_returnsDeletedFileEntries() =
+    fun test_deleteObjects_returnsDeletedFileEntries() =
         runTest {
             val client = FakeSupabaseClient()
             val sut = StorageClientImpl(client)
 
-            val result = sut.removeWithResult(bucket = "avatars", paths = listOf("a.png"))
+            val result = sut.deleteObjects(bucket = "avatars", paths = listOf("a.png"))
 
             assertEquals("/storage/v1/object/avatars", client.lastDeleteEndpoint)
             assertTrue(result is SupabaseResult.Success)
@@ -823,14 +823,14 @@ class StorageClientImplTest {
             assertTrue(created is SupabaseResult.Success)
             assertTrue(client.lastPostBody?.contains("\"namespace\":[\"prod\",\"events\"]") == true)
 
-            val metadata = catalog.loadNamespaceMetadata(listOf("prod", "events"))
+            val metadata = catalog.getNamespaceMetadata(listOf("prod", "events"))
             val updated =
                 catalog.updateNamespaceProperties(
                     namespace = listOf("prod", "events"),
                     removals = listOf("old"),
                     updates = mapOf("owner" to "platform"),
                 )
-            val dropped = catalog.dropNamespace(listOf("prod", "events"))
+            val dropped = catalog.deleteNamespace(listOf("prod", "events"))
 
             assertTrue(metadata is SupabaseResult.Success)
             assertTrue(updated is SupabaseResult.Success)
@@ -856,11 +856,11 @@ class StorageClientImplTest {
             assertEquals("/storage/v1/iceberg/v1/catalog-prefix/namespaces/prod/tables?pageToken=p1&pageSize=20", client.lastGetEndpoint)
 
             val created = catalog.createTable(namespace = listOf("prod"), request = tableRequest)
-            val loaded = catalog.loadTable(namespace = listOf("prod"), name = "clicks", snapshots = "all")
+            val loaded = catalog.getTable(namespace = listOf("prod"), name = "clicks", snapshots = "all")
             val updated = catalog.updateTable(namespace = listOf("prod"), name = "clicks", request = buildJsonObject { put("updates", "[]") })
             val registered = catalog.registerTable(namespace = listOf("prod"), request = buildJsonObject { put("name", "external") })
             val renamed = catalog.renameTable(buildJsonObject { put("source", "clicks") })
-            val dropped = catalog.dropTable(namespace = listOf("prod"), name = "clicks", purge = true)
+            val dropped = catalog.deleteTable(namespace = listOf("prod"), name = "clicks", purge = true)
 
             assertTrue(created is SupabaseResult.Success)
             assertEquals("clicks", created.value["name"]?.toString()?.trim('"'))
@@ -880,7 +880,7 @@ class StorageClientImplTest {
             val sut = StorageClientImpl(client)
             val catalog = sut.analyticsCatalog("events")
 
-            val config = catalog.loadConfigTyped()
+            val config = catalog.getConfigTyped()
             val namespaces = catalog.listNamespacesTyped(pageSize = 10)
             val namespace =
                 catalog.createNamespaceTyped(
@@ -889,7 +889,7 @@ class StorageClientImplTest {
                         properties = mapOf("owner" to "data-team"),
                     ),
                 )
-            val namespaceMetadata = catalog.loadNamespaceMetadataTyped(listOf("prod", "events"))
+            val namespaceMetadata = catalog.getNamespaceMetadataTyped(listOf("prod", "events"))
             val namespaceUpdate =
                 catalog.updateNamespacePropertiesTyped(
                     namespace = listOf("prod", "events"),
@@ -909,9 +909,9 @@ class StorageClientImplTest {
                             schema = buildJsonObject { put("type", "struct") },
                         ),
                 )
-            val loaded = catalog.loadTableTyped(namespace = listOf("prod"), name = "clicks")
+            val loaded = catalog.getTableTyped(namespace = listOf("prod"), name = "clicks")
             val committed =
-                catalog.commitTableTyped(
+                catalog.updateTableTyped(
                     namespace = listOf("prod"),
                     name = "clicks",
                     request = IcebergTableCommitRequest(updates = listOf(buildJsonObject { put("action", "noop") })),

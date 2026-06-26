@@ -7,6 +7,8 @@ import io.github.androidpoet.supabase.database.CountOption
 import io.github.androidpoet.supabase.database.DatabaseClient
 import io.github.androidpoet.supabase.database.ExplainOptions
 import io.github.androidpoet.supabase.database.PostgrestRange
+import io.github.androidpoet.supabase.database.PostgrestRawPage
+import io.github.androidpoet.supabase.database.ResponseFormat
 import io.github.androidpoet.supabase.database.ReturnOption
 import io.github.androidpoet.supabase.database.UpsertResolution
 import io.github.androidpoet.supabase.realtime.ConnectionState
@@ -151,10 +153,7 @@ private class FakeDatabaseClient(
         table: String,
         schema: String?,
         columns: String,
-        head: Boolean,
-        single: Boolean,
-        csv: Boolean,
-        geojson: Boolean,
+        format: ResponseFormat,
         count: CountOption?,
         stripNulls: Boolean,
         explain: ExplainOptions?,
@@ -202,12 +201,12 @@ private class FakeDatabaseClient(
         table: String,
         schema: String?,
         columns: String,
-        single: Boolean,
+        format: ResponseFormat,
         count: CountOption,
         stripNulls: Boolean,
         headers: Map<String, String>,
         block: QueryBuilder.() -> Unit,
-    ): SupabaseResult<Pair<String, PostgrestRange>> = error("unused")
+    ): SupabaseResult<PostgrestRawPage> = error("unused")
 
     override suspend fun update(
         table: String,
@@ -248,9 +247,7 @@ private class FakeDatabaseClient(
         function: String,
         schema: String?,
         params: String?,
-        head: Boolean,
-        single: Boolean,
-        csv: Boolean,
+        format: ResponseFormat,
         count: CountOption?,
         stripNulls: Boolean,
         rollback: Boolean,
@@ -265,9 +262,7 @@ private class FakeDatabaseClient(
         function: String,
         schema: String?,
         queryParams: List<Pair<String, String>>,
-        head: Boolean,
-        single: Boolean,
-        csv: Boolean,
+        format: ResponseFormat,
         count: CountOption?,
         stripNulls: Boolean,
         explain: ExplainOptions?,
@@ -293,24 +288,21 @@ private class FakeRealtimeClient : RealtimeClient {
 
     override fun getSubscriptions(): Set<RealtimeSubscription> = emptySet()
 
-    override fun activeChannels(): Set<String> = emptySet()
+    override fun getActiveChannelNames(): Set<String> = emptySet()
 
-    override fun activeChannelDetails(): Set<RealtimeChannel> = emptySet()
+    override fun getActiveChannels(): Set<RealtimeChannel> = emptySet()
 
     override suspend fun removeSubscription(subscription: RealtimeSubscription) = Unit
 
     override suspend fun removeSubscriptions(subscriptions: List<RealtimeSubscription>) = Unit
 
-    @Deprecated("Use removeSubscription instead", ReplaceWith("removeSubscription(subscription)"))
-    override suspend fun removeChannel(subscription: RealtimeSubscription) = Unit
-
     override suspend fun removeSubscriptionByTopic(topic: String) = Unit
 
-    override suspend fun removeChannelsByTopic(topics: List<String>) = Unit
+    override suspend fun removeSubscriptionsByTopic(topics: List<String>) = Unit
 
-    override suspend fun removeChannel(name: String) = Unit
+    override suspend fun removeSubscription(name: String) = Unit
 
-    override suspend fun removeAllChannels() = Unit
+    override suspend fun removeAllSubscriptions() = Unit
 
     override suspend fun setAuth(token: String?) = Unit
 

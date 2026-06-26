@@ -68,24 +68,22 @@ final enum class io.github.androidpoet.supabase.storage/SortOrder : kotlin/Enum<
 }
 
 abstract interface io.github.androidpoet.supabase.storage/AnalyticsCatalogClient { // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient|null[0]
-    abstract suspend fun commitTable(kotlin.collections/List<kotlin/String>, kotlin/String, kotlinx.serialization.json/JsonObject): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.commitTable|commitTable(kotlin.collections.List<kotlin.String>;kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
-    abstract suspend fun commitTableTyped(kotlin.collections/List<kotlin/String>, kotlin/String, io.github.androidpoet.supabase.storage.models/IcebergTableCommitRequest): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.storage.models/IcebergTableMetadataResponse> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.commitTableTyped|commitTableTyped(kotlin.collections.List<kotlin.String>;kotlin.String;io.github.androidpoet.supabase.storage.models.IcebergTableCommitRequest){}[0]
     abstract suspend fun createNamespace(kotlin.collections/List<kotlin/String>, kotlin.collections/Map<kotlin/String, kotlin/String> = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.createNamespace|createNamespace(kotlin.collections.List<kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
     abstract suspend fun createNamespaceTyped(io.github.androidpoet.supabase.storage.models/IcebergCreateNamespaceRequest): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.storage.models/IcebergNamespaceMetadata> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.createNamespaceTyped|createNamespaceTyped(io.github.androidpoet.supabase.storage.models.IcebergCreateNamespaceRequest){}[0]
     abstract suspend fun createTable(kotlin.collections/List<kotlin/String>, kotlinx.serialization.json/JsonObject): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.createTable|createTable(kotlin.collections.List<kotlin.String>;kotlinx.serialization.json.JsonObject){}[0]
     abstract suspend fun createTableTyped(kotlin.collections/List<kotlin/String>, io.github.androidpoet.supabase.storage.models/IcebergTableCreateRequest): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.storage.models/IcebergTableMetadataResponse> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.createTableTyped|createTableTyped(kotlin.collections.List<kotlin.String>;io.github.androidpoet.supabase.storage.models.IcebergTableCreateRequest){}[0]
-    abstract suspend fun dropNamespace(kotlin.collections/List<kotlin/String>): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.dropNamespace|dropNamespace(kotlin.collections.List<kotlin.String>){}[0]
-    abstract suspend fun dropTable(kotlin.collections/List<kotlin/String>, kotlin/String, kotlin/Boolean = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.dropTable|dropTable(kotlin.collections.List<kotlin.String>;kotlin.String;kotlin.Boolean){}[0]
+    abstract suspend fun deleteNamespace(kotlin.collections/List<kotlin/String>): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.deleteNamespace|deleteNamespace(kotlin.collections.List<kotlin.String>){}[0]
+    abstract suspend fun deleteTable(kotlin.collections/List<kotlin/String>, kotlin/String, kotlin/Boolean = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.deleteTable|deleteTable(kotlin.collections.List<kotlin.String>;kotlin.String;kotlin.Boolean){}[0]
+    abstract suspend fun getConfig(): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.getConfig|getConfig(){}[0]
+    abstract suspend fun getConfigTyped(): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.storage.models/IcebergCatalogConfig> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.getConfigTyped|getConfigTyped(){}[0]
+    abstract suspend fun getNamespaceMetadata(kotlin.collections/List<kotlin/String>): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.getNamespaceMetadata|getNamespaceMetadata(kotlin.collections.List<kotlin.String>){}[0]
+    abstract suspend fun getNamespaceMetadataTyped(kotlin.collections/List<kotlin/String>): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.storage.models/IcebergNamespaceMetadata> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.getNamespaceMetadataTyped|getNamespaceMetadataTyped(kotlin.collections.List<kotlin.String>){}[0]
+    abstract suspend fun getTable(kotlin.collections/List<kotlin/String>, kotlin/String, kotlin/String? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.getTable|getTable(kotlin.collections.List<kotlin.String>;kotlin.String;kotlin.String?){}[0]
+    abstract suspend fun getTableTyped(kotlin.collections/List<kotlin/String>, kotlin/String, kotlin/String? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.storage.models/IcebergTableMetadataResponse> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.getTableTyped|getTableTyped(kotlin.collections.List<kotlin.String>;kotlin.String;kotlin.String?){}[0]
     abstract suspend fun listNamespaces(kotlin.collections/List<kotlin/String>? = ..., kotlin/String? = ..., kotlin/Int? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.listNamespaces|listNamespaces(kotlin.collections.List<kotlin.String>?;kotlin.String?;kotlin.Int?){}[0]
     abstract suspend fun listNamespacesTyped(kotlin.collections/List<kotlin/String>? = ..., kotlin/String? = ..., kotlin/Int? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.storage.models/IcebergNamespaceListResponse> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.listNamespacesTyped|listNamespacesTyped(kotlin.collections.List<kotlin.String>?;kotlin.String?;kotlin.Int?){}[0]
     abstract suspend fun listTables(kotlin.collections/List<kotlin/String>, kotlin/String? = ..., kotlin/Int? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.listTables|listTables(kotlin.collections.List<kotlin.String>;kotlin.String?;kotlin.Int?){}[0]
     abstract suspend fun listTablesTyped(kotlin.collections/List<kotlin/String>, kotlin/String? = ..., kotlin/Int? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.storage.models/IcebergTableListResponse> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.listTablesTyped|listTablesTyped(kotlin.collections.List<kotlin.String>;kotlin.String?;kotlin.Int?){}[0]
-    abstract suspend fun loadConfig(): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.loadConfig|loadConfig(){}[0]
-    abstract suspend fun loadConfigTyped(): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.storage.models/IcebergCatalogConfig> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.loadConfigTyped|loadConfigTyped(){}[0]
-    abstract suspend fun loadNamespaceMetadata(kotlin.collections/List<kotlin/String>): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.loadNamespaceMetadata|loadNamespaceMetadata(kotlin.collections.List<kotlin.String>){}[0]
-    abstract suspend fun loadNamespaceMetadataTyped(kotlin.collections/List<kotlin/String>): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.storage.models/IcebergNamespaceMetadata> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.loadNamespaceMetadataTyped|loadNamespaceMetadataTyped(kotlin.collections.List<kotlin.String>){}[0]
-    abstract suspend fun loadTable(kotlin.collections/List<kotlin/String>, kotlin/String, kotlin/String? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.loadTable|loadTable(kotlin.collections.List<kotlin.String>;kotlin.String;kotlin.String?){}[0]
-    abstract suspend fun loadTableTyped(kotlin.collections/List<kotlin/String>, kotlin/String, kotlin/String? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.storage.models/IcebergTableMetadataResponse> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.loadTableTyped|loadTableTyped(kotlin.collections.List<kotlin.String>;kotlin.String;kotlin.String?){}[0]
     abstract suspend fun registerTable(kotlin.collections/List<kotlin/String>, kotlinx.serialization.json/JsonObject): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.registerTable|registerTable(kotlin.collections.List<kotlin.String>;kotlinx.serialization.json.JsonObject){}[0]
     abstract suspend fun registerTableTyped(kotlin.collections/List<kotlin/String>, io.github.androidpoet.supabase.storage.models/IcebergTableRegisterRequest): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.storage.models/IcebergTableMetadataResponse> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.registerTableTyped|registerTableTyped(kotlin.collections.List<kotlin.String>;io.github.androidpoet.supabase.storage.models.IcebergTableRegisterRequest){}[0]
     abstract suspend fun renameTable(kotlinx.serialization.json/JsonObject): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.renameTable|renameTable(kotlinx.serialization.json.JsonObject){}[0]
@@ -93,6 +91,7 @@ abstract interface io.github.androidpoet.supabase.storage/AnalyticsCatalogClient
     abstract suspend fun updateNamespaceProperties(kotlin.collections/List<kotlin/String>, kotlin.collections/List<kotlin/String>? = ..., kotlin.collections/Map<kotlin/String, kotlin/String>? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.updateNamespaceProperties|updateNamespaceProperties(kotlin.collections.List<kotlin.String>;kotlin.collections.List<kotlin.String>?;kotlin.collections.Map<kotlin.String,kotlin.String>?){}[0]
     abstract suspend fun updateNamespacePropertiesTyped(kotlin.collections/List<kotlin/String>, io.github.androidpoet.supabase.storage.models/IcebergUpdateNamespacePropertiesRequest): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.storage.models/IcebergUpdateNamespacePropertiesResponse> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.updateNamespacePropertiesTyped|updateNamespacePropertiesTyped(kotlin.collections.List<kotlin.String>;io.github.androidpoet.supabase.storage.models.IcebergUpdateNamespacePropertiesRequest){}[0]
     abstract suspend fun updateTable(kotlin.collections/List<kotlin/String>, kotlin/String, kotlinx.serialization.json/JsonObject): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlinx.serialization.json/JsonObject> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.updateTable|updateTable(kotlin.collections.List<kotlin.String>;kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
+    abstract suspend fun updateTableTyped(kotlin.collections/List<kotlin/String>, kotlin/String, io.github.androidpoet.supabase.storage.models/IcebergTableCommitRequest): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.storage.models/IcebergTableMetadataResponse> // io.github.androidpoet.supabase.storage/AnalyticsCatalogClient.updateTableTyped|updateTableTyped(kotlin.collections.List<kotlin.String>;kotlin.String;io.github.androidpoet.supabase.storage.models.IcebergTableCommitRequest){}[0]
 }
 
 abstract interface io.github.androidpoet.supabase.storage/ResumableUpload { // io.github.androidpoet.supabase.storage/ResumableUpload|null[0]
@@ -114,6 +113,7 @@ abstract interface io.github.androidpoet.supabase.storage/StorageClient { // io.
     abstract fun getPublicUrl(kotlin/String, kotlin/String, io.github.androidpoet.supabase.storage/ImageTransformOptions? = ...): kotlin/String // io.github.androidpoet.supabase.storage/StorageClient.getPublicUrl|getPublicUrl(kotlin.String;kotlin.String;io.github.androidpoet.supabase.storage.ImageTransformOptions?){}[0]
     abstract fun getPublicUrl(kotlin/String, kotlin/String, kotlin/Boolean = ..., kotlin/String? = ..., io.github.androidpoet.supabase.storage/ImageTransformOptions? = ...): kotlin/String // io.github.androidpoet.supabase.storage/StorageClient.getPublicUrl|getPublicUrl(kotlin.String;kotlin.String;kotlin.Boolean;kotlin.String?;io.github.androidpoet.supabase.storage.ImageTransformOptions?){}[0]
     abstract fun getSignedDownloadUrl(kotlin/String, kotlin/String, kotlin/String, kotlin/Boolean = ..., kotlin/String? = ...): kotlin/String // io.github.androidpoet.supabase.storage/StorageClient.getSignedDownloadUrl|getSignedDownloadUrl(kotlin.String;kotlin.String;kotlin.String;kotlin.Boolean;kotlin.String?){}[0]
+    abstract suspend fun clearBucket(kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.storage/StorageClient.clearBucket|clearBucket(kotlin.String){}[0]
     abstract suspend fun copy(kotlin/String, kotlin/String, kotlin/String, kotlin/String? = ..., kotlin/Boolean? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.storage/StorageClient.copy|copy(kotlin.String;kotlin.String;kotlin.String;kotlin.String?;kotlin.Boolean?){}[0]
     abstract suspend fun createAnalyticsBucket(kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.storage.models/AnalyticsBucket> // io.github.androidpoet.supabase.storage/StorageClient.createAnalyticsBucket|createAnalyticsBucket(kotlin.String){}[0]
     abstract suspend fun createBucket(kotlin/String, kotlin/String, kotlin/Boolean = ..., kotlin/Long? = ..., kotlin.collections/List<kotlin/String>? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.storage.models/Bucket> // io.github.androidpoet.supabase.storage/StorageClient.createBucket|createBucket(kotlin.String;kotlin.String;kotlin.Boolean;kotlin.Long?;kotlin.collections.List<kotlin.String>?){}[0]
@@ -126,6 +126,7 @@ abstract interface io.github.androidpoet.supabase.storage/StorageClient { // io.
     abstract suspend fun deleteAnalyticsBucket(kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.storage/StorageClient.deleteAnalyticsBucket|deleteAnalyticsBucket(kotlin.String){}[0]
     abstract suspend fun deleteBucket(kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.storage/StorageClient.deleteBucket|deleteBucket(kotlin.String){}[0]
     abstract suspend fun deleteObject(kotlin/String, kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.storage/StorageClient.deleteObject|deleteObject(kotlin.String;kotlin.String){}[0]
+    abstract suspend fun deleteObjects(kotlin/String, kotlin.collections/List<kotlin/String>): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin.collections/List<io.github.androidpoet.supabase.storage.models/FileObject>> // io.github.androidpoet.supabase.storage/StorageClient.deleteObjects|deleteObjects(kotlin.String;kotlin.collections.List<kotlin.String>){}[0]
     abstract suspend fun deleteVectorBucket(kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.storage/StorageClient.deleteVectorBucket|deleteVectorBucket(kotlin.String){}[0]
     abstract suspend fun deleteVectorIndex(kotlin/String, kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.storage/StorageClient.deleteVectorIndex|deleteVectorIndex(kotlin.String;kotlin.String){}[0]
     abstract suspend fun deleteVectors(kotlin/String, kotlin/String, kotlin.collections/List<kotlin/String>): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.storage/StorageClient.deleteVectors|deleteVectors(kotlin.String;kotlin.String;kotlin.collections.List<kotlin.String>){}[0]
@@ -137,7 +138,6 @@ abstract interface io.github.androidpoet.supabase.storage/StorageClient { // io.
     abstract suspend fun downloadPublic(kotlin/String, kotlin/String, kotlin/Boolean = ..., kotlin/String? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/String> // io.github.androidpoet.supabase.storage/StorageClient.downloadPublic|downloadPublic(kotlin.String;kotlin.String;kotlin.Boolean;kotlin.String?){}[0]
     abstract suspend fun downloadPublicBytes(kotlin/String, kotlin/String, io.github.androidpoet.supabase.storage/ImageTransformOptions, kotlin/Boolean = ..., kotlin/String? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/ByteArray> // io.github.androidpoet.supabase.storage/StorageClient.downloadPublicBytes|downloadPublicBytes(kotlin.String;kotlin.String;io.github.androidpoet.supabase.storage.ImageTransformOptions;kotlin.Boolean;kotlin.String?){}[0]
     abstract suspend fun downloadPublicBytes(kotlin/String, kotlin/String, kotlin/Boolean = ..., kotlin/String? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/ByteArray> // io.github.androidpoet.supabase.storage/StorageClient.downloadPublicBytes|downloadPublicBytes(kotlin.String;kotlin.String;kotlin.Boolean;kotlin.String?){}[0]
-    abstract suspend fun emptyBucket(kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.storage/StorageClient.emptyBucket|emptyBucket(kotlin.String){}[0]
     abstract suspend fun exists(kotlin/String, kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Boolean> // io.github.androidpoet.supabase.storage/StorageClient.exists|exists(kotlin.String;kotlin.String){}[0]
     abstract suspend fun existsPublic(kotlin/String, kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Boolean> // io.github.androidpoet.supabase.storage/StorageClient.existsPublic|existsPublic(kotlin.String;kotlin.String){}[0]
     abstract suspend fun getBucket(kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.storage.models/Bucket> // io.github.androidpoet.supabase.storage/StorageClient.getBucket|getBucket(kotlin.String){}[0]
@@ -156,8 +156,6 @@ abstract interface io.github.androidpoet.supabase.storage/StorageClient { // io.
     abstract suspend fun move(kotlin/String, kotlin/String, kotlin/String, kotlin/String? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.storage/StorageClient.move|move(kotlin.String;kotlin.String;kotlin.String;kotlin.String?){}[0]
     abstract suspend fun putVectors(kotlin/String, kotlin/String, kotlin.collections/List<io.github.androidpoet.supabase.storage.models/VectorObject>): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.storage/StorageClient.putVectors|putVectors(kotlin.String;kotlin.String;kotlin.collections.List<io.github.androidpoet.supabase.storage.models.VectorObject>){}[0]
     abstract suspend fun queryVectors(kotlin/String, kotlin/String, io.github.androidpoet.supabase.storage.models/VectorData, kotlin/Int? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlin/Boolean? = ..., kotlin/Boolean? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.storage.models/VectorQueryResponse> // io.github.androidpoet.supabase.storage/StorageClient.queryVectors|queryVectors(kotlin.String;kotlin.String;io.github.androidpoet.supabase.storage.models.VectorData;kotlin.Int?;kotlinx.serialization.json.JsonObject?;kotlin.Boolean?;kotlin.Boolean?){}[0]
-    abstract suspend fun remove(kotlin/String, kotlin.collections/List<kotlin/String>): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.storage/StorageClient.remove|remove(kotlin.String;kotlin.collections.List<kotlin.String>){}[0]
-    abstract suspend fun removeWithResult(kotlin/String, kotlin.collections/List<kotlin/String>): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin.collections/List<io.github.androidpoet.supabase.storage.models/FileObject>> // io.github.androidpoet.supabase.storage/StorageClient.removeWithResult|removeWithResult(kotlin.String;kotlin.collections.List<kotlin.String>){}[0]
     abstract suspend fun update(kotlin/String, kotlin/String, kotlin/ByteArray, kotlin/String = ..., kotlin/Boolean = ..., kotlin/Int? = ..., kotlinx.serialization.json/JsonObject? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/String> // io.github.androidpoet.supabase.storage/StorageClient.update|update(kotlin.String;kotlin.String;kotlin.ByteArray;kotlin.String;kotlin.Boolean;kotlin.Int?;kotlinx.serialization.json.JsonObject?){}[0]
     abstract suspend fun updateBucket(kotlin/String, kotlin/String? = ..., kotlin/Boolean? = ..., kotlin/Long? = ..., kotlin.collections/List<kotlin/String>? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.storage.models/Bucket> // io.github.androidpoet.supabase.storage/StorageClient.updateBucket|updateBucket(kotlin.String;kotlin.String?;kotlin.Boolean?;kotlin.Long?;kotlin.collections.List<kotlin.String>?){}[0]
     abstract suspend fun upload(kotlin/String, kotlin/String, kotlin/ByteArray, kotlin/String = ..., kotlin/Boolean = ..., kotlin/Int? = ..., kotlinx.serialization.json/JsonObject? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/String> // io.github.androidpoet.supabase.storage/StorageClient.upload|upload(kotlin.String;kotlin.String;kotlin.ByteArray;kotlin.String;kotlin.Boolean;kotlin.Int?;kotlinx.serialization.json.JsonObject?){}[0]
@@ -199,58 +197,6 @@ final class io.github.androidpoet.supabase.storage.models/AnalyticsBucket { // i
 
     final object Companion { // io.github.androidpoet.supabase.storage.models/AnalyticsBucket.Companion|null[0]
         final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/AnalyticsBucket> // io.github.androidpoet.supabase.storage.models/AnalyticsBucket.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class io.github.androidpoet.supabase.storage.models/AnalyticsBucketCreateRequest { // io.github.androidpoet.supabase.storage.models/AnalyticsBucketCreateRequest|null[0]
-    constructor <init>(kotlin/String) // io.github.androidpoet.supabase.storage.models/AnalyticsBucketCreateRequest.<init>|<init>(kotlin.String){}[0]
-
-    final val name // io.github.androidpoet.supabase.storage.models/AnalyticsBucketCreateRequest.name|{}name[0]
-        final fun <get-name>(): kotlin/String // io.github.androidpoet.supabase.storage.models/AnalyticsBucketCreateRequest.name.<get-name>|<get-name>(){}[0]
-
-    final fun component1(): kotlin/String // io.github.androidpoet.supabase.storage.models/AnalyticsBucketCreateRequest.component1|component1(){}[0]
-    final fun copy(kotlin/String = ...): io.github.androidpoet.supabase.storage.models/AnalyticsBucketCreateRequest // io.github.androidpoet.supabase.storage.models/AnalyticsBucketCreateRequest.copy|copy(kotlin.String){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/AnalyticsBucketCreateRequest.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/AnalyticsBucketCreateRequest.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/AnalyticsBucketCreateRequest.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.storage.models/AnalyticsBucketCreateRequest> { // io.github.androidpoet.supabase.storage.models/AnalyticsBucketCreateRequest.$serializer|null[0]
-        final val descriptor // io.github.androidpoet.supabase.storage.models/AnalyticsBucketCreateRequest.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.storage.models/AnalyticsBucketCreateRequest.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.storage.models/AnalyticsBucketCreateRequest.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.storage.models/AnalyticsBucketCreateRequest // io.github.androidpoet.supabase.storage.models/AnalyticsBucketCreateRequest.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.storage.models/AnalyticsBucketCreateRequest) // io.github.androidpoet.supabase.storage.models/AnalyticsBucketCreateRequest.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.storage.models.AnalyticsBucketCreateRequest){}[0]
-    }
-
-    final object Companion { // io.github.androidpoet.supabase.storage.models/AnalyticsBucketCreateRequest.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/AnalyticsBucketCreateRequest> // io.github.androidpoet.supabase.storage.models/AnalyticsBucketCreateRequest.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class io.github.androidpoet.supabase.storage.models/AnalyticsBucketDeleteResponse { // io.github.androidpoet.supabase.storage.models/AnalyticsBucketDeleteResponse|null[0]
-    constructor <init>(kotlin/String? = ...) // io.github.androidpoet.supabase.storage.models/AnalyticsBucketDeleteResponse.<init>|<init>(kotlin.String?){}[0]
-
-    final val message // io.github.androidpoet.supabase.storage.models/AnalyticsBucketDeleteResponse.message|{}message[0]
-        final fun <get-message>(): kotlin/String? // io.github.androidpoet.supabase.storage.models/AnalyticsBucketDeleteResponse.message.<get-message>|<get-message>(){}[0]
-
-    final fun component1(): kotlin/String? // io.github.androidpoet.supabase.storage.models/AnalyticsBucketDeleteResponse.component1|component1(){}[0]
-    final fun copy(kotlin/String? = ...): io.github.androidpoet.supabase.storage.models/AnalyticsBucketDeleteResponse // io.github.androidpoet.supabase.storage.models/AnalyticsBucketDeleteResponse.copy|copy(kotlin.String?){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/AnalyticsBucketDeleteResponse.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/AnalyticsBucketDeleteResponse.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/AnalyticsBucketDeleteResponse.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.storage.models/AnalyticsBucketDeleteResponse> { // io.github.androidpoet.supabase.storage.models/AnalyticsBucketDeleteResponse.$serializer|null[0]
-        final val descriptor // io.github.androidpoet.supabase.storage.models/AnalyticsBucketDeleteResponse.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.storage.models/AnalyticsBucketDeleteResponse.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.storage.models/AnalyticsBucketDeleteResponse.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.storage.models/AnalyticsBucketDeleteResponse // io.github.androidpoet.supabase.storage.models/AnalyticsBucketDeleteResponse.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.storage.models/AnalyticsBucketDeleteResponse) // io.github.androidpoet.supabase.storage.models/AnalyticsBucketDeleteResponse.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.storage.models.AnalyticsBucketDeleteResponse){}[0]
-    }
-
-    final object Companion { // io.github.androidpoet.supabase.storage.models/AnalyticsBucketDeleteResponse.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/AnalyticsBucketDeleteResponse> // io.github.androidpoet.supabase.storage.models/AnalyticsBucketDeleteResponse.Companion.serializer|serializer(){}[0]
     }
 }
 
@@ -297,46 +243,6 @@ final class io.github.androidpoet.supabase.storage.models/Bucket { // io.github.
         final val $childSerializers // io.github.androidpoet.supabase.storage.models/Bucket.Companion.$childSerializers|{}$childSerializers[0]
 
         final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/Bucket> // io.github.androidpoet.supabase.storage.models/Bucket.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class io.github.androidpoet.supabase.storage.models/CreateBucketRequest { // io.github.androidpoet.supabase.storage.models/CreateBucketRequest|null[0]
-    constructor <init>(kotlin/String, kotlin/String, kotlin/Boolean = ..., kotlin/Long? = ..., kotlin.collections/List<kotlin/String>? = ...) // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.<init>|<init>(kotlin.String;kotlin.String;kotlin.Boolean;kotlin.Long?;kotlin.collections.List<kotlin.String>?){}[0]
-
-    final val allowedMimeTypes // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.allowedMimeTypes|{}allowedMimeTypes[0]
-        final fun <get-allowedMimeTypes>(): kotlin.collections/List<kotlin/String>? // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.allowedMimeTypes.<get-allowedMimeTypes>|<get-allowedMimeTypes>(){}[0]
-    final val fileSizeLimit // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.fileSizeLimit|{}fileSizeLimit[0]
-        final fun <get-fileSizeLimit>(): kotlin/Long? // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.fileSizeLimit.<get-fileSizeLimit>|<get-fileSizeLimit>(){}[0]
-    final val id // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.id|{}id[0]
-        final fun <get-id>(): kotlin/String // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.id.<get-id>|<get-id>(){}[0]
-    final val name // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.name|{}name[0]
-        final fun <get-name>(): kotlin/String // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.name.<get-name>|<get-name>(){}[0]
-    final val public // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.public|{}public[0]
-        final fun <get-public>(): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.public.<get-public>|<get-public>(){}[0]
-
-    final fun component1(): kotlin/String // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.component1|component1(){}[0]
-    final fun component2(): kotlin/String // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.component2|component2(){}[0]
-    final fun component3(): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.component3|component3(){}[0]
-    final fun component4(): kotlin/Long? // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.component4|component4(){}[0]
-    final fun component5(): kotlin.collections/List<kotlin/String>? // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.component5|component5(){}[0]
-    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/Boolean = ..., kotlin/Long? = ..., kotlin.collections/List<kotlin/String>? = ...): io.github.androidpoet.supabase.storage.models/CreateBucketRequest // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.copy|copy(kotlin.String;kotlin.String;kotlin.Boolean;kotlin.Long?;kotlin.collections.List<kotlin.String>?){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.storage.models/CreateBucketRequest> { // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.$serializer|null[0]
-        final val descriptor // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.storage.models/CreateBucketRequest // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.storage.models/CreateBucketRequest) // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.storage.models.CreateBucketRequest){}[0]
-    }
-
-    final object Companion { // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.Companion|null[0]
-        final val $childSerializers // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.Companion.$childSerializers|{}$childSerializers[0]
-
-        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/CreateBucketRequest> // io.github.androidpoet.supabase.storage.models/CreateBucketRequest.Companion.serializer|serializer(){}[0]
     }
 }
 
@@ -732,35 +638,6 @@ final class io.github.androidpoet.supabase.storage.models/IcebergTableRegisterRe
     }
 }
 
-final class io.github.androidpoet.supabase.storage.models/IcebergTableRenameRequest { // io.github.androidpoet.supabase.storage.models/IcebergTableRenameRequest|null[0]
-    constructor <init>(io.github.androidpoet.supabase.storage.models/IcebergTableIdentifier, io.github.androidpoet.supabase.storage.models/IcebergTableIdentifier) // io.github.androidpoet.supabase.storage.models/IcebergTableRenameRequest.<init>|<init>(io.github.androidpoet.supabase.storage.models.IcebergTableIdentifier;io.github.androidpoet.supabase.storage.models.IcebergTableIdentifier){}[0]
-
-    final val destination // io.github.androidpoet.supabase.storage.models/IcebergTableRenameRequest.destination|{}destination[0]
-        final fun <get-destination>(): io.github.androidpoet.supabase.storage.models/IcebergTableIdentifier // io.github.androidpoet.supabase.storage.models/IcebergTableRenameRequest.destination.<get-destination>|<get-destination>(){}[0]
-    final val source // io.github.androidpoet.supabase.storage.models/IcebergTableRenameRequest.source|{}source[0]
-        final fun <get-source>(): io.github.androidpoet.supabase.storage.models/IcebergTableIdentifier // io.github.androidpoet.supabase.storage.models/IcebergTableRenameRequest.source.<get-source>|<get-source>(){}[0]
-
-    final fun component1(): io.github.androidpoet.supabase.storage.models/IcebergTableIdentifier // io.github.androidpoet.supabase.storage.models/IcebergTableRenameRequest.component1|component1(){}[0]
-    final fun component2(): io.github.androidpoet.supabase.storage.models/IcebergTableIdentifier // io.github.androidpoet.supabase.storage.models/IcebergTableRenameRequest.component2|component2(){}[0]
-    final fun copy(io.github.androidpoet.supabase.storage.models/IcebergTableIdentifier = ..., io.github.androidpoet.supabase.storage.models/IcebergTableIdentifier = ...): io.github.androidpoet.supabase.storage.models/IcebergTableRenameRequest // io.github.androidpoet.supabase.storage.models/IcebergTableRenameRequest.copy|copy(io.github.androidpoet.supabase.storage.models.IcebergTableIdentifier;io.github.androidpoet.supabase.storage.models.IcebergTableIdentifier){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/IcebergTableRenameRequest.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/IcebergTableRenameRequest.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/IcebergTableRenameRequest.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.storage.models/IcebergTableRenameRequest> { // io.github.androidpoet.supabase.storage.models/IcebergTableRenameRequest.$serializer|null[0]
-        final val descriptor // io.github.androidpoet.supabase.storage.models/IcebergTableRenameRequest.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.storage.models/IcebergTableRenameRequest.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.storage.models/IcebergTableRenameRequest.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.storage.models/IcebergTableRenameRequest // io.github.androidpoet.supabase.storage.models/IcebergTableRenameRequest.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.storage.models/IcebergTableRenameRequest) // io.github.androidpoet.supabase.storage.models/IcebergTableRenameRequest.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.storage.models.IcebergTableRenameRequest){}[0]
-    }
-
-    final object Companion { // io.github.androidpoet.supabase.storage.models/IcebergTableRenameRequest.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/IcebergTableRenameRequest> // io.github.androidpoet.supabase.storage.models/IcebergTableRenameRequest.Companion.serializer|serializer(){}[0]
-    }
-}
-
 final class io.github.androidpoet.supabase.storage.models/IcebergUpdateNamespacePropertiesRequest { // io.github.androidpoet.supabase.storage.models/IcebergUpdateNamespacePropertiesRequest|null[0]
     constructor <init>(kotlin.collections/List<kotlin/String>? = ..., kotlin.collections/Map<kotlin/String, kotlin/String>? = ...) // io.github.androidpoet.supabase.storage.models/IcebergUpdateNamespacePropertiesRequest.<init>|<init>(kotlin.collections.List<kotlin.String>?;kotlin.collections.Map<kotlin.String,kotlin.String>?){}[0]
 
@@ -823,82 +700,6 @@ final class io.github.androidpoet.supabase.storage.models/IcebergUpdateNamespace
         final val $childSerializers // io.github.androidpoet.supabase.storage.models/IcebergUpdateNamespacePropertiesResponse.Companion.$childSerializers|{}$childSerializers[0]
 
         final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/IcebergUpdateNamespacePropertiesResponse> // io.github.androidpoet.supabase.storage.models/IcebergUpdateNamespacePropertiesResponse.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class io.github.androidpoet.supabase.storage.models/MoveRequest { // io.github.androidpoet.supabase.storage.models/MoveRequest|null[0]
-    constructor <init>(kotlin/String, kotlin/String, kotlin/String? = ..., kotlin/String? = ..., kotlin/Boolean? = ...) // io.github.androidpoet.supabase.storage.models/MoveRequest.<init>|<init>(kotlin.String;kotlin.String;kotlin.String?;kotlin.String?;kotlin.Boolean?){}[0]
-
-    final val bucketId // io.github.androidpoet.supabase.storage.models/MoveRequest.bucketId|{}bucketId[0]
-        final fun <get-bucketId>(): kotlin/String // io.github.androidpoet.supabase.storage.models/MoveRequest.bucketId.<get-bucketId>|<get-bucketId>(){}[0]
-    final val copyMetadata // io.github.androidpoet.supabase.storage.models/MoveRequest.copyMetadata|{}copyMetadata[0]
-        final fun <get-copyMetadata>(): kotlin/Boolean? // io.github.androidpoet.supabase.storage.models/MoveRequest.copyMetadata.<get-copyMetadata>|<get-copyMetadata>(){}[0]
-    final val destinationBucketId // io.github.androidpoet.supabase.storage.models/MoveRequest.destinationBucketId|{}destinationBucketId[0]
-        final fun <get-destinationBucketId>(): kotlin/String? // io.github.androidpoet.supabase.storage.models/MoveRequest.destinationBucketId.<get-destinationBucketId>|<get-destinationBucketId>(){}[0]
-    final val destinationKey // io.github.androidpoet.supabase.storage.models/MoveRequest.destinationKey|{}destinationKey[0]
-        final fun <get-destinationKey>(): kotlin/String? // io.github.androidpoet.supabase.storage.models/MoveRequest.destinationKey.<get-destinationKey>|<get-destinationKey>(){}[0]
-    final val sourceKey // io.github.androidpoet.supabase.storage.models/MoveRequest.sourceKey|{}sourceKey[0]
-        final fun <get-sourceKey>(): kotlin/String // io.github.androidpoet.supabase.storage.models/MoveRequest.sourceKey.<get-sourceKey>|<get-sourceKey>(){}[0]
-
-    final fun component1(): kotlin/String // io.github.androidpoet.supabase.storage.models/MoveRequest.component1|component1(){}[0]
-    final fun component2(): kotlin/String // io.github.androidpoet.supabase.storage.models/MoveRequest.component2|component2(){}[0]
-    final fun component3(): kotlin/String? // io.github.androidpoet.supabase.storage.models/MoveRequest.component3|component3(){}[0]
-    final fun component4(): kotlin/String? // io.github.androidpoet.supabase.storage.models/MoveRequest.component4|component4(){}[0]
-    final fun component5(): kotlin/Boolean? // io.github.androidpoet.supabase.storage.models/MoveRequest.component5|component5(){}[0]
-    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/Boolean? = ...): io.github.androidpoet.supabase.storage.models/MoveRequest // io.github.androidpoet.supabase.storage.models/MoveRequest.copy|copy(kotlin.String;kotlin.String;kotlin.String?;kotlin.String?;kotlin.Boolean?){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/MoveRequest.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/MoveRequest.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/MoveRequest.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.storage.models/MoveRequest> { // io.github.androidpoet.supabase.storage.models/MoveRequest.$serializer|null[0]
-        final val descriptor // io.github.androidpoet.supabase.storage.models/MoveRequest.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.storage.models/MoveRequest.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.storage.models/MoveRequest.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.storage.models/MoveRequest // io.github.androidpoet.supabase.storage.models/MoveRequest.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.storage.models/MoveRequest) // io.github.androidpoet.supabase.storage.models/MoveRequest.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.storage.models.MoveRequest){}[0]
-    }
-
-    final object Companion { // io.github.androidpoet.supabase.storage.models/MoveRequest.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/MoveRequest> // io.github.androidpoet.supabase.storage.models/MoveRequest.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class io.github.androidpoet.supabase.storage.models/ObjectListRequest { // io.github.androidpoet.supabase.storage.models/ObjectListRequest|null[0]
-    constructor <init>(kotlin/String, kotlin/Int, kotlin/Int, io.github.androidpoet.supabase.storage.models/ObjectSortByRequest? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.storage.models/ObjectListRequest.<init>|<init>(kotlin.String;kotlin.Int;kotlin.Int;io.github.androidpoet.supabase.storage.models.ObjectSortByRequest?;kotlin.String?){}[0]
-
-    final val limit // io.github.androidpoet.supabase.storage.models/ObjectListRequest.limit|{}limit[0]
-        final fun <get-limit>(): kotlin/Int // io.github.androidpoet.supabase.storage.models/ObjectListRequest.limit.<get-limit>|<get-limit>(){}[0]
-    final val offset // io.github.androidpoet.supabase.storage.models/ObjectListRequest.offset|{}offset[0]
-        final fun <get-offset>(): kotlin/Int // io.github.androidpoet.supabase.storage.models/ObjectListRequest.offset.<get-offset>|<get-offset>(){}[0]
-    final val prefix // io.github.androidpoet.supabase.storage.models/ObjectListRequest.prefix|{}prefix[0]
-        final fun <get-prefix>(): kotlin/String // io.github.androidpoet.supabase.storage.models/ObjectListRequest.prefix.<get-prefix>|<get-prefix>(){}[0]
-    final val search // io.github.androidpoet.supabase.storage.models/ObjectListRequest.search|{}search[0]
-        final fun <get-search>(): kotlin/String? // io.github.androidpoet.supabase.storage.models/ObjectListRequest.search.<get-search>|<get-search>(){}[0]
-    final val sortBy // io.github.androidpoet.supabase.storage.models/ObjectListRequest.sortBy|{}sortBy[0]
-        final fun <get-sortBy>(): io.github.androidpoet.supabase.storage.models/ObjectSortByRequest? // io.github.androidpoet.supabase.storage.models/ObjectListRequest.sortBy.<get-sortBy>|<get-sortBy>(){}[0]
-
-    final fun component1(): kotlin/String // io.github.androidpoet.supabase.storage.models/ObjectListRequest.component1|component1(){}[0]
-    final fun component2(): kotlin/Int // io.github.androidpoet.supabase.storage.models/ObjectListRequest.component2|component2(){}[0]
-    final fun component3(): kotlin/Int // io.github.androidpoet.supabase.storage.models/ObjectListRequest.component3|component3(){}[0]
-    final fun component4(): io.github.androidpoet.supabase.storage.models/ObjectSortByRequest? // io.github.androidpoet.supabase.storage.models/ObjectListRequest.component4|component4(){}[0]
-    final fun component5(): kotlin/String? // io.github.androidpoet.supabase.storage.models/ObjectListRequest.component5|component5(){}[0]
-    final fun copy(kotlin/String = ..., kotlin/Int = ..., kotlin/Int = ..., io.github.androidpoet.supabase.storage.models/ObjectSortByRequest? = ..., kotlin/String? = ...): io.github.androidpoet.supabase.storage.models/ObjectListRequest // io.github.androidpoet.supabase.storage.models/ObjectListRequest.copy|copy(kotlin.String;kotlin.Int;kotlin.Int;io.github.androidpoet.supabase.storage.models.ObjectSortByRequest?;kotlin.String?){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/ObjectListRequest.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/ObjectListRequest.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/ObjectListRequest.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.storage.models/ObjectListRequest> { // io.github.androidpoet.supabase.storage.models/ObjectListRequest.$serializer|null[0]
-        final val descriptor // io.github.androidpoet.supabase.storage.models/ObjectListRequest.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.storage.models/ObjectListRequest.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.storage.models/ObjectListRequest.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.storage.models/ObjectListRequest // io.github.androidpoet.supabase.storage.models/ObjectListRequest.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.storage.models/ObjectListRequest) // io.github.androidpoet.supabase.storage.models/ObjectListRequest.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.storage.models.ObjectListRequest){}[0]
-    }
-
-    final object Companion { // io.github.androidpoet.supabase.storage.models/ObjectListRequest.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/ObjectListRequest> // io.github.androidpoet.supabase.storage.models/ObjectListRequest.Companion.serializer|serializer(){}[0]
     }
 }
 
@@ -975,44 +776,6 @@ final class io.github.androidpoet.supabase.storage.models/ObjectListV2Object { /
     }
 }
 
-final class io.github.androidpoet.supabase.storage.models/ObjectListV2Request { // io.github.androidpoet.supabase.storage.models/ObjectListV2Request|null[0]
-    constructor <init>(kotlin/String? = ..., kotlin/String? = ..., kotlin/Int? = ..., kotlin/Boolean? = ..., io.github.androidpoet.supabase.storage.models/ObjectSortByRequest? = ...) // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.<init>|<init>(kotlin.String?;kotlin.String?;kotlin.Int?;kotlin.Boolean?;io.github.androidpoet.supabase.storage.models.ObjectSortByRequest?){}[0]
-
-    final val cursor // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.cursor|{}cursor[0]
-        final fun <get-cursor>(): kotlin/String? // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.cursor.<get-cursor>|<get-cursor>(){}[0]
-    final val limit // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.limit|{}limit[0]
-        final fun <get-limit>(): kotlin/Int? // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.limit.<get-limit>|<get-limit>(){}[0]
-    final val prefix // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.prefix|{}prefix[0]
-        final fun <get-prefix>(): kotlin/String? // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.prefix.<get-prefix>|<get-prefix>(){}[0]
-    final val sortBy // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.sortBy|{}sortBy[0]
-        final fun <get-sortBy>(): io.github.androidpoet.supabase.storage.models/ObjectSortByRequest? // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.sortBy.<get-sortBy>|<get-sortBy>(){}[0]
-    final val withDelimiter // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.withDelimiter|{}withDelimiter[0]
-        final fun <get-withDelimiter>(): kotlin/Boolean? // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.withDelimiter.<get-withDelimiter>|<get-withDelimiter>(){}[0]
-
-    final fun component1(): kotlin/String? // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.component1|component1(){}[0]
-    final fun component2(): kotlin/String? // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.component2|component2(){}[0]
-    final fun component3(): kotlin/Int? // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.component3|component3(){}[0]
-    final fun component4(): kotlin/Boolean? // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.component4|component4(){}[0]
-    final fun component5(): io.github.androidpoet.supabase.storage.models/ObjectSortByRequest? // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.component5|component5(){}[0]
-    final fun copy(kotlin/String? = ..., kotlin/String? = ..., kotlin/Int? = ..., kotlin/Boolean? = ..., io.github.androidpoet.supabase.storage.models/ObjectSortByRequest? = ...): io.github.androidpoet.supabase.storage.models/ObjectListV2Request // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.copy|copy(kotlin.String?;kotlin.String?;kotlin.Int?;kotlin.Boolean?;io.github.androidpoet.supabase.storage.models.ObjectSortByRequest?){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.storage.models/ObjectListV2Request> { // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.$serializer|null[0]
-        final val descriptor // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.storage.models/ObjectListV2Request // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.storage.models/ObjectListV2Request) // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.storage.models.ObjectListV2Request){}[0]
-    }
-
-    final object Companion { // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/ObjectListV2Request> // io.github.androidpoet.supabase.storage.models/ObjectListV2Request.Companion.serializer|serializer(){}[0]
-    }
-}
-
 final class io.github.androidpoet.supabase.storage.models/ObjectListV2Result { // io.github.androidpoet.supabase.storage.models/ObjectListV2Result|null[0]
     constructor <init>(kotlin/Boolean, kotlin.collections/List<io.github.androidpoet.supabase.storage.models/ObjectListV2Folder>, kotlin.collections/List<io.github.androidpoet.supabase.storage.models/ObjectListV2Object>, kotlin/String? = ...) // io.github.androidpoet.supabase.storage.models/ObjectListV2Result.<init>|<init>(kotlin.Boolean;kotlin.collections.List<io.github.androidpoet.supabase.storage.models.ObjectListV2Folder>;kotlin.collections.List<io.github.androidpoet.supabase.storage.models.ObjectListV2Object>;kotlin.String?){}[0]
 
@@ -1050,263 +813,6 @@ final class io.github.androidpoet.supabase.storage.models/ObjectListV2Result { /
     }
 }
 
-final class io.github.androidpoet.supabase.storage.models/ObjectSortByRequest { // io.github.androidpoet.supabase.storage.models/ObjectSortByRequest|null[0]
-    constructor <init>(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.storage.models/ObjectSortByRequest.<init>|<init>(kotlin.String;kotlin.String){}[0]
-
-    final val column // io.github.androidpoet.supabase.storage.models/ObjectSortByRequest.column|{}column[0]
-        final fun <get-column>(): kotlin/String // io.github.androidpoet.supabase.storage.models/ObjectSortByRequest.column.<get-column>|<get-column>(){}[0]
-    final val order // io.github.androidpoet.supabase.storage.models/ObjectSortByRequest.order|{}order[0]
-        final fun <get-order>(): kotlin/String // io.github.androidpoet.supabase.storage.models/ObjectSortByRequest.order.<get-order>|<get-order>(){}[0]
-
-    final fun component1(): kotlin/String // io.github.androidpoet.supabase.storage.models/ObjectSortByRequest.component1|component1(){}[0]
-    final fun component2(): kotlin/String // io.github.androidpoet.supabase.storage.models/ObjectSortByRequest.component2|component2(){}[0]
-    final fun copy(kotlin/String = ..., kotlin/String = ...): io.github.androidpoet.supabase.storage.models/ObjectSortByRequest // io.github.androidpoet.supabase.storage.models/ObjectSortByRequest.copy|copy(kotlin.String;kotlin.String){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/ObjectSortByRequest.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/ObjectSortByRequest.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/ObjectSortByRequest.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.storage.models/ObjectSortByRequest> { // io.github.androidpoet.supabase.storage.models/ObjectSortByRequest.$serializer|null[0]
-        final val descriptor // io.github.androidpoet.supabase.storage.models/ObjectSortByRequest.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.storage.models/ObjectSortByRequest.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.storage.models/ObjectSortByRequest.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.storage.models/ObjectSortByRequest // io.github.androidpoet.supabase.storage.models/ObjectSortByRequest.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.storage.models/ObjectSortByRequest) // io.github.androidpoet.supabase.storage.models/ObjectSortByRequest.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.storage.models.ObjectSortByRequest){}[0]
-    }
-
-    final object Companion { // io.github.androidpoet.supabase.storage.models/ObjectSortByRequest.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/ObjectSortByRequest> // io.github.androidpoet.supabase.storage.models/ObjectSortByRequest.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse { // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse|null[0]
-    constructor <init>(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.<init>|<init>(kotlin.String?;kotlin.String?;kotlin.String?){}[0]
-
-    final val error // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.error|{}error[0]
-        final fun <get-error>(): kotlin/String? // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.error.<get-error>|<get-error>(){}[0]
-    final val path // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.path|{}path[0]
-        final fun <get-path>(): kotlin/String? // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.path.<get-path>|<get-path>(){}[0]
-    final val signedUrl // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.signedUrl|{}signedUrl[0]
-        final fun <get-signedUrl>(): kotlin/String? // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.signedUrl.<get-signedUrl>|<get-signedUrl>(){}[0]
-
-    final fun component1(): kotlin/String? // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.component1|component1(){}[0]
-    final fun component2(): kotlin/String? // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.component2|component2(){}[0]
-    final fun component3(): kotlin/String? // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.component3|component3(){}[0]
-    final fun copy(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ...): io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.copy|copy(kotlin.String?;kotlin.String?;kotlin.String?){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse> { // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.$serializer|null[0]
-        final val descriptor // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse) // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.storage.models.SignedUrlItemResponse){}[0]
-    }
-
-    final object Companion { // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse> // io.github.androidpoet.supabase.storage.models/SignedUrlItemResponse.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class io.github.androidpoet.supabase.storage.models/SignedUrlRequest { // io.github.androidpoet.supabase.storage.models/SignedUrlRequest|null[0]
-    constructor <init>(kotlin/Long, io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest? = ...) // io.github.androidpoet.supabase.storage.models/SignedUrlRequest.<init>|<init>(kotlin.Long;io.github.androidpoet.supabase.storage.models.SignedUrlTransformRequest?){}[0]
-
-    final val expiresIn // io.github.androidpoet.supabase.storage.models/SignedUrlRequest.expiresIn|{}expiresIn[0]
-        final fun <get-expiresIn>(): kotlin/Long // io.github.androidpoet.supabase.storage.models/SignedUrlRequest.expiresIn.<get-expiresIn>|<get-expiresIn>(){}[0]
-    final val transform // io.github.androidpoet.supabase.storage.models/SignedUrlRequest.transform|{}transform[0]
-        final fun <get-transform>(): io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest? // io.github.androidpoet.supabase.storage.models/SignedUrlRequest.transform.<get-transform>|<get-transform>(){}[0]
-
-    final fun component1(): kotlin/Long // io.github.androidpoet.supabase.storage.models/SignedUrlRequest.component1|component1(){}[0]
-    final fun component2(): io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest? // io.github.androidpoet.supabase.storage.models/SignedUrlRequest.component2|component2(){}[0]
-    final fun copy(kotlin/Long = ..., io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest? = ...): io.github.androidpoet.supabase.storage.models/SignedUrlRequest // io.github.androidpoet.supabase.storage.models/SignedUrlRequest.copy|copy(kotlin.Long;io.github.androidpoet.supabase.storage.models.SignedUrlTransformRequest?){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/SignedUrlRequest.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/SignedUrlRequest.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/SignedUrlRequest.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.storage.models/SignedUrlRequest> { // io.github.androidpoet.supabase.storage.models/SignedUrlRequest.$serializer|null[0]
-        final val descriptor // io.github.androidpoet.supabase.storage.models/SignedUrlRequest.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.storage.models/SignedUrlRequest.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.storage.models/SignedUrlRequest.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.storage.models/SignedUrlRequest // io.github.androidpoet.supabase.storage.models/SignedUrlRequest.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.storage.models/SignedUrlRequest) // io.github.androidpoet.supabase.storage.models/SignedUrlRequest.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.storage.models.SignedUrlRequest){}[0]
-    }
-
-    final object Companion { // io.github.androidpoet.supabase.storage.models/SignedUrlRequest.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/SignedUrlRequest> // io.github.androidpoet.supabase.storage.models/SignedUrlRequest.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class io.github.androidpoet.supabase.storage.models/SignedUrlResponse { // io.github.androidpoet.supabase.storage.models/SignedUrlResponse|null[0]
-    constructor <init>(kotlin/String) // io.github.androidpoet.supabase.storage.models/SignedUrlResponse.<init>|<init>(kotlin.String){}[0]
-
-    final val signedUrl // io.github.androidpoet.supabase.storage.models/SignedUrlResponse.signedUrl|{}signedUrl[0]
-        final fun <get-signedUrl>(): kotlin/String // io.github.androidpoet.supabase.storage.models/SignedUrlResponse.signedUrl.<get-signedUrl>|<get-signedUrl>(){}[0]
-
-    final fun component1(): kotlin/String // io.github.androidpoet.supabase.storage.models/SignedUrlResponse.component1|component1(){}[0]
-    final fun copy(kotlin/String = ...): io.github.androidpoet.supabase.storage.models/SignedUrlResponse // io.github.androidpoet.supabase.storage.models/SignedUrlResponse.copy|copy(kotlin.String){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/SignedUrlResponse.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/SignedUrlResponse.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/SignedUrlResponse.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.storage.models/SignedUrlResponse> { // io.github.androidpoet.supabase.storage.models/SignedUrlResponse.$serializer|null[0]
-        final val descriptor // io.github.androidpoet.supabase.storage.models/SignedUrlResponse.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.storage.models/SignedUrlResponse.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.storage.models/SignedUrlResponse.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.storage.models/SignedUrlResponse // io.github.androidpoet.supabase.storage.models/SignedUrlResponse.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.storage.models/SignedUrlResponse) // io.github.androidpoet.supabase.storage.models/SignedUrlResponse.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.storage.models.SignedUrlResponse){}[0]
-    }
-
-    final object Companion { // io.github.androidpoet.supabase.storage.models/SignedUrlResponse.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/SignedUrlResponse> // io.github.androidpoet.supabase.storage.models/SignedUrlResponse.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest { // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest|null[0]
-    constructor <init>(kotlin/Int? = ..., kotlin/Int? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/Int? = ...) // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.<init>|<init>(kotlin.Int?;kotlin.Int?;kotlin.String?;kotlin.String?;kotlin.Int?){}[0]
-
-    final val format // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.format|{}format[0]
-        final fun <get-format>(): kotlin/String? // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.format.<get-format>|<get-format>(){}[0]
-    final val height // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.height|{}height[0]
-        final fun <get-height>(): kotlin/Int? // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.height.<get-height>|<get-height>(){}[0]
-    final val quality // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.quality|{}quality[0]
-        final fun <get-quality>(): kotlin/Int? // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.quality.<get-quality>|<get-quality>(){}[0]
-    final val resize // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.resize|{}resize[0]
-        final fun <get-resize>(): kotlin/String? // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.resize.<get-resize>|<get-resize>(){}[0]
-    final val width // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.width|{}width[0]
-        final fun <get-width>(): kotlin/Int? // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.width.<get-width>|<get-width>(){}[0]
-
-    final fun component1(): kotlin/Int? // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.component1|component1(){}[0]
-    final fun component2(): kotlin/Int? // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.component2|component2(){}[0]
-    final fun component3(): kotlin/String? // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.component3|component3(){}[0]
-    final fun component4(): kotlin/String? // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.component4|component4(){}[0]
-    final fun component5(): kotlin/Int? // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.component5|component5(){}[0]
-    final fun copy(kotlin/Int? = ..., kotlin/Int? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/Int? = ...): io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.copy|copy(kotlin.Int?;kotlin.Int?;kotlin.String?;kotlin.String?;kotlin.Int?){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest> { // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.$serializer|null[0]
-        final val descriptor // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest) // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.storage.models.SignedUrlTransformRequest){}[0]
-    }
-
-    final object Companion { // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest> // io.github.androidpoet.supabase.storage.models/SignedUrlTransformRequest.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class io.github.androidpoet.supabase.storage.models/SignedUrlsRequest { // io.github.androidpoet.supabase.storage.models/SignedUrlsRequest|null[0]
-    constructor <init>(kotlin.collections/List<kotlin/String>, kotlin/Long) // io.github.androidpoet.supabase.storage.models/SignedUrlsRequest.<init>|<init>(kotlin.collections.List<kotlin.String>;kotlin.Long){}[0]
-
-    final val expiresIn // io.github.androidpoet.supabase.storage.models/SignedUrlsRequest.expiresIn|{}expiresIn[0]
-        final fun <get-expiresIn>(): kotlin/Long // io.github.androidpoet.supabase.storage.models/SignedUrlsRequest.expiresIn.<get-expiresIn>|<get-expiresIn>(){}[0]
-    final val paths // io.github.androidpoet.supabase.storage.models/SignedUrlsRequest.paths|{}paths[0]
-        final fun <get-paths>(): kotlin.collections/List<kotlin/String> // io.github.androidpoet.supabase.storage.models/SignedUrlsRequest.paths.<get-paths>|<get-paths>(){}[0]
-
-    final fun component1(): kotlin.collections/List<kotlin/String> // io.github.androidpoet.supabase.storage.models/SignedUrlsRequest.component1|component1(){}[0]
-    final fun component2(): kotlin/Long // io.github.androidpoet.supabase.storage.models/SignedUrlsRequest.component2|component2(){}[0]
-    final fun copy(kotlin.collections/List<kotlin/String> = ..., kotlin/Long = ...): io.github.androidpoet.supabase.storage.models/SignedUrlsRequest // io.github.androidpoet.supabase.storage.models/SignedUrlsRequest.copy|copy(kotlin.collections.List<kotlin.String>;kotlin.Long){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/SignedUrlsRequest.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/SignedUrlsRequest.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/SignedUrlsRequest.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.storage.models/SignedUrlsRequest> { // io.github.androidpoet.supabase.storage.models/SignedUrlsRequest.$serializer|null[0]
-        final val descriptor // io.github.androidpoet.supabase.storage.models/SignedUrlsRequest.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.storage.models/SignedUrlsRequest.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.storage.models/SignedUrlsRequest.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.storage.models/SignedUrlsRequest // io.github.androidpoet.supabase.storage.models/SignedUrlsRequest.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.storage.models/SignedUrlsRequest) // io.github.androidpoet.supabase.storage.models/SignedUrlsRequest.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.storage.models.SignedUrlsRequest){}[0]
-    }
-
-    final object Companion { // io.github.androidpoet.supabase.storage.models/SignedUrlsRequest.Companion|null[0]
-        final val $childSerializers // io.github.androidpoet.supabase.storage.models/SignedUrlsRequest.Companion.$childSerializers|{}$childSerializers[0]
-
-        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/SignedUrlsRequest> // io.github.androidpoet.supabase.storage.models/SignedUrlsRequest.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class io.github.androidpoet.supabase.storage.models/UpdateBucketRequest { // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest|null[0]
-    constructor <init>(kotlin/String? = ..., kotlin/String? = ..., kotlin/Boolean? = ..., kotlin/Long? = ..., kotlin.collections/List<kotlin/String>? = ...) // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.<init>|<init>(kotlin.String?;kotlin.String?;kotlin.Boolean?;kotlin.Long?;kotlin.collections.List<kotlin.String>?){}[0]
-
-    final val allowedMimeTypes // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.allowedMimeTypes|{}allowedMimeTypes[0]
-        final fun <get-allowedMimeTypes>(): kotlin.collections/List<kotlin/String>? // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.allowedMimeTypes.<get-allowedMimeTypes>|<get-allowedMimeTypes>(){}[0]
-    final val fileSizeLimit // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.fileSizeLimit|{}fileSizeLimit[0]
-        final fun <get-fileSizeLimit>(): kotlin/Long? // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.fileSizeLimit.<get-fileSizeLimit>|<get-fileSizeLimit>(){}[0]
-    final val id // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.id|{}id[0]
-        final fun <get-id>(): kotlin/String? // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.id.<get-id>|<get-id>(){}[0]
-    final val name // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.name|{}name[0]
-        final fun <get-name>(): kotlin/String? // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.name.<get-name>|<get-name>(){}[0]
-    final val public // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.public|{}public[0]
-        final fun <get-public>(): kotlin/Boolean? // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.public.<get-public>|<get-public>(){}[0]
-
-    final fun component1(): kotlin/String? // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.component1|component1(){}[0]
-    final fun component2(): kotlin/String? // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.component2|component2(){}[0]
-    final fun component3(): kotlin/Boolean? // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.component3|component3(){}[0]
-    final fun component4(): kotlin/Long? // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.component4|component4(){}[0]
-    final fun component5(): kotlin.collections/List<kotlin/String>? // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.component5|component5(){}[0]
-    final fun copy(kotlin/String? = ..., kotlin/String? = ..., kotlin/Boolean? = ..., kotlin/Long? = ..., kotlin.collections/List<kotlin/String>? = ...): io.github.androidpoet.supabase.storage.models/UpdateBucketRequest // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.copy|copy(kotlin.String?;kotlin.String?;kotlin.Boolean?;kotlin.Long?;kotlin.collections.List<kotlin.String>?){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.storage.models/UpdateBucketRequest> { // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.$serializer|null[0]
-        final val descriptor // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.storage.models/UpdateBucketRequest // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.storage.models/UpdateBucketRequest) // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.storage.models.UpdateBucketRequest){}[0]
-    }
-
-    final object Companion { // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.Companion|null[0]
-        final val $childSerializers // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.Companion.$childSerializers|{}$childSerializers[0]
-
-        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/UpdateBucketRequest> // io.github.androidpoet.supabase.storage.models/UpdateBucketRequest.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse { // io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse|null[0]
-    constructor <init>(kotlin/String, kotlin/String, kotlin/String? = ...) // io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse.<init>|<init>(kotlin.String;kotlin.String;kotlin.String?){}[0]
-
-    final val path // io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse.path|{}path[0]
-        final fun <get-path>(): kotlin/String? // io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse.path.<get-path>|<get-path>(){}[0]
-    final val token // io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse.token|{}token[0]
-        final fun <get-token>(): kotlin/String // io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse.token.<get-token>|<get-token>(){}[0]
-    final val url // io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse.url|{}url[0]
-        final fun <get-url>(): kotlin/String // io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse.url.<get-url>|<get-url>(){}[0]
-
-    final fun component1(): kotlin/String // io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse.component1|component1(){}[0]
-    final fun component2(): kotlin/String // io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse.component2|component2(){}[0]
-    final fun component3(): kotlin/String? // io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse.component3|component3(){}[0]
-    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/String? = ...): io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse // io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse.copy|copy(kotlin.String;kotlin.String;kotlin.String?){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse> { // io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse.$serializer|null[0]
-        final val descriptor // io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse // io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse) // io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.storage.models.UploadSignedUrlResponse){}[0]
-    }
-
-    final object Companion { // io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse> // io.github.androidpoet.supabase.storage.models/UploadSignedUrlResponse.Companion.serializer|serializer(){}[0]
-    }
-}
-
 final class io.github.androidpoet.supabase.storage.models/VectorBucket { // io.github.androidpoet.supabase.storage.models/VectorBucket|null[0]
     constructor <init>(kotlin/String, kotlin/Long? = ..., kotlinx.serialization.json/JsonObject? = ...) // io.github.androidpoet.supabase.storage.models/VectorBucket.<init>|<init>(kotlin.String;kotlin.Long?;kotlinx.serialization.json.JsonObject?){}[0]
 
@@ -1339,32 +845,6 @@ final class io.github.androidpoet.supabase.storage.models/VectorBucket { // io.g
     }
 }
 
-final class io.github.androidpoet.supabase.storage.models/VectorBucketCreateRequest { // io.github.androidpoet.supabase.storage.models/VectorBucketCreateRequest|null[0]
-    constructor <init>(kotlin/String) // io.github.androidpoet.supabase.storage.models/VectorBucketCreateRequest.<init>|<init>(kotlin.String){}[0]
-
-    final val vectorBucketName // io.github.androidpoet.supabase.storage.models/VectorBucketCreateRequest.vectorBucketName|{}vectorBucketName[0]
-        final fun <get-vectorBucketName>(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorBucketCreateRequest.vectorBucketName.<get-vectorBucketName>|<get-vectorBucketName>(){}[0]
-
-    final fun component1(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorBucketCreateRequest.component1|component1(){}[0]
-    final fun copy(kotlin/String = ...): io.github.androidpoet.supabase.storage.models/VectorBucketCreateRequest // io.github.androidpoet.supabase.storage.models/VectorBucketCreateRequest.copy|copy(kotlin.String){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/VectorBucketCreateRequest.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/VectorBucketCreateRequest.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorBucketCreateRequest.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.storage.models/VectorBucketCreateRequest> { // io.github.androidpoet.supabase.storage.models/VectorBucketCreateRequest.$serializer|null[0]
-        final val descriptor // io.github.androidpoet.supabase.storage.models/VectorBucketCreateRequest.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.storage.models/VectorBucketCreateRequest.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.storage.models/VectorBucketCreateRequest.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.storage.models/VectorBucketCreateRequest // io.github.androidpoet.supabase.storage.models/VectorBucketCreateRequest.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.storage.models/VectorBucketCreateRequest) // io.github.androidpoet.supabase.storage.models/VectorBucketCreateRequest.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.storage.models.VectorBucketCreateRequest){}[0]
-    }
-
-    final object Companion { // io.github.androidpoet.supabase.storage.models/VectorBucketCreateRequest.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/VectorBucketCreateRequest> // io.github.androidpoet.supabase.storage.models/VectorBucketCreateRequest.Companion.serializer|serializer(){}[0]
-    }
-}
-
 final class io.github.androidpoet.supabase.storage.models/VectorBucketListItem { // io.github.androidpoet.supabase.storage.models/VectorBucketListItem|null[0]
     constructor <init>(kotlin/String) // io.github.androidpoet.supabase.storage.models/VectorBucketListItem.<init>|<init>(kotlin.String){}[0]
 
@@ -1388,38 +868,6 @@ final class io.github.androidpoet.supabase.storage.models/VectorBucketListItem {
 
     final object Companion { // io.github.androidpoet.supabase.storage.models/VectorBucketListItem.Companion|null[0]
         final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/VectorBucketListItem> // io.github.androidpoet.supabase.storage.models/VectorBucketListItem.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class io.github.androidpoet.supabase.storage.models/VectorBucketListRequest { // io.github.androidpoet.supabase.storage.models/VectorBucketListRequest|null[0]
-    constructor <init>(kotlin/String? = ..., kotlin/Int? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.storage.models/VectorBucketListRequest.<init>|<init>(kotlin.String?;kotlin.Int?;kotlin.String?){}[0]
-
-    final val maxResults // io.github.androidpoet.supabase.storage.models/VectorBucketListRequest.maxResults|{}maxResults[0]
-        final fun <get-maxResults>(): kotlin/Int? // io.github.androidpoet.supabase.storage.models/VectorBucketListRequest.maxResults.<get-maxResults>|<get-maxResults>(){}[0]
-    final val nextToken // io.github.androidpoet.supabase.storage.models/VectorBucketListRequest.nextToken|{}nextToken[0]
-        final fun <get-nextToken>(): kotlin/String? // io.github.androidpoet.supabase.storage.models/VectorBucketListRequest.nextToken.<get-nextToken>|<get-nextToken>(){}[0]
-    final val prefix // io.github.androidpoet.supabase.storage.models/VectorBucketListRequest.prefix|{}prefix[0]
-        final fun <get-prefix>(): kotlin/String? // io.github.androidpoet.supabase.storage.models/VectorBucketListRequest.prefix.<get-prefix>|<get-prefix>(){}[0]
-
-    final fun component1(): kotlin/String? // io.github.androidpoet.supabase.storage.models/VectorBucketListRequest.component1|component1(){}[0]
-    final fun component2(): kotlin/Int? // io.github.androidpoet.supabase.storage.models/VectorBucketListRequest.component2|component2(){}[0]
-    final fun component3(): kotlin/String? // io.github.androidpoet.supabase.storage.models/VectorBucketListRequest.component3|component3(){}[0]
-    final fun copy(kotlin/String? = ..., kotlin/Int? = ..., kotlin/String? = ...): io.github.androidpoet.supabase.storage.models/VectorBucketListRequest // io.github.androidpoet.supabase.storage.models/VectorBucketListRequest.copy|copy(kotlin.String?;kotlin.Int?;kotlin.String?){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/VectorBucketListRequest.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/VectorBucketListRequest.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorBucketListRequest.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.storage.models/VectorBucketListRequest> { // io.github.androidpoet.supabase.storage.models/VectorBucketListRequest.$serializer|null[0]
-        final val descriptor // io.github.androidpoet.supabase.storage.models/VectorBucketListRequest.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.storage.models/VectorBucketListRequest.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.storage.models/VectorBucketListRequest.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.storage.models/VectorBucketListRequest // io.github.androidpoet.supabase.storage.models/VectorBucketListRequest.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.storage.models/VectorBucketListRequest) // io.github.androidpoet.supabase.storage.models/VectorBucketListRequest.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.storage.models.VectorBucketListRequest){}[0]
-    }
-
-    final object Companion { // io.github.androidpoet.supabase.storage.models/VectorBucketListRequest.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/VectorBucketListRequest> // io.github.androidpoet.supabase.storage.models/VectorBucketListRequest.Companion.serializer|serializer(){}[0]
     }
 }
 
@@ -1451,32 +899,6 @@ final class io.github.androidpoet.supabase.storage.models/VectorBucketListRespon
         final val $childSerializers // io.github.androidpoet.supabase.storage.models/VectorBucketListResponse.Companion.$childSerializers|{}$childSerializers[0]
 
         final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/VectorBucketListResponse> // io.github.androidpoet.supabase.storage.models/VectorBucketListResponse.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class io.github.androidpoet.supabase.storage.models/VectorBucketRequest { // io.github.androidpoet.supabase.storage.models/VectorBucketRequest|null[0]
-    constructor <init>(kotlin/String) // io.github.androidpoet.supabase.storage.models/VectorBucketRequest.<init>|<init>(kotlin.String){}[0]
-
-    final val vectorBucketName // io.github.androidpoet.supabase.storage.models/VectorBucketRequest.vectorBucketName|{}vectorBucketName[0]
-        final fun <get-vectorBucketName>(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorBucketRequest.vectorBucketName.<get-vectorBucketName>|<get-vectorBucketName>(){}[0]
-
-    final fun component1(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorBucketRequest.component1|component1(){}[0]
-    final fun copy(kotlin/String = ...): io.github.androidpoet.supabase.storage.models/VectorBucketRequest // io.github.androidpoet.supabase.storage.models/VectorBucketRequest.copy|copy(kotlin.String){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/VectorBucketRequest.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/VectorBucketRequest.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorBucketRequest.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.storage.models/VectorBucketRequest> { // io.github.androidpoet.supabase.storage.models/VectorBucketRequest.$serializer|null[0]
-        final val descriptor // io.github.androidpoet.supabase.storage.models/VectorBucketRequest.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.storage.models/VectorBucketRequest.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.storage.models/VectorBucketRequest.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.storage.models/VectorBucketRequest // io.github.androidpoet.supabase.storage.models/VectorBucketRequest.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.storage.models/VectorBucketRequest) // io.github.androidpoet.supabase.storage.models/VectorBucketRequest.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.storage.models.VectorBucketRequest){}[0]
-    }
-
-    final object Companion { // io.github.androidpoet.supabase.storage.models/VectorBucketRequest.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/VectorBucketRequest> // io.github.androidpoet.supabase.storage.models/VectorBucketRequest.Companion.serializer|serializer(){}[0]
     }
 }
 
@@ -1534,80 +956,6 @@ final class io.github.androidpoet.supabase.storage.models/VectorData { // io.git
     }
 }
 
-final class io.github.androidpoet.supabase.storage.models/VectorDeleteRequest { // io.github.androidpoet.supabase.storage.models/VectorDeleteRequest|null[0]
-    constructor <init>(kotlin/String, kotlin/String, kotlin.collections/List<kotlin/String>) // io.github.androidpoet.supabase.storage.models/VectorDeleteRequest.<init>|<init>(kotlin.String;kotlin.String;kotlin.collections.List<kotlin.String>){}[0]
-
-    final val indexName // io.github.androidpoet.supabase.storage.models/VectorDeleteRequest.indexName|{}indexName[0]
-        final fun <get-indexName>(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorDeleteRequest.indexName.<get-indexName>|<get-indexName>(){}[0]
-    final val keys // io.github.androidpoet.supabase.storage.models/VectorDeleteRequest.keys|{}keys[0]
-        final fun <get-keys>(): kotlin.collections/List<kotlin/String> // io.github.androidpoet.supabase.storage.models/VectorDeleteRequest.keys.<get-keys>|<get-keys>(){}[0]
-    final val vectorBucketName // io.github.androidpoet.supabase.storage.models/VectorDeleteRequest.vectorBucketName|{}vectorBucketName[0]
-        final fun <get-vectorBucketName>(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorDeleteRequest.vectorBucketName.<get-vectorBucketName>|<get-vectorBucketName>(){}[0]
-
-    final fun component1(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorDeleteRequest.component1|component1(){}[0]
-    final fun component2(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorDeleteRequest.component2|component2(){}[0]
-    final fun component3(): kotlin.collections/List<kotlin/String> // io.github.androidpoet.supabase.storage.models/VectorDeleteRequest.component3|component3(){}[0]
-    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin.collections/List<kotlin/String> = ...): io.github.androidpoet.supabase.storage.models/VectorDeleteRequest // io.github.androidpoet.supabase.storage.models/VectorDeleteRequest.copy|copy(kotlin.String;kotlin.String;kotlin.collections.List<kotlin.String>){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/VectorDeleteRequest.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/VectorDeleteRequest.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorDeleteRequest.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.storage.models/VectorDeleteRequest> { // io.github.androidpoet.supabase.storage.models/VectorDeleteRequest.$serializer|null[0]
-        final val descriptor // io.github.androidpoet.supabase.storage.models/VectorDeleteRequest.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.storage.models/VectorDeleteRequest.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.storage.models/VectorDeleteRequest.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.storage.models/VectorDeleteRequest // io.github.androidpoet.supabase.storage.models/VectorDeleteRequest.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.storage.models/VectorDeleteRequest) // io.github.androidpoet.supabase.storage.models/VectorDeleteRequest.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.storage.models.VectorDeleteRequest){}[0]
-    }
-
-    final object Companion { // io.github.androidpoet.supabase.storage.models/VectorDeleteRequest.Companion|null[0]
-        final val $childSerializers // io.github.androidpoet.supabase.storage.models/VectorDeleteRequest.Companion.$childSerializers|{}$childSerializers[0]
-
-        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/VectorDeleteRequest> // io.github.androidpoet.supabase.storage.models/VectorDeleteRequest.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class io.github.androidpoet.supabase.storage.models/VectorGetRequest { // io.github.androidpoet.supabase.storage.models/VectorGetRequest|null[0]
-    constructor <init>(kotlin/String, kotlin/String, kotlin.collections/List<kotlin/String>, kotlin/Boolean? = ..., kotlin/Boolean? = ...) // io.github.androidpoet.supabase.storage.models/VectorGetRequest.<init>|<init>(kotlin.String;kotlin.String;kotlin.collections.List<kotlin.String>;kotlin.Boolean?;kotlin.Boolean?){}[0]
-
-    final val indexName // io.github.androidpoet.supabase.storage.models/VectorGetRequest.indexName|{}indexName[0]
-        final fun <get-indexName>(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorGetRequest.indexName.<get-indexName>|<get-indexName>(){}[0]
-    final val keys // io.github.androidpoet.supabase.storage.models/VectorGetRequest.keys|{}keys[0]
-        final fun <get-keys>(): kotlin.collections/List<kotlin/String> // io.github.androidpoet.supabase.storage.models/VectorGetRequest.keys.<get-keys>|<get-keys>(){}[0]
-    final val returnData // io.github.androidpoet.supabase.storage.models/VectorGetRequest.returnData|{}returnData[0]
-        final fun <get-returnData>(): kotlin/Boolean? // io.github.androidpoet.supabase.storage.models/VectorGetRequest.returnData.<get-returnData>|<get-returnData>(){}[0]
-    final val returnMetadata // io.github.androidpoet.supabase.storage.models/VectorGetRequest.returnMetadata|{}returnMetadata[0]
-        final fun <get-returnMetadata>(): kotlin/Boolean? // io.github.androidpoet.supabase.storage.models/VectorGetRequest.returnMetadata.<get-returnMetadata>|<get-returnMetadata>(){}[0]
-    final val vectorBucketName // io.github.androidpoet.supabase.storage.models/VectorGetRequest.vectorBucketName|{}vectorBucketName[0]
-        final fun <get-vectorBucketName>(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorGetRequest.vectorBucketName.<get-vectorBucketName>|<get-vectorBucketName>(){}[0]
-
-    final fun component1(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorGetRequest.component1|component1(){}[0]
-    final fun component2(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorGetRequest.component2|component2(){}[0]
-    final fun component3(): kotlin.collections/List<kotlin/String> // io.github.androidpoet.supabase.storage.models/VectorGetRequest.component3|component3(){}[0]
-    final fun component4(): kotlin/Boolean? // io.github.androidpoet.supabase.storage.models/VectorGetRequest.component4|component4(){}[0]
-    final fun component5(): kotlin/Boolean? // io.github.androidpoet.supabase.storage.models/VectorGetRequest.component5|component5(){}[0]
-    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin.collections/List<kotlin/String> = ..., kotlin/Boolean? = ..., kotlin/Boolean? = ...): io.github.androidpoet.supabase.storage.models/VectorGetRequest // io.github.androidpoet.supabase.storage.models/VectorGetRequest.copy|copy(kotlin.String;kotlin.String;kotlin.collections.List<kotlin.String>;kotlin.Boolean?;kotlin.Boolean?){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/VectorGetRequest.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/VectorGetRequest.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorGetRequest.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.storage.models/VectorGetRequest> { // io.github.androidpoet.supabase.storage.models/VectorGetRequest.$serializer|null[0]
-        final val descriptor // io.github.androidpoet.supabase.storage.models/VectorGetRequest.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.storage.models/VectorGetRequest.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.storage.models/VectorGetRequest.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.storage.models/VectorGetRequest // io.github.androidpoet.supabase.storage.models/VectorGetRequest.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.storage.models/VectorGetRequest) // io.github.androidpoet.supabase.storage.models/VectorGetRequest.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.storage.models.VectorGetRequest){}[0]
-    }
-
-    final object Companion { // io.github.androidpoet.supabase.storage.models/VectorGetRequest.Companion|null[0]
-        final val $childSerializers // io.github.androidpoet.supabase.storage.models/VectorGetRequest.Companion.$childSerializers|{}$childSerializers[0]
-
-        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/VectorGetRequest> // io.github.androidpoet.supabase.storage.models/VectorGetRequest.Companion.serializer|serializer(){}[0]
-    }
-}
-
 final class io.github.androidpoet.supabase.storage.models/VectorIndex { // io.github.androidpoet.supabase.storage.models/VectorIndex|null[0]
     constructor <init>(kotlin/String, kotlin/String, io.github.androidpoet.supabase.storage.models/VectorDataType = ..., kotlin/Int, io.github.androidpoet.supabase.storage.models/VectorDistanceMetric = ..., io.github.androidpoet.supabase.storage.models/VectorMetadataConfiguration? = ..., kotlin/Long? = ...) // io.github.androidpoet.supabase.storage.models/VectorIndex.<init>|<init>(kotlin.String;kotlin.String;io.github.androidpoet.supabase.storage.models.VectorDataType;kotlin.Int;io.github.androidpoet.supabase.storage.models.VectorDistanceMetric;io.github.androidpoet.supabase.storage.models.VectorMetadataConfiguration?;kotlin.Long?){}[0]
 
@@ -1654,49 +1002,6 @@ final class io.github.androidpoet.supabase.storage.models/VectorIndex { // io.gi
     }
 }
 
-final class io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest { // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest|null[0]
-    constructor <init>(kotlin/String, kotlin/String, io.github.androidpoet.supabase.storage.models/VectorDataType, kotlin/Int, io.github.androidpoet.supabase.storage.models/VectorDistanceMetric, io.github.androidpoet.supabase.storage.models/VectorMetadataConfiguration? = ...) // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.<init>|<init>(kotlin.String;kotlin.String;io.github.androidpoet.supabase.storage.models.VectorDataType;kotlin.Int;io.github.androidpoet.supabase.storage.models.VectorDistanceMetric;io.github.androidpoet.supabase.storage.models.VectorMetadataConfiguration?){}[0]
-
-    final val dataType // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.dataType|{}dataType[0]
-        final fun <get-dataType>(): io.github.androidpoet.supabase.storage.models/VectorDataType // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.dataType.<get-dataType>|<get-dataType>(){}[0]
-    final val dimension // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.dimension|{}dimension[0]
-        final fun <get-dimension>(): kotlin/Int // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.dimension.<get-dimension>|<get-dimension>(){}[0]
-    final val distanceMetric // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.distanceMetric|{}distanceMetric[0]
-        final fun <get-distanceMetric>(): io.github.androidpoet.supabase.storage.models/VectorDistanceMetric // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.distanceMetric.<get-distanceMetric>|<get-distanceMetric>(){}[0]
-    final val indexName // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.indexName|{}indexName[0]
-        final fun <get-indexName>(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.indexName.<get-indexName>|<get-indexName>(){}[0]
-    final val metadataConfiguration // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.metadataConfiguration|{}metadataConfiguration[0]
-        final fun <get-metadataConfiguration>(): io.github.androidpoet.supabase.storage.models/VectorMetadataConfiguration? // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.metadataConfiguration.<get-metadataConfiguration>|<get-metadataConfiguration>(){}[0]
-    final val vectorBucketName // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.vectorBucketName|{}vectorBucketName[0]
-        final fun <get-vectorBucketName>(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.vectorBucketName.<get-vectorBucketName>|<get-vectorBucketName>(){}[0]
-
-    final fun component1(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.component1|component1(){}[0]
-    final fun component2(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.component2|component2(){}[0]
-    final fun component3(): io.github.androidpoet.supabase.storage.models/VectorDataType // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.component3|component3(){}[0]
-    final fun component4(): kotlin/Int // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.component4|component4(){}[0]
-    final fun component5(): io.github.androidpoet.supabase.storage.models/VectorDistanceMetric // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.component5|component5(){}[0]
-    final fun component6(): io.github.androidpoet.supabase.storage.models/VectorMetadataConfiguration? // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.component6|component6(){}[0]
-    final fun copy(kotlin/String = ..., kotlin/String = ..., io.github.androidpoet.supabase.storage.models/VectorDataType = ..., kotlin/Int = ..., io.github.androidpoet.supabase.storage.models/VectorDistanceMetric = ..., io.github.androidpoet.supabase.storage.models/VectorMetadataConfiguration? = ...): io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.copy|copy(kotlin.String;kotlin.String;io.github.androidpoet.supabase.storage.models.VectorDataType;kotlin.Int;io.github.androidpoet.supabase.storage.models.VectorDistanceMetric;io.github.androidpoet.supabase.storage.models.VectorMetadataConfiguration?){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest> { // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.$serializer|null[0]
-        final val descriptor // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest) // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.storage.models.VectorIndexCreateRequest){}[0]
-    }
-
-    final object Companion { // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.Companion|null[0]
-        final val $childSerializers // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.Companion.$childSerializers|{}$childSerializers[0]
-
-        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest> // io.github.androidpoet.supabase.storage.models/VectorIndexCreateRequest.Companion.serializer|serializer(){}[0]
-    }
-}
-
 final class io.github.androidpoet.supabase.storage.models/VectorIndexListItem { // io.github.androidpoet.supabase.storage.models/VectorIndexListItem|null[0]
     constructor <init>(kotlin/String) // io.github.androidpoet.supabase.storage.models/VectorIndexListItem.<init>|<init>(kotlin.String){}[0]
 
@@ -1720,41 +1025,6 @@ final class io.github.androidpoet.supabase.storage.models/VectorIndexListItem { 
 
     final object Companion { // io.github.androidpoet.supabase.storage.models/VectorIndexListItem.Companion|null[0]
         final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/VectorIndexListItem> // io.github.androidpoet.supabase.storage.models/VectorIndexListItem.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class io.github.androidpoet.supabase.storage.models/VectorIndexListRequest { // io.github.androidpoet.supabase.storage.models/VectorIndexListRequest|null[0]
-    constructor <init>(kotlin/String, kotlin/String? = ..., kotlin/Int? = ..., kotlin/String? = ...) // io.github.androidpoet.supabase.storage.models/VectorIndexListRequest.<init>|<init>(kotlin.String;kotlin.String?;kotlin.Int?;kotlin.String?){}[0]
-
-    final val maxResults // io.github.androidpoet.supabase.storage.models/VectorIndexListRequest.maxResults|{}maxResults[0]
-        final fun <get-maxResults>(): kotlin/Int? // io.github.androidpoet.supabase.storage.models/VectorIndexListRequest.maxResults.<get-maxResults>|<get-maxResults>(){}[0]
-    final val nextToken // io.github.androidpoet.supabase.storage.models/VectorIndexListRequest.nextToken|{}nextToken[0]
-        final fun <get-nextToken>(): kotlin/String? // io.github.androidpoet.supabase.storage.models/VectorIndexListRequest.nextToken.<get-nextToken>|<get-nextToken>(){}[0]
-    final val prefix // io.github.androidpoet.supabase.storage.models/VectorIndexListRequest.prefix|{}prefix[0]
-        final fun <get-prefix>(): kotlin/String? // io.github.androidpoet.supabase.storage.models/VectorIndexListRequest.prefix.<get-prefix>|<get-prefix>(){}[0]
-    final val vectorBucketName // io.github.androidpoet.supabase.storage.models/VectorIndexListRequest.vectorBucketName|{}vectorBucketName[0]
-        final fun <get-vectorBucketName>(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorIndexListRequest.vectorBucketName.<get-vectorBucketName>|<get-vectorBucketName>(){}[0]
-
-    final fun component1(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorIndexListRequest.component1|component1(){}[0]
-    final fun component2(): kotlin/String? // io.github.androidpoet.supabase.storage.models/VectorIndexListRequest.component2|component2(){}[0]
-    final fun component3(): kotlin/Int? // io.github.androidpoet.supabase.storage.models/VectorIndexListRequest.component3|component3(){}[0]
-    final fun component4(): kotlin/String? // io.github.androidpoet.supabase.storage.models/VectorIndexListRequest.component4|component4(){}[0]
-    final fun copy(kotlin/String = ..., kotlin/String? = ..., kotlin/Int? = ..., kotlin/String? = ...): io.github.androidpoet.supabase.storage.models/VectorIndexListRequest // io.github.androidpoet.supabase.storage.models/VectorIndexListRequest.copy|copy(kotlin.String;kotlin.String?;kotlin.Int?;kotlin.String?){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/VectorIndexListRequest.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/VectorIndexListRequest.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorIndexListRequest.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.storage.models/VectorIndexListRequest> { // io.github.androidpoet.supabase.storage.models/VectorIndexListRequest.$serializer|null[0]
-        final val descriptor // io.github.androidpoet.supabase.storage.models/VectorIndexListRequest.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.storage.models/VectorIndexListRequest.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.storage.models/VectorIndexListRequest.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.storage.models/VectorIndexListRequest // io.github.androidpoet.supabase.storage.models/VectorIndexListRequest.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.storage.models/VectorIndexListRequest) // io.github.androidpoet.supabase.storage.models/VectorIndexListRequest.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.storage.models.VectorIndexListRequest){}[0]
-    }
-
-    final object Companion { // io.github.androidpoet.supabase.storage.models/VectorIndexListRequest.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/VectorIndexListRequest> // io.github.androidpoet.supabase.storage.models/VectorIndexListRequest.Companion.serializer|serializer(){}[0]
     }
 }
 
@@ -1789,35 +1059,6 @@ final class io.github.androidpoet.supabase.storage.models/VectorIndexListRespons
     }
 }
 
-final class io.github.androidpoet.supabase.storage.models/VectorIndexRequest { // io.github.androidpoet.supabase.storage.models/VectorIndexRequest|null[0]
-    constructor <init>(kotlin/String, kotlin/String) // io.github.androidpoet.supabase.storage.models/VectorIndexRequest.<init>|<init>(kotlin.String;kotlin.String){}[0]
-
-    final val indexName // io.github.androidpoet.supabase.storage.models/VectorIndexRequest.indexName|{}indexName[0]
-        final fun <get-indexName>(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorIndexRequest.indexName.<get-indexName>|<get-indexName>(){}[0]
-    final val vectorBucketName // io.github.androidpoet.supabase.storage.models/VectorIndexRequest.vectorBucketName|{}vectorBucketName[0]
-        final fun <get-vectorBucketName>(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorIndexRequest.vectorBucketName.<get-vectorBucketName>|<get-vectorBucketName>(){}[0]
-
-    final fun component1(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorIndexRequest.component1|component1(){}[0]
-    final fun component2(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorIndexRequest.component2|component2(){}[0]
-    final fun copy(kotlin/String = ..., kotlin/String = ...): io.github.androidpoet.supabase.storage.models/VectorIndexRequest // io.github.androidpoet.supabase.storage.models/VectorIndexRequest.copy|copy(kotlin.String;kotlin.String){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/VectorIndexRequest.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/VectorIndexRequest.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorIndexRequest.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.storage.models/VectorIndexRequest> { // io.github.androidpoet.supabase.storage.models/VectorIndexRequest.$serializer|null[0]
-        final val descriptor // io.github.androidpoet.supabase.storage.models/VectorIndexRequest.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.storage.models/VectorIndexRequest.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.storage.models/VectorIndexRequest.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.storage.models/VectorIndexRequest // io.github.androidpoet.supabase.storage.models/VectorIndexRequest.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.storage.models/VectorIndexRequest) // io.github.androidpoet.supabase.storage.models/VectorIndexRequest.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.storage.models.VectorIndexRequest){}[0]
-    }
-
-    final object Companion { // io.github.androidpoet.supabase.storage.models/VectorIndexRequest.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/VectorIndexRequest> // io.github.androidpoet.supabase.storage.models/VectorIndexRequest.Companion.serializer|serializer(){}[0]
-    }
-}
-
 final class io.github.androidpoet.supabase.storage.models/VectorIndexResponse { // io.github.androidpoet.supabase.storage.models/VectorIndexResponse|null[0]
     constructor <init>(io.github.androidpoet.supabase.storage.models/VectorIndex) // io.github.androidpoet.supabase.storage.models/VectorIndexResponse.<init>|<init>(io.github.androidpoet.supabase.storage.models.VectorIndex){}[0]
 
@@ -1841,53 +1082,6 @@ final class io.github.androidpoet.supabase.storage.models/VectorIndexResponse { 
 
     final object Companion { // io.github.androidpoet.supabase.storage.models/VectorIndexResponse.Companion|null[0]
         final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/VectorIndexResponse> // io.github.androidpoet.supabase.storage.models/VectorIndexResponse.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class io.github.androidpoet.supabase.storage.models/VectorListRequest { // io.github.androidpoet.supabase.storage.models/VectorListRequest|null[0]
-    constructor <init>(kotlin/String, kotlin/String, kotlin/Int? = ..., kotlin/String? = ..., kotlin/Boolean? = ..., kotlin/Boolean? = ..., kotlin/Int? = ..., kotlin/Int? = ...) // io.github.androidpoet.supabase.storage.models/VectorListRequest.<init>|<init>(kotlin.String;kotlin.String;kotlin.Int?;kotlin.String?;kotlin.Boolean?;kotlin.Boolean?;kotlin.Int?;kotlin.Int?){}[0]
-
-    final val indexName // io.github.androidpoet.supabase.storage.models/VectorListRequest.indexName|{}indexName[0]
-        final fun <get-indexName>(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorListRequest.indexName.<get-indexName>|<get-indexName>(){}[0]
-    final val maxResults // io.github.androidpoet.supabase.storage.models/VectorListRequest.maxResults|{}maxResults[0]
-        final fun <get-maxResults>(): kotlin/Int? // io.github.androidpoet.supabase.storage.models/VectorListRequest.maxResults.<get-maxResults>|<get-maxResults>(){}[0]
-    final val nextToken // io.github.androidpoet.supabase.storage.models/VectorListRequest.nextToken|{}nextToken[0]
-        final fun <get-nextToken>(): kotlin/String? // io.github.androidpoet.supabase.storage.models/VectorListRequest.nextToken.<get-nextToken>|<get-nextToken>(){}[0]
-    final val returnData // io.github.androidpoet.supabase.storage.models/VectorListRequest.returnData|{}returnData[0]
-        final fun <get-returnData>(): kotlin/Boolean? // io.github.androidpoet.supabase.storage.models/VectorListRequest.returnData.<get-returnData>|<get-returnData>(){}[0]
-    final val returnMetadata // io.github.androidpoet.supabase.storage.models/VectorListRequest.returnMetadata|{}returnMetadata[0]
-        final fun <get-returnMetadata>(): kotlin/Boolean? // io.github.androidpoet.supabase.storage.models/VectorListRequest.returnMetadata.<get-returnMetadata>|<get-returnMetadata>(){}[0]
-    final val segmentCount // io.github.androidpoet.supabase.storage.models/VectorListRequest.segmentCount|{}segmentCount[0]
-        final fun <get-segmentCount>(): kotlin/Int? // io.github.androidpoet.supabase.storage.models/VectorListRequest.segmentCount.<get-segmentCount>|<get-segmentCount>(){}[0]
-    final val segmentIndex // io.github.androidpoet.supabase.storage.models/VectorListRequest.segmentIndex|{}segmentIndex[0]
-        final fun <get-segmentIndex>(): kotlin/Int? // io.github.androidpoet.supabase.storage.models/VectorListRequest.segmentIndex.<get-segmentIndex>|<get-segmentIndex>(){}[0]
-    final val vectorBucketName // io.github.androidpoet.supabase.storage.models/VectorListRequest.vectorBucketName|{}vectorBucketName[0]
-        final fun <get-vectorBucketName>(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorListRequest.vectorBucketName.<get-vectorBucketName>|<get-vectorBucketName>(){}[0]
-
-    final fun component1(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorListRequest.component1|component1(){}[0]
-    final fun component2(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorListRequest.component2|component2(){}[0]
-    final fun component3(): kotlin/Int? // io.github.androidpoet.supabase.storage.models/VectorListRequest.component3|component3(){}[0]
-    final fun component4(): kotlin/String? // io.github.androidpoet.supabase.storage.models/VectorListRequest.component4|component4(){}[0]
-    final fun component5(): kotlin/Boolean? // io.github.androidpoet.supabase.storage.models/VectorListRequest.component5|component5(){}[0]
-    final fun component6(): kotlin/Boolean? // io.github.androidpoet.supabase.storage.models/VectorListRequest.component6|component6(){}[0]
-    final fun component7(): kotlin/Int? // io.github.androidpoet.supabase.storage.models/VectorListRequest.component7|component7(){}[0]
-    final fun component8(): kotlin/Int? // io.github.androidpoet.supabase.storage.models/VectorListRequest.component8|component8(){}[0]
-    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/Int? = ..., kotlin/String? = ..., kotlin/Boolean? = ..., kotlin/Boolean? = ..., kotlin/Int? = ..., kotlin/Int? = ...): io.github.androidpoet.supabase.storage.models/VectorListRequest // io.github.androidpoet.supabase.storage.models/VectorListRequest.copy|copy(kotlin.String;kotlin.String;kotlin.Int?;kotlin.String?;kotlin.Boolean?;kotlin.Boolean?;kotlin.Int?;kotlin.Int?){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/VectorListRequest.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/VectorListRequest.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorListRequest.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.storage.models/VectorListRequest> { // io.github.androidpoet.supabase.storage.models/VectorListRequest.$serializer|null[0]
-        final val descriptor // io.github.androidpoet.supabase.storage.models/VectorListRequest.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.storage.models/VectorListRequest.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.storage.models/VectorListRequest.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.storage.models/VectorListRequest // io.github.androidpoet.supabase.storage.models/VectorListRequest.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.storage.models/VectorListRequest) // io.github.androidpoet.supabase.storage.models/VectorListRequest.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.storage.models.VectorListRequest){}[0]
-    }
-
-    final object Companion { // io.github.androidpoet.supabase.storage.models/VectorListRequest.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/VectorListRequest> // io.github.androidpoet.supabase.storage.models/VectorListRequest.Companion.serializer|serializer(){}[0]
     }
 }
 
@@ -2014,84 +1208,6 @@ final class io.github.androidpoet.supabase.storage.models/VectorObject { // io.g
 
     final object Companion { // io.github.androidpoet.supabase.storage.models/VectorObject.Companion|null[0]
         final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/VectorObject> // io.github.androidpoet.supabase.storage.models/VectorObject.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class io.github.androidpoet.supabase.storage.models/VectorPutRequest { // io.github.androidpoet.supabase.storage.models/VectorPutRequest|null[0]
-    constructor <init>(kotlin/String, kotlin/String, kotlin.collections/List<io.github.androidpoet.supabase.storage.models/VectorObject>) // io.github.androidpoet.supabase.storage.models/VectorPutRequest.<init>|<init>(kotlin.String;kotlin.String;kotlin.collections.List<io.github.androidpoet.supabase.storage.models.VectorObject>){}[0]
-
-    final val indexName // io.github.androidpoet.supabase.storage.models/VectorPutRequest.indexName|{}indexName[0]
-        final fun <get-indexName>(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorPutRequest.indexName.<get-indexName>|<get-indexName>(){}[0]
-    final val vectorBucketName // io.github.androidpoet.supabase.storage.models/VectorPutRequest.vectorBucketName|{}vectorBucketName[0]
-        final fun <get-vectorBucketName>(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorPutRequest.vectorBucketName.<get-vectorBucketName>|<get-vectorBucketName>(){}[0]
-    final val vectors // io.github.androidpoet.supabase.storage.models/VectorPutRequest.vectors|{}vectors[0]
-        final fun <get-vectors>(): kotlin.collections/List<io.github.androidpoet.supabase.storage.models/VectorObject> // io.github.androidpoet.supabase.storage.models/VectorPutRequest.vectors.<get-vectors>|<get-vectors>(){}[0]
-
-    final fun component1(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorPutRequest.component1|component1(){}[0]
-    final fun component2(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorPutRequest.component2|component2(){}[0]
-    final fun component3(): kotlin.collections/List<io.github.androidpoet.supabase.storage.models/VectorObject> // io.github.androidpoet.supabase.storage.models/VectorPutRequest.component3|component3(){}[0]
-    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin.collections/List<io.github.androidpoet.supabase.storage.models/VectorObject> = ...): io.github.androidpoet.supabase.storage.models/VectorPutRequest // io.github.androidpoet.supabase.storage.models/VectorPutRequest.copy|copy(kotlin.String;kotlin.String;kotlin.collections.List<io.github.androidpoet.supabase.storage.models.VectorObject>){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/VectorPutRequest.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/VectorPutRequest.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorPutRequest.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.storage.models/VectorPutRequest> { // io.github.androidpoet.supabase.storage.models/VectorPutRequest.$serializer|null[0]
-        final val descriptor // io.github.androidpoet.supabase.storage.models/VectorPutRequest.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.storage.models/VectorPutRequest.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.storage.models/VectorPutRequest.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.storage.models/VectorPutRequest // io.github.androidpoet.supabase.storage.models/VectorPutRequest.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.storage.models/VectorPutRequest) // io.github.androidpoet.supabase.storage.models/VectorPutRequest.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.storage.models.VectorPutRequest){}[0]
-    }
-
-    final object Companion { // io.github.androidpoet.supabase.storage.models/VectorPutRequest.Companion|null[0]
-        final val $childSerializers // io.github.androidpoet.supabase.storage.models/VectorPutRequest.Companion.$childSerializers|{}$childSerializers[0]
-
-        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/VectorPutRequest> // io.github.androidpoet.supabase.storage.models/VectorPutRequest.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class io.github.androidpoet.supabase.storage.models/VectorQueryRequest { // io.github.androidpoet.supabase.storage.models/VectorQueryRequest|null[0]
-    constructor <init>(kotlin/String, kotlin/String, io.github.androidpoet.supabase.storage.models/VectorData, kotlin/Int? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlin/Boolean? = ..., kotlin/Boolean? = ...) // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.<init>|<init>(kotlin.String;kotlin.String;io.github.androidpoet.supabase.storage.models.VectorData;kotlin.Int?;kotlinx.serialization.json.JsonObject?;kotlin.Boolean?;kotlin.Boolean?){}[0]
-
-    final val filter // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.filter|{}filter[0]
-        final fun <get-filter>(): kotlinx.serialization.json/JsonObject? // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.filter.<get-filter>|<get-filter>(){}[0]
-    final val indexName // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.indexName|{}indexName[0]
-        final fun <get-indexName>(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.indexName.<get-indexName>|<get-indexName>(){}[0]
-    final val queryVector // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.queryVector|{}queryVector[0]
-        final fun <get-queryVector>(): io.github.androidpoet.supabase.storage.models/VectorData // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.queryVector.<get-queryVector>|<get-queryVector>(){}[0]
-    final val returnDistance // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.returnDistance|{}returnDistance[0]
-        final fun <get-returnDistance>(): kotlin/Boolean? // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.returnDistance.<get-returnDistance>|<get-returnDistance>(){}[0]
-    final val returnMetadata // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.returnMetadata|{}returnMetadata[0]
-        final fun <get-returnMetadata>(): kotlin/Boolean? // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.returnMetadata.<get-returnMetadata>|<get-returnMetadata>(){}[0]
-    final val topK // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.topK|{}topK[0]
-        final fun <get-topK>(): kotlin/Int? // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.topK.<get-topK>|<get-topK>(){}[0]
-    final val vectorBucketName // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.vectorBucketName|{}vectorBucketName[0]
-        final fun <get-vectorBucketName>(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.vectorBucketName.<get-vectorBucketName>|<get-vectorBucketName>(){}[0]
-
-    final fun component1(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.component1|component1(){}[0]
-    final fun component2(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.component2|component2(){}[0]
-    final fun component3(): io.github.androidpoet.supabase.storage.models/VectorData // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.component3|component3(){}[0]
-    final fun component4(): kotlin/Int? // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.component4|component4(){}[0]
-    final fun component5(): kotlinx.serialization.json/JsonObject? // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.component5|component5(){}[0]
-    final fun component6(): kotlin/Boolean? // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.component6|component6(){}[0]
-    final fun component7(): kotlin/Boolean? // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.component7|component7(){}[0]
-    final fun copy(kotlin/String = ..., kotlin/String = ..., io.github.androidpoet.supabase.storage.models/VectorData = ..., kotlin/Int? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlin/Boolean? = ..., kotlin/Boolean? = ...): io.github.androidpoet.supabase.storage.models/VectorQueryRequest // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.copy|copy(kotlin.String;kotlin.String;io.github.androidpoet.supabase.storage.models.VectorData;kotlin.Int?;kotlinx.serialization.json.JsonObject?;kotlin.Boolean?;kotlin.Boolean?){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<io.github.androidpoet.supabase.storage.models/VectorQueryRequest> { // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.$serializer|null[0]
-        final val descriptor // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): io.github.androidpoet.supabase.storage.models/VectorQueryRequest // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, io.github.androidpoet.supabase.storage.models/VectorQueryRequest) // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;io.github.androidpoet.supabase.storage.models.VectorQueryRequest){}[0]
-    }
-
-    final object Companion { // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<io.github.androidpoet.supabase.storage.models/VectorQueryRequest> // io.github.androidpoet.supabase.storage.models/VectorQueryRequest.Companion.serializer|serializer(){}[0]
     }
 }
 
@@ -2232,7 +1348,6 @@ final suspend fun (io.github.androidpoet.supabase.storage/StorageClient).io.gith
 final suspend fun (io.github.androidpoet.supabase.storage/StorageClient).io.github.androidpoet.supabase.storage/createSignedRenderUrls(kotlin/String, kotlin/Long, io.github.androidpoet.supabase.storage/ImageTransformOptions, kotlin/Array<out kotlin/String>...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin.collections/List<kotlin/String>> // io.github.androidpoet.supabase.storage/createSignedRenderUrls|createSignedRenderUrls@io.github.androidpoet.supabase.storage.StorageClient(kotlin.String;kotlin.Long;io.github.androidpoet.supabase.storage.ImageTransformOptions;kotlin.Array<out|kotlin.String>...){}[0]
 final suspend fun (io.github.androidpoet.supabase.storage/StorageClient).io.github.androidpoet.supabase.storage/createSignedRenderUrlsByPath(kotlin/String, kotlin.collections/List<kotlin/String>, kotlin/Long, io.github.androidpoet.supabase.storage/ImageTransformOptions): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin.collections/Map<kotlin/String, kotlin/String>> // io.github.androidpoet.supabase.storage/createSignedRenderUrlsByPath|createSignedRenderUrlsByPath@io.github.androidpoet.supabase.storage.StorageClient(kotlin.String;kotlin.collections.List<kotlin.String>;kotlin.Long;io.github.androidpoet.supabase.storage.ImageTransformOptions){}[0]
 final suspend fun (io.github.androidpoet.supabase.storage/StorageClient).io.github.androidpoet.supabase.storage/createSignedRenderUrlsByPath(kotlin/String, kotlin/Long, io.github.androidpoet.supabase.storage/ImageTransformOptions, kotlin/Array<out kotlin/String>...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin.collections/Map<kotlin/String, kotlin/String>> // io.github.androidpoet.supabase.storage/createSignedRenderUrlsByPath|createSignedRenderUrlsByPath@io.github.androidpoet.supabase.storage.StorageClient(kotlin.String;kotlin.Long;io.github.androidpoet.supabase.storage.ImageTransformOptions;kotlin.Array<out|kotlin.String>...){}[0]
+final suspend fun (io.github.androidpoet.supabase.storage/StorageClient).io.github.androidpoet.supabase.storage/deleteObjects(kotlin/String, kotlin/Array<out kotlin/String>...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin.collections/List<io.github.androidpoet.supabase.storage.models/FileObject>> // io.github.androidpoet.supabase.storage/deleteObjects|deleteObjects@io.github.androidpoet.supabase.storage.StorageClient(kotlin.String;kotlin.Array<out|kotlin.String>...){}[0]
 final suspend fun (io.github.androidpoet.supabase.storage/StorageClient).io.github.androidpoet.supabase.storage/listOrThrow(kotlin/String, kotlin/String = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/String? = ..., io.github.androidpoet.supabase.storage/SortOrder = ..., kotlin/String? = ...): kotlin.collections/List<io.github.androidpoet.supabase.storage.models/FileObject> // io.github.androidpoet.supabase.storage/listOrThrow|listOrThrow@io.github.androidpoet.supabase.storage.StorageClient(kotlin.String;kotlin.String;kotlin.Int;kotlin.Int;kotlin.String?;io.github.androidpoet.supabase.storage.SortOrder;kotlin.String?){}[0]
-final suspend fun (io.github.androidpoet.supabase.storage/StorageClient).io.github.androidpoet.supabase.storage/remove(kotlin/String, kotlin/Array<out kotlin/String>...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.storage/remove|remove@io.github.androidpoet.supabase.storage.StorageClient(kotlin.String;kotlin.Array<out|kotlin.String>...){}[0]
-final suspend fun (io.github.androidpoet.supabase.storage/StorageClient).io.github.androidpoet.supabase.storage/removeWithResult(kotlin/String, kotlin/Array<out kotlin/String>...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin.collections/List<io.github.androidpoet.supabase.storage.models/FileObject>> // io.github.androidpoet.supabase.storage/removeWithResult|removeWithResult@io.github.androidpoet.supabase.storage.StorageClient(kotlin.String;kotlin.Array<out|kotlin.String>...){}[0]
 final suspend fun (io.github.androidpoet.supabase.storage/StorageClient).io.github.androidpoet.supabase.storage/uploadResumable(kotlin/String, kotlin/String, kotlin/ByteArray, kotlin/String = ..., kotlin/Boolean = ..., kotlin/Int? = ..., kotlin/Int = ..., kotlinx.serialization.json/JsonObject? = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.storage/uploadResumable|uploadResumable@io.github.androidpoet.supabase.storage.StorageClient(kotlin.String;kotlin.String;kotlin.ByteArray;kotlin.String;kotlin.Boolean;kotlin.Int?;kotlin.Int;kotlinx.serialization.json.JsonObject?){}[0]

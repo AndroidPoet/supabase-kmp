@@ -17,13 +17,15 @@ VALUES (?, ?, ?, ?, ?);
 selectById:
 SELECT updatedAt, deleted, fields FROM SyncRecord WHERE tableName = ? AND id = ?;
 
--- Offset pagination, ordered by id.
+-- Offset pagination, ordered by id. Tombstoned (soft-deleted) rows are excluded so a deleted
+-- item never shows in a paged list; the tombstone itself still lives in the row for sync.
 page:
-SELECT id, updatedAt, deleted, fields FROM SyncRecord WHERE tableName = ? ORDER BY id LIMIT ? OFFSET ?;
+SELECT id, updatedAt, deleted, fields FROM SyncRecord WHERE tableName = ? AND deleted = 0 ORDER BY id LIMIT ? OFFSET ?;
 
--- Keyset pagination: the next rows after a given id (pass '' for the first page).
+-- Keyset pagination: the next live rows after a given id (pass '' for the first page).
 pageAfter:
-SELECT id, updatedAt, deleted, fields FROM SyncRecord WHERE tableName = ? AND id > ? ORDER BY id LIMIT ?;
+SELECT id, updatedAt, deleted, fields FROM SyncRecord WHERE tableName = ? AND deleted = 0 AND id > ? ORDER BY id LIMIT ?;
 
+-- Count of live (non-tombstone) rows — the total for paging and SyncStore.count.
 countAll:
-SELECT COUNT(*) FROM SyncRecord WHERE tableName = ?;
+SELECT COUNT(*) FROM SyncRecord WHERE tableName = ? AND deleted = 0;

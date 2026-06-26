@@ -114,7 +114,7 @@ class PostgrestConformanceTest {
     fun test_select_single_usesObjectMediaType() =
         runTest {
             val client = RecordingClient()
-            DatabaseClientImpl(client).select(table = "todos", single = true) {}
+            DatabaseClientImpl(client).select(table = "todos", format = ResponseFormat.SINGLE) {}
             assertEquals("application/vnd.pgrst.object+json", client.getHeaders["Accept"])
         }
 
@@ -122,7 +122,7 @@ class PostgrestConformanceTest {
     fun test_select_singleStripNulls_appendsNullsStripped() =
         runTest {
             val client = RecordingClient()
-            DatabaseClientImpl(client).select(table = "todos", single = true, stripNulls = true) {}
+            DatabaseClientImpl(client).select(table = "todos", format = ResponseFormat.SINGLE, stripNulls = true) {}
             assertEquals("application/vnd.pgrst.object+json;nulls=stripped", client.getHeaders["Accept"])
         }
 
@@ -138,7 +138,7 @@ class PostgrestConformanceTest {
     fun test_select_csv_usesTextCsv() =
         runTest {
             val client = RecordingClient()
-            DatabaseClientImpl(client).select(table = "todos", csv = true) {}
+            DatabaseClientImpl(client).select(table = "todos", format = ResponseFormat.CSV) {}
             assertEquals("text/csv", client.getHeaders["Accept"])
         }
 
@@ -146,7 +146,7 @@ class PostgrestConformanceTest {
     fun test_select_geojson_usesGeoJsonMediaType() =
         runTest {
             val client = RecordingClient()
-            DatabaseClientImpl(client).select(table = "todos", geojson = true) {}
+            DatabaseClientImpl(client).select(table = "todos", format = ResponseFormat.GEOJSON) {}
             assertEquals("application/geo+json", client.getHeaders["Accept"])
         }
 
