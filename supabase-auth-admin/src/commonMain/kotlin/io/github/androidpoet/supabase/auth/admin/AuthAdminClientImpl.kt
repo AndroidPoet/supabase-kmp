@@ -46,13 +46,13 @@ internal class AuthAdminClientImpl(
     private val adminHeaders: Map<String, String> = mapOf("Authorization" to "Bearer $serviceRoleKey")
 
     override suspend fun signOut(
-        jwt: String,
+        accessToken: String,
         scope: SignOutScope,
     ): SupabaseResult<Unit> =
         client
             .post(
                 endpoint = "${AuthAdminPaths.LOGOUT}?scope=${scope.name.lowercase()}",
-                headers = mapOf("Authorization" to "Bearer $jwt"),
+                headers = mapOf("Authorization" to "Bearer $accessToken"),
             ).map { }
 
     override suspend fun inviteUserByEmail(
@@ -192,7 +192,7 @@ internal class AuthAdminClientImpl(
             ).deserialize()
     }
 
-    override suspend fun auditLogEvents(
+    override suspend fun listAuditLogEvents(
         page: Int?,
         perPage: Int?,
     ): SupabaseResult<List<AuditLogEntry>> {

@@ -14,5 +14,7 @@ import io.github.androidpoet.supabase.client.SupabaseClient
  * key — pass the real service-role key explicitly and source it from a secret, not
  * from committed code.
  */
-public fun SupabaseClient.authAdmin(serviceRoleKey: String): AuthAdminClient =
-    AuthAdminClientImpl(client = this, serviceRoleKey = serviceRoleKey)
+public fun createAuthAdminClient(
+    supabaseClient: SupabaseClient,
+    serviceRoleKey: String,
+): AuthAdminClient = AuthAdminClientImpl(client = supabaseClient, serviceRoleKey = serviceRoleKey)
