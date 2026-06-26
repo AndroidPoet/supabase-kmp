@@ -40,6 +40,15 @@ them:
 ./gradlew apiDump
 ```
 
+**Before changing any public API, read [`API_DESIGN.md`](API_DESIGN.md)** — the SDK's
+design principles (Result-first, explicit, thin-over-REST, type-safe) and the concrete
+rules every surface change must follow. It is the tie-breaker when a change is ambiguous.
+
+**Before changing any public API, read [`docs/API_DESIGN.md`](docs/API_DESIGN.md)** —
+the SDK's design principles (Result-first, explicit, thin-over-REST, type-safe) and the
+concrete rules every surface change must follow. It is the tie-breaker when a change is
+ambiguous.
+
 If you add code that trips a new detekt rule you cannot reasonably fix, refresh
 the baseline with `./gradlew detektBaseline` — but prefer fixing the finding.
 
