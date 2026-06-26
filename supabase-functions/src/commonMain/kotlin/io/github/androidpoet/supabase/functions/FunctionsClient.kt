@@ -99,7 +99,7 @@ public enum class FunctionMethod {
  * reuses its base URL and session token, so calls are authenticated with the
  * current session unless a token is pinned via [setAuth]. [invoke] posts a text
  * body and reads the full response; [invokeWithBody] posts arbitrary bytes; and
- * [invokeSSE] streams a `text/event-stream` response as a [Flow]. Obtain an
+ * [invokeSse] streams a `text/event-stream` response as a [Flow]. Obtain an
  * instance with [createFunctionsClient].
  */
 public interface FunctionsClient {
@@ -168,12 +168,12 @@ public interface FunctionsClient {
      * `.catch`) since, unlike the buffered [invoke], a streamed call cannot return
      * a [SupabaseResult] up front.
      */
-    public fun invokeSSE(
+    public fun invokeSse(
         functionName: String,
         body: String? = null,
         contentType: String = "application/json",
         headers: Map<String, String> = emptyMap(),
         region: FunctionRegion? = null,
     ): Flow<FunctionServerSentEvent> =
-        flow { throw UnsupportedOperationException("invokeSSE is not supported by this FunctionsClient") }
+        flow { throw UnsupportedOperationException("invokeSse is not supported by this FunctionsClient") }
 }

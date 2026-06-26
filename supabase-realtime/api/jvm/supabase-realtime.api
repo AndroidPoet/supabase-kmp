@@ -62,14 +62,14 @@ public final class io/github/androidpoet/supabase/realtime/RealtimeChannelBuilde
 	public static synthetic fun configureBroadcastReplay$default (Lio/github/androidpoet/supabase/realtime/RealtimeChannelBuilder;JLjava/lang/Integer;ILjava/lang/Object;)Lio/github/androidpoet/supabase/realtime/RealtimeChannelBuilder;
 	public final fun configurePresence (Ljava/lang/String;)Lio/github/androidpoet/supabase/realtime/RealtimeChannelBuilder;
 	public static synthetic fun configurePresence$default (Lio/github/androidpoet/supabase/realtime/RealtimeChannelBuilder;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/realtime/RealtimeChannelBuilder;
+	public final fun configurePrivate (Z)Lio/github/androidpoet/supabase/realtime/RealtimeChannelBuilder;
+	public static synthetic fun configurePrivate$default (Lio/github/androidpoet/supabase/realtime/RealtimeChannelBuilder;ZILjava/lang/Object;)Lio/github/androidpoet/supabase/realtime/RealtimeChannelBuilder;
 	public final fun onBroadcast (Ljava/lang/String;Lkotlin/jvm/functions/Function2;)Lio/github/androidpoet/supabase/realtime/RealtimeChannelBuilder;
 	public final fun onPostgresChange (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/realtime/models/PostgresChangeEvent;Lkotlin/jvm/functions/Function2;)Lio/github/androidpoet/supabase/realtime/RealtimeChannelBuilder;
 	public final fun onPostgresChange (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/realtime/models/PostgresChangeEvent;Lkotlin/jvm/functions/Function3;)Lio/github/androidpoet/supabase/realtime/RealtimeChannelBuilder;
 	public static synthetic fun onPostgresChange$default (Lio/github/androidpoet/supabase/realtime/RealtimeChannelBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/realtime/models/PostgresChangeEvent;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lio/github/androidpoet/supabase/realtime/RealtimeChannelBuilder;
 	public static synthetic fun onPostgresChange$default (Lio/github/androidpoet/supabase/realtime/RealtimeChannelBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/realtime/models/PostgresChangeEvent;Lkotlin/jvm/functions/Function3;ILjava/lang/Object;)Lio/github/androidpoet/supabase/realtime/RealtimeChannelBuilder;
 	public final fun onPresence (Lkotlin/jvm/functions/Function2;)Lio/github/androidpoet/supabase/realtime/RealtimeChannelBuilder;
-	public final fun setPrivate (Z)Lio/github/androidpoet/supabase/realtime/RealtimeChannelBuilder;
-	public static synthetic fun setPrivate$default (Lio/github/androidpoet/supabase/realtime/RealtimeChannelBuilder;ZILjava/lang/Object;)Lio/github/androidpoet/supabase/realtime/RealtimeChannelBuilder;
 	public final fun subscribe (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun subscribeWithResult (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
@@ -402,7 +402,6 @@ public final class io/github/androidpoet/supabase/realtime/RealtimeExtKt {
 	public static final fun presenceJoinFlow (Lio/github/androidpoet/supabase/realtime/RealtimeSubscription;)Lkotlinx/coroutines/flow/Flow;
 	public static final fun presenceLeaveFlow (Lio/github/androidpoet/supabase/realtime/RealtimeSubscription;)Lkotlinx/coroutines/flow/Flow;
 	public static final fun presenceSyncFlow (Lio/github/androidpoet/supabase/realtime/RealtimeSubscription;)Lkotlinx/coroutines/flow/Flow;
-	public static final fun statusFlow (Lio/github/androidpoet/supabase/realtime/RealtimeSubscription;)Lkotlinx/coroutines/flow/StateFlow;
 	public static final fun systemEventFlow (Lio/github/androidpoet/supabase/realtime/RealtimeSubscription;Ljava/lang/String;)Lkotlinx/coroutines/flow/Flow;
 	public static synthetic fun systemEventFlow$default (Lio/github/androidpoet/supabase/realtime/RealtimeSubscription;Ljava/lang/String;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
 }

@@ -135,7 +135,7 @@ public data class PostgrestPage<T>(
 /**
  * The raw response [body] of a [DatabaseClient.selectRange] together with the total
  * [count] and fetched [range] from PostgREST's `Content-Range` header. The string
- * analogue of [PostgrestPage]; the typed `selectWithCount` helper decodes [body]
+ * analogue of [PostgrestPage]; the typed `selectWithCountTyped` helper decodes [body]
  * into a [PostgrestPage].
  */
 public data class PostgrestRawPage(
@@ -208,7 +208,7 @@ public interface DatabaseClient {
     /**
      * Like [select], but also returns the total [PostgrestRawPage.count] and the
      * fetched [PostgrestRawPage.range] from the `Content-Range` header alongside
-     * the raw [PostgrestRawPage.body]. Use the `selectWithCount` typed helper to
+     * the raw [PostgrestRawPage.body]. Use the `selectWithCountTyped` typed helper to
      * decode rows into a [PostgrestPage].
      */
     public suspend fun selectRange(

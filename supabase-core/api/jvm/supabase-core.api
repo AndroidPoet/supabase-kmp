@@ -136,9 +136,9 @@ public final class io/github/androidpoet/supabase/core/models/WhereBuilder {
 public final class io/github/androidpoet/supabase/core/paging/Paginator {
 	public fun <init> (ILkotlin/jvm/functions/Function3;)V
 	public synthetic fun <init> (ILkotlin/jvm/functions/Function3;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun getEndReached ()Lkotlinx/coroutines/flow/StateFlow;
 	public final fun getError ()Lkotlinx/coroutines/flow/StateFlow;
 	public final fun getItems ()Lkotlinx/coroutines/flow/StateFlow;
+	public final fun isEndReached ()Lkotlinx/coroutines/flow/StateFlow;
 	public final fun isLoading ()Lkotlinx/coroutines/flow/StateFlow;
 	public final fun loadNext (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun refresh (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -441,7 +441,6 @@ public final class io/github/androidpoet/supabase/core/result/SupabaseResultAsyn
 public final class io/github/androidpoet/supabase/core/result/SupabaseResultFlowKt {
 	public static final fun toFlow (Lio/github/androidpoet/supabase/core/result/SupabaseResult;)Lkotlinx/coroutines/flow/Flow;
 	public static final fun toFlow (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/Flow;
-	public static final fun toResultFlow (Lio/github/androidpoet/supabase/core/result/SupabaseResult;)Lkotlinx/coroutines/flow/Flow;
 	public static final fun toSuspendFlow (Lio/github/androidpoet/supabase/core/result/SupabaseResult;Lkotlin/jvm/functions/Function2;)Lkotlinx/coroutines/flow/Flow;
 }
 

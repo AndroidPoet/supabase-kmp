@@ -168,7 +168,7 @@ val signed = storage.createSignedUrl(
 storage.createSignedUrls("avatars", listOf("a.png", "b.png"), expiresIn = 3600)
 
 // Browser-side uploads (pre-signed token):
-storage.createUploadSignedUrlWithPath("avatars", "user-123/new.png").onSuccess { signed ->
+storage.createSignedUploadUrlWithPath("avatars", "user-123/new.png").onSuccess { signed ->
     storage.uploadToSignedUrl("avatars", "user-123/new.png", token = signed.token, data = bytes)
 }
 ```

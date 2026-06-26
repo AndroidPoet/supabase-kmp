@@ -69,7 +69,7 @@ internal class FunctionsClientImpl(
         }
     }
 
-    override fun invokeSSE(
+    override fun invokeSse(
         functionName: String,
         body: String?,
         contentType: String,

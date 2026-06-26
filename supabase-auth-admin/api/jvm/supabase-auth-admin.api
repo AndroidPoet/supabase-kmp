@@ -182,7 +182,7 @@ public final class io/github/androidpoet/supabase/auth/admin/models/CustomProvid
 	public final fun getId ()Ljava/lang/String;
 	public final fun getIdentifier ()Ljava/lang/String;
 	public final fun getIssuer ()Ljava/lang/String;
-	public final fun getJwksUri ()Ljava/lang/String;
+	public final fun getJwksUrl ()Ljava/lang/String;
 	public final fun getName ()Ljava/lang/String;
 	public final fun getPkceEnabled ()Ljava/lang/Boolean;
 	public final fun getProviderType ()Lio/github/androidpoet/supabase/auth/admin/models/CustomProviderType;
@@ -247,7 +247,7 @@ public final class io/github/androidpoet/supabase/auth/admin/models/CustomProvid
 	public final fun getEnabled ()Ljava/lang/Boolean;
 	public final fun getIdentifier ()Ljava/lang/String;
 	public final fun getIssuer ()Ljava/lang/String;
-	public final fun getJwksUri ()Ljava/lang/String;
+	public final fun getJwksUrl ()Ljava/lang/String;
 	public final fun getName ()Ljava/lang/String;
 	public final fun getPkceEnabled ()Ljava/lang/Boolean;
 	public final fun getProviderType ()Lio/github/androidpoet/supabase/auth/admin/models/CustomProviderType;
@@ -353,7 +353,7 @@ public final class io/github/androidpoet/supabase/auth/admin/models/CustomProvid
 	public final fun getEmailOptional ()Ljava/lang/Boolean;
 	public final fun getEnabled ()Ljava/lang/Boolean;
 	public final fun getIssuer ()Ljava/lang/String;
-	public final fun getJwksUri ()Ljava/lang/String;
+	public final fun getJwksUrl ()Ljava/lang/String;
 	public final fun getName ()Ljava/lang/String;
 	public final fun getPkceEnabled ()Ljava/lang/Boolean;
 	public final fun getScopes ()Ljava/util/List;
@@ -816,7 +816,7 @@ public final class io/github/androidpoet/supabase/auth/admin/models/OidcDiscover
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAuthorizationEndpoint ()Ljava/lang/String;
 	public final fun getIssuer ()Ljava/lang/String;
-	public final fun getJwksUri ()Ljava/lang/String;
+	public final fun getJwksUrl ()Ljava/lang/String;
 	public final fun getRevocationEndpoint ()Ljava/lang/String;
 	public final fun getSupportedIdTokenSigningAlgs ()Ljava/util/List;
 	public final fun getSupportedResponseTypes ()Ljava/util/List;

@@ -114,6 +114,23 @@ each call site.
   your own `SqlDriver` (or `openOfflineSyncStore`). The generated `…sync.store.db` package
   (including a `Cursor` that collided with the public `sync.Cursor`) is no longer part of
   the published API.
+- **Final naming pass (cross-module consistency).** A last convention sweep before the
+  freeze, so one rule holds across every module:
+  - `FunctionsClient.invokeSSE` → **`invokeSse`** — acronyms are word-cased everywhere
+    else in the SDK (`Url`, `Otp`, `Jwt`, `Csv`, `GeoJson`); this was the lone exception.
+  - `Paginator.endReached` → **`isEndReached`** — a boolean reads as an assertion, matching
+    its sibling `isLoading`.
+  - Database `selectWithCount` → **`selectWithCountTyped`** — it decodes into your type, so
+    it joins the `*Typed` family (`selectTyped` / `selectSingleTyped` / …).
+  - Realtime `RealtimeChannelBuilder.setPrivate(…)` → **`configurePrivate(…)`** — matches
+    the builder's own `configureBroadcast` / `configurePresence` prefix.
+  - Storage `createUploadSignedUrl` / `…WithPath` → **`createSignedUploadUrl`** / `…WithPath`
+    — `Signed`+direction word order, matching `createSignedUrl` / `getSignedDownloadUrl`.
+  - Storage `VectorDistanceMetric.DOTPRODUCT` → **`DOT_PRODUCT`** — legible entry next to
+    `COSINE` / `EUCLIDEAN`; the `dotproduct` wire value is unchanged (via `@SerialName`).
+  - Auth-admin OIDC `jwksUri` → **`jwksUrl`** — its siblings are all `*Url`
+    (`authorizationUrl` / `tokenUrl` / `userinfoUrl`); the `jwks_uri` wire field is
+    unchanged (via `@SerialName`).
 
 ### Removed (breaking)
 
@@ -127,6 +144,9 @@ each call site.
   fire-and-forget.
 - **Realtime `removeChannel(subscription)`** — the deprecated duplicate of
   `removeSubscription(subscription)`.
+- **Duplicate `Flow` bridges** — core `SupabaseResult.toResultFlow()` (byte-for-byte the
+  same single-emit as `asFlow()`) and realtime `RealtimeSubscription.statusFlow()`
+  (identical to the `status` property) were removed; use `asFlow()` and `.status`.
 - **~46 wire-only request/response DTOs** in `supabase-auth` and `supabase-storage` are now
   `internal` (they were never meant to be constructed by callers).
 
@@ -402,7 +422,7 @@ each call site.
   `order=` params — so `order("a"); order("b")` sorted by only one column. Successive `order`
   calls now accumulate into one parameter (per referenced table), matching PostgREST.
 - **Edge Function SSE streaming: the last-event-id now persists across events.** The
-  `invokeSSE` parser reset the id on every event, so a streamed event that omitted `id:`
+  `invokeSse` parser reset the id on every event, so a streamed event that omitted `id:`
   reported `null` instead of inheriting the most recent id (the browser
   `EventSource.lastEventId` behaviour). The id is now carried forward until the server sends
   a new one. As part of the same fix, a block carrying only a (now-persistent) id no longer
@@ -536,7 +556,7 @@ each call site.
 ### Added
 
 - **Pagination** — a demand-driven `Paginator<T>` in `supabase-core` (exposes
-  `items`/`isLoading`/`endReached`/`error` as `StateFlow`s, with `loadNext()` and
+  `items`/`isLoading`/`isEndReached`/`error` as `StateFlow`s, with `loadNext()` and
   `refresh()`), plus in-module factories: `DatabaseClient.paginator()`,
   `StorageClient.listPaginator()` and `AuthAdminClient.usersPaginator()`. No new
   dependencies; works on all targets. See the new **Pagination** docs page
@@ -755,13 +775,13 @@ change is additive — no breaking changes.
   corrupting images/PDFs. Also: extension→MIME inference when `contentType` is
   left at the octet-stream default, and a `withCacheNonce` URL cache-buster.
 - **Postgrest count** — `selectCount` (HTTP `HEAD`), `selectRange`, and typed
-  `selectWithCount<T>` parse the `Content-Range` header into a `PostgrestPage`/
+  `selectWithCountTyped<T>` parse the `Content-Range` header into a `PostgrestPage`/
   `PostgrestRange` (handles `0-9/27`, `*/27`, `*/*`), so the requested count is
   finally surfaced. Added the geojson+`stripNulls` mutual-exclusion guard.
 - **Realtime** — HTTP `broadcast(...)` without a subscription (`/realtime/v1/api/broadcast`);
   presence `metas` are unwrapped to user state; `postgres_changes` route by the
   server-assigned binding `ids`; reconnect backoff gains optional jitter.
-- **Edge Functions SSE** — `invokeSSE(...): Flow<FunctionServerSentEvent>` with
+- **Edge Functions SSE** — `invokeSse(...): Flow<FunctionServerSentEvent>` with
   per-event `decodeAs<T>()`, over a new `streamLines` transport primitive.
 - **Auth** — single-flight, TTL-cached JWKS (`resolveSigningKey`); `getClaims`
   validates `exp`/`nbf` (with clock-skew leeway) and, opt-in, `iss`/`aud`;

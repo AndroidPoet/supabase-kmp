@@ -64,7 +64,7 @@ public suspend inline fun <reified T> DatabaseClient.selectTypedOrThrow(
  * [PostgrestPage.count] reported by PostgREST's `Content-Range` header. Combine
  * with `limit`/`range` filters for count-aware pagination.
  */
-public suspend inline fun <reified T> DatabaseClient.selectWithCount(
+public suspend inline fun <reified T> DatabaseClient.selectWithCountTyped(
     table: String,
     schema: String? = null,
     columns: String = "*",

@@ -176,10 +176,10 @@ val result = client.functions.invokeWithBody(
 )
 ```
 
-### `invokeSSE`
+### `invokeSse`
 
 ```kotlin
-public fun invokeSSE(
+public fun invokeSse(
     functionName: String,
     body: String? = null,
     contentType: String = "application/json",
@@ -207,7 +207,7 @@ response surfaces as a terminal exception in the flow rather than an empty
 stream, so collect within `try`/`catch` (or Flow `.catch`).
 
 ```kotlin
-client.functions.invokeSSE("stream-tokens")
+client.functions.invokeSse("stream-tokens")
     .catch { e -> println("stream failed: $e") }
     .collect { event -> println(event.data) }
 ```
@@ -347,7 +347,7 @@ public data class FunctionServerSentEvent(
 ```
 
 One Server-Sent Event emitted by a streaming Edge Function, as produced by
-`invokeSSE`. Fields mirror the SSE wire format:
+`invokeSse`. Fields mirror the SSE wire format:
 
 - `id` — the last-event-id (`id:` line). It persists across events, so an event
   that omits `id:` reports the most recently seen id (matching the browser
@@ -377,7 +377,7 @@ valid JSON for `T` — wrap the call site if you need that as a value.
 @Serializable
 data class Token(val text: String)
 
-client.functions.invokeSSE("stream-tokens")
+client.functions.invokeSse("stream-tokens")
     .collect { event ->
         val token = event.decodeAs<Token>()
         if (token != null) print(token.text)

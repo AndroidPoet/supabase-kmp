@@ -78,7 +78,7 @@ class RealtimeClientExtTest {
 
             val subscription =
                 realtime.subscribe("room-x") {
-                    setPrivate(true)
+                    configurePrivate(true)
                     configurePresence("user-1")
                 } as ChannelSubscriptionImpl
 

@@ -219,7 +219,7 @@ public data class OidcDiscoveryDocument(
     public val issuer: String,
     @SerialName("authorization_endpoint") public val authorizationEndpoint: String,
     @SerialName("token_endpoint") public val tokenEndpoint: String,
-    @SerialName("jwks_uri") public val jwksUri: String,
+    @SerialName("jwks_uri") public val jwksUrl: String,
     @SerialName("userinfo_endpoint") public val userinfoEndpoint: String? = null,
     @SerialName("revocation_endpoint") public val revocationEndpoint: String? = null,
     @SerialName("supported_scopes") public val supportedScopes: List<String>? = null,
@@ -248,7 +248,7 @@ public data class CustomProvider(
     @SerialName("authorization_url") public val authorizationUrl: String? = null,
     @SerialName("token_url") public val tokenUrl: String? = null,
     @SerialName("userinfo_url") public val userinfoUrl: String? = null,
-    @SerialName("jwks_uri") public val jwksUri: String? = null,
+    @SerialName("jwks_uri") public val jwksUrl: String? = null,
     @SerialName("discovery_document") public val discoveryDocument: OidcDiscoveryDocument? = null,
     @SerialName("created_at") public val createdAt: String? = null,
     @SerialName("updated_at") public val updatedAt: String? = null,
@@ -274,7 +274,7 @@ public data class CustomProviderCreateRequest(
     @SerialName("authorization_url") public val authorizationUrl: String? = null,
     @SerialName("token_url") public val tokenUrl: String? = null,
     @SerialName("userinfo_url") public val userinfoUrl: String? = null,
-    @SerialName("jwks_uri") public val jwksUri: String? = null,
+    @SerialName("jwks_uri") public val jwksUrl: String? = null,
 ) {
     // Mask the client secret so it never leaks into logs or crash reports.
     override fun toString(): String =
@@ -284,7 +284,7 @@ public data class CustomProviderCreateRequest(
             "authorizationParams=$authorizationParams, enabled=$enabled, emailOptional=$emailOptional, " +
             "issuer=$issuer, discoveryUrl=$discoveryUrl, skipNonceCheck=$skipNonceCheck, " +
             "authorizationUrl=$authorizationUrl, tokenUrl=$tokenUrl, userinfoUrl=$userinfoUrl, " +
-            "jwksUri=$jwksUri)"
+            "jwksUrl=$jwksUrl)"
 }
 
 @Serializable
@@ -305,7 +305,7 @@ public data class CustomProviderUpdateRequest(
     @SerialName("authorization_url") public val authorizationUrl: String? = null,
     @SerialName("token_url") public val tokenUrl: String? = null,
     @SerialName("userinfo_url") public val userinfoUrl: String? = null,
-    @SerialName("jwks_uri") public val jwksUri: String? = null,
+    @SerialName("jwks_uri") public val jwksUrl: String? = null,
 ) {
     // Mask the client secret so it never leaks into logs or crash reports.
     override fun toString(): String =
@@ -316,7 +316,7 @@ public data class CustomProviderUpdateRequest(
             "enabled=$enabled, emailOptional=$emailOptional, issuer=$issuer, " +
             "discoveryUrl=$discoveryUrl, skipNonceCheck=$skipNonceCheck, " +
             "authorizationUrl=$authorizationUrl, tokenUrl=$tokenUrl, userinfoUrl=$userinfoUrl, " +
-            "jwksUri=$jwksUri)"
+            "jwksUrl=$jwksUrl)"
 }
 
 @Serializable

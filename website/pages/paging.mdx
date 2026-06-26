@@ -45,7 +45,7 @@ each call appends one more page. It exposes everything a list screen needs as
 
 - `items` — the rows loaded so far (grows with each page)
 - `isLoading` — whether a page is in flight
-- `endReached` — `true` once there are no more rows
+- `isEndReached` — `true` once there are no more rows
 - `error` — the last failure, or `null`
 
 Plus `loadNext()` to fetch the next page and `refresh()` to start over (for
@@ -137,13 +137,13 @@ row with retry, and the first-load empty state:
 fun TodosScreen(vm: TodosViewModel) {
     val todos by vm.pager.items.collectAsState()
     val isLoading by vm.pager.isLoading.collectAsState()
-    val endReached by vm.pager.endReached.collectAsState()
+    val isEndReached by vm.pager.isEndReached.collectAsState()
     val error by vm.pager.error.collectAsState()
 
     LazyColumn {
         itemsIndexed(todos, key = { _, t -> t.id }) { index, todo ->
             TodoRow(todo)
-            if (index >= todos.lastIndex - 3 && !endReached) {
+            if (index >= todos.lastIndex - 3 && !isEndReached) {
                 LaunchedEffect(index) { vm.loadNext() }   // prefetch near the end
             }
         }
@@ -173,7 +173,7 @@ scope.launch { pager.items.collect { rows -> log("showing ${rows.size}") } }
 pager.loadNext()
 
 // Or drain the whole list (e.g. an export) — keep going until the end.
-while (!pager.endReached.value) {
+while (!pager.isEndReached.value) {
     pager.loadNext()
     pager.error.value?.let { throw it }   // stop on a failed page
 }
@@ -254,7 +254,7 @@ thin.
 | --- | --- | --- |
 | Setup | nothing — included | app adds `androidx.paging` + one `PagingSource` class |
 | Targets | all 16 | the ~12 Paging 3 publishes |
-| You get | `items`/`isLoading`/`endReached`/`error` + `loadNext` | + auto-prefetch, placeholders, `LazyColumn` binding |
+| You get | `items`/`isLoading`/`isEndReached`/`error` + `loadNext` | + auto-prefetch, placeholders, `LazyColumn` binding |
 | Best for | most apps, all platforms | Compose apps already on Paging 3 |
 
 ## Large or live tables: keyset paging

@@ -2,12 +2,12 @@ package io.github.androidpoet.supabase.core
 
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.github.androidpoet.supabase.core.result.SupabaseResult
+import io.github.androidpoet.supabase.core.result.asFlow
 import io.github.androidpoet.supabase.core.result.filter
 import io.github.androidpoet.supabase.core.result.filterNot
 import io.github.androidpoet.supabase.core.result.getOrDefault
 import io.github.androidpoet.supabase.core.result.mergeAll
 import io.github.androidpoet.supabase.core.result.toFlow
-import io.github.androidpoet.supabase.core.result.toResultFlow
 import io.github.androidpoet.supabase.core.result.toSuspendFlow
 import io.github.androidpoet.supabase.core.result.zip
 import kotlinx.coroutines.flow.toList
@@ -134,9 +134,9 @@ class SupabaseResultParityTest {
         }
 
     @Test
-    fun test_toResultFlow_preservesFailure() =
+    fun test_asFlow_preservesFailure() =
         runTest {
-            val emitted = SupabaseResult.Failure(error).toResultFlow().toList()
+            val emitted = SupabaseResult.Failure(error).asFlow().toList()
             assertEquals(1, emitted.size)
             assertEquals(error, emitted.single().errorOrNull())
         }

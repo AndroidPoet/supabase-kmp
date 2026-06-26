@@ -480,15 +480,15 @@ internal class StorageClientImpl(
             }
     }
 
-    override suspend fun createUploadSignedUrl(
+    override suspend fun createSignedUploadUrl(
         bucket: String,
         path: String,
         upsert: Boolean,
     ): SupabaseResult<String> =
-        createUploadSignedUrlWithPath(bucket, path, upsert)
+        createSignedUploadUrlWithPath(bucket, path, upsert)
             .map { it.token }
 
-    override suspend fun createUploadSignedUrlWithPath(
+    override suspend fun createSignedUploadUrlWithPath(
         bucket: String,
         path: String,
         upsert: Boolean,
