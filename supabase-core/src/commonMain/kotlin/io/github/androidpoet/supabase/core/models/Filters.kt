@@ -61,16 +61,16 @@ public enum class TextSearchType(
     internal val postgrestName: String,
 ) {
     /** Bare `fts` (passed straight to `to_tsquery`). */
-    Raw(""),
+    RAW(""),
 
     /** Plain `plfts`. */
-    Plain("pl"),
+    PLAIN("pl"),
 
     /** Phrase `phfts`. */
-    Phrase("ph"),
+    PHRASE("ph"),
 
     /** Web-search `wfts`. */
-    Websearch("w"),
+    WEB_SEARCH("w"),
 }
 
 /**
@@ -291,7 +291,7 @@ public class WhereBuilder {
     public fun Column<String>.textSearch(
         query: String,
         config: String? = null,
-        type: TextSearchType = TextSearchType.Plain,
+        type: TextSearchType = TextSearchType.PLAIN,
     ) {
         val configPart = if (config != null) "($config)" else ""
         add(name, "${type.postgrestName}fts$configPart.${encodeValue(query)}")

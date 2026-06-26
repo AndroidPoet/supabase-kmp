@@ -178,7 +178,7 @@ For Postgres-specific column types — array columns and full-text search over t
 ```kotlin
 where {
     Users.tags contains listOf("kotlin", "kmp")     // also containedBy / overlaps
-    Users.body.textSearch("kotlin & multiplatform", type = TextSearchType.Websearch)
+    Users.body.textSearch("kotlin & multiplatform", type = TextSearchType.WEB_SEARCH)
 }
 ```
 

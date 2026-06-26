@@ -19,7 +19,7 @@ private fun transport(captured: MutableList<HttpRequestData>) =
         config =
             SupabaseConfig(
                 logging = false,
-                logLevel = io.github.androidpoet.supabase.client.HttpLogLevel.NONE,
+                httpLogLevel = io.github.androidpoet.supabase.client.HttpLogLevel.NONE,
                 headers = emptyMap(),
                 accessTokenProvider = null,
             ),

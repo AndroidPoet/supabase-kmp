@@ -126,7 +126,7 @@ database.selectTyped<Todo>(table = "todos") {
 }
 ```
 
-Errors carry a `category` (`Conflict`, `NotFound`, `Unauthorized`, `RateLimited`, `Validation`, `Internal`, `Network`, `Unknown`) so you can branch without parsing codes — plus chainable helpers like `onUnauthorized { }`, `onRateLimited { }` and `onNetworkError { }`. See [Results & Errors](https://androidpoet.github.io/supabase-kmp/results-and-errors) for the full surface.
+Errors carry a `category` (`CONFLICT`, `NOT_FOUND`, `UNAUTHORIZED`, `RATE_LIMITED`, `VALIDATION`, `Internal`, `NETWORK`, `UNKNOWN`) so you can branch without parsing codes — plus chainable helpers like `onUnauthorized { }`, `onRateLimited { }` and `onNetworkError { }`. See [Results & Errors](https://androidpoet.github.io/supabase-kmp/results-and-errors) for the full surface.
 
 ## Modules
 

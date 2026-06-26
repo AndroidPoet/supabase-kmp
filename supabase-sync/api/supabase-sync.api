@@ -2,7 +2,7 @@ public final class io/github/androidpoet/supabase/sync/remote/SupabaseRemoteSour
 	public fun <init> (Lio/github/androidpoet/supabase/database/DatabaseClient;Lio/github/androidpoet/supabase/realtime/RealtimeClient;Lio/github/androidpoet/supabase/sync/remote/SyncColumns;Ljava/lang/String;I)V
 	public synthetic fun <init> (Lio/github/androidpoet/supabase/database/DatabaseClient;Lio/github/androidpoet/supabase/realtime/RealtimeClient;Lio/github/androidpoet/supabase/sync/remote/SyncColumns;Ljava/lang/String;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun changes (Ljava/lang/String;)Lkotlinx/coroutines/flow/Flow;
-	public fun pull (Ljava/lang/String;Lio/github/androidpoet/supabase/sync/Cursor;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun pull (Ljava/lang/String;Lio/github/androidpoet/supabase/sync/SyncCursor;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun push (Ljava/lang/String;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 

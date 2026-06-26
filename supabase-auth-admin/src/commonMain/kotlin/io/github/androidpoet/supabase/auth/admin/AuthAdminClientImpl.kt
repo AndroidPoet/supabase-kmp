@@ -1,7 +1,7 @@
 package io.github.androidpoet.supabase.auth.admin
 
 import io.github.androidpoet.supabase.auth.admin.models.AdminUserAttributes
-import io.github.androidpoet.supabase.auth.admin.models.AuditLogEntry
+import io.github.androidpoet.supabase.auth.admin.models.AuditLogEvent
 import io.github.androidpoet.supabase.auth.admin.models.CustomProvider
 import io.github.androidpoet.supabase.auth.admin.models.CustomProviderCreateRequest
 import io.github.androidpoet.supabase.auth.admin.models.CustomProviderListResponse
@@ -195,7 +195,7 @@ internal class AuthAdminClientImpl(
     override suspend fun listAuditLogEvents(
         page: Int?,
         perPage: Int?,
-    ): SupabaseResult<List<AuditLogEntry>> {
+    ): SupabaseResult<List<AuditLogEvent>> {
         val queryParams =
             buildList {
                 if (page != null) add("page" to page.toString())

@@ -61,7 +61,7 @@ public class SyncEngine(
         val pendingById = local.pending(table).associateBy { it.record.id }
         val resolver = resolvers.forTable(table)
 
-        val toStore = ArrayList<Record>(pull.changed.size)
+        val toStore = ArrayList<SyncRecord>(pull.changed.size)
         val clearedConflicts = mutableListOf<String>()
         val reEnqueue = mutableListOf<PendingChange>()
 
@@ -112,7 +112,7 @@ public class SyncEngine(
         val MAX_PULL_PAGES = 10_000
     }
 
-    public fun observe(table: String): Flow<Record> =
+    public fun observe(table: String): Flow<SyncRecord> =
         remote.changes(table).onEach { incoming ->
             val localPending = local.pending(table).firstOrNull { it.record.id == incoming.id }?.record
             val winner =

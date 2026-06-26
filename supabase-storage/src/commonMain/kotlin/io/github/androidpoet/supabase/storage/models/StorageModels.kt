@@ -197,7 +197,7 @@ internal data class ObjectListV2Request(
 )
 
 /**
- * A single object entry in a v2 ([ObjectListV2Result]) listing.
+ * A single object entry in a v2 ([ObjectListV2Response]) listing.
  *
  * @property name the object name within its folder.
  * @property key the full object key, when reported.
@@ -236,7 +236,7 @@ public data class ObjectListV2Folder(
  * @property nextCursor cursor to pass back for the next page, when [hasNext].
  */
 @Serializable
-public data class ObjectListV2Result(
+public data class ObjectListV2Response(
     val hasNext: Boolean,
     val folders: List<ObjectListV2Folder>,
     val objects: List<ObjectListV2Object>,

@@ -39,7 +39,7 @@ class ErrorParsingConformanceTest {
                 headersOf("Content-Type", "application/json")
             }
         return HttpTransport(
-            config = SupabaseConfig(logging = false, logLevel = io.github.androidpoet.supabase.client.HttpLogLevel.NONE, headers = emptyMap()),
+            config = SupabaseConfig(logging = false, httpLogLevel = io.github.androidpoet.supabase.client.HttpLogLevel.NONE, headers = emptyMap()),
             engineFactory = TestMockEngineFactory { respond(content = body, status = status, headers = headers) },
             projectUrl = "https://example.supabase.co",
             apiKey = "anon",
@@ -63,7 +63,7 @@ class ErrorParsingConformanceTest {
             assertEquals("23505", error.code)
             assertEquals("duplicate key violates unique constraint", error.message)
             assertEquals(409, error.httpStatus)
-            assertEquals(SupabaseErrorCategory.Conflict, error.category)
+            assertEquals(SupabaseErrorCategory.CONFLICT, error.category)
         }
 
     @Test
@@ -79,7 +79,7 @@ class ErrorParsingConformanceTest {
             assertEquals("weak_password", error.code)
             assertEquals("Password is too weak", error.message)
             assertEquals(422, error.httpStatus)
-            assertEquals(SupabaseErrorCategory.Validation, error.category)
+            assertEquals(SupabaseErrorCategory.VALIDATION, error.category)
         }
 
     @Test
@@ -92,7 +92,7 @@ class ErrorParsingConformanceTest {
                 )
             assertEquals("weak_password", error.code)
             assertEquals("Password should be at least 6 characters", error.message)
-            assertEquals(SupabaseErrorCategory.Validation, error.category)
+            assertEquals(SupabaseErrorCategory.VALIDATION, error.category)
         }
 
     @Test
@@ -105,7 +105,7 @@ class ErrorParsingConformanceTest {
                     """{"error":"invalid_grant","error_description":"Invalid login credentials"}""",
                 )
             assertEquals("Invalid login credentials", error.message)
-            assertEquals(SupabaseErrorCategory.Validation, error.category)
+            assertEquals(SupabaseErrorCategory.VALIDATION, error.category)
         }
 
     @Test
@@ -118,7 +118,7 @@ class ErrorParsingConformanceTest {
                 )
             assertEquals("NoSuchKey", error.code)
             assertEquals("Object not found", error.message)
-            assertEquals(SupabaseErrorCategory.NotFound, error.category)
+            assertEquals(SupabaseErrorCategory.NOT_FOUND, error.category)
         }
 
     @Test
@@ -136,7 +136,7 @@ class ErrorParsingConformanceTest {
             assertEquals("NoSuchKey", error.code)
             assertEquals("Object not found", error.message)
             assertTrue(error.isFileNotFound())
-            assertEquals(SupabaseErrorCategory.NotFound, error.category)
+            assertEquals(SupabaseErrorCategory.NOT_FOUND, error.category)
         }
 
     @Test
@@ -145,7 +145,7 @@ class ErrorParsingConformanceTest {
             // 408 is transient: it must be retryable and must NOT collapse to Unknown,
             // or the session transient-failure guard could sign the user out on a fluke.
             val error = errorFor(HttpStatusCode.RequestTimeout, "")
-            assertEquals(SupabaseErrorCategory.Internal, error.category)
+            assertEquals(SupabaseErrorCategory.INTERNAL, error.category)
             assertTrue(error.category.isRetryable)
         }
 
@@ -159,7 +159,7 @@ class ErrorParsingConformanceTest {
                     retryAfter = "30",
                 )
             assertEquals(30, error.retryAfterSeconds)
-            assertEquals(SupabaseErrorCategory.RateLimited, error.category)
+            assertEquals(SupabaseErrorCategory.RATE_LIMITED, error.category)
             assertTrue(error.category.isRetryable)
         }
 
@@ -168,7 +168,7 @@ class ErrorParsingConformanceTest {
         runTest {
             val error = errorFor(HttpStatusCode.Unauthorized, """{"message":"JWT expired"}""")
             assertEquals(401, error.httpStatus)
-            assertEquals(SupabaseErrorCategory.Unauthorized, error.category)
+            assertEquals(SupabaseErrorCategory.UNAUTHORIZED, error.category)
         }
 
     @Test
@@ -177,7 +177,7 @@ class ErrorParsingConformanceTest {
             val error = errorFor(HttpStatusCode.InternalServerError, "")
             assertEquals("HTTP 500", error.message)
             assertEquals(500, error.httpStatus)
-            assertEquals(SupabaseErrorCategory.Internal, error.category)
+            assertEquals(SupabaseErrorCategory.INTERNAL, error.category)
             assertTrue(error.category.isRetryable)
         }
 
@@ -187,6 +187,6 @@ class ErrorParsingConformanceTest {
             val error = errorFor(HttpStatusCode.BadGateway, "upstream connection error")
             assertEquals("upstream connection error", error.message)
             assertEquals(502, error.httpStatus)
-            assertEquals(SupabaseErrorCategory.Internal, error.category)
+            assertEquals(SupabaseErrorCategory.INTERNAL, error.category)
         }
 }

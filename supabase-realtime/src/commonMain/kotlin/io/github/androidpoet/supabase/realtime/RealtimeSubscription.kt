@@ -36,7 +36,7 @@ public interface RealtimeSubscription {
     }
 
     /** The channel name (the part after `realtime:`). */
-    public val channel: String
+    public val channelName: String
 
     /** The channel's join lifecycle as a [StateFlow]; await `SUBSCRIBED` or use
      * `awaitSubscribed`. */

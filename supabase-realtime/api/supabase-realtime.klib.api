@@ -63,8 +63,8 @@ abstract interface io.github.androidpoet.supabase.realtime/RealtimeClient { // i
 }
 
 abstract interface io.github.androidpoet.supabase.realtime/RealtimeSubscription { // io.github.androidpoet.supabase.realtime/RealtimeSubscription|null[0]
-    abstract val channel // io.github.androidpoet.supabase.realtime/RealtimeSubscription.channel|{}channel[0]
-        abstract fun <get-channel>(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeSubscription.channel.<get-channel>|<get-channel>(){}[0]
+    abstract val channelName // io.github.androidpoet.supabase.realtime/RealtimeSubscription.channelName|{}channelName[0]
+        abstract fun <get-channelName>(): kotlin/String // io.github.androidpoet.supabase.realtime/RealtimeSubscription.channelName.<get-channelName>|<get-channelName>(){}[0]
     abstract val status // io.github.androidpoet.supabase.realtime/RealtimeSubscription.status|{}status[0]
         abstract fun <get-status>(): kotlinx.coroutines.flow/StateFlow<io.github.androidpoet.supabase.realtime/RealtimeSubscription.Status> // io.github.androidpoet.supabase.realtime/RealtimeSubscription.status.<get-status>|<get-status>(){}[0]
 

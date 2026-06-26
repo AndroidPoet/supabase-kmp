@@ -17,8 +17,8 @@ import app.cash.paging.RemoteMediatorMediatorResultSuccess
 import io.github.androidpoet.supabase.sync.ChangeKind
 import io.github.androidpoet.supabase.sync.LocalStore
 import io.github.androidpoet.supabase.sync.PendingChange
-import io.github.androidpoet.supabase.sync.Record
 import io.github.androidpoet.supabase.sync.SyncEngine
+import io.github.androidpoet.supabase.sync.SyncRecord
 import io.github.androidpoet.supabase.sync.SyncResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
@@ -104,7 +104,7 @@ public class SyncStore<T : Any>(
 
     /** Optimistically insert/replace [value]: visible to reads at once, queued to push next sync. */
     public suspend fun upsert(value: T) {
-        val record = Record(idOf(value), now(), deleted = false, fields = encode(value))
+        val record = SyncRecord(idOf(value), now(), deleted = false, fields = encode(value))
         // Local writes go through enqueue (the optimistic path), NOT local.upsert: upsert carries the
         // remote monotonic guard, which would silently drop this edit whenever the client clock is
         // behind the row's stored (server) updatedAt. enqueue applies the row and queues it atomically.
@@ -116,7 +116,7 @@ public class SyncStore<T : Any>(
     /** Optimistically delete [id] via a soft-delete tombstone, queued to push next sync. */
     public suspend fun delete(id: String) {
         val existing = local.get(table, id)
-        val record = Record(id, now(), deleted = true, fields = existing?.fields ?: EMPTY_FIELDS)
+        val record = SyncRecord(id, now(), deleted = true, fields = existing?.fields ?: EMPTY_FIELDS)
         // Route through enqueue (not local.upsert), same as [upsert]: enqueue writes the tombstone and
         // queues it atomically, unguarded — local.upsert's remote monotonic guard could otherwise drop
         // the delete when the client clock trails the row's stored updatedAt.
@@ -174,7 +174,7 @@ public class SyncStore<T : Any>(
         revision.update { it + 1 }
     }
 
-    private fun decode(record: Record): T = json.decodeFromJsonElement(serializer, record.fields)
+    private fun decode(record: SyncRecord): T = json.decodeFromJsonElement(serializer, record.fields)
 
     // `.jsonObject` throws a clear IllegalArgumentException if T doesn't serialize to a JSON object
     // (a row model always does); friendlier than a raw ClassCastException.
@@ -204,7 +204,7 @@ public val DefaultJson: Json =
 private class LocalPagingSource<T : Any>(
     private val table: String,
     private val local: LocalStore,
-    private val decode: (Record) -> T,
+    private val decode: (SyncRecord) -> T,
     revision: StateFlow<Int>,
     scope: CoroutineScope,
 ) : PagingSource<String, T>() {

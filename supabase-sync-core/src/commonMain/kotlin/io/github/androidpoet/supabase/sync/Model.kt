@@ -8,7 +8,7 @@ import kotlinx.serialization.json.JsonObject
  * tombstone so deletions propagate through an incremental pull (a hard delete is invisible to
  * a "changed since" query).
  */
-public data class Record(
+public data class SyncRecord(
     public val id: String,
     public val updatedAt: Long,
     public val deleted: Boolean = false,
@@ -23,7 +23,7 @@ public data class Record(
  * cursor` skips rows written in the same millisecond at the boundary, while `>=` re-fetches or
  * loops. [id] defaults to empty (the low bound), so a cursor of just an `updatedAt` still works.
  */
-public data class Cursor(
+public data class SyncCursor(
     public val updatedAt: Long,
     public val id: String = "",
 )
@@ -33,14 +33,14 @@ public enum class ChangeKind { UPSERT, DELETE }
 
 /** A local mutation waiting to be pushed to the remote. */
 public data class PendingChange(
-    public val record: Record,
+    public val record: SyncRecord,
     public val kind: ChangeKind,
 )
 
 /** What a pull returned: the rows that changed plus the cursor to resume from next time. */
 public data class PullResult(
-    public val changed: List<Record>,
-    public val nextCursor: Cursor?,
+    public val changed: List<SyncRecord>,
+    public val nextCursor: SyncCursor?,
 )
 
 /** Per-id outcome of a push: which local changes the server accepted vs rejected. */

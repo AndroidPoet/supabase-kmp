@@ -289,7 +289,7 @@ val sub = realtime.channel("room1")
 
 ```kotlin
 suspend fun RealtimeClient.subscribe(
-    channel: String,
+    channelName: String,
     configure: RealtimeChannelBuilder.() -> Unit = {},
 ): RealtimeSubscription
 ```
@@ -601,10 +601,10 @@ A live subscription to one joined channel: the handle returned by `subscribe()`
 for observing events and sending on the channel. It stays valid across reconnects
 — the client rejoins automatically.
 
-#### `channel`
+#### `channelName`
 
 ```kotlin
-val channel: String
+val channelName: String
 ```
 
 The channel name (the part after `realtime:`).
@@ -805,7 +805,7 @@ the common "watch this table" cases.
 
 ```kotlin
 suspend fun RealtimeClient.subscribeToPostgresChanges(
-    channel: String,
+    channelName: String,
     schema: String = "public",
     table: String? = null,
     filter: String? = null,
@@ -814,7 +814,7 @@ suspend fun RealtimeClient.subscribeToPostgresChanges(
 ): RealtimeSubscription
 
 suspend fun RealtimeClient.subscribeToPostgresChanges(
-    channel: String,
+    channelName: String,
     schema: String = "public",
     table: String? = null,
     filter: String? = null,
@@ -823,7 +823,7 @@ suspend fun RealtimeClient.subscribeToPostgresChanges(
 ): RealtimeSubscription
 
 suspend inline fun <reified T> RealtimeClient.subscribeToPostgresChanges(
-    channel: String,
+    channelName: String,
     schema: String = "public",
     table: String? = null,
     filter: String? = null,
@@ -832,7 +832,7 @@ suspend inline fun <reified T> RealtimeClient.subscribeToPostgresChanges(
 ): RealtimeSubscription
 ```
 
-Subscribes to `channel` and registers a single `postgres_changes` callback in one
+Subscribes to `channelName` and registers a single `postgres_changes` callback in one
 call. The three overloads deliver, respectively: the raw row (`JsonObject`); the
 resolved change type plus the row; and the row decoded into your model `T` (with
 the same skip-on-mismatch semantics as the reified `onPostgresChange`). See
@@ -841,7 +841,7 @@ for building `filter`.
 
 ```kotlin
 val sub = realtime.subscribeToPostgresChanges<Message>(
-    channel = "rooms",
+    channelName = "rooms",
     table = "messages",
     filter = realtimeFilter { eq("room_id", roomId) },
 ) { msg -> store(msg) }
@@ -975,7 +975,7 @@ the helpers here cover HTTP send, one-call subscribe, and consuming flows.
 
 ```kotlin
 suspend fun RealtimeClient.broadcast(
-    channel: String,
+    channelName: String,
     event: String,
     payload: JsonObject,
     private: Boolean = false,
@@ -987,7 +987,7 @@ Sends a broadcast over HTTP to the realtime broadcast endpoint
 Useful for fire-and-forget server-to-client fan-out where the sender doesn't need
 to subscribe.
 
-- `channel` — the channel name (without the `realtime:` prefix).
+- `channelName` — the channel name (without the `realtime:` prefix).
 - `event` — the broadcast event name.
 - `payload` — the message body.
 - `private` — when `true`, targets a private channel; the caller's session JWT
@@ -1003,13 +1003,13 @@ realtime.broadcast("room1", "notice", buildJsonObject { put("text", "hi") })
 
 ```kotlin
 suspend fun RealtimeClient.subscribeToBroadcast(
-    channel: String,
+    channelName: String,
     event: String,
     callback: suspend (JsonObject) -> Unit,
 ): RealtimeSubscription
 ```
 
-Subscribes to `channel` and registers a single broadcast `callback` for the named
+Subscribes to `channelName` and registers a single broadcast `callback` for the named
 `event` in one call.
 
 ### `broadcastFlow`
@@ -1060,12 +1060,12 @@ subscribe and consuming flows.
 
 ```kotlin
 suspend fun RealtimeClient.subscribeToPresence(
-    channel: String,
+    channelName: String,
     callback: suspend (PresenceState) -> Unit,
 ): RealtimeSubscription
 ```
 
-Subscribes to `channel` and registers a single presence sync `callback`, invoked
+Subscribes to `channelName` and registers a single presence sync `callback`, invoked
 with the full [`PresenceState`](#presencestate).
 
 ### `presenceSyncFlow`

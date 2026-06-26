@@ -653,13 +653,13 @@ non-null.
 suspend fun listAuditLogEvents(
     page: Int? = null,
     perPage: Int? = null,
-): SupabaseResult<List<AuditLogEntry>>
+): SupabaseResult<List<AuditLogEvent>>
 ```
 
 - `page` — 1-indexed page number. Default `null` (omitted).
 - `perPage` — entries per page. Default `null` (omitted).
 
-**Returns** `SupabaseResult<List<AuditLogEntry>>` — `Success` with the entries, `Failure` on error.
+**Returns** `SupabaseResult<List<AuditLogEvent>>` — `Success` with the entries, `Failure` on error.
 
 ```kotlin
 val events = admin.listAuditLogEvents(page = 1, perPage = 100)
@@ -982,7 +982,7 @@ data class CustomProvider(
     val skipNonceCheck: Boolean? = null,               // skip_nonce_check
     val authorizationUrl: String? = null,              // authorization_url
     val tokenUrl: String? = null,                      // token_url
-    val userinfoUrl: String? = null,                   // userinfo_url
+    val userInfoUrl: String? = null,                   // userinfo_url
     val jwksUrl: String? = null,                       // jwks_uri
     val discoveryDocument: OidcDiscoveryDocument? = null, // discovery_document
     val createdAt: String? = null,                     // created_at
@@ -1013,7 +1013,7 @@ data class CustomProviderCreateRequest(
     val skipNonceCheck: Boolean? = null,               // skip_nonce_check
     val authorizationUrl: String? = null,              // authorization_url
     val tokenUrl: String? = null,                      // token_url
-    val userinfoUrl: String? = null,                   // userinfo_url
+    val userInfoUrl: String? = null,                   // userinfo_url
     val jwksUrl: String? = null,                       // jwks_uri
 )
 ```
@@ -1040,7 +1040,7 @@ data class CustomProviderUpdateRequest(
     val skipNonceCheck: Boolean? = null,               // skip_nonce_check
     val authorizationUrl: String? = null,              // authorization_url
     val tokenUrl: String? = null,                      // token_url
-    val userinfoUrl: String? = null,                   // userinfo_url
+    val userInfoUrl: String? = null,                   // userinfo_url
     val jwksUrl: String? = null,                       // jwks_uri
 )
 ```
@@ -1159,13 +1159,13 @@ data class Passkey(
 )
 ```
 
-### AuditLogEntry
+### AuditLogEvent
 
 A single audit-log entry from `listAuditLogEvents`. The `payload` shape depends on
 the recorded action, so it is kept as a raw `JsonObject` rather than a typed model.
 
 ```kotlin
-data class AuditLogEntry(
+data class AuditLogEvent(
     val id: String,
     val payload: JsonObject? = null,
     val createdAt: String? = null,          // created_at

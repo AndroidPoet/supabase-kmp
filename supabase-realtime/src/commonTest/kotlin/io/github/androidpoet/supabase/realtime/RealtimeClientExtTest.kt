@@ -82,7 +82,7 @@ class RealtimeClientExtTest {
                     configurePresence("user-1")
                 } as ChannelSubscriptionImpl
 
-            assertEquals("room-x", subscription.channel)
+            assertEquals("room-x", subscription.channelName)
             assertTrue(subscription.privateChannel)
             assertEquals("user-1", subscription.presenceKey)
         }
@@ -94,7 +94,7 @@ class RealtimeClientExtTest {
 
             val subscription =
                 realtime.subscribeToPostgresChanges(
-                    channel = "room-pg",
+                    channelName = "room-pg",
                     schema = "public",
                     table = "messages",
                     event = PostgresChangeEvent.INSERT,
@@ -114,7 +114,7 @@ class RealtimeClientExtTest {
 
             val subscription =
                 realtime.subscribeToPostgresChanges(
-                    channel = "room-pg-typed",
+                    channelName = "room-pg-typed",
                     table = "messages",
                     event = PostgresChangeEvent.ALL,
                 ) { event, payload ->
@@ -156,7 +156,7 @@ class RealtimeClientExtTest {
 
             val subscription =
                 realtime.subscribeToBroadcast(
-                    channel = "room-b",
+                    channelName = "room-b",
                     event = "message",
                     callback = { called = true },
                 ) as ChannelSubscriptionImpl
@@ -185,7 +185,7 @@ class RealtimeClientExtTest {
 
             val subscription =
                 realtime.subscribeToPresence(
-                    channel = "room-presence",
+                    channelName = "room-presence",
                     callback = { state: PresenceState -> stateSize = state.size },
                 ) as ChannelSubscriptionImpl
 
@@ -227,7 +227,7 @@ class RealtimeClientExtTest {
 
             val subscription =
                 realtime.subscribeToPresence(
-                    channel = "room",
+                    channelName = "room",
                     callback = { state: PresenceState -> latest = state },
                 ) as ChannelSubscriptionImpl
 

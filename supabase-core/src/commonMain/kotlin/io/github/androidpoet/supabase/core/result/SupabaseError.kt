@@ -65,32 +65,32 @@ public fun SupabaseError.toException(cause: Throwable? = null): SupabaseExceptio
  */
 public enum class SupabaseErrorCategory {
     /** A uniqueness/foreign-key clash or an already-existing resource (HTTP 409). */
-    Conflict,
+    CONFLICT,
 
     /** The requested table, row, user or object does not exist (HTTP 404). */
-    NotFound,
+    NOT_FOUND,
 
     /** Missing, invalid or insufficient credentials/permissions (HTTP 401/403). */
-    Unauthorized,
+    UNAUTHORIZED,
 
     /** The caller exceeded a rate limit; back off and retry (HTTP 429). */
-    RateLimited,
+    RATE_LIMITED,
 
     /** The request was malformed or failed validation (HTTP 400/422). */
-    Validation,
+    VALIDATION,
 
     /** A server-side failure unrelated to the request's content (HTTP 5xx). */
-    Internal,
+    INTERNAL,
 
     /**
      * The request never reached the server or never produced a usable response:
      * the device is offline, the connection timed out, or the body could not be
-     * decoded. Distinct from [Unknown] so callers can show offline/retry UI.
+     * decoded. Distinct from [UNKNOWN] so callers can show offline/retry UI.
      */
-    Network,
+    NETWORK,
 
     /** No more specific category applied; the catch-all fallback. */
-    Unknown,
+    UNKNOWN,
 }
 
 /**
@@ -101,9 +101,9 @@ public enum class SupabaseErrorCategory {
 public val SupabaseErrorCategory.isRetryable: Boolean
     get() =
         when (this) {
-            SupabaseErrorCategory.RateLimited,
-            SupabaseErrorCategory.Internal,
-            SupabaseErrorCategory.Network,
+            SupabaseErrorCategory.RATE_LIMITED,
+            SupabaseErrorCategory.INTERNAL,
+            SupabaseErrorCategory.NETWORK,
             -> true
             else -> false
         }
@@ -198,13 +198,13 @@ private val internalCodes =
 public val SupabaseError.category: SupabaseErrorCategory
     get() =
         when {
-            code in networkCodes -> SupabaseErrorCategory.Network
-            code in conflictCodes -> SupabaseErrorCategory.Conflict
-            code in notFoundCodes -> SupabaseErrorCategory.NotFound
-            code in unauthorizedCodes -> SupabaseErrorCategory.Unauthorized
-            code in rateLimitedCodes -> SupabaseErrorCategory.RateLimited
-            code in validationCodes -> SupabaseErrorCategory.Validation
-            code in internalCodes -> SupabaseErrorCategory.Internal
+            code in networkCodes -> SupabaseErrorCategory.NETWORK
+            code in conflictCodes -> SupabaseErrorCategory.CONFLICT
+            code in notFoundCodes -> SupabaseErrorCategory.NOT_FOUND
+            code in unauthorizedCodes -> SupabaseErrorCategory.UNAUTHORIZED
+            code in rateLimitedCodes -> SupabaseErrorCategory.RATE_LIMITED
+            code in validationCodes -> SupabaseErrorCategory.VALIDATION
+            code in internalCodes -> SupabaseErrorCategory.INTERNAL
             // Fall back to httpStatus; only treat a numeric textual `code` as a
             // status when it's in the HTTP range, so a numeric service code (e.g. a
             // 5-digit SQLSTATE) is never misread as an HTTP status.
@@ -217,19 +217,19 @@ public val SupabaseError.category: SupabaseErrorCategory
 // field are still categorized instead of collapsing to Unknown.
 private fun categorizeByStatus(status: Int?): SupabaseErrorCategory =
     when (status) {
-        401, 403 -> SupabaseErrorCategory.Unauthorized
-        404 -> SupabaseErrorCategory.NotFound
-        409 -> SupabaseErrorCategory.Conflict
+        401, 403 -> SupabaseErrorCategory.UNAUTHORIZED
+        404 -> SupabaseErrorCategory.NOT_FOUND
+        409 -> SupabaseErrorCategory.CONFLICT
         // 406 Not Acceptable (Accept/cardinality unsatisfiable) and 416 Range Not
         // Satisfiable are request-shape problems, so they map to Validation too.
-        400, 406, 416, 422 -> SupabaseErrorCategory.Validation
-        429 -> SupabaseErrorCategory.RateLimited
+        400, 406, 416, 422 -> SupabaseErrorCategory.VALIDATION
+        429 -> SupabaseErrorCategory.RATE_LIMITED
         // 408 Request Timeout and 425 Too Early are transient: treat them like a
         // server-side hiccup (Internal) so they're retryable and the session
         // transient-failure guard doesn't sign the user out on a fluke timeout.
-        408, 425 -> SupabaseErrorCategory.Internal
-        in 500..599 -> SupabaseErrorCategory.Internal
-        else -> SupabaseErrorCategory.Unknown
+        408, 425 -> SupabaseErrorCategory.INTERNAL
+        in 500..599 -> SupabaseErrorCategory.INTERNAL
+        else -> SupabaseErrorCategory.UNKNOWN
     }
 
 /** True when this is a Postgres unique-constraint violation (`23505`) — a duplicate row. */
@@ -255,7 +255,7 @@ public fun SupabaseError.isFileNotFound(): Boolean =
 /**
  * True when the request failed before producing a usable server response
  * (offline, timeout, connection or decoding failure). Equivalent to
- * `category == SupabaseErrorCategory.Network`.
+ * `category == SupabaseErrorCategory.NETWORK`.
  */
 public fun SupabaseError.isNetworkError(): Boolean =
-    category == SupabaseErrorCategory.Network
+    category == SupabaseErrorCategory.NETWORK

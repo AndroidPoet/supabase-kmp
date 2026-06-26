@@ -15,16 +15,16 @@ public interface LocalStore {
      * with a client clock that trails the row's stored (server) `updatedAt` would be silently
      * dropped by that guard — local edits go through [enqueue] instead.
      */
-    public suspend fun upsert(table: String, records: List<Record>)
+    public suspend fun upsert(table: String, records: List<SyncRecord>)
 
     /** The row [id] in [table], or `null` if absent. */
-    public suspend fun get(table: String, id: String): Record?
+    public suspend fun get(table: String, id: String): SyncRecord?
 
     /** The last pull position stored for [table], or `null` if it has never synced. */
-    public suspend fun cursor(table: String): Cursor?
+    public suspend fun cursor(table: String): SyncCursor?
 
     /** Persists the pull position for [table]. */
-    public suspend fun setCursor(table: String, cursor: Cursor?)
+    public suspend fun setCursor(table: String, cursor: SyncCursor?)
 
     /** Local changes for [table] still waiting to be pushed. */
     public suspend fun pending(table: String): List<PendingChange>
@@ -42,10 +42,10 @@ public interface LocalStore {
     public suspend fun clearPending(table: String, ids: List<String>)
 
     /** Offset page of live (non-tombstone) rows in [table], ordered by id. Drives `SyncStore.paged`. */
-    public suspend fun page(table: String, limit: Long, offset: Long): Page<Record>
+    public suspend fun page(table: String, limit: Long, offset: Long): Page<SyncRecord>
 
     /** Keyset page: the next [limit] live rows after [afterId] (`null` = first page), ordered by id. */
-    public suspend fun pageAfter(table: String, afterId: String?, limit: Long): List<Record>
+    public suspend fun pageAfter(table: String, afterId: String?, limit: Long): List<SyncRecord>
 
     /** Total live (non-tombstone) row count for [table]. */
     public suspend fun count(table: String): Long
@@ -62,11 +62,11 @@ public interface RemoteSource {
      * the position to resume from, or `null` to leave the stored cursor unchanged (e.g. when
      * nothing changed) — returning `null` must never force a full re-sync.
      */
-    public suspend fun pull(table: String, since: Cursor?): PullResult
+    public suspend fun pull(table: String, since: SyncCursor?): PullResult
 
     /** Sends local [changes] to the server and reports which were accepted. */
     public suspend fun push(table: String, changes: List<PendingChange>): PushResult
 
-    /** A live stream of remote changes for [table] (e.g. Supabase Realtime), one [Record] per change. */
-    public fun changes(table: String): Flow<Record>
+    /** A live stream of remote changes for [table] (e.g. Supabase Realtime), one [SyncRecord] per change. */
+    public fun changes(table: String): Flow<SyncRecord>
 }

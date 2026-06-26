@@ -50,7 +50,7 @@ class HttpTransportTest {
                     config =
                         SupabaseConfig(
                             logging = false,
-                            logLevel = io.github.androidpoet.supabase.client.HttpLogLevel.NONE,
+                            httpLogLevel = io.github.androidpoet.supabase.client.HttpLogLevel.NONE,
                             headers =
                                 mapOf(
                                     "X-Trace-Id" to "global-trace",
@@ -80,7 +80,7 @@ class HttpTransportTest {
                     config =
                         SupabaseConfig(
                             logging = false,
-                            logLevel = io.github.androidpoet.supabase.client.HttpLogLevel.NONE,
+                            httpLogLevel = io.github.androidpoet.supabase.client.HttpLogLevel.NONE,
                             headers = emptyMap(),
                         ),
                     engineFactory =
@@ -117,7 +117,7 @@ class HttpTransportTest {
                     config =
                         SupabaseConfig(
                             logging = false,
-                            logLevel = io.github.androidpoet.supabase.client.HttpLogLevel.NONE,
+                            httpLogLevel = io.github.androidpoet.supabase.client.HttpLogLevel.NONE,
                             headers = emptyMap(),
                         ),
                     engineFactory =
@@ -150,7 +150,7 @@ class HttpTransportTest {
                     config =
                         SupabaseConfig(
                             logging = false,
-                            logLevel = io.github.androidpoet.supabase.client.HttpLogLevel.NONE,
+                            httpLogLevel = io.github.androidpoet.supabase.client.HttpLogLevel.NONE,
                             headers = emptyMap(),
                         ),
                     engineFactory =
@@ -181,7 +181,7 @@ class HttpTransportTest {
                     config =
                         SupabaseConfig(
                             logging = false,
-                            logLevel = io.github.androidpoet.supabase.client.HttpLogLevel.NONE,
+                            httpLogLevel = io.github.androidpoet.supabase.client.HttpLogLevel.NONE,
                             headers = emptyMap(),
                             retry =
                                 io.github.androidpoet.supabase.client
@@ -231,7 +231,7 @@ class HttpTransportTest {
                     config =
                         SupabaseConfig(
                             logging = false,
-                            logLevel = io.github.androidpoet.supabase.client.HttpLogLevel.NONE,
+                            httpLogLevel = io.github.androidpoet.supabase.client.HttpLogLevel.NONE,
                             headers = emptyMap(),
                             retry =
                                 io.github.androidpoet.supabase.client
@@ -276,7 +276,7 @@ class HttpTransportTest {
                     config =
                         SupabaseConfig(
                             logging = false,
-                            logLevel = io.github.androidpoet.supabase.client.HttpLogLevel.NONE,
+                            httpLogLevel = io.github.androidpoet.supabase.client.HttpLogLevel.NONE,
                             headers = emptyMap(),
                         ),
                     engineFactory =

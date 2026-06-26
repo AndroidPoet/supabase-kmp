@@ -44,14 +44,14 @@ final class io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore : io.
 
     final suspend fun clearPending(kotlin/String, kotlin.collections/List<kotlin/String>) // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.clearPending|clearPending(kotlin.String;kotlin.collections.List<kotlin.String>){}[0]
     final suspend fun count(kotlin/String): kotlin/Long // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.count|count(kotlin.String){}[0]
-    final suspend fun cursor(kotlin/String): io.github.androidpoet.supabase.sync/Cursor? // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.cursor|cursor(kotlin.String){}[0]
+    final suspend fun cursor(kotlin/String): io.github.androidpoet.supabase.sync/SyncCursor? // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.cursor|cursor(kotlin.String){}[0]
     final suspend fun enqueue(kotlin/String, io.github.androidpoet.supabase.sync/PendingChange) // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.enqueue|enqueue(kotlin.String;io.github.androidpoet.supabase.sync.PendingChange){}[0]
-    final suspend fun get(kotlin/String, kotlin/String): io.github.androidpoet.supabase.sync/Record? // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.get|get(kotlin.String;kotlin.String){}[0]
-    final suspend fun page(kotlin/String, kotlin/Long, kotlin/Long): io.github.androidpoet.supabase.sync/Page<io.github.androidpoet.supabase.sync/Record> // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.page|page(kotlin.String;kotlin.Long;kotlin.Long){}[0]
-    final suspend fun pageAfter(kotlin/String, kotlin/String?, kotlin/Long): kotlin.collections/List<io.github.androidpoet.supabase.sync/Record> // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.pageAfter|pageAfter(kotlin.String;kotlin.String?;kotlin.Long){}[0]
+    final suspend fun get(kotlin/String, kotlin/String): io.github.androidpoet.supabase.sync/SyncRecord? // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.get|get(kotlin.String;kotlin.String){}[0]
+    final suspend fun page(kotlin/String, kotlin/Long, kotlin/Long): io.github.androidpoet.supabase.sync/Page<io.github.androidpoet.supabase.sync/SyncRecord> // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.page|page(kotlin.String;kotlin.Long;kotlin.Long){}[0]
+    final suspend fun pageAfter(kotlin/String, kotlin/String?, kotlin/Long): kotlin.collections/List<io.github.androidpoet.supabase.sync/SyncRecord> // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.pageAfter|pageAfter(kotlin.String;kotlin.String?;kotlin.Long){}[0]
     final suspend fun pending(kotlin/String): kotlin.collections/List<io.github.androidpoet.supabase.sync/PendingChange> // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.pending|pending(kotlin.String){}[0]
-    final suspend fun setCursor(kotlin/String, io.github.androidpoet.supabase.sync/Cursor?) // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.setCursor|setCursor(kotlin.String;io.github.androidpoet.supabase.sync.Cursor?){}[0]
-    final suspend fun upsert(kotlin/String, kotlin.collections/List<io.github.androidpoet.supabase.sync/Record>) // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.upsert|upsert(kotlin.String;kotlin.collections.List<io.github.androidpoet.supabase.sync.Record>){}[0]
+    final suspend fun setCursor(kotlin/String, io.github.androidpoet.supabase.sync/SyncCursor?) // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.setCursor|setCursor(kotlin.String;io.github.androidpoet.supabase.sync.SyncCursor?){}[0]
+    final suspend fun upsert(kotlin/String, kotlin.collections/List<io.github.androidpoet.supabase.sync/SyncRecord>) // io.github.androidpoet.supabase.sync.store/SqlDelightLocalStore.upsert|upsert(kotlin.String;kotlin.collections.List<io.github.androidpoet.supabase.sync.SyncRecord>){}[0]
 }
 
 final class io.github.androidpoet.supabase.sync.store/SqlDelightTableAdapter : io.github.androidpoet.supabase.sync/TableAdapter { // io.github.androidpoet.supabase.sync.store/SqlDelightTableAdapter|null[0]

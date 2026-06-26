@@ -6,12 +6,12 @@ import io.github.androidpoet.supabase.database.DatabaseClient
 import io.github.androidpoet.supabase.database.ReturnOption
 import io.github.androidpoet.supabase.realtime.RealtimeClient
 import io.github.androidpoet.supabase.realtime.models.PostgresChangeEvent
-import io.github.androidpoet.supabase.sync.Cursor
 import io.github.androidpoet.supabase.sync.PendingChange
 import io.github.androidpoet.supabase.sync.PullResult
 import io.github.androidpoet.supabase.sync.PushResult
-import io.github.androidpoet.supabase.sync.Record
 import io.github.androidpoet.supabase.sync.RemoteSource
+import io.github.androidpoet.supabase.sync.SyncCursor
+import io.github.androidpoet.supabase.sync.SyncRecord
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -45,7 +45,7 @@ public class SupabaseRemoteSource(
      * — keeps the pull stable when several rows share an `updatedAt`. Returns the new high-water
      * cursor, or `null` (don't advance) when nothing changed.
      */
-    override suspend fun pull(table: String, since: Cursor?): PullResult {
+    override suspend fun pull(table: String, since: SyncCursor?): PullResult {
         val body =
             database
                 .select(
@@ -94,12 +94,12 @@ public class SupabaseRemoteSource(
     }
 
     /**
-     * A cold [Flow] of [table]'s realtime `postgres_changes`, each emitted as a [Record].
+     * A cold [Flow] of [table]'s realtime `postgres_changes`, each emitted as a [SyncRecord].
      * INSERT/UPDATE carry the new row; a DELETE is surfaced as a tombstone. Connects the client if
      * needed and tears the channel down when collection stops. Pair with periodic [pull] to
      * backfill anything missed while disconnected.
      */
-    override fun changes(table: String): Flow<Record> =
+    override fun changes(table: String): Flow<SyncRecord> =
         callbackFlow {
             if (!realtime.isConnected) realtime.connect()
             val subscription =

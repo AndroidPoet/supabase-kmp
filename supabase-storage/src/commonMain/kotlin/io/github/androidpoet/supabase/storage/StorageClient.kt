@@ -15,7 +15,7 @@ import io.github.androidpoet.supabase.storage.models.IcebergTableMetadataRespons
 import io.github.androidpoet.supabase.storage.models.IcebergTableRegisterRequest
 import io.github.androidpoet.supabase.storage.models.IcebergUpdateNamespacePropertiesRequest
 import io.github.androidpoet.supabase.storage.models.IcebergUpdateNamespacePropertiesResponse
-import io.github.androidpoet.supabase.storage.models.ObjectListV2Result
+import io.github.androidpoet.supabase.storage.models.ObjectListV2Response
 import io.github.androidpoet.supabase.storage.models.VectorBucket
 import io.github.androidpoet.supabase.storage.models.VectorBucketListResponse
 import io.github.androidpoet.supabase.storage.models.VectorData
@@ -513,7 +513,7 @@ public interface StorageClient {
     ): SupabaseResult<List<FileObject>>
 
     /**
-     * Cursor-paged object listing (`POST /object/list-v2`) returning an [ObjectListV2Result] that
+     * Cursor-paged object listing (`POST /object/list-v2`) returning an [ObjectListV2Response] that
      * separates folders from objects and carries a `nextCursor`/`hasNext` for continuation.
      * Prefer this over [list] for large buckets or delimiter-style folder navigation.
      *
@@ -533,7 +533,7 @@ public interface StorageClient {
         withDelimiter: Boolean? = null,
         sortBy: String? = null,
         sortOrder: SortOrder = SortOrder.ASC,
-    ): SupabaseResult<ObjectListV2Result>
+    ): SupabaseResult<ObjectListV2Response>
 
     /**
      * Moves (renames) the object at [fromPath] to [toPath] (`POST /object/move`), optionally

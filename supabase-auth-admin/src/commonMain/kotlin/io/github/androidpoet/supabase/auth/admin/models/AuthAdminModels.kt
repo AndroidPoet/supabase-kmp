@@ -247,7 +247,7 @@ public data class CustomProvider(
     @SerialName("skip_nonce_check") public val skipNonceCheck: Boolean? = null,
     @SerialName("authorization_url") public val authorizationUrl: String? = null,
     @SerialName("token_url") public val tokenUrl: String? = null,
-    @SerialName("userinfo_url") public val userinfoUrl: String? = null,
+    @SerialName("userinfo_url") public val userInfoUrl: String? = null,
     @SerialName("jwks_uri") public val jwksUrl: String? = null,
     @SerialName("discovery_document") public val discoveryDocument: OidcDiscoveryDocument? = null,
     @SerialName("created_at") public val createdAt: String? = null,
@@ -273,7 +273,7 @@ public data class CustomProviderCreateRequest(
     @SerialName("skip_nonce_check") public val skipNonceCheck: Boolean? = null,
     @SerialName("authorization_url") public val authorizationUrl: String? = null,
     @SerialName("token_url") public val tokenUrl: String? = null,
-    @SerialName("userinfo_url") public val userinfoUrl: String? = null,
+    @SerialName("userinfo_url") public val userInfoUrl: String? = null,
     @SerialName("jwks_uri") public val jwksUrl: String? = null,
 ) {
     // Mask the client secret so it never leaks into logs or crash reports.
@@ -283,7 +283,7 @@ public data class CustomProviderCreateRequest(
             "scopes=$scopes, pkceEnabled=$pkceEnabled, attributeMapping=$attributeMapping, " +
             "authorizationParams=$authorizationParams, enabled=$enabled, emailOptional=$emailOptional, " +
             "issuer=$issuer, discoveryUrl=$discoveryUrl, skipNonceCheck=$skipNonceCheck, " +
-            "authorizationUrl=$authorizationUrl, tokenUrl=$tokenUrl, userinfoUrl=$userinfoUrl, " +
+            "authorizationUrl=$authorizationUrl, tokenUrl=$tokenUrl, userInfoUrl=$userInfoUrl, " +
             "jwksUrl=$jwksUrl)"
 }
 
@@ -304,7 +304,7 @@ public data class CustomProviderUpdateRequest(
     @SerialName("skip_nonce_check") public val skipNonceCheck: Boolean? = null,
     @SerialName("authorization_url") public val authorizationUrl: String? = null,
     @SerialName("token_url") public val tokenUrl: String? = null,
-    @SerialName("userinfo_url") public val userinfoUrl: String? = null,
+    @SerialName("userinfo_url") public val userInfoUrl: String? = null,
     @SerialName("jwks_uri") public val jwksUrl: String? = null,
 ) {
     // Mask the client secret so it never leaks into logs or crash reports.
@@ -315,7 +315,7 @@ public data class CustomProviderUpdateRequest(
             "attributeMapping=$attributeMapping, authorizationParams=$authorizationParams, " +
             "enabled=$enabled, emailOptional=$emailOptional, issuer=$issuer, " +
             "discoveryUrl=$discoveryUrl, skipNonceCheck=$skipNonceCheck, " +
-            "authorizationUrl=$authorizationUrl, tokenUrl=$tokenUrl, userinfoUrl=$userinfoUrl, " +
+            "authorizationUrl=$authorizationUrl, tokenUrl=$tokenUrl, userInfoUrl=$userInfoUrl, " +
             "jwksUrl=$jwksUrl)"
 }
 
@@ -398,7 +398,7 @@ public data class Passkey(
  * so it is kept as a raw [JsonObject] rather than a strongly typed model.
  */
 @Serializable
-public data class AuditLogEntry(
+public data class AuditLogEvent(
     public val id: String,
     public val payload: JsonObject? = null,
     @SerialName("created_at") public val createdAt: String? = null,

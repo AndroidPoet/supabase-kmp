@@ -129,8 +129,26 @@ each call site.
   - Storage `VectorDistanceMetric.DOTPRODUCT` → **`DOT_PRODUCT`** — legible entry next to
     `COSINE` / `EUCLIDEAN`; the `dotproduct` wire value is unchanged (via `@SerialName`).
   - Auth-admin OIDC `jwksUri` → **`jwksUrl`** — its siblings are all `*Url`
-    (`authorizationUrl` / `tokenUrl` / `userinfoUrl`); the `jwks_uri` wire field is
+    (`authorizationUrl` / `tokenUrl` / `userInfoUrl`); the `jwks_uri` wire field is
     unchanged (via `@SerialName`).
+- **Final naming pass, part 2 — every enum entry is now `UPPER_SNAKE` and every remaining
+  outlier is resolved:**
+  - **`SupabaseErrorCategory`** entries `Conflict`/`NotFound`/`Unauthorized`/`RateLimited`/
+    `Validation`/`Internal`/`Network`/`Unknown` → **`CONFLICT`/`NOT_FOUND`/`UNAUTHORIZED`/
+    `RATE_LIMITED`/`VALIDATION`/`INTERNAL`/`NETWORK`/`UNKNOWN`**, and **`TextSearchType`**
+    `Raw`/`Plain`/`Phrase`/`Websearch` → **`RAW`/`PLAIN`/`PHRASE`/`WEB_SEARCH`** — the last two
+    PascalCase enums now match the ~38 others. Both are name-only (the wire values live in HTTP
+    status mapping / a constructor arg, not the entry name).
+  - Realtime `RealtimeSubscription.channel` → **`channelName`** — it returns a name, not a
+    `RealtimeChannel` (and it now matches the builder's `channelName`).
+  - Sync `Record` / `Cursor` → **`SyncRecord`** / **`SyncCursor`** — qualified domain nouns;
+    `SyncCursor` no longer collides with the generated SQLDelight `Cursor`.
+  - Storage `ObjectListV2Result` → **`ObjectListV2Response`** (the lone `*Result` among the
+    `*Response` list DTOs); auth-admin `AuditLogEntry` → **`AuditLogEvent`** (the method is
+    `listAuditLogEvents`); auth-admin OIDC `userinfoUrl` → **`userInfoUrl`** (camelCase;
+    `userinfo_url` wire field unchanged).
+  - Client config `logLevel` → **`httpLogLevel`** — disambiguates wire-verbosity `HttpLogLevel`
+    from logger-severity `SupabaseLogLevel` at the call site.
 
 ### Removed (breaking)
 
@@ -588,7 +606,7 @@ change is additive — no breaking changes.
   `captchaToken` and a defaulted `skip_http_redirect=true` on SSO so the URL call
   returns JSON instead of a 303 redirect; `webauthn` verification on `mfaVerify`
   (new `MfaWebauthnVerification` model).
-- **Auth Admin** — `auditLogEvents(page, perPage)` returning `AuditLogEntry`;
+- **Auth Admin** — `auditLogEvents(page, perPage)` returning `AuditLogEvent`;
   `updateFactor(userId, factorId, friendlyName)` returning the full `MfaFactor`.
 
 ### Fixed
@@ -652,7 +670,7 @@ change is additive — no breaking changes.
 - **Auth** — `getSettings()` (`GET /auth/v1/settings`, reports which providers and
   flags the project has enabled) and `getHealth()` (`GET /auth/v1/health`); both
   decode tolerantly so unknown/missing keys don't break the response.
-- **Postgrest** — `TextSearchType.Raw` exposes the bare `fts` operator
+- **Postgrest** — `TextSearchType.RAW` exposes the bare `fts` operator
   (`to_tsquery`); a standalone `offset()`; `ReturnOption.HEADERS_ONLY`
   (`Prefer: return=headers-only`, an empty body that keeps headers like
   `Location`); and `replace()` — `PUT`-based single-row upsert by primary key.
@@ -957,7 +975,7 @@ change is additive — no breaking changes.
   for issuing raw, non-JSON requests through the configured client (powers the
   resumable upload protocol).
 - **Errors:** network-aware error handling — `SupabaseError.httpStatus` and
-  `retryAfterSeconds`, a `SupabaseErrorCategory.Network` category,
+  `retryAfterSeconds`, a `SupabaseErrorCategory.NETWORK` category,
   `SupabaseErrorCategory.isRetryable`, `SupabaseError.isNetworkError()`, and an
   `onNetworkError { }` result handler. Transport now classifies timeouts and
   connection failures into `SupabaseErrorCodes.Client` codes so categorization

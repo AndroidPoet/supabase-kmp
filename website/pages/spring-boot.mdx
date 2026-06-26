@@ -116,11 +116,11 @@ fun <T> SupabaseResult<T>.unwrap(): T =
         is SupabaseResult.Success -> value
         is SupabaseResult.Failure -> {
             val status = when (error.category) {
-                SupabaseErrorCategory.Conflict -> HttpStatus.CONFLICT
-                SupabaseErrorCategory.NotFound -> HttpStatus.NOT_FOUND
-                SupabaseErrorCategory.Unauthorized -> HttpStatus.UNAUTHORIZED
-                SupabaseErrorCategory.RateLimited -> HttpStatus.TOO_MANY_REQUESTS
-                SupabaseErrorCategory.Validation -> HttpStatus.BAD_REQUEST
+                SupabaseErrorCategory.CONFLICT -> HttpStatus.CONFLICT
+                SupabaseErrorCategory.NOT_FOUND -> HttpStatus.NOT_FOUND
+                SupabaseErrorCategory.UNAUTHORIZED -> HttpStatus.UNAUTHORIZED
+                SupabaseErrorCategory.RATE_LIMITED -> HttpStatus.TOO_MANY_REQUESTS
+                SupabaseErrorCategory.VALIDATION -> HttpStatus.BAD_REQUEST
                 else -> HttpStatus.BAD_GATEWAY
             }
             throw ResponseStatusException(status, error.message)

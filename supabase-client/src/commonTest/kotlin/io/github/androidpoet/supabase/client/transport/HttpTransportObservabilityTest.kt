@@ -44,10 +44,10 @@ private fun config(
     interceptor: SupabaseInterceptor? = null,
     logger: SupabaseLogger? = null,
     logging: Boolean = false,
-    logLevel: HttpLogLevel = HttpLogLevel.NONE,
+    httpLogLevel: HttpLogLevel = HttpLogLevel.NONE,
 ) = SupabaseConfig(
     logging = logging,
-    logLevel = logLevel,
+    httpLogLevel = httpLogLevel,
     headers = emptyMap(),
     retry = retry,
     logger = logger,
@@ -167,7 +167,7 @@ class HttpTransportObservabilityTest {
                     }
                 }
             val transport =
-                transport(config(logger = sink, logging = true, logLevel = HttpLogLevel.ALL)) {
+                transport(config(logger = sink, logging = true, httpLogLevel = HttpLogLevel.ALL)) {
                     respond("{}", HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
                 }
 

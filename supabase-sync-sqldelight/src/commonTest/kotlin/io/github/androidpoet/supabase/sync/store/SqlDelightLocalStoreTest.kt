@@ -1,9 +1,9 @@
 package io.github.androidpoet.supabase.sync.store
 
 import io.github.androidpoet.supabase.sync.ChangeKind
-import io.github.androidpoet.supabase.sync.Cursor
 import io.github.androidpoet.supabase.sync.PendingChange
-import io.github.androidpoet.supabase.sync.Record
+import io.github.androidpoet.supabase.sync.SyncCursor
+import io.github.androidpoet.supabase.sync.SyncRecord
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -21,8 +21,8 @@ class SqlDelightLocalStoreTest {
     @AfterTest
     fun tearDown() = driver.close()
 
-    private fun record(id: String, updatedAt: Long, deleted: Boolean = false, title: String = "t"): Record =
-        Record(
+    private fun record(id: String, updatedAt: Long, deleted: Boolean = false, title: String = "t"): SyncRecord =
+        SyncRecord(
             id = id,
             updatedAt = updatedAt,
             deleted = deleted,
@@ -67,8 +67,8 @@ class SqlDelightLocalStoreTest {
         runTest {
             assertNull(store.cursor("todos"))
 
-            store.setCursor("todos", Cursor(updatedAt = 42, id = "msg-7"))
-            assertEquals(Cursor(42, "msg-7"), store.cursor("todos"), "both halves of the keyset round-trip")
+            store.setCursor("todos", SyncCursor(updatedAt = 42, id = "msg-7"))
+            assertEquals(SyncCursor(42, "msg-7"), store.cursor("todos"), "both halves of the keyset round-trip")
             assertNull(store.cursor("notes"), "cursors don't bleed across tables")
 
             store.setCursor("todos", null)
