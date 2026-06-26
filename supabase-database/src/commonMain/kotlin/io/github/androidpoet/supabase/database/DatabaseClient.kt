@@ -133,6 +133,18 @@ public data class PostgrestPage<T>(
 )
 
 /**
+ * The raw response [body] of a [DatabaseClient.selectRange] together with the total
+ * [count] and fetched [range] from PostgREST's `Content-Range` header. The string
+ * analogue of [PostgrestPage]; the typed `selectWithCount` helper decodes [body]
+ * into a [PostgrestPage].
+ */
+public data class PostgrestRawPage(
+    public val body: String,
+    public val count: Long? = null,
+    public val range: LongRange? = null,
+)
+
+/**
  * Thin, stateless client over a Supabase project's PostgREST (`/rest/v1`) API.
  *
  * Every call maps to a single HTTP request and returns the raw response body as
@@ -194,10 +206,10 @@ public interface DatabaseClient {
     ): SupabaseResult<PostgrestRange>
 
     /**
-     * Like [select], but also returns the total [PostgrestRange.count] and the
-     * fetched [PostgrestRange.range] from the `Content-Range` header alongside
-     * the (string) body. Use the `selectWithCount` typed helper to decode rows
-     * into a [PostgrestPage].
+     * Like [select], but also returns the total [PostgrestRawPage.count] and the
+     * fetched [PostgrestRawPage.range] from the `Content-Range` header alongside
+     * the raw [PostgrestRawPage.body]. Use the `selectWithCount` typed helper to
+     * decode rows into a [PostgrestPage].
      */
     public suspend fun selectRange(
         table: String,
@@ -208,7 +220,7 @@ public interface DatabaseClient {
         stripNulls: Boolean = false,
         headers: Map<String, String> = emptyMap(),
         block: QueryBuilder.() -> Unit = {},
-    ): SupabaseResult<Pair<String, PostgrestRange>>
+    ): SupabaseResult<PostgrestRawPage>
 
     /**
      * Inserts (or upserts) into [table] via `POST /rest/v1/{table}`, with [body]

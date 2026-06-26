@@ -76,13 +76,13 @@ public suspend inline fun <reified T> DatabaseClient.selectWithCount(
             selectRange(table = table, schema = schema, columns = columns, count = count, block = block)
     ) {
         is SupabaseResult.Success ->
-            when (val rows = SupabaseResult.Success(result.value.first).deserialize<List<T>>()) {
+            when (val rows = SupabaseResult.Success(result.value.body).deserialize<List<T>>()) {
                 is SupabaseResult.Success ->
                     SupabaseResult.Success(
                         PostgrestPage(
                             rows = rows.value,
-                            count = result.value.second.count,
-                            range = result.value.second.range,
+                            count = result.value.count,
+                            range = result.value.range,
                         ),
                     )
                 is SupabaseResult.Failure -> rows

@@ -7,6 +7,7 @@ import io.github.androidpoet.supabase.database.CountOption
 import io.github.androidpoet.supabase.database.DatabaseClient
 import io.github.androidpoet.supabase.database.ExplainOptions
 import io.github.androidpoet.supabase.database.PostgrestRange
+import io.github.androidpoet.supabase.database.PostgrestRawPage
 import io.github.androidpoet.supabase.database.ResponseFormat
 import io.github.androidpoet.supabase.database.ReturnOption
 import io.github.androidpoet.supabase.database.UpsertResolution
@@ -205,7 +206,7 @@ private class FakeDatabaseClient(
         stripNulls: Boolean,
         headers: Map<String, String>,
         block: QueryBuilder.() -> Unit,
-    ): SupabaseResult<Pair<String, PostgrestRange>> = error("unused")
+    ): SupabaseResult<PostgrestRawPage> = error("unused")
 
     override suspend fun update(
         table: String,

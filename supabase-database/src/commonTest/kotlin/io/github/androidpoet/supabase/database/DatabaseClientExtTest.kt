@@ -723,9 +723,9 @@ private class FakeDatabaseClient(
         stripNulls: Boolean,
         headers: Map<String, String>,
         block: QueryBuilder.() -> Unit,
-    ): SupabaseResult<Pair<String, PostgrestRange>> =
+    ): SupabaseResult<PostgrestRawPage> =
         when (selectResult) {
-            is SupabaseResult.Success -> SupabaseResult.Success(selectResult.value to PostgrestRange())
+            is SupabaseResult.Success -> SupabaseResult.Success(PostgrestRawPage(body = selectResult.value))
             is SupabaseResult.Failure -> selectResult
         }
 

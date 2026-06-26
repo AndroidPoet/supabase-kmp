@@ -118,7 +118,7 @@ internal class DatabaseClientImpl(
         stripNulls: Boolean,
         headers: Map<String, String>,
         block: QueryBuilder.() -> Unit,
-    ): SupabaseResult<Pair<String, PostgrestRange>> {
+    ): SupabaseResult<PostgrestRawPage> {
         val single = format == ResponseFormat.SINGLE
         val safeTable = validatePathSegment(table, "table")
         val safeSchema = schema?.let { validatePathSegment(it, "schema") }
@@ -142,10 +142,16 @@ internal class DatabaseClientImpl(
                     headers = headersWithSchema,
                 )
         ) {
-            is SupabaseResult.Success ->
+            is SupabaseResult.Success -> {
+                val range = parseContentRange(result.value.header("Content-Range"))
                 SupabaseResult.Success(
-                    result.value.body.decodeToString() to parseContentRange(result.value.header("Content-Range")),
+                    PostgrestRawPage(
+                        body = result.value.body.decodeToString(),
+                        count = range.count,
+                        range = range.range,
+                    ),
                 )
+            }
             is SupabaseResult.Failure -> result
         }
     }
