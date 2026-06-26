@@ -60,8 +60,8 @@ public final class io/github/androidpoet/supabase/functions/FunctionsAccessorKt 
 public abstract interface class io/github/androidpoet/supabase/functions/FunctionsClient {
 	public abstract fun invoke (Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/functions/FunctionMethod;Ljava/util/Map;Lio/github/androidpoet/supabase/functions/FunctionRegion;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun invoke$default (Lio/github/androidpoet/supabase/functions/FunctionsClient;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/functions/FunctionMethod;Ljava/util/Map;Lio/github/androidpoet/supabase/functions/FunctionRegion;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public fun invokeSSE (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lio/github/androidpoet/supabase/functions/FunctionRegion;)Lkotlinx/coroutines/flow/Flow;
-	public static synthetic fun invokeSSE$default (Lio/github/androidpoet/supabase/functions/FunctionsClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lio/github/androidpoet/supabase/functions/FunctionRegion;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public fun invokeSse (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lio/github/androidpoet/supabase/functions/FunctionRegion;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun invokeSse$default (Lio/github/androidpoet/supabase/functions/FunctionsClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lio/github/androidpoet/supabase/functions/FunctionRegion;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
 	public abstract fun invokeWithBody (Ljava/lang/String;[BLjava/lang/String;Lio/github/androidpoet/supabase/functions/FunctionMethod;Ljava/util/Map;Lio/github/androidpoet/supabase/functions/FunctionRegion;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun invokeWithBody$default (Lio/github/androidpoet/supabase/functions/FunctionsClient;Ljava/lang/String;[BLjava/lang/String;Lio/github/androidpoet/supabase/functions/FunctionMethod;Ljava/util/Map;Lio/github/androidpoet/supabase/functions/FunctionRegion;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun setAuth (Ljava/lang/String;)V
@@ -69,8 +69,8 @@ public abstract interface class io/github/androidpoet/supabase/functions/Functio
 
 public final class io/github/androidpoet/supabase/functions/FunctionsClient$DefaultImpls {
 	public static synthetic fun invoke$default (Lio/github/androidpoet/supabase/functions/FunctionsClient;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/functions/FunctionMethod;Ljava/util/Map;Lio/github/androidpoet/supabase/functions/FunctionRegion;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static fun invokeSSE (Lio/github/androidpoet/supabase/functions/FunctionsClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lio/github/androidpoet/supabase/functions/FunctionRegion;)Lkotlinx/coroutines/flow/Flow;
-	public static synthetic fun invokeSSE$default (Lio/github/androidpoet/supabase/functions/FunctionsClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lio/github/androidpoet/supabase/functions/FunctionRegion;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public static fun invokeSse (Lio/github/androidpoet/supabase/functions/FunctionsClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lio/github/androidpoet/supabase/functions/FunctionRegion;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun invokeSse$default (Lio/github/androidpoet/supabase/functions/FunctionsClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lio/github/androidpoet/supabase/functions/FunctionRegion;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
 	public static synthetic fun invokeWithBody$default (Lio/github/androidpoet/supabase/functions/FunctionsClient;Ljava/lang/String;[BLjava/lang/String;Lio/github/androidpoet/supabase/functions/FunctionMethod;Ljava/util/Map;Lio/github/androidpoet/supabase/functions/FunctionRegion;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 }
 

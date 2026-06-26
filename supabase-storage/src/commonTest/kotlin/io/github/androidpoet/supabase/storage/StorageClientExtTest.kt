@@ -570,9 +570,13 @@ private class FakeStorageClient : StorageClient {
         return SupabaseResult.Success(paths.map { "https://example.supabase.co/storage/v1/object/sign/$bucket/$it?token=abc" })
     }
 
-    override suspend fun createUploadSignedUrl(bucket: String, path: String, upsert: Boolean): SupabaseResult<String> = error("not used")
+    override suspend fun createSignedUploadUrl(bucket: String, path: String, upsert: Boolean): SupabaseResult<String> = error("not used")
 
-    override suspend fun createUploadSignedUrlWithPath(bucket: String, path: String, upsert: Boolean): SupabaseResult<UploadSignedUrl> = error("not used")
+    override suspend fun createSignedUploadUrlWithPath(
+        bucket: String,
+        path: String,
+        upsert: Boolean,
+    ): SupabaseResult<UploadSignedUrl> = error("not used")
 
     override suspend fun uploadToSignedUrl(
         bucket: String,

@@ -949,7 +949,7 @@ data class OidcDiscoveryDocument(
     val issuer: String,
     val authorizationEndpoint: String,                 // authorization_endpoint
     val tokenEndpoint: String,                         // token_endpoint
-    val jwksUri: String,                               // jwks_uri
+    val jwksUrl: String,                               // jwks_uri
     val userinfoEndpoint: String? = null,              // userinfo_endpoint
     val revocationEndpoint: String? = null,            // revocation_endpoint
     val supportedScopes: List<String>? = null,         // supported_scopes
@@ -983,7 +983,7 @@ data class CustomProvider(
     val authorizationUrl: String? = null,              // authorization_url
     val tokenUrl: String? = null,                      // token_url
     val userinfoUrl: String? = null,                   // userinfo_url
-    val jwksUri: String? = null,                       // jwks_uri
+    val jwksUrl: String? = null,                       // jwks_uri
     val discoveryDocument: OidcDiscoveryDocument? = null, // discovery_document
     val createdAt: String? = null,                     // created_at
     val updatedAt: String? = null,                     // updated_at
@@ -1014,7 +1014,7 @@ data class CustomProviderCreateRequest(
     val authorizationUrl: String? = null,              // authorization_url
     val tokenUrl: String? = null,                      // token_url
     val userinfoUrl: String? = null,                   // userinfo_url
-    val jwksUri: String? = null,                       // jwks_uri
+    val jwksUrl: String? = null,                       // jwks_uri
 )
 ```
 
@@ -1041,7 +1041,7 @@ data class CustomProviderUpdateRequest(
     val authorizationUrl: String? = null,              // authorization_url
     val tokenUrl: String? = null,                      // token_url
     val userinfoUrl: String? = null,                   // userinfo_url
-    val jwksUri: String? = null,                       // jwks_uri
+    val jwksUrl: String? = null,                       // jwks_uri
 )
 ```
 

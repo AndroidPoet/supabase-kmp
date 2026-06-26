@@ -15,13 +15,13 @@ import kotlinx.coroutines.withContext
  *
  * Unlike a flow that walks every page on its own, this loads the next page only
  * when the consumer asks — call [loadNext] when the list nears its end. It holds
- * the accumulated [items], plus [isLoading], [endReached] and [error] as
+ * the accumulated [items], plus [isLoading], [isEndReached] and [error] as
  * [StateFlow]s a UI can observe directly (or fold into a screen state). It depends
  * on nothing but coroutines, so it works on every target and with or without
  * Compose.
  *
  * Provide a [fetch] that returns one page given an `offset` and `limit`; the
- * paginator advances the offset and stops ([endReached]) once a page comes back
+ * paginator advances the offset and stops ([isEndReached]) once a page comes back
  * shorter than [pageSize]. [fetch] is expected to **throw** on failure (e.g. via
  * `getOrThrow()`); the throwable is captured into [error] rather than propagated,
  * except [CancellationException], which is always rethrown so coroutine
@@ -62,10 +62,10 @@ public class Paginator<T>(
     /** `true` while a page is being fetched. */
     public val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    private val _endReached = MutableStateFlow(false)
+    private val _isEndReached = MutableStateFlow(false)
 
     /** `true` once a short page signalled there are no more rows. */
-    public val endReached: StateFlow<Boolean> = _endReached.asStateFlow()
+    public val isEndReached: StateFlow<Boolean> = _isEndReached.asStateFlow()
 
     private val _error = MutableStateFlow<Throwable?>(null)
 
@@ -83,12 +83,12 @@ public class Paginator<T>(
 
     /**
      * Loads and appends the next page. No-op if a load is already running or
-     * [endReached] is set. Failures land in [error]; cancellation is rethrown.
+     * [isEndReached] is set. Failures land in [error]; cancellation is rethrown.
      */
     public suspend fun loadNext() {
         val startEpoch =
             mutex.withLock {
-                if (_isLoading.value || _endReached.value) return
+                if (_isLoading.value || _isEndReached.value) return
                 _isLoading.value = true
                 _error.value = null
                 epoch
@@ -105,7 +105,7 @@ public class Paginator<T>(
             mutex.withLock {
                 epoch++
                 offset = 0
-                _endReached.value = false
+                _isEndReached.value = false
                 _error.value = null
                 _items.value = emptyList()
                 // Take ownership of the loading flag in the SAME lock as the reset and
@@ -130,7 +130,7 @@ public class Paginator<T>(
                 if (epoch == startEpoch) {
                     _items.update { it + page }
                     offset += page.size
-                    if (page.size < pageSize) _endReached.value = true
+                    if (page.size < pageSize) _isEndReached.value = true
                 }
             }
         } catch (e: CancellationException) {

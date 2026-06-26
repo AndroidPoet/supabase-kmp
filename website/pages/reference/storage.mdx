@@ -332,7 +332,7 @@ storage.uploadResumable("videos", "clip.mp4", videoBytes)
 ### uploadToSignedUrl
 
 Uploads `data` to a pre-signed upload URL identified by `token` (see
-[`createUploadSignedUrl`](#createuploadsignedurl)).
+[`createSignedUploadUrl`](#createuploadsignedurl)).
 
 ```kotlin
 suspend fun uploadToSignedUrl(
@@ -760,7 +760,7 @@ storage.deleteObjects("avatars", "jane/old.png", "jane/older.png")
 ## URLs
 
 The URL builders compute a string locally and never hit the network. Signing
-operations (`createSignedUrl`, `createUploadSignedUrl`) are suspending and do call
+operations (`createSignedUrl`, `createSignedUploadUrl`) are suspending and do call
 the server.
 
 ### createSignedUrl
@@ -922,14 +922,14 @@ suspend fun StorageClient.createSignedRenderUrlsByPath(
 
 **Returns** `SupabaseResult<Map<String, String>>` — `Success` mapping each path to its render URL, `Failure` on error.
 
-### createUploadSignedUrl
+### createSignedUploadUrl
 
 Creates a signed *upload* token (`POST /object/upload/sign`) so a client without
 storage credentials can later upload to `path` via
 [`uploadToSignedUrl`](#uploadtosignedurl). Returns just the token.
 
 ```kotlin
-suspend fun createUploadSignedUrl(
+suspend fun createSignedUploadUrl(
     bucket: String,
     path: String,
     upsert: Boolean = false,
@@ -942,17 +942,17 @@ suspend fun createUploadSignedUrl(
 **Returns** `SupabaseResult<String>` — `Success` with the token, `Failure` on error.
 
 ```kotlin
-val token = storage.createUploadSignedUrl("avatars", "jane/profile.png")
+val token = storage.createSignedUploadUrl("avatars", "jane/profile.png")
 ```
 
-### createUploadSignedUrlWithPath
+### createSignedUploadUrlWithPath
 
-Like [`createUploadSignedUrl`](#createuploadsignedurl) but returns the full
+Like [`createSignedUploadUrl`](#createuploadsignedurl) but returns the full
 [`UploadSignedUrl`](#uploadsignedurl) (absolute upload URL, token, and bound path)
 instead of only the token.
 
 ```kotlin
-suspend fun createUploadSignedUrlWithPath(
+suspend fun createSignedUploadUrlWithPath(
     bucket: String,
     path: String,
     upsert: Boolean = false,
@@ -962,7 +962,7 @@ suspend fun createUploadSignedUrlWithPath(
 **Returns** `SupabaseResult<UploadSignedUrl>` — `Success` with the signed target, `Failure` on error.
 
 ```kotlin
-val signed = storage.createUploadSignedUrlWithPath("avatars", "jane/profile.png")
+val signed = storage.createSignedUploadUrlWithPath("avatars", "jane/profile.png")
 ```
 
 ### getSignedDownloadUrl
@@ -2064,7 +2064,7 @@ data class AnalyticsBucket(
 ### UploadSignedUrl
 
 A signed upload target returned by
-[`createUploadSignedUrlWithPath`](#createuploadsignedurlwithpath).
+[`createSignedUploadUrlWithPath`](#createuploadsignedurlwithpath).
 
 ```kotlin
 data class UploadSignedUrl(
@@ -2529,10 +2529,10 @@ enum class VectorDataType { FLOAT32, UNKNOWN }
 Similarity metric a vector index uses to rank query matches.
 
 ```kotlin
-enum class VectorDistanceMetric { COSINE, EUCLIDEAN, DOTPRODUCT, UNKNOWN }
+enum class VectorDistanceMetric { COSINE, EUCLIDEAN, DOT_PRODUCT, UNKNOWN }
 ```
 
 - `COSINE` — cosine similarity (angle between vectors).
 - `EUCLIDEAN` — Euclidean (L2) distance.
-- `DOTPRODUCT` — dot-product (inner product) similarity.
+- `DOT_PRODUCT` — dot-product (inner product) similarity.
 - `UNKNOWN` — fallback for a metric this client does not recognize.

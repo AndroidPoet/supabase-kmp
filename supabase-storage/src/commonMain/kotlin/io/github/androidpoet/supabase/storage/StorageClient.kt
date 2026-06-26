@@ -612,21 +612,21 @@ public interface StorageClient {
     /**
      * Creates a signed *upload* token (`POST /object/upload/sign`) so a client without storage
      * credentials can later upload to [path] via [uploadToSignedUrl]. Returns just the token; use
-     * [createUploadSignedUrlWithPath] when you also need the upload URL and bound path.
+     * [createSignedUploadUrlWithPath] when you also need the upload URL and bound path.
      *
      * @param upsert when true, the resulting token permits overwriting an existing object.
      */
-    public suspend fun createUploadSignedUrl(
+    public suspend fun createSignedUploadUrl(
         bucket: String,
         path: String,
         upsert: Boolean = false,
     ): SupabaseResult<String>
 
     /**
-     * Like [createUploadSignedUrl] but returns the full [UploadSignedUrl] (absolute upload URL,
+     * Like [createSignedUploadUrl] but returns the full [UploadSignedUrl] (absolute upload URL,
      * token, and the server-bound path) instead of only the token.
      */
-    public suspend fun createUploadSignedUrlWithPath(
+    public suspend fun createSignedUploadUrlWithPath(
         bucket: String,
         path: String,
         upsert: Boolean = false,
@@ -908,7 +908,7 @@ public interface StorageClient {
 }
 
 /**
- * A signed upload target returned by [StorageClient.createUploadSignedUrlWithPath]: the absolute
+ * A signed upload target returned by [StorageClient.createSignedUploadUrlWithPath]: the absolute
  * upload [url] and the [token] a client passes to [StorageClient.uploadToSignedUrl].
  *
  * @property url the absolute URL to upload to.

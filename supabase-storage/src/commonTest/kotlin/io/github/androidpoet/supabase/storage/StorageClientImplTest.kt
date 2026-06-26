@@ -293,7 +293,7 @@ class StorageClientImplTest {
             val sut = StorageClientImpl(client)
 
             val result =
-                sut.createUploadSignedUrl(
+                sut.createSignedUploadUrl(
                     bucket = "avatars",
                     path = "a.png",
                 )
@@ -309,7 +309,7 @@ class StorageClientImplTest {
             val client = FakeSupabaseClient()
             val sut = StorageClientImpl(client)
 
-            sut.createUploadSignedUrl(
+            sut.createSignedUploadUrl(
                 bucket = "avatars",
                 path = "a.png",
                 upsert = true,
@@ -325,7 +325,7 @@ class StorageClientImplTest {
             val sut = StorageClientImpl(client)
 
             val result =
-                sut.createUploadSignedUrlWithPath(
+                sut.createSignedUploadUrlWithPath(
                     bucket = "avatars",
                     path = "a.png",
                 )
@@ -1172,7 +1172,7 @@ class StorageClientImplTest {
             val client = FakeSupabaseClient()
             val sut = StorageClientImpl(client)
 
-            val result = sut.createUploadSignedUrlWithPath(bucket = "avatars", path = "a.png")
+            val result = sut.createSignedUploadUrlWithPath(bucket = "avatars", path = "a.png")
 
             assertTrue(result is SupabaseResult.Success)
             assertEquals("avatars/a.png", result.value.path)

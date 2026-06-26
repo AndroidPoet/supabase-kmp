@@ -551,10 +551,10 @@ Sets the presence `key` identifying this client among channel members (defaults
 to a server-assigned key). Use a stable per-user key to dedupe a user across
 reconnects or devices. Returns the builder.
 
-#### `setPrivate`
+#### `configurePrivate`
 
 ```kotlin
-fun setPrivate(enabled: Boolean = true): RealtimeChannelBuilder
+fun configurePrivate(enabled: Boolean = true): RealtimeChannelBuilder
 ```
 
 Marks the channel as private, so the server applies Realtime authorization (RLS)
@@ -766,15 +766,6 @@ enum class SendType(val wireValue: String) {
 ```
 
 The kind of message [`send`](#send) dispatches, with its Phoenix `wireValue`.
-
-### `statusFlow`
-
-```kotlin
-fun RealtimeSubscription.statusFlow(): StateFlow<RealtimeSubscription.Status>
-```
-
-The subscription's `status` as a `StateFlow`, for observing the join lifecycle
-(e.g. to drive a connecting indicator).
 
 ### `awaitSubscribed`
 

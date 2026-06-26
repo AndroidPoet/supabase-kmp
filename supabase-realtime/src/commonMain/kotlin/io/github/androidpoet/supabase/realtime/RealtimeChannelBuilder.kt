@@ -156,7 +156,7 @@ public class RealtimeChannelBuilder internal constructor(
      * applies Realtime authorization (RLS) using the client's session JWT. Required
      * for RLS-protected `postgres_changes` and private broadcast/presence channels.
      */
-    public fun setPrivate(
+    public fun configurePrivate(
         enabled: Boolean = true,
     ): RealtimeChannelBuilder =
         apply {

@@ -25,14 +25,14 @@ class PaginatorTest {
 
             pager.loadNext()
             assertEquals(listOf(0, 1), pager.items.value)
-            assertTrue(!pager.endReached.value)
+            assertTrue(!pager.isEndReached.value)
 
             pager.loadNext()
             assertEquals(listOf(0, 1, 2, 3), pager.items.value)
 
             pager.loadNext()
             assertEquals(listOf(0, 1, 2, 3, 4), pager.items.value)
-            assertTrue(pager.endReached.value)
+            assertTrue(pager.isEndReached.value)
         }
 
     @Test
@@ -42,13 +42,13 @@ class PaginatorTest {
             val pager =
                 Paginator(pageSize = 10) { _, _ ->
                     calls++
-                    listOf(1) // short immediately → endReached
+                    listOf(1) // short immediately → isEndReached
                 }
             pager.loadNext()
             pager.loadNext()
             pager.loadNext()
             assertEquals(1, calls)
-            assertTrue(pager.endReached.value)
+            assertTrue(pager.isEndReached.value)
         }
 
     @Test
@@ -61,7 +61,7 @@ class PaginatorTest {
             pager.loadNext() // must not throw
             assertTrue(pager.error.value is IllegalStateException)
             assertTrue(pager.items.value.isEmpty())
-            assertTrue(!pager.endReached.value) // a failure is retryable
+            assertTrue(!pager.isEndReached.value) // a failure is retryable
         }
 
     @Test
@@ -87,7 +87,7 @@ class PaginatorTest {
             pager.refresh()
             assertEquals(listOf(0, 1), pager.items.value) // back to first page
             assertNull(pager.error.value)
-            assertTrue(!pager.endReached.value)
+            assertTrue(!pager.isEndReached.value)
         }
 
     @Test

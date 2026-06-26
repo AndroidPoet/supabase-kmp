@@ -22,7 +22,7 @@ class RealtimeChannelBuilderConfigTest {
                     .configureBroadcast(receiveOwnBroadcasts = true, acknowledgeBroadcasts = true)
                     .configureBroadcastReplay(sinceMs = 1234L, limit = 10)
                     .configurePresence(key = "user-123")
-                    .setPrivate(true)
+                    .configurePrivate(true)
                     .subscribe()
 
             val internal = subscription as ChannelSubscriptionImpl

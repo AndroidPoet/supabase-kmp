@@ -63,7 +63,7 @@ public class SupabaseConfigBuilder {
     /**
      * Maximum total time for a whole request including the response body, in
      * milliseconds. `null` (default) leaves it unbounded. Do NOT set this when
-     * streaming (`streamLines`/`invokeSSE`) or transferring large
+     * streaming (`streamLines`/`invokeSse`) or transferring large
      * uploads/downloads — it caps the entire transfer, not just connection setup.
      */
     public var requestTimeoutMillis: Long? = null

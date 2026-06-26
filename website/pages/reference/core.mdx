@@ -223,15 +223,13 @@ public fun <T> dataFlow(block: suspend () -> SupabaseResult<T>): Flow<T>
 public fun <T> SupabaseResult<T>.toFlow(): Flow<T>
 public inline fun <T, R> SupabaseResult<T>.toFlow(transform: (T) -> R): Flow<R>
 public inline fun <T, R> SupabaseResult<T>.toSuspendFlow(transform: suspend (T) -> R): Flow<R>
-public fun <T> SupabaseResult<T>.toResultFlow(): Flow<SupabaseResult<T>>
 ```
 
-- **`asFlow`** — emits an already-computed result as a single-value cold `Flow`, keeping the wrapper. Handy for seeding a stream with a cached result before live values arrive.
+- **`asFlow`** — emits an already-computed result as a single-value cold `Flow`, keeping the wrapper so a failure (and its error) survives into the stream. Handy for seeding a stream with a cached result before live values arrive.
 - **`supabaseFlow`** — wraps a not-yet-run suspending call in a cold `Flow` that runs it on collection and emits the result once, **keeping** the `SupabaseResult` wrapper.
 - **`dataFlow`** — the no-`Result` escape hatch: emits the plain value on success and **throws** (`SupabaseException`) on failure, so the wrapper never enters your stream. Pairs with exception-based `Flow<T>.asResult()` UI helpers.
 - **`toFlow()`** — emits the success value, or an **empty** flow on failure (failures are dropped silently). A `transform` overload maps before emitting.
 - **`toSuspendFlow`** — `toFlow` with a `suspend` transform run in the collection context.
-- **`toResultFlow`** — emits the whole result as one element, so a failure (and its error) survives into the stream — the error-preserving counterpart of `toFlow`.
 
 ```kotlin
 supabaseFlow { database.selectTyped<Todo>("todos") }
@@ -612,7 +610,7 @@ public class Paginator<T>(
 ) {
     public val items: StateFlow<List<T>>
     public val isLoading: StateFlow<Boolean>
-    public val endReached: StateFlow<Boolean>
+    public val isEndReached: StateFlow<Boolean>
     public val error: StateFlow<Throwable?>
 
     public suspend fun loadNext()
@@ -629,12 +627,12 @@ State:
 
 - **`items`** — the rows loaded so far, growing with each successful `loadNext`.
 - **`isLoading`** — `true` while a page is being fetched.
-- **`endReached`** — `true` once a page came back shorter than `pageSize`.
+- **`isEndReached`** — `true` once a page came back shorter than `pageSize`.
 - **`error`** — the last `fetch` failure, or `null`; cleared when a new load starts.
 
 Operations:
 
-- **`loadNext()`** — loads and appends the next page. A no-op if a load is running or `endReached` is set.
+- **`loadNext()`** — loads and appends the next page. A no-op if a load is running or `isEndReached` is set.
 - **`refresh()`** — resets to the first page and reloads it (pull-to-refresh); any in-flight page is discarded so it cannot append onto the cleared list.
 
 ```kotlin

@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.flowOf
  * failure. Convenient for `stateIn`/`collectAsState` in MVVM/Compose layers.
  *
  * Failures are dropped silently — handle them with [onFailure]/[fold] before
- * converting, or use [toResultFlow] to keep the error in-stream.
+ * converting, or use [asFlow] to keep the error in-stream.
  */
 public fun <T> SupabaseResult<T>.toFlow(): Flow<T> =
     when (this) {
@@ -39,10 +39,3 @@ public inline fun <T, R> SupabaseResult<T>.toSuspendFlow(
         if (self is SupabaseResult.Success) emit(transform(self.value))
     }
 }
-
-/**
- * Emits the whole result as a single element, so the failure (and its
- * [SupabaseError]) survives into the stream. The error-preserving counterpart of
- * [toFlow].
- */
-public fun <T> SupabaseResult<T>.toResultFlow(): Flow<SupabaseResult<T>> = flowOf(this)

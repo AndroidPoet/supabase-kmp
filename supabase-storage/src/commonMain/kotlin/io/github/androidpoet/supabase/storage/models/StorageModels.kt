@@ -491,7 +491,7 @@ public enum class VectorDistanceMetric {
 
     /** Dot-product (inner product) similarity. */
     @SerialName("dotproduct")
-    DOTPRODUCT,
+    DOT_PRODUCT,
 
     /** Fallback for a metric this client does not recognize (e.g. added server-side later). */
     @SerialName("unknown")

@@ -3,7 +3,6 @@ package io.github.androidpoet.supabase.realtime
 import io.github.androidpoet.supabase.realtime.models.PresenceState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -88,11 +87,6 @@ public fun RealtimeSubscription.systemEventFlow(
         .filter { it is RealtimeEvent.SystemEvent && (status == null || it.status == status) }
         .map { it as RealtimeEvent.SystemEvent }
 
-/** The subscription's [RealtimeSubscription.status] as a [StateFlow], for
- * observing the join lifecycle (e.g. to drive a connecting indicator). */
-public fun RealtimeSubscription.statusFlow(): StateFlow<RealtimeSubscription.Status> =
-    status
-
 /**
  * Suspends until this subscription reaches `SUBSCRIBED` (or `ERROR`) and returns
  * that status, throwing [kotlinx.coroutines.TimeoutCancellationException] after
@@ -103,7 +97,7 @@ public suspend fun RealtimeSubscription.awaitSubscribed(
     timeoutMs: Long = 10_000,
 ): RealtimeSubscription.Status =
     withTimeout(timeoutMs) {
-        statusFlow().first { it == RealtimeSubscription.Status.SUBSCRIBED || it == RealtimeSubscription.Status.ERROR }
+        status.first { it == RealtimeSubscription.Status.SUBSCRIBED || it == RealtimeSubscription.Status.ERROR }
     }
 
 /**
@@ -115,7 +109,7 @@ public suspend fun RealtimeSubscription.awaitUnsubscribed(
     timeoutMs: Long = 10_000,
 ): RealtimeSubscription.Status =
     withTimeout(timeoutMs) {
-        statusFlow().first { it == RealtimeSubscription.Status.UNSUBSCRIBED || it == RealtimeSubscription.Status.ERROR }
+        status.first { it == RealtimeSubscription.Status.UNSUBSCRIBED || it == RealtimeSubscription.Status.ERROR }
     }
 
 /**

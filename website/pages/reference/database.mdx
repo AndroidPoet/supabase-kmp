@@ -213,10 +213,10 @@ Still fails if more than one row matches.
 val maybe = database.selectMaybeSingleTyped<Todo>("todos") { where { Todo.id eq 7 } }
 ```
 
-### `selectWithCount`
+### `selectWithCountTyped`
 
 ```kotlin
-public suspend inline fun <reified T> DatabaseClient.selectWithCount(
+public suspend inline fun <reified T> DatabaseClient.selectWithCountTyped(
     table: String,
     schema: String? = null,
     columns: String = "*",
@@ -235,7 +235,7 @@ for count-aware pagination.
 **Returns:** `SupabaseResult<PostgrestPage<T>>`.
 
 ```kotlin
-val page = database.selectWithCount<Todo>("todos") { range(0, 19) }
+val page = database.selectWithCountTyped<Todo>("todos") { range(0, 19) }
 // page.value.rows, page.value.count
 ```
 
@@ -357,7 +357,7 @@ public suspend fun selectRange(
 Like `select`, but also returns the total and the fetched range from
 `Content-Range` alongside the raw body, packaged as a
 [`PostgrestRawPage`](#postgrestrawpage) (a data class with `body`, `count`, and
-`range` — **not** a `Pair`). The typed [`selectWithCount`](#selectwithcount) sits
+`range` — **not** a `Pair`). The typed [`selectWithCountTyped`](#selectwithcount) sits
 on top of this and decodes `body` into a `PostgrestPage`.
 
 - `count` — total computation strategy. Default `CountOption.EXACT`.
@@ -1519,7 +1519,7 @@ public data class PostgrestRawPage(
 
 The raw response `body` of a [`selectRange`](#selectrange-interface-method) together
 with the total `count` and fetched `range` from `Content-Range`. The string analogue
-of `PostgrestPage` — **not** a `Pair`. The typed `selectWithCount` helper decodes
+of `PostgrestPage` — **not** a `Pair`. The typed `selectWithCountTyped` helper decodes
 `body` into a `PostgrestPage`.
 
 ### `PostgrestPage`
@@ -1533,7 +1533,7 @@ public data class PostgrestPage<T>(
 ```
 
 A page of decoded `rows` together with the total `count` reported by PostgREST.
-Produced by [`selectWithCount`](#selectwithcount).
+Produced by [`selectWithCountTyped`](#selectwithcount).
 
 ---
 

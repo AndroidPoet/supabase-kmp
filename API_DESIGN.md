@@ -98,7 +98,7 @@ handled in source.
 - `ErrorResponse` (wire-only) → `internal`; deleted unused typed-id value classes (dead public API).
 - `SupabaseConfig` → plain `class` (function-typed fields; no meaningful `copy`/`equals`).
 - `MAX_PULL_PAGES` / `DEFAULT_PAGE_SIZE` no longer leak as public static fields.
-- `asFlow()` relabeled hot (was mislabeled "Cold"); `streamLines` / `invokeSSE` defaults defer
+- `asFlow()` relabeled hot (was mislabeled "Cold"); `streamLines` / `invokeSse` defaults defer
   their throw into the cold `flow { }` instead of throwing eagerly.
 - **Database query response shape unified into `ResponseFormat`** — `select` / `rpc` / `rpcGet` /
   `selectRange` took 4 mutually-exclusive `head`/`single`/`csv`/`geojson` booleans (illegal combos
@@ -167,3 +167,53 @@ handled in source.
   upload/download isn't forced through an in-memory `ByteArray`. A bytes-returning functions
   response accessor (`invokeForBytes`) is the same shape of additive gap — both are purely new
   surface, safe to land post-1.0.
+
+## Final naming audit (last pass before the freeze)
+
+A second, naming-only sweep across **every** module's `.klib.api` (7 parallel auditors +
+a cross-module acronym/factory-verb/enum-casing analysis), judged against the Kotlin/JetBrains
+API guidelines. Verdict: the surface was already in good shape — all auditors reported "no
+blockers." A handful of genuine, contained violations of the SDK's **own** conventions were
+fixed; the rest are deliberate, recorded decisions.
+
+**Fixed (the SDK's own convention was violated, and the change was contained):**
+- `invokeSSE`→`invokeSse` — acronyms are word-cased in every other identifier (`Url`, `Otp`,
+  `Jwt`, `Csv`, `GeoJson`); this was the single all-caps outlier in the whole SDK.
+- `Paginator.endReached`→`isEndReached` — booleans read as assertions; its sibling is `isLoading`.
+- `selectWithCount`→`selectWithCountTyped` — it decodes into `T`, so it joins the `*Typed` family.
+- `RealtimeChannelBuilder.setPrivate`→`configurePrivate` — matches the builder's `configure*` group.
+- storage `createUploadSignedUrl(WithPath)`→`createSignedUploadUrl(WithPath)` — `Signed`+direction
+  order, matching `createSignedUrl` / `getSignedDownloadUrl`.
+- `VectorDistanceMetric.DOTPRODUCT`→`DOT_PRODUCT`; auth-admin OIDC `jwksUri`→`jwksUrl`
+  (both keep their wire value via `@SerialName`).
+- Removed two exact duplicates: core `toResultFlow()` (≡ `asFlow()`) and realtime `statusFlow()`
+  (≡ the `status` property).
+
+**Deliberate — kept by design (recorded so they aren't "fixed" later):**
+- **Enum-entry casing is intentionally mixed.** Wire-mapped / option / SQL-keyword enums use
+  `UPPER_SNAKE` (`Order.ASC`, `ResponseFormat.GEOJSON`, every `@SerialName`-backed enum); the two
+  pure-domain category sets — `SupabaseErrorCategory` and `TextSearchType` — use `PascalCase`
+  because they read as a closed set of named conditions at a `when`/`onFailureCategory` call site.
+  Both styles are sanctioned by the Kotlin style guide; the split is by role, not by accident.
+- **Filter-operator vocabulary** (`eq`/`neq` abbreviated, `greater`/`greaterEq` spelled, range
+  ops `rangeGt`/`rangeGte`) is kept — the query DSL was reviewed and blessed in the main audit;
+  the equality/ordering shorthands match what query-DSL users reach for. Not reopened.
+- **Factory verbs differ by what they return**, on purpose: `Supabase.create` (root builder),
+  `createXClient` (feature clients), `googleAuthProvider`/`appleAuthProvider` (return a provider
+  *descriptor* you hand to config, not a client), `openOfflineSyncStore` (opens a DB-backed
+  resource).
+- **`rpcTyped`=single vs `selectTyped`=list** is intentional: an RPC returns one value by nature,
+  a `select` returns rows. `rpcListTyped` / `rpcSingleTyped` make the other cardinalities explicit.
+- **Pseudo-namespaced auth methods** (`mfa*`/`oauth*`/`passkey*`) read noun-first by design — a
+  flattened stand-in for sub-clients; admin stays verb-first CRUD. `getUserById`/`updateUserById`
+  keep `ById` because the non-admin `getUser` already means "by access token."
+- **`*OrThrow` / `*WithResult` / `*WithAck` suffixes** are the deliberate explicit-exception /
+  await-confirmation escape hatches on top of the Result-first defaults — kept, not collapsed.
+
+**Deferred (real but not worth pre-freeze churn; the sync surface isn't published in 1.0):**
+- `sync-core` `Record`/`Cursor` → `SyncRecord`/`SyncCursor` (collide with `java.lang.Record`) —
+  ~285 references across the sync tree; the sync modules' publishing is deferred, so this can ride
+  the same train as their first publish.
+- `RealtimeSubscription.channel: String` → `channelName` (a name-trap, but `.channel` is too
+  ambiguous to rename mechanically without risk) and storage `ObjectListV2Result`→`*Response`
+  (suffix polish, 69 references) — both additive-safe to revisit.

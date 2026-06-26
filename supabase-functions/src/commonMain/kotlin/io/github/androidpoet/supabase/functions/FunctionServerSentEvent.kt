@@ -3,7 +3,7 @@ import io.github.androidpoet.supabase.client.defaultJson
 
 /**
  * One Server-Sent Event emitted by a streaming Edge Function, as produced by
- * [FunctionsClient.invokeSSE].
+ * [FunctionsClient.invokeSse].
  *
  * Fields mirror the SSE wire format: [id] (`id:`), [event] (`event:`, defaulting
  * to `"message"` on the wire when omitted) and [data] (`data:`; multiple `data:`
