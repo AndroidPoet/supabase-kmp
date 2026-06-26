@@ -63,7 +63,7 @@ public data class FileObject(
 
 /** Request body for creating a bucket; see [io.github.androidpoet.supabase.storage.StorageClient.createBucket] for field semantics. */
 @Serializable
-public data class CreateBucketRequest(
+internal data class CreateBucketRequest(
     val id: String,
     val name: String,
     val public: Boolean = false,
@@ -73,7 +73,7 @@ public data class CreateBucketRequest(
 
 /** Request body for signing a single object URL: TTL plus optional image transform. */
 @Serializable
-public data class SignedUrlRequest(
+internal data class SignedUrlRequest(
     // The storage server reads the request body as camelCase `expiresIn`; sending
     // snake_case `expires_in` left the TTL unset, so signed URLs used the server default.
     @SerialName("expiresIn") val expiresIn: Long,
@@ -85,7 +85,7 @@ public data class SignedUrlRequest(
  * [io.github.androidpoet.supabase.storage.ImageTransformOptions], with [resize] as the raw string.
  */
 @Serializable
-public data class SignedUrlTransformRequest(
+internal data class SignedUrlTransformRequest(
     val width: Int? = null,
     val height: Int? = null,
     val resize: String? = null,
@@ -95,7 +95,7 @@ public data class SignedUrlTransformRequest(
 
 /** Response carrying a single signed object URL. */
 @Serializable
-public data class SignedUrlResponse(
+internal data class SignedUrlResponse(
     // The storage server returns camelCase `signedURL` from POST /object/sign/:bucket/*
     // (same key the batch endpoint uses); decoding `signed_url` here failed every call.
     @SerialName("signedURL") val signedUrl: String,
@@ -103,7 +103,7 @@ public data class SignedUrlResponse(
 
 /** Request body for batch-signing object URLs: the paths to sign and their shared TTL. */
 @Serializable
-public data class SignedUrlsRequest(
+internal data class SignedUrlsRequest(
     @SerialName("paths") val paths: List<String>,
     @SerialName("expiresIn") val expiresIn: Long,
 )
@@ -121,7 +121,7 @@ public data class SignedUrlsRequest(
  * tolerate. The client never reads it, so making it nullable has no call-site impact.
  */
 @Serializable
-public data class SignedUrlItemResponse(
+internal data class SignedUrlItemResponse(
     @SerialName("path") val path: String? = null,
     @SerialName("signedURL") val signedUrl: String? = null,
     @SerialName("error") val error: String? = null,
@@ -132,7 +132,7 @@ public data class SignedUrlItemResponse(
  * and the server-bound object [path] when returned.
  */
 @Serializable
-public data class UploadSignedUrlResponse(
+internal data class UploadSignedUrlResponse(
     @SerialName("url") val url: String,
     @SerialName("token") val token: String,
     @SerialName("path") val path: String? = null,
@@ -143,7 +143,7 @@ public data class UploadSignedUrlResponse(
  * meaning of each attribute.
  */
 @Serializable
-public data class UpdateBucketRequest(
+internal data class UpdateBucketRequest(
     val id: String? = null,
     val name: String? = null,
     val public: Boolean? = null,
@@ -161,7 +161,7 @@ public data class UpdateBucketRequest(
  * @property copyMetadata whether to carry the object's user metadata across (copy only).
  */
 @Serializable
-public data class MoveRequest(
+internal data class MoveRequest(
     val bucketId: String,
     val sourceKey: String,
     val destinationKey: String? = null,
@@ -171,14 +171,14 @@ public data class MoveRequest(
 
 /** Sort directive in a listing request: the [column] to sort by and the [order] (`asc`/`desc`). */
 @Serializable
-public data class ObjectSortByRequest(
+internal data class ObjectSortByRequest(
     val column: String,
     val order: String,
 )
 
 /** Request body for the offset-paged object listing; see [io.github.androidpoet.supabase.storage.StorageClient.list]. */
 @Serializable
-public data class ObjectListRequest(
+internal data class ObjectListRequest(
     val prefix: String,
     val limit: Int,
     val offset: Int,
@@ -188,7 +188,7 @@ public data class ObjectListRequest(
 
 /** Request body for the cursor-paged object listing; see [io.github.androidpoet.supabase.storage.StorageClient.listV2]. */
 @Serializable
-public data class ObjectListV2Request(
+internal data class ObjectListV2Request(
     val prefix: String? = null,
     val cursor: String? = null,
     val limit: Int? = null,
@@ -263,13 +263,13 @@ public data class AnalyticsBucket(
 
 /** Request body for creating an analytics bucket by [name]. */
 @Serializable
-public data class AnalyticsBucketCreateRequest(
+internal data class AnalyticsBucketCreateRequest(
     val name: String,
 )
 
 /** Response of an analytics-bucket delete, carrying an optional server [message]. */
 @Serializable
-public data class AnalyticsBucketDeleteResponse(
+internal data class AnalyticsBucketDeleteResponse(
     val message: String? = null,
 )
 
@@ -392,7 +392,7 @@ public data class IcebergTableRegisterRequest(
 
 /** Request body to rename/move a table from [source] to [destination]. */
 @Serializable
-public data class IcebergTableRenameRequest(
+internal data class IcebergTableRenameRequest(
     val source: IcebergTableIdentifier,
     val destination: IcebergTableIdentifier,
 )
@@ -415,13 +415,13 @@ public data class IcebergTableMetadataResponse(
 
 /** Request body to create an S3-Vectors bucket named [vectorBucketName]. */
 @Serializable
-public data class VectorBucketCreateRequest(
+internal data class VectorBucketCreateRequest(
     val vectorBucketName: String,
 )
 
 /** Request body addressing a single vector bucket by [vectorBucketName] (get/delete). */
 @Serializable
-public data class VectorBucketRequest(
+internal data class VectorBucketRequest(
     val vectorBucketName: String,
 )
 
@@ -447,7 +447,7 @@ public data class VectorBucketResponse(
 
 /** Request body for listing vector buckets, with optional prefix filter and paging token. */
 @Serializable
-public data class VectorBucketListRequest(
+internal data class VectorBucketListRequest(
     val prefix: String? = null,
     val maxResults: Int? = null,
     val nextToken: String? = null,
@@ -506,7 +506,7 @@ public data class VectorMetadataConfiguration(
 
 /** Request body to create a vector index; see [io.github.androidpoet.supabase.storage.StorageClient.createVectorIndex] for field semantics. */
 @Serializable
-public data class VectorIndexCreateRequest(
+internal data class VectorIndexCreateRequest(
     val vectorBucketName: String,
     val indexName: String,
     val dataType: VectorDataType,
@@ -517,7 +517,7 @@ public data class VectorIndexCreateRequest(
 
 /** Request body addressing a single index by bucket and [indexName] (get/delete). */
 @Serializable
-public data class VectorIndexRequest(
+internal data class VectorIndexRequest(
     val vectorBucketName: String,
     val indexName: String,
 )
@@ -552,7 +552,7 @@ public data class VectorIndexResponse(
 
 /** Request body for listing the indexes in a bucket, with optional prefix filter and paging token. */
 @Serializable
-public data class VectorIndexListRequest(
+internal data class VectorIndexListRequest(
     val vectorBucketName: String,
     val prefix: String? = null,
     val maxResults: Int? = null,
@@ -610,7 +610,7 @@ public data class VectorMatch(
 
 /** Request body to insert/overwrite [vectors] in the given index. */
 @Serializable
-public data class VectorPutRequest(
+internal data class VectorPutRequest(
     val vectorBucketName: String,
     val indexName: String,
     val vectors: List<VectorObject>,
@@ -618,7 +618,7 @@ public data class VectorPutRequest(
 
 /** Request body to fetch vectors by [keys], optionally including their data and/or metadata. */
 @Serializable
-public data class VectorGetRequest(
+internal data class VectorGetRequest(
     val vectorBucketName: String,
     val indexName: String,
     val keys: List<String>,
@@ -628,7 +628,7 @@ public data class VectorGetRequest(
 
 /** Request body to delete vectors by [keys] from the given index. */
 @Serializable
-public data class VectorDeleteRequest(
+internal data class VectorDeleteRequest(
     val vectorBucketName: String,
     val indexName: String,
     val keys: List<String>,
@@ -636,7 +636,7 @@ public data class VectorDeleteRequest(
 
 /** Request body for listing vectors; see [io.github.androidpoet.supabase.storage.StorageClient.listVectors] for the segment/paging semantics. */
 @Serializable
-public data class VectorListRequest(
+internal data class VectorListRequest(
     val vectorBucketName: String,
     val indexName: String,
     val maxResults: Int? = null,
@@ -656,7 +656,7 @@ public data class VectorListResponse(
 
 /** Request body for a nearest-neighbor query; see [io.github.androidpoet.supabase.storage.StorageClient.queryVectors] for field semantics. */
 @Serializable
-public data class VectorQueryRequest(
+internal data class VectorQueryRequest(
     val vectorBucketName: String,
     val indexName: String,
     val queryVector: VectorData,

@@ -374,62 +374,6 @@ public final class io/github/androidpoet/supabase/storage/models/AnalyticsBucket
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class io/github/androidpoet/supabase/storage/models/AnalyticsBucketCreateRequest {
-	public static final field Companion Lio/github/androidpoet/supabase/storage/models/AnalyticsBucketCreateRequest$Companion;
-	public fun <init> (Ljava/lang/String;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;)Lio/github/androidpoet/supabase/storage/models/AnalyticsBucketCreateRequest;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/models/AnalyticsBucketCreateRequest;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/models/AnalyticsBucketCreateRequest;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getName ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/storage/models/AnalyticsBucketCreateRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/storage/models/AnalyticsBucketCreateRequest$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/storage/models/AnalyticsBucketCreateRequest;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/storage/models/AnalyticsBucketCreateRequest;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/AnalyticsBucketCreateRequest$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/AnalyticsBucketDeleteResponse {
-	public static final field Companion Lio/github/androidpoet/supabase/storage/models/AnalyticsBucketDeleteResponse$Companion;
-	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;)Lio/github/androidpoet/supabase/storage/models/AnalyticsBucketDeleteResponse;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/models/AnalyticsBucketDeleteResponse;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/models/AnalyticsBucketDeleteResponse;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getMessage ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/storage/models/AnalyticsBucketDeleteResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/storage/models/AnalyticsBucketDeleteResponse$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/storage/models/AnalyticsBucketDeleteResponse;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/storage/models/AnalyticsBucketDeleteResponse;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/AnalyticsBucketDeleteResponse$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
 public final class io/github/androidpoet/supabase/storage/models/Bucket {
 	public static final field Companion Lio/github/androidpoet/supabase/storage/models/Bucket$Companion;
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZLjava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/util/List;)V
@@ -467,42 +411,6 @@ public final synthetic class io/github/androidpoet/supabase/storage/models/Bucke
 }
 
 public final class io/github/androidpoet/supabase/storage/models/Bucket$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/CreateBucketRequest {
-	public static final field Companion Lio/github/androidpoet/supabase/storage/models/CreateBucketRequest$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZLjava/lang/Long;Ljava/util/List;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ZLjava/lang/Long;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Ljava/lang/String;
-	public final fun component3 ()Z
-	public final fun component4 ()Ljava/lang/Long;
-	public final fun component5 ()Ljava/util/List;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;ZLjava/lang/Long;Ljava/util/List;)Lio/github/androidpoet/supabase/storage/models/CreateBucketRequest;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/models/CreateBucketRequest;Ljava/lang/String;Ljava/lang/String;ZLjava/lang/Long;Ljava/util/List;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/models/CreateBucketRequest;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getAllowedMimeTypes ()Ljava/util/List;
-	public final fun getFileSizeLimit ()Ljava/lang/Long;
-	public final fun getId ()Ljava/lang/String;
-	public final fun getName ()Ljava/lang/String;
-	public final fun getPublic ()Z
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/storage/models/CreateBucketRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/storage/models/CreateBucketRequest$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/storage/models/CreateBucketRequest;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/storage/models/CreateBucketRequest;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/CreateBucketRequest$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
@@ -876,35 +784,6 @@ public final class io/github/androidpoet/supabase/storage/models/IcebergTableReg
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class io/github/androidpoet/supabase/storage/models/IcebergTableRenameRequest {
-	public static final field Companion Lio/github/androidpoet/supabase/storage/models/IcebergTableRenameRequest$Companion;
-	public fun <init> (Lio/github/androidpoet/supabase/storage/models/IcebergTableIdentifier;Lio/github/androidpoet/supabase/storage/models/IcebergTableIdentifier;)V
-	public final fun component1 ()Lio/github/androidpoet/supabase/storage/models/IcebergTableIdentifier;
-	public final fun component2 ()Lio/github/androidpoet/supabase/storage/models/IcebergTableIdentifier;
-	public final fun copy (Lio/github/androidpoet/supabase/storage/models/IcebergTableIdentifier;Lio/github/androidpoet/supabase/storage/models/IcebergTableIdentifier;)Lio/github/androidpoet/supabase/storage/models/IcebergTableRenameRequest;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/models/IcebergTableRenameRequest;Lio/github/androidpoet/supabase/storage/models/IcebergTableIdentifier;Lio/github/androidpoet/supabase/storage/models/IcebergTableIdentifier;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/models/IcebergTableRenameRequest;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getDestination ()Lio/github/androidpoet/supabase/storage/models/IcebergTableIdentifier;
-	public final fun getSource ()Lio/github/androidpoet/supabase/storage/models/IcebergTableIdentifier;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/storage/models/IcebergTableRenameRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/storage/models/IcebergTableRenameRequest$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/storage/models/IcebergTableRenameRequest;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/storage/models/IcebergTableRenameRequest;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/IcebergTableRenameRequest$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
 public final class io/github/androidpoet/supabase/storage/models/IcebergUpdateNamespacePropertiesRequest {
 	public static final field Companion Lio/github/androidpoet/supabase/storage/models/IcebergUpdateNamespacePropertiesRequest$Companion;
 	public fun <init> ()V
@@ -966,78 +845,6 @@ public final synthetic class io/github/androidpoet/supabase/storage/models/Icebe
 }
 
 public final class io/github/androidpoet/supabase/storage/models/IcebergUpdateNamespacePropertiesResponse$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/MoveRequest {
-	public static final field Companion Lio/github/androidpoet/supabase/storage/models/MoveRequest$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Ljava/lang/String;
-	public final fun component3 ()Ljava/lang/String;
-	public final fun component4 ()Ljava/lang/String;
-	public final fun component5 ()Ljava/lang/Boolean;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;)Lio/github/androidpoet/supabase/storage/models/MoveRequest;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/models/MoveRequest;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/models/MoveRequest;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getBucketId ()Ljava/lang/String;
-	public final fun getCopyMetadata ()Ljava/lang/Boolean;
-	public final fun getDestinationBucketId ()Ljava/lang/String;
-	public final fun getDestinationKey ()Ljava/lang/String;
-	public final fun getSourceKey ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/storage/models/MoveRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/storage/models/MoveRequest$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/storage/models/MoveRequest;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/storage/models/MoveRequest;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/MoveRequest$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/ObjectListRequest {
-	public static final field Companion Lio/github/androidpoet/supabase/storage/models/ObjectListRequest$Companion;
-	public fun <init> (Ljava/lang/String;IILio/github/androidpoet/supabase/storage/models/ObjectSortByRequest;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;IILio/github/androidpoet/supabase/storage/models/ObjectSortByRequest;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()I
-	public final fun component3 ()I
-	public final fun component4 ()Lio/github/androidpoet/supabase/storage/models/ObjectSortByRequest;
-	public final fun component5 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;IILio/github/androidpoet/supabase/storage/models/ObjectSortByRequest;Ljava/lang/String;)Lio/github/androidpoet/supabase/storage/models/ObjectListRequest;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/models/ObjectListRequest;Ljava/lang/String;IILio/github/androidpoet/supabase/storage/models/ObjectSortByRequest;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/models/ObjectListRequest;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getLimit ()I
-	public final fun getOffset ()I
-	public final fun getPrefix ()Ljava/lang/String;
-	public final fun getSearch ()Ljava/lang/String;
-	public final fun getSortBy ()Lio/github/androidpoet/supabase/storage/models/ObjectSortByRequest;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/storage/models/ObjectListRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/storage/models/ObjectListRequest$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/storage/models/ObjectListRequest;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/storage/models/ObjectListRequest;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/ObjectListRequest$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
@@ -1111,43 +918,6 @@ public final class io/github/androidpoet/supabase/storage/models/ObjectListV2Obj
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class io/github/androidpoet/supabase/storage/models/ObjectListV2Request {
-	public static final field Companion Lio/github/androidpoet/supabase/storage/models/ObjectListV2Request$Companion;
-	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Boolean;Lio/github/androidpoet/supabase/storage/models/ObjectSortByRequest;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Boolean;Lio/github/androidpoet/supabase/storage/models/ObjectSortByRequest;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Ljava/lang/String;
-	public final fun component3 ()Ljava/lang/Integer;
-	public final fun component4 ()Ljava/lang/Boolean;
-	public final fun component5 ()Lio/github/androidpoet/supabase/storage/models/ObjectSortByRequest;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Boolean;Lio/github/androidpoet/supabase/storage/models/ObjectSortByRequest;)Lio/github/androidpoet/supabase/storage/models/ObjectListV2Request;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/models/ObjectListV2Request;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Boolean;Lio/github/androidpoet/supabase/storage/models/ObjectSortByRequest;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/models/ObjectListV2Request;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getCursor ()Ljava/lang/String;
-	public final fun getLimit ()Ljava/lang/Integer;
-	public final fun getPrefix ()Ljava/lang/String;
-	public final fun getSortBy ()Lio/github/androidpoet/supabase/storage/models/ObjectSortByRequest;
-	public final fun getWithDelimiter ()Ljava/lang/Boolean;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/storage/models/ObjectListV2Request$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/storage/models/ObjectListV2Request$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/storage/models/ObjectListV2Request;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/storage/models/ObjectListV2Request;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/ObjectListV2Request$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
 public final class io/github/androidpoet/supabase/storage/models/ObjectListV2Result {
 	public static final field Companion Lio/github/androidpoet/supabase/storage/models/ObjectListV2Result$Companion;
 	public fun <init> (ZLjava/util/List;Ljava/util/List;Ljava/lang/String;)V
@@ -1179,260 +949,6 @@ public final synthetic class io/github/androidpoet/supabase/storage/models/Objec
 }
 
 public final class io/github/androidpoet/supabase/storage/models/ObjectListV2Result$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/ObjectSortByRequest {
-	public static final field Companion Lio/github/androidpoet/supabase/storage/models/ObjectSortByRequest$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lio/github/androidpoet/supabase/storage/models/ObjectSortByRequest;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/models/ObjectSortByRequest;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/models/ObjectSortByRequest;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getColumn ()Ljava/lang/String;
-	public final fun getOrder ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/storage/models/ObjectSortByRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/storage/models/ObjectSortByRequest$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/storage/models/ObjectSortByRequest;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/storage/models/ObjectSortByRequest;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/ObjectSortByRequest$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/SignedUrlItemResponse {
-	public static final field Companion Lio/github/androidpoet/supabase/storage/models/SignedUrlItemResponse$Companion;
-	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Ljava/lang/String;
-	public final fun component3 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lio/github/androidpoet/supabase/storage/models/SignedUrlItemResponse;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/models/SignedUrlItemResponse;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/models/SignedUrlItemResponse;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getError ()Ljava/lang/String;
-	public final fun getPath ()Ljava/lang/String;
-	public final fun getSignedUrl ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/storage/models/SignedUrlItemResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/storage/models/SignedUrlItemResponse$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/storage/models/SignedUrlItemResponse;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/storage/models/SignedUrlItemResponse;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/SignedUrlItemResponse$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/SignedUrlRequest {
-	public static final field Companion Lio/github/androidpoet/supabase/storage/models/SignedUrlRequest$Companion;
-	public fun <init> (JLio/github/androidpoet/supabase/storage/models/SignedUrlTransformRequest;)V
-	public synthetic fun <init> (JLio/github/androidpoet/supabase/storage/models/SignedUrlTransformRequest;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()J
-	public final fun component2 ()Lio/github/androidpoet/supabase/storage/models/SignedUrlTransformRequest;
-	public final fun copy (JLio/github/androidpoet/supabase/storage/models/SignedUrlTransformRequest;)Lio/github/androidpoet/supabase/storage/models/SignedUrlRequest;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/models/SignedUrlRequest;JLio/github/androidpoet/supabase/storage/models/SignedUrlTransformRequest;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/models/SignedUrlRequest;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getExpiresIn ()J
-	public final fun getTransform ()Lio/github/androidpoet/supabase/storage/models/SignedUrlTransformRequest;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/storage/models/SignedUrlRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/storage/models/SignedUrlRequest$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/storage/models/SignedUrlRequest;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/storage/models/SignedUrlRequest;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/SignedUrlRequest$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/SignedUrlResponse {
-	public static final field Companion Lio/github/androidpoet/supabase/storage/models/SignedUrlResponse$Companion;
-	public fun <init> (Ljava/lang/String;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;)Lio/github/androidpoet/supabase/storage/models/SignedUrlResponse;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/models/SignedUrlResponse;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/models/SignedUrlResponse;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getSignedUrl ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/storage/models/SignedUrlResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/storage/models/SignedUrlResponse$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/storage/models/SignedUrlResponse;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/storage/models/SignedUrlResponse;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/SignedUrlResponse$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/SignedUrlTransformRequest {
-	public static final field Companion Lio/github/androidpoet/supabase/storage/models/SignedUrlTransformRequest$Companion;
-	public fun <init> ()V
-	public fun <init> (Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;)V
-	public synthetic fun <init> (Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Ljava/lang/Integer;
-	public final fun component2 ()Ljava/lang/Integer;
-	public final fun component3 ()Ljava/lang/String;
-	public final fun component4 ()Ljava/lang/String;
-	public final fun component5 ()Ljava/lang/Integer;
-	public final fun copy (Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;)Lio/github/androidpoet/supabase/storage/models/SignedUrlTransformRequest;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/models/SignedUrlTransformRequest;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/models/SignedUrlTransformRequest;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getFormat ()Ljava/lang/String;
-	public final fun getHeight ()Ljava/lang/Integer;
-	public final fun getQuality ()Ljava/lang/Integer;
-	public final fun getResize ()Ljava/lang/String;
-	public final fun getWidth ()Ljava/lang/Integer;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/storage/models/SignedUrlTransformRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/storage/models/SignedUrlTransformRequest$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/storage/models/SignedUrlTransformRequest;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/storage/models/SignedUrlTransformRequest;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/SignedUrlTransformRequest$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/SignedUrlsRequest {
-	public static final field Companion Lio/github/androidpoet/supabase/storage/models/SignedUrlsRequest$Companion;
-	public fun <init> (Ljava/util/List;J)V
-	public final fun component1 ()Ljava/util/List;
-	public final fun component2 ()J
-	public final fun copy (Ljava/util/List;J)Lio/github/androidpoet/supabase/storage/models/SignedUrlsRequest;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/models/SignedUrlsRequest;Ljava/util/List;JILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/models/SignedUrlsRequest;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getExpiresIn ()J
-	public final fun getPaths ()Ljava/util/List;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/storage/models/SignedUrlsRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/storage/models/SignedUrlsRequest$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/storage/models/SignedUrlsRequest;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/storage/models/SignedUrlsRequest;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/SignedUrlsRequest$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/UpdateBucketRequest {
-	public static final field Companion Lio/github/androidpoet/supabase/storage/models/UpdateBucketRequest$Companion;
-	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Long;Ljava/util/List;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Long;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Ljava/lang/String;
-	public final fun component3 ()Ljava/lang/Boolean;
-	public final fun component4 ()Ljava/lang/Long;
-	public final fun component5 ()Ljava/util/List;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Long;Ljava/util/List;)Lio/github/androidpoet/supabase/storage/models/UpdateBucketRequest;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/models/UpdateBucketRequest;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Long;Ljava/util/List;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/models/UpdateBucketRequest;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getAllowedMimeTypes ()Ljava/util/List;
-	public final fun getFileSizeLimit ()Ljava/lang/Long;
-	public final fun getId ()Ljava/lang/String;
-	public final fun getName ()Ljava/lang/String;
-	public final fun getPublic ()Ljava/lang/Boolean;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/storage/models/UpdateBucketRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/storage/models/UpdateBucketRequest$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/storage/models/UpdateBucketRequest;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/storage/models/UpdateBucketRequest;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/UpdateBucketRequest$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/UploadSignedUrlResponse {
-	public static final field Companion Lio/github/androidpoet/supabase/storage/models/UploadSignedUrlResponse$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Ljava/lang/String;
-	public final fun component3 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lio/github/androidpoet/supabase/storage/models/UploadSignedUrlResponse;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/models/UploadSignedUrlResponse;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/models/UploadSignedUrlResponse;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getPath ()Ljava/lang/String;
-	public final fun getToken ()Ljava/lang/String;
-	public final fun getUrl ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/storage/models/UploadSignedUrlResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/storage/models/UploadSignedUrlResponse$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/storage/models/UploadSignedUrlResponse;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/storage/models/UploadSignedUrlResponse;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/UploadSignedUrlResponse$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
@@ -1468,33 +984,6 @@ public final class io/github/androidpoet/supabase/storage/models/VectorBucket$Co
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class io/github/androidpoet/supabase/storage/models/VectorBucketCreateRequest {
-	public static final field Companion Lio/github/androidpoet/supabase/storage/models/VectorBucketCreateRequest$Companion;
-	public fun <init> (Ljava/lang/String;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;)Lio/github/androidpoet/supabase/storage/models/VectorBucketCreateRequest;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/models/VectorBucketCreateRequest;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/models/VectorBucketCreateRequest;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getVectorBucketName ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/storage/models/VectorBucketCreateRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/storage/models/VectorBucketCreateRequest$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/storage/models/VectorBucketCreateRequest;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/storage/models/VectorBucketCreateRequest;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/VectorBucketCreateRequest$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
 public final class io/github/androidpoet/supabase/storage/models/VectorBucketListItem {
 	public static final field Companion Lio/github/androidpoet/supabase/storage/models/VectorBucketListItem$Companion;
 	public fun <init> (Ljava/lang/String;)V
@@ -1519,39 +1008,6 @@ public final synthetic class io/github/androidpoet/supabase/storage/models/Vecto
 }
 
 public final class io/github/androidpoet/supabase/storage/models/VectorBucketListItem$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/VectorBucketListRequest {
-	public static final field Companion Lio/github/androidpoet/supabase/storage/models/VectorBucketListRequest$Companion;
-	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Ljava/lang/Integer;
-	public final fun component3 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;)Lio/github/androidpoet/supabase/storage/models/VectorBucketListRequest;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/models/VectorBucketListRequest;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/models/VectorBucketListRequest;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getMaxResults ()Ljava/lang/Integer;
-	public final fun getNextToken ()Ljava/lang/String;
-	public final fun getPrefix ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/storage/models/VectorBucketListRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/storage/models/VectorBucketListRequest$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/storage/models/VectorBucketListRequest;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/storage/models/VectorBucketListRequest;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/VectorBucketListRequest$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
@@ -1582,33 +1038,6 @@ public final synthetic class io/github/androidpoet/supabase/storage/models/Vecto
 }
 
 public final class io/github/androidpoet/supabase/storage/models/VectorBucketListResponse$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/VectorBucketRequest {
-	public static final field Companion Lio/github/androidpoet/supabase/storage/models/VectorBucketRequest$Companion;
-	public fun <init> (Ljava/lang/String;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;)Lio/github/androidpoet/supabase/storage/models/VectorBucketRequest;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/models/VectorBucketRequest;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/models/VectorBucketRequest;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getVectorBucketName ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/storage/models/VectorBucketRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/storage/models/VectorBucketRequest$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/storage/models/VectorBucketRequest;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/storage/models/VectorBucketRequest;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/VectorBucketRequest$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
@@ -1679,37 +1108,6 @@ public final class io/github/androidpoet/supabase/storage/models/VectorDataType$
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class io/github/androidpoet/supabase/storage/models/VectorDeleteRequest {
-	public static final field Companion Lio/github/androidpoet/supabase/storage/models/VectorDeleteRequest$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Ljava/lang/String;
-	public final fun component3 ()Ljava/util/List;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)Lio/github/androidpoet/supabase/storage/models/VectorDeleteRequest;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/models/VectorDeleteRequest;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/models/VectorDeleteRequest;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getIndexName ()Ljava/lang/String;
-	public final fun getKeys ()Ljava/util/List;
-	public final fun getVectorBucketName ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/storage/models/VectorDeleteRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/storage/models/VectorDeleteRequest$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/storage/models/VectorDeleteRequest;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/storage/models/VectorDeleteRequest;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/VectorDeleteRequest$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
 public final class io/github/androidpoet/supabase/storage/models/VectorDistanceMetric : java/lang/Enum {
 	public static final field COSINE Lio/github/androidpoet/supabase/storage/models/VectorDistanceMetric;
 	public static final field Companion Lio/github/androidpoet/supabase/storage/models/VectorDistanceMetric$Companion;
@@ -1722,42 +1120,6 @@ public final class io/github/androidpoet/supabase/storage/models/VectorDistanceM
 }
 
 public final class io/github/androidpoet/supabase/storage/models/VectorDistanceMetric$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/VectorGetRequest {
-	public static final field Companion Lio/github/androidpoet/supabase/storage/models/VectorGetRequest$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/Boolean;Ljava/lang/Boolean;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/Boolean;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Ljava/lang/String;
-	public final fun component3 ()Ljava/util/List;
-	public final fun component4 ()Ljava/lang/Boolean;
-	public final fun component5 ()Ljava/lang/Boolean;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/Boolean;Ljava/lang/Boolean;)Lio/github/androidpoet/supabase/storage/models/VectorGetRequest;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/models/VectorGetRequest;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/Boolean;Ljava/lang/Boolean;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/models/VectorGetRequest;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getIndexName ()Ljava/lang/String;
-	public final fun getKeys ()Ljava/util/List;
-	public final fun getReturnData ()Ljava/lang/Boolean;
-	public final fun getReturnMetadata ()Ljava/lang/Boolean;
-	public final fun getVectorBucketName ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/storage/models/VectorGetRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/storage/models/VectorGetRequest$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/storage/models/VectorGetRequest;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/storage/models/VectorGetRequest;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/VectorGetRequest$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
@@ -1801,44 +1163,6 @@ public final class io/github/androidpoet/supabase/storage/models/VectorIndex$Com
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class io/github/androidpoet/supabase/storage/models/VectorIndexCreateRequest {
-	public static final field Companion Lio/github/androidpoet/supabase/storage/models/VectorIndexCreateRequest$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/storage/models/VectorDataType;ILio/github/androidpoet/supabase/storage/models/VectorDistanceMetric;Lio/github/androidpoet/supabase/storage/models/VectorMetadataConfiguration;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/storage/models/VectorDataType;ILio/github/androidpoet/supabase/storage/models/VectorDistanceMetric;Lio/github/androidpoet/supabase/storage/models/VectorMetadataConfiguration;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Ljava/lang/String;
-	public final fun component3 ()Lio/github/androidpoet/supabase/storage/models/VectorDataType;
-	public final fun component4 ()I
-	public final fun component5 ()Lio/github/androidpoet/supabase/storage/models/VectorDistanceMetric;
-	public final fun component6 ()Lio/github/androidpoet/supabase/storage/models/VectorMetadataConfiguration;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/storage/models/VectorDataType;ILio/github/androidpoet/supabase/storage/models/VectorDistanceMetric;Lio/github/androidpoet/supabase/storage/models/VectorMetadataConfiguration;)Lio/github/androidpoet/supabase/storage/models/VectorIndexCreateRequest;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/models/VectorIndexCreateRequest;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/storage/models/VectorDataType;ILio/github/androidpoet/supabase/storage/models/VectorDistanceMetric;Lio/github/androidpoet/supabase/storage/models/VectorMetadataConfiguration;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/models/VectorIndexCreateRequest;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getDataType ()Lio/github/androidpoet/supabase/storage/models/VectorDataType;
-	public final fun getDimension ()I
-	public final fun getDistanceMetric ()Lio/github/androidpoet/supabase/storage/models/VectorDistanceMetric;
-	public final fun getIndexName ()Ljava/lang/String;
-	public final fun getMetadataConfiguration ()Lio/github/androidpoet/supabase/storage/models/VectorMetadataConfiguration;
-	public final fun getVectorBucketName ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/storage/models/VectorIndexCreateRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/storage/models/VectorIndexCreateRequest$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/storage/models/VectorIndexCreateRequest;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/storage/models/VectorIndexCreateRequest;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/VectorIndexCreateRequest$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
 public final class io/github/androidpoet/supabase/storage/models/VectorIndexListItem {
 	public static final field Companion Lio/github/androidpoet/supabase/storage/models/VectorIndexListItem$Companion;
 	public fun <init> (Ljava/lang/String;)V
@@ -1863,40 +1187,6 @@ public final synthetic class io/github/androidpoet/supabase/storage/models/Vecto
 }
 
 public final class io/github/androidpoet/supabase/storage/models/VectorIndexListItem$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/VectorIndexListRequest {
-	public static final field Companion Lio/github/androidpoet/supabase/storage/models/VectorIndexListRequest$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Ljava/lang/String;
-	public final fun component3 ()Ljava/lang/Integer;
-	public final fun component4 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;)Lio/github/androidpoet/supabase/storage/models/VectorIndexListRequest;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/models/VectorIndexListRequest;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/models/VectorIndexListRequest;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getMaxResults ()Ljava/lang/Integer;
-	public final fun getNextToken ()Ljava/lang/String;
-	public final fun getPrefix ()Ljava/lang/String;
-	public final fun getVectorBucketName ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/storage/models/VectorIndexListRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/storage/models/VectorIndexListRequest$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/storage/models/VectorIndexListRequest;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/storage/models/VectorIndexListRequest;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/VectorIndexListRequest$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
@@ -1930,35 +1220,6 @@ public final class io/github/androidpoet/supabase/storage/models/VectorIndexList
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class io/github/androidpoet/supabase/storage/models/VectorIndexRequest {
-	public static final field Companion Lio/github/androidpoet/supabase/storage/models/VectorIndexRequest$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lio/github/androidpoet/supabase/storage/models/VectorIndexRequest;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/models/VectorIndexRequest;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/models/VectorIndexRequest;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getIndexName ()Ljava/lang/String;
-	public final fun getVectorBucketName ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/storage/models/VectorIndexRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/storage/models/VectorIndexRequest$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/storage/models/VectorIndexRequest;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/storage/models/VectorIndexRequest;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/VectorIndexRequest$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
 public final class io/github/androidpoet/supabase/storage/models/VectorIndexResponse {
 	public static final field Companion Lio/github/androidpoet/supabase/storage/models/VectorIndexResponse$Companion;
 	public fun <init> (Lio/github/androidpoet/supabase/storage/models/VectorIndex;)V
@@ -1983,48 +1244,6 @@ public final synthetic class io/github/androidpoet/supabase/storage/models/Vecto
 }
 
 public final class io/github/androidpoet/supabase/storage/models/VectorIndexResponse$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/VectorListRequest {
-	public static final field Companion Lio/github/androidpoet/supabase/storage/models/VectorListRequest$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/lang/Integer;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Ljava/lang/String;
-	public final fun component3 ()Ljava/lang/Integer;
-	public final fun component4 ()Ljava/lang/String;
-	public final fun component5 ()Ljava/lang/Boolean;
-	public final fun component6 ()Ljava/lang/Boolean;
-	public final fun component7 ()Ljava/lang/Integer;
-	public final fun component8 ()Ljava/lang/Integer;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/lang/Integer;)Lio/github/androidpoet/supabase/storage/models/VectorListRequest;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/models/VectorListRequest;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/lang/Integer;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/models/VectorListRequest;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getIndexName ()Ljava/lang/String;
-	public final fun getMaxResults ()Ljava/lang/Integer;
-	public final fun getNextToken ()Ljava/lang/String;
-	public final fun getReturnData ()Ljava/lang/Boolean;
-	public final fun getReturnMetadata ()Ljava/lang/Boolean;
-	public final fun getSegmentCount ()Ljava/lang/Integer;
-	public final fun getSegmentIndex ()Ljava/lang/Integer;
-	public final fun getVectorBucketName ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/storage/models/VectorListRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/storage/models/VectorListRequest$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/storage/models/VectorListRequest;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/storage/models/VectorListRequest;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/VectorListRequest$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
@@ -2150,77 +1369,6 @@ public final synthetic class io/github/androidpoet/supabase/storage/models/Vecto
 }
 
 public final class io/github/androidpoet/supabase/storage/models/VectorObject$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/VectorPutRequest {
-	public static final field Companion Lio/github/androidpoet/supabase/storage/models/VectorPutRequest$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Ljava/lang/String;
-	public final fun component3 ()Ljava/util/List;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)Lio/github/androidpoet/supabase/storage/models/VectorPutRequest;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/models/VectorPutRequest;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/models/VectorPutRequest;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getIndexName ()Ljava/lang/String;
-	public final fun getVectorBucketName ()Ljava/lang/String;
-	public final fun getVectors ()Ljava/util/List;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/storage/models/VectorPutRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/storage/models/VectorPutRequest$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/storage/models/VectorPutRequest;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/storage/models/VectorPutRequest;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/VectorPutRequest$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/VectorQueryRequest {
-	public static final field Companion Lio/github/androidpoet/supabase/storage/models/VectorQueryRequest$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/storage/models/VectorData;Ljava/lang/Integer;Lkotlinx/serialization/json/JsonObject;Ljava/lang/Boolean;Ljava/lang/Boolean;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/storage/models/VectorData;Ljava/lang/Integer;Lkotlinx/serialization/json/JsonObject;Ljava/lang/Boolean;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Ljava/lang/String;
-	public final fun component3 ()Lio/github/androidpoet/supabase/storage/models/VectorData;
-	public final fun component4 ()Ljava/lang/Integer;
-	public final fun component5 ()Lkotlinx/serialization/json/JsonObject;
-	public final fun component6 ()Ljava/lang/Boolean;
-	public final fun component7 ()Ljava/lang/Boolean;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/storage/models/VectorData;Ljava/lang/Integer;Lkotlinx/serialization/json/JsonObject;Ljava/lang/Boolean;Ljava/lang/Boolean;)Lio/github/androidpoet/supabase/storage/models/VectorQueryRequest;
-	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/models/VectorQueryRequest;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/storage/models/VectorData;Ljava/lang/Integer;Lkotlinx/serialization/json/JsonObject;Ljava/lang/Boolean;Ljava/lang/Boolean;ILjava/lang/Object;)Lio/github/androidpoet/supabase/storage/models/VectorQueryRequest;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getFilter ()Lkotlinx/serialization/json/JsonObject;
-	public final fun getIndexName ()Ljava/lang/String;
-	public final fun getQueryVector ()Lio/github/androidpoet/supabase/storage/models/VectorData;
-	public final fun getReturnDistance ()Ljava/lang/Boolean;
-	public final fun getReturnMetadata ()Ljava/lang/Boolean;
-	public final fun getTopK ()Ljava/lang/Integer;
-	public final fun getVectorBucketName ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class io/github/androidpoet/supabase/storage/models/VectorQueryRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lio/github/androidpoet/supabase/storage/models/VectorQueryRequest$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lio/github/androidpoet/supabase/storage/models/VectorQueryRequest;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lio/github/androidpoet/supabase/storage/models/VectorQueryRequest;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class io/github/androidpoet/supabase/storage/models/VectorQueryRequest$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 

@@ -79,7 +79,7 @@ public data class UserIdentity(
 
 /** Request body for `POST /signup` (email or phone + password); the captcha constructor nests the token under `gotrue_meta_security`. */
 @Serializable
-public data class SignUpRequest(
+internal data class SignUpRequest(
     val email: String? = null,
     val phone: String? = null,
     val password: String,
@@ -118,7 +118,7 @@ public data class SignUpRequest(
 
 /** Request body for the password grant (email or phone + password); the captcha constructor nests the token under `gotrue_meta_security`. */
 @Serializable
-public data class SignInRequest(
+internal data class SignInRequest(
     val email: String? = null,
     val phone: String? = null,
     val password: String,
@@ -147,7 +147,7 @@ public data class SignInRequest(
  * `gotrue_meta_security` as GoTrue expects.
  */
 @Serializable
-public data class IdTokenRequest(
+internal data class IdTokenRequest(
     @SerialName("id_token") val idToken: String,
     val provider: String,
     @SerialName("access_token") val accessToken: String? = null,
@@ -185,7 +185,7 @@ public data class IdTokenRequest(
 
 /** Request body for anonymous sign-up; the captcha constructor nests the token under `gotrue_meta_security`. */
 @Serializable
-public data class AnonymousSignInRequest(
+internal data class AnonymousSignInRequest(
     val data: JsonObject? = null,
     @SerialName("gotrue_meta_security") val gotrueMetaSecurity: GotrueMetaSecurity? = null,
 ) {
@@ -204,7 +204,7 @@ public data class AnonymousSignInRequest(
  * param, not a body field — GoTrue ignores it in the body.
  */
 @Serializable
-public data class OtpRequest(
+internal data class OtpRequest(
     val email: String? = null,
     val phone: String? = null,
     @SerialName("create_user") val createUser: Boolean? = null,
@@ -242,7 +242,7 @@ public data class OtpRequest(
  * a body field. This endpoint defines only `email` (+ optional captcha), so nothing else is sent.
  */
 @Serializable
-public data class RecoverRequest(
+internal data class RecoverRequest(
     val email: String,
     @SerialName("gotrue_meta_security") val gotrueMetaSecurity: GotrueMetaSecurity? = null,
     @SerialName("code_challenge") val codeChallenge: String? = null,
@@ -263,7 +263,7 @@ public data class RecoverRequest(
 
 /** Request body for `POST /verify` (by `token` or `token_hash`); the captcha constructor nests the token under `gotrue_meta_security`. */
 @Serializable
-public data class OtpVerifyRequest(
+internal data class OtpVerifyRequest(
     val email: String? = null,
     val phone: String? = null,
     val token: String? = null,
@@ -308,7 +308,7 @@ public sealed interface OtpVerifyResult {
 
 /** Request body for `POST /resend`; the captcha constructor nests the token under `gotrue_meta_security`. */
 @Serializable
-public data class ResendOtpRequest(
+internal data class ResendOtpRequest(
     val type: OtpType,
     val email: String? = null,
     val phone: String? = null,
@@ -362,7 +362,7 @@ public enum class OtpType {
 
 /** Request body for the `refresh_token` grant. */
 @Serializable
-public data class RefreshTokenRequest(
+internal data class RefreshTokenRequest(
     @SerialName("refresh_token") val refreshToken: String,
 ) {
     // Mask the refresh token so it never leaks into logs or crash reports.
@@ -421,7 +421,7 @@ public data class LinkIdentityResponse(
  * `gotrue_meta_security`.
  */
 @Serializable
-public data class SsoRequest(
+internal data class SsoRequest(
     @SerialName("domain") public val domain: String? = null,
     @SerialName("provider_id") public val providerId: String? = null,
     @SerialName("redirect_to") public val redirectTo: String? = null,
@@ -533,7 +533,7 @@ public data class PkceParams(
 
 /** Request body for the `pkce` grant: the authorization code plus its original verifier. */
 @Serializable
-public data class ExchangeCodeRequest(
+internal data class ExchangeCodeRequest(
     @SerialName("auth_code") public val authCode: String,
     @SerialName("code_verifier") public val codeVerifier: String,
 )
@@ -557,7 +557,7 @@ public enum class MfaFactorType {
 
 /** Request body for `POST /factors` (enroll a new MFA factor). */
 @Serializable
-public data class MfaEnrollRequest(
+internal data class MfaEnrollRequest(
     @SerialName("factor_type") public val factorType: MfaFactorType,
     @SerialName("friendly_name") public val friendlyName: String? = null,
     @SerialName("issuer") public val issuer: String? = null,
@@ -587,7 +587,7 @@ public data class MfaTotpDetails(
 
 /** Request body for `POST /factors/{id}/challenge`; carries only the phone delivery [channel] (the factor id is in the path). */
 @Serializable
-public data class MfaChallengeRequest(
+internal data class MfaChallengeRequest(
     // Phone factors accept a delivery channel ("sms" or "whatsapp"). The factor id
     // is carried in the URL path, not the body, so the body only needs the channel.
     @SerialName("channel") public val channel: String? = null,
@@ -613,7 +613,7 @@ public data class MfaChallengeResponse(
  * For a WebAuthn factor the [webauthn] credential response stands in for [code].
  */
 @Serializable
-public data class MfaVerifyRequest(
+internal data class MfaVerifyRequest(
     @SerialName("challenge_id") public val challengeId: String,
     @SerialName("code") public val code: String,
     @SerialName("webauthn") public val webauthn: MfaWebauthnVerification? = null,
@@ -792,7 +792,7 @@ public data class OAuthGrant(
 
 /** Request body for an OAuth consent decision; [action] is `"approve"` or `"deny"`. */
 @Serializable
-public data class OAuthConsentRequest(
+internal data class OAuthConsentRequest(
     public val action: String,
 )
 
@@ -808,7 +808,7 @@ public enum class Web3Chain {
 
 /** Request body for the `web3` grant: the signed [message] and its [signature] for the given [chain]. */
 @Serializable
-public data class Web3SignInRequest(
+internal data class Web3SignInRequest(
     public val chain: Web3Chain,
     public val message: String,
     public val signature: String,
@@ -829,20 +829,20 @@ public data class Web3SignInRequest(
 
 /** Request body for verifying a passkey registration or authentication: the [challengeId] plus the WebAuthn [credential]. */
 @Serializable
-public data class PasskeyVerifyRequest(
+internal data class PasskeyVerifyRequest(
     @SerialName("challenge_id") public val challengeId: String,
     public val credential: JsonObject,
 )
 
 /** Request body for renaming a passkey. */
 @Serializable
-public data class PasskeyUpdateRequest(
+internal data class PasskeyUpdateRequest(
     @SerialName("friendly_name") public val friendlyName: String,
 )
 
 /** Request body for starting passkey authentication; the captcha constructor nests the token under `gotrue_meta_security`. */
 @Serializable
-public data class PasskeyAuthenticationOptionsRequest(
+internal data class PasskeyAuthenticationOptionsRequest(
     @SerialName("gotrue_meta_security") public val gotrueMetaSecurity: GotrueMetaSecurity? = null,
 ) {
     public constructor(captchaToken: String?) : this(
@@ -852,7 +852,7 @@ public data class PasskeyAuthenticationOptionsRequest(
 
 /** GoTrue's `gotrue_meta_security` wrapper that carries a captcha token on protected flows. */
 @Serializable
-public data class GotrueMetaSecurity(
+internal data class GotrueMetaSecurity(
     @SerialName("captcha_token") public val captchaToken: String,
 )
 
