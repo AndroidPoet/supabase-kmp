@@ -118,9 +118,12 @@ handled in source.
 - ~~**Database query surface (format enum):**~~ **DONE** — `select`/`rpc`/`rpcGet`/`selectRange`
   now take one `ResponseFormat` enum instead of the exclusive booleans; the *typed* terminals stay
   separate (cardinality changes the return type). See the Done section above.
-- **Database method sprawl (still open):** trim the `rpcGet × List/Map × csv/head/unit` matrix
-  (~66 → ~30–35 public fns) — standardize on `Map` args (drop the `List<Pair>` duplicates) and lean
-  on generic `<T>` decoders. Separable from the format-enum change above; do as its own pass.
+- ~~**Database method sprawl:**~~ **DONE** — the `rpcGet` typed terminals (`rpcGetTyped`/`…Unit`/
+  `…ListTyped`/`…SingleTyped`/`…MaybeSingleTyped`/`…Csv`/`…Head`) each dropped their redundant
+  `List<Pair>` convenience overload and standardized on one `Map<String,String> = emptyMap()` form
+  (RPC arguments are *named*, so they are Map-shaped; the pair-list seam stays on the raw
+  `DatabaseClient.rpcGet` interface method for the rare ordered case). The `Request`-object typed
+  overloads are unchanged.
 - **Naming sweep:** one verb per concept (`get`/`list`/`create`/`update`/`delete`; drop
   `fetch`/`load`/`remove`/`getAll`); collapse `WithResult`/`Unit`/`OrThrow` twins into one method
   + a `returning` param (PostgREST `Prefer`); make `accessToken` position consistent; align auth

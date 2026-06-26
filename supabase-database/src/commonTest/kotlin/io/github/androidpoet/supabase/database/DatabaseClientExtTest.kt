@@ -224,7 +224,7 @@ class DatabaseClientExtTest {
             val result =
                 client.rpcGetTyped<TestItem>(
                     function = "get_item",
-                    queryParams = listOf("id" to "3"),
+                    queryParams = mapOf("id" to "3"),
                 )
 
             assertTrue(result is SupabaseResult.Success)

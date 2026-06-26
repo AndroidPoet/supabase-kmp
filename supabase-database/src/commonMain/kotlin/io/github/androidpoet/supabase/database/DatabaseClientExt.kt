@@ -697,18 +697,6 @@ public suspend inline fun <reified Request : Any> DatabaseClient.rpcHead(
     )
 
 /**
- * Calls read-only stored procedure [function] (GET) and decodes the result into
- * [T] — the typed wrapper over [DatabaseClient.rpcGet] taking ordered
- * [queryParams] argument pairs.
- */
-public suspend inline fun <reified T> DatabaseClient.rpcGetTyped(
-    function: String,
-    schema: String? = null,
-    queryParams: List<Pair<String, String>> = emptyList(),
-): SupabaseResult<T> =
-    rpcGet(function = function, schema = schema, queryParams = queryParams).deserialize()
-
-/**
  * Calls read-only stored procedure [function] (GET), passing arguments as a
  * [Map] — the `Map` convenience over [DatabaseClient.rpcGet]'s pair-list form.
  */
@@ -756,13 +744,16 @@ public suspend fun DatabaseClient.rpcGet(
     )
 
 /**
- * Calls read-only stored procedure [function] (GET) with [Map] arguments and
- * decodes the result into [T] — the `Map` form of [rpcGetTyped].
+ * Calls read-only stored procedure [function] (GET) with named [queryParams] and
+ * decodes the result into [T] — the typed wrapper over [DatabaseClient.rpcGet].
+ *
+ * RPC arguments are named, so they are passed as a [Map] (the pair-list form lives
+ * on the raw [DatabaseClient.rpcGet] interface method for the rare ordered case).
  */
 public suspend inline fun <reified T> DatabaseClient.rpcGetTyped(
     function: String,
     schema: String? = null,
-    queryParams: Map<String, String>,
+    queryParams: Map<String, String> = emptyMap(),
 ): SupabaseResult<T> =
     rpcGet(function = function, schema = schema, queryParams = queryParams).deserialize()
 
@@ -780,25 +771,14 @@ public suspend inline fun <reified Request : Any, reified Response> DatabaseClie
 
 /**
  * Calls read-only stored procedure [function] (GET) for its result alone,
- * discarding the body — the pair-list form.
+ * discarding the body.
  */
 public suspend fun DatabaseClient.rpcGetUnit(
     function: String,
     schema: String? = null,
-    queryParams: List<Pair<String, String>> = emptyList(),
+    queryParams: Map<String, String> = emptyMap(),
 ): SupabaseResult<Unit> =
     rpcGet(function = function, schema = schema, queryParams = queryParams).map { }
-
-/**
- * Calls read-only stored procedure [function] (GET) with [Map] arguments,
- * discarding the body — the `Map` form of [rpcGetUnit].
- */
-public suspend fun DatabaseClient.rpcGetUnit(
-    function: String,
-    schema: String? = null,
-    queryParams: Map<String, String>,
-): SupabaseResult<Unit> =
-    rpcGetUnit(function = function, schema = schema, queryParams = queryParams.toPairList())
 
 /**
  * Calls read-only stored procedure [function] (GET) with a serializable [params]
@@ -818,20 +798,9 @@ public suspend inline fun <reified Request : Any> DatabaseClient.rpcGetUnit(
 public suspend inline fun <reified T> DatabaseClient.rpcGetListTyped(
     function: String,
     schema: String? = null,
-    queryParams: List<Pair<String, String>> = emptyList(),
+    queryParams: Map<String, String> = emptyMap(),
 ): SupabaseResult<List<T>> =
     rpcGet(function = function, schema = schema, queryParams = queryParams).deserialize()
-
-/**
- * Calls set-returning read-only stored procedure [function] (GET) with [Map]
- * arguments, decoding into `List<T>` — the `Map` form of [rpcGetListTyped].
- */
-public suspend inline fun <reified T> DatabaseClient.rpcGetListTyped(
-    function: String,
-    schema: String? = null,
-    queryParams: Map<String, String>,
-): SupabaseResult<List<T>> =
-    rpcGetListTyped(function = function, schema = schema, queryParams = queryParams.toPairList())
 
 /**
  * Calls set-returning read-only stored procedure [function] (GET) with a
@@ -854,20 +823,9 @@ public suspend inline fun <reified Request : Any, reified Response> DatabaseClie
 public suspend inline fun <reified T> DatabaseClient.rpcGetSingleTyped(
     function: String,
     schema: String? = null,
-    queryParams: List<Pair<String, String>> = emptyList(),
+    queryParams: Map<String, String> = emptyMap(),
 ): SupabaseResult<T> =
     rpcGet(function = function, schema = schema, queryParams = queryParams, format = ResponseFormat.SINGLE).deserialize()
-
-/**
- * Calls single-result read-only stored procedure [function] (GET) with [Map]
- * arguments — the `Map` form of [rpcGetSingleTyped].
- */
-public suspend inline fun <reified T> DatabaseClient.rpcGetSingleTyped(
-    function: String,
-    schema: String? = null,
-    queryParams: Map<String, String>,
-): SupabaseResult<T> =
-    rpcGetSingleTyped(function = function, schema = schema, queryParams = queryParams.toPairList())
 
 /**
  * Calls single-result read-only stored procedure [function] (GET) with a
@@ -889,7 +847,7 @@ public suspend inline fun <reified Request : Any, reified Response> DatabaseClie
 public suspend inline fun <reified T> DatabaseClient.rpcGetMaybeSingleTyped(
     function: String,
     schema: String? = null,
-    queryParams: List<Pair<String, String>> = emptyList(),
+    queryParams: Map<String, String> = emptyMap(),
 ): SupabaseResult<T?> {
     val result = rpcGet(function = function, schema = schema, queryParams = queryParams, format = ResponseFormat.SINGLE)
     return when (result) {
@@ -902,17 +860,6 @@ public suspend inline fun <reified T> DatabaseClient.rpcGetMaybeSingleTyped(
             }
     }
 }
-
-/**
- * Calls at-most-one-row read-only stored procedure [function] (GET) with [Map]
- * arguments — the `Map` form of [rpcGetMaybeSingleTyped].
- */
-public suspend inline fun <reified T> DatabaseClient.rpcGetMaybeSingleTyped(
-    function: String,
-    schema: String? = null,
-    queryParams: Map<String, String>,
-): SupabaseResult<T?> =
-    rpcGetMaybeSingleTyped(function = function, schema = schema, queryParams = queryParams.toPairList())
 
 /**
  * Calls at-most-one-row read-only stored procedure [function] (GET) with a
@@ -932,20 +879,9 @@ public suspend inline fun <reified Request : Any, reified Response> DatabaseClie
 public suspend fun DatabaseClient.rpcGetCsv(
     function: String,
     schema: String? = null,
-    queryParams: List<Pair<String, String>> = emptyList(),
+    queryParams: Map<String, String> = emptyMap(),
 ): SupabaseResult<String> =
     rpcGet(function = function, schema = schema, queryParams = queryParams, format = ResponseFormat.CSV)
-
-/**
- * Calls read-only stored procedure [function] (GET) requesting CSV with [Map]
- * arguments — the `Map` form of [rpcGetCsv].
- */
-public suspend fun DatabaseClient.rpcGetCsv(
-    function: String,
-    schema: String? = null,
-    queryParams: Map<String, String>,
-): SupabaseResult<String> =
-    rpcGetCsv(function = function, schema = schema, queryParams = queryParams.toPairList())
 
 /**
  * Calls read-only stored procedure [function] (GET) requesting CSV with a
@@ -966,22 +902,10 @@ public suspend inline fun <reified Request : Any> DatabaseClient.rpcGetCsv(
 public suspend fun DatabaseClient.rpcGetHead(
     function: String,
     schema: String? = null,
-    queryParams: List<Pair<String, String>> = emptyList(),
+    queryParams: Map<String, String> = emptyMap(),
     count: CountOption? = null,
 ): SupabaseResult<Unit> =
     rpcGet(function = function, schema = schema, queryParams = queryParams, format = ResponseFormat.HEAD, count = count).map { }
-
-/**
- * Issues read-only stored procedure [function] (GET) as a `HEAD` request with
- * [Map] arguments — the `Map` form of [rpcGetHead].
- */
-public suspend fun DatabaseClient.rpcGetHead(
-    function: String,
-    schema: String? = null,
-    queryParams: Map<String, String>,
-    count: CountOption? = null,
-): SupabaseResult<Unit> =
-    rpcGetHead(function = function, schema = schema, queryParams = queryParams.toPairList(), count = count)
 
 /**
  * Issues read-only stored procedure [function] (GET) as a `HEAD` request with a
