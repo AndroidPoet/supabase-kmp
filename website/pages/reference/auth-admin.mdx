@@ -1,0 +1,1185 @@
+---
+title: Auth Admin — API Reference
+description: Server-side admin client for Supabase Auth (GoTrue). Manage users, MFA factors, OAuth clients, custom OIDC/OAuth2 providers, SAML SSO providers, passkeys, audit logs and sign-out — all authenticated with the service-role key. Complete 1.0.0 reference for io.github.androidpoet:supabase-auth-admin.
+---
+
+import { Callout } from 'nextra/components'
+
+# Auth Admin — API Reference
+
+The **supabase-auth-admin** module is a thin, typed wrapper over the GoTrue
+**admin** REST API. It lets a trusted backend manage your project's auth state:
+list and mutate users, run their MFA factors, register OAuth clients, configure
+custom OIDC/OAuth2 and SAML SSO providers, inspect passkeys and audit logs, and
+force-sign-out a session. Every call returns a `SupabaseResult<T>`, so failures
+are values you handle rather than exceptions you catch.
+
+- **Maven artifact:** `io.github.androidpoet:supabase-auth-admin`
+- **Entry point:** `createAuthAdminClient(client, serviceRoleKey)`
+- **Package:** `io.github.androidpoet.supabase.auth.admin` (models in `…admin.models`)
+
+<Callout type="error">
+**This module uses the service-role key. Never ship it in a client app.**
+
+The service-role key **bypasses Row Level Security** and can read, modify, or
+delete *any* user and *any* row in your project. It must only ever run in a
+trusted, server-side environment (a backend service or edge function) — never in
+a mobile, desktop, or browser app where it can be extracted. The key is a
+**required** argument with **no default** by design, so an admin client can never
+be created by accident with the public anon key. Source it from a secret store,
+not from committed code.
+</Callout>
+
+## Setup
+
+`createAuthAdminClient` builds an [`AuthAdminClient`](#authadminclient) from an
+existing `SupabaseClient` and your service-role key.
+
+```kotlin
+fun createAuthAdminClient(
+    supabaseClient: SupabaseClient,
+    serviceRoleKey: String,
+): AuthAdminClient
+```
+
+- `supabaseClient` — the configured `SupabaseClient` whose project URL the admin calls target.
+- `serviceRoleKey` — the project's service-role key. Required, no default. Bypasses RLS.
+
+**Returns** an `AuthAdminClient` instance. This call does no I/O and does not fail.
+
+```kotlin
+val admin = createAuthAdminClient(
+    supabaseClient = client,
+    serviceRoleKey = System.getenv("SUPABASE_SERVICE_ROLE_KEY"),
+)
+```
+
+---
+
+## AuthAdminClient
+
+The interface exposing every admin operation. All methods are `suspend` and
+return `SupabaseResult<T>`: a `Success` carrying the value, or a `Failure`
+carrying the error. The sections below group the methods by area.
+
+### User management
+
+#### createUser
+
+Creates a user directly, skipping the normal sign-up flow. Set `emailConfirm` /
+`phoneConfirm` to mark contacts pre-verified.
+
+```kotlin
+suspend fun createUser(attributes: AdminUserAttributes): SupabaseResult<User>
+```
+
+- `attributes` — the fields to set on the new user (see [`AdminUserAttributes`](#adminuserattributes)).
+
+**Returns** `SupabaseResult<User>` — `Success` with the created user, `Failure` on error.
+
+```kotlin
+val result = admin.createUser(
+    AdminUserAttributes(
+        email = "jane@example.com",
+        password = "s3cret-pass",
+        emailConfirm = true,
+    ),
+)
+```
+
+#### listUsers
+
+Lists users one page at a time. GoTrue's admin list is page-based and 1-indexed.
+
+```kotlin
+suspend fun listUsers(
+    page: Int? = null,
+    perPage: Int? = null,
+): SupabaseResult<ListUsersResponse>
+```
+
+- `page` — 1-indexed page number. Default `null` (server default, the first page).
+- `perPage` — users per page. Default `null` (server default).
+
+**Returns** `SupabaseResult<ListUsersResponse>` — `Success` with the page of users, `Failure` on error.
+
+```kotlin
+val page = admin.listUsers(page = 1, perPage = 50)
+```
+
+<Callout type="info">
+For ergonomic paging see [`listUsersOrThrow`](#listusersorthrow) and
+[`usersPaginator`](#userspaginator) below.
+</Callout>
+
+#### getUserById
+
+Fetches a single user by id.
+
+```kotlin
+suspend fun getUserById(userId: String): SupabaseResult<User>
+```
+
+- `userId` — the user's UUID.
+
+**Returns** `SupabaseResult<User>` — `Success` with the user, `Failure` if not found or on error.
+
+```kotlin
+val user = admin.getUserById("8f3a…")
+```
+
+#### updateUserById
+
+Updates an existing user. Only the non-null fields on `attributes` are changed.
+
+```kotlin
+suspend fun updateUserById(
+    userId: String,
+    attributes: AdminUserAttributes,
+): SupabaseResult<User>
+```
+
+- `userId` — the user's UUID.
+- `attributes` — fields to change (see [`AdminUserAttributes`](#adminuserattributes)). Use `banDuration` to ban (e.g. `"24h"`) or `"none"` to unban.
+
+**Returns** `SupabaseResult<User>` — `Success` with the updated user, `Failure` on error.
+
+```kotlin
+val updated = admin.updateUserById(
+    userId = "8f3a…",
+    attributes = AdminUserAttributes(banDuration = "24h"),
+)
+```
+
+#### deleteUser
+
+Deletes a user.
+
+```kotlin
+suspend fun deleteUser(
+    userId: String,
+    shouldSoftDelete: Boolean = false,
+): SupabaseResult<Unit>
+```
+
+- `userId` — the user's UUID.
+- `shouldSoftDelete` — if `true`, soft-deletes (retains the row, marks it deleted); if `false`, hard-deletes. Default `false`.
+
+**Returns** `SupabaseResult<Unit>` — `Success` on deletion, `Failure` on error.
+
+```kotlin
+admin.deleteUser("8f3a…", shouldSoftDelete = true)
+```
+
+#### inviteUserByEmail
+
+Sends an invite email and creates a pending user.
+
+```kotlin
+suspend fun inviteUserByEmail(
+    email: String,
+    data: JsonObject? = null,
+    redirectTo: String? = null,
+): SupabaseResult<User>
+```
+
+- `email` — the invitee's email address.
+- `data` — optional metadata stored on the user (becomes `user_metadata`). Default `null`.
+- `redirectTo` — optional URL to redirect to after the invite is accepted. Default `null`.
+
+**Returns** `SupabaseResult<User>` — `Success` with the invited user, `Failure` on error.
+
+```kotlin
+admin.inviteUserByEmail("new@example.com")
+```
+
+#### generateLink
+
+Generates an action link (signup, magic link, recovery, invite, or email change)
+without sending the email yourself.
+
+```kotlin
+suspend fun generateLink(request: GenerateLinkRequest): SupabaseResult<GenerateLinkResponse>
+```
+
+- `request` — the link parameters (see [`GenerateLinkRequest`](#generatelinkrequest)).
+
+**Returns** `SupabaseResult<GenerateLinkResponse>` — `Success` with the generated link properties and (where applicable) the user, `Failure` on error.
+
+```kotlin
+val link = admin.generateLink(
+    GenerateLinkRequest(
+        type = GenerateLinkType.MAGIC_LINK,
+        email = "jane@example.com",
+    ),
+)
+```
+
+#### signOut
+
+Revokes a user's session(s) given their access token.
+
+```kotlin
+suspend fun signOut(
+    accessToken: String,
+    scope: SignOutScope = SignOutScope.LOCAL,
+): SupabaseResult<Unit>
+```
+
+- `accessToken` — the user's JWT access token to sign out.
+- `scope` — which sessions to revoke (`SignOutScope.LOCAL`, `GLOBAL`, or `OTHERS`). Default `SignOutScope.LOCAL`.
+
+**Returns** `SupabaseResult<Unit>` — `Success` on sign-out, `Failure` on error.
+
+```kotlin
+admin.signOut(accessToken = userJwt, scope = SignOutScope.GLOBAL)
+```
+
+### Multi-factor authentication
+
+#### listFactors
+
+Lists a user's enrolled MFA factors.
+
+```kotlin
+suspend fun listFactors(userId: String): SupabaseResult<MfaAdminListFactorsResponse>
+```
+
+- `userId` — the user's UUID.
+
+**Returns** `SupabaseResult<MfaAdminListFactorsResponse>` — `Success` with the factor list, `Failure` on error.
+
+```kotlin
+val factors = admin.listFactors("8f3a…")
+```
+
+#### updateFactor
+
+Updates a user's MFA factor — currently its friendly name. PUTs to
+`/admin/users/{userId}/factors/{factorId}` and returns the full updated factor.
+
+```kotlin
+suspend fun updateFactor(
+    userId: String,
+    factorId: String,
+    friendlyName: String? = null,
+): SupabaseResult<MfaFactor>
+```
+
+- `userId` — the user's UUID.
+- `factorId` — the factor's id.
+- `friendlyName` — the new display name for the factor. Default `null`.
+
+**Returns** `SupabaseResult<MfaFactor>` — `Success` with the updated factor, `Failure` on error.
+
+```kotlin
+admin.updateFactor("8f3a…", "factor-id", friendlyName = "My phone")
+```
+
+#### deleteFactor
+
+Removes a user's MFA factor.
+
+```kotlin
+suspend fun deleteFactor(
+    userId: String,
+    factorId: String,
+): SupabaseResult<MfaAdminDeleteFactorResponse>
+```
+
+- `userId` — the user's UUID.
+- `factorId` — the factor's id.
+
+**Returns** `SupabaseResult<MfaAdminDeleteFactorResponse>` — `Success` with the deleted factor's id, `Failure` on error.
+
+```kotlin
+admin.deleteFactor("8f3a…", "factor-id")
+```
+
+### OAuth clients
+
+#### listOAuthClients
+
+Lists registered OAuth clients, page by page.
+
+```kotlin
+suspend fun listOAuthClients(
+    page: Int? = null,
+    perPage: Int? = null,
+): SupabaseResult<OAuthClientListResponse>
+```
+
+- `page` — 1-indexed page number. Default `null`.
+- `perPage` — clients per page. Default `null`.
+
+**Returns** `SupabaseResult<OAuthClientListResponse>` — `Success` with the page of clients, `Failure` on error.
+
+```kotlin
+val clients = admin.listOAuthClients(page = 1, perPage = 20)
+```
+
+#### createOAuthClient
+
+Registers a new OAuth client.
+
+```kotlin
+suspend fun createOAuthClient(request: OAuthClientCreateRequest): SupabaseResult<OAuthClient>
+```
+
+- `request` — the new client's configuration (see [`OAuthClientCreateRequest`](#oauthclientcreaterequest)).
+
+**Returns** `SupabaseResult<OAuthClient>` — `Success` with the created client (including its secret), `Failure` on error.
+
+```kotlin
+val client = admin.createOAuthClient(
+    OAuthClientCreateRequest(
+        clientName = "My App",
+        redirectUris = listOf("https://app.example.com/callback"),
+    ),
+)
+```
+
+#### getOAuthClient
+
+Fetches a single OAuth client by id.
+
+```kotlin
+suspend fun getOAuthClient(clientId: String): SupabaseResult<OAuthClient>
+```
+
+- `clientId` — the client's id.
+
+**Returns** `SupabaseResult<OAuthClient>` — `Success` with the client, `Failure` on error.
+
+```kotlin
+val client = admin.getOAuthClient("client-id")
+```
+
+#### updateOAuthClient
+
+Updates an existing OAuth client. Only non-null fields on `request` are changed.
+
+```kotlin
+suspend fun updateOAuthClient(
+    clientId: String,
+    request: OAuthClientUpdateRequest,
+): SupabaseResult<OAuthClient>
+```
+
+- `clientId` — the client's id.
+- `request` — fields to change (see [`OAuthClientUpdateRequest`](#oauthclientupdaterequest)).
+
+**Returns** `SupabaseResult<OAuthClient>` — `Success` with the updated client, `Failure` on error.
+
+```kotlin
+admin.updateOAuthClient(
+    clientId = "client-id",
+    request = OAuthClientUpdateRequest(clientName = "Renamed App"),
+)
+```
+
+#### deleteOAuthClient
+
+Deletes an OAuth client.
+
+```kotlin
+suspend fun deleteOAuthClient(clientId: String): SupabaseResult<Unit>
+```
+
+- `clientId` — the client's id.
+
+**Returns** `SupabaseResult<Unit>` — `Success` on deletion, `Failure` on error.
+
+```kotlin
+admin.deleteOAuthClient("client-id")
+```
+
+#### regenerateOAuthClientSecret
+
+Issues a fresh secret for an OAuth client, invalidating the old one.
+
+```kotlin
+suspend fun regenerateOAuthClientSecret(clientId: String): SupabaseResult<OAuthClient>
+```
+
+- `clientId` — the client's id.
+
+**Returns** `SupabaseResult<OAuthClient>` — `Success` with the client carrying the new secret, `Failure` on error.
+
+```kotlin
+val rotated = admin.regenerateOAuthClientSecret("client-id")
+```
+
+### Custom OIDC / OAuth2 providers
+
+#### listCustomProviders
+
+Lists custom identity providers, optionally filtered by type.
+
+```kotlin
+suspend fun listCustomProviders(type: CustomProviderType? = null): SupabaseResult<CustomProviderListResponse>
+```
+
+- `type` — restrict to a provider type (`OAUTH2` or `OIDC`). Default `null` (all types).
+
+**Returns** `SupabaseResult<CustomProviderListResponse>` — `Success` with the provider list, `Failure` on error.
+
+```kotlin
+val providers = admin.listCustomProviders(type = CustomProviderType.OIDC)
+```
+
+#### createCustomProvider
+
+Registers a new custom OIDC/OAuth2 provider.
+
+```kotlin
+suspend fun createCustomProvider(request: CustomProviderCreateRequest): SupabaseResult<CustomProvider>
+```
+
+- `request` — the provider configuration (see [`CustomProviderCreateRequest`](#customprovidercreaterequest)).
+
+**Returns** `SupabaseResult<CustomProvider>` — `Success` with the created provider, `Failure` on error.
+
+```kotlin
+val provider = admin.createCustomProvider(
+    CustomProviderCreateRequest(
+        providerType = CustomProviderType.OIDC,
+        identifier = "acme",
+        name = "Acme SSO",
+        clientId = "client-id",
+        clientSecret = "client-secret",
+        discoveryUrl = "https://acme.example.com/.well-known/openid-configuration",
+    ),
+)
+```
+
+#### getCustomProvider
+
+Fetches a single custom provider by its identifier.
+
+```kotlin
+suspend fun getCustomProvider(identifier: String): SupabaseResult<CustomProvider>
+```
+
+- `identifier` — the provider's identifier.
+
+**Returns** `SupabaseResult<CustomProvider>` — `Success` with the provider, `Failure` on error.
+
+```kotlin
+val provider = admin.getCustomProvider("acme")
+```
+
+#### updateCustomProvider
+
+Updates an existing custom provider. Only non-null fields on `request` are changed.
+
+```kotlin
+suspend fun updateCustomProvider(
+    identifier: String,
+    request: CustomProviderUpdateRequest,
+): SupabaseResult<CustomProvider>
+```
+
+- `identifier` — the provider's identifier.
+- `request` — fields to change (see [`CustomProviderUpdateRequest`](#customproviderupdaterequest)).
+
+**Returns** `SupabaseResult<CustomProvider>` — `Success` with the updated provider, `Failure` on error.
+
+```kotlin
+admin.updateCustomProvider(
+    identifier = "acme",
+    request = CustomProviderUpdateRequest(enabled = false),
+)
+```
+
+#### deleteCustomProvider
+
+Deletes a custom provider.
+
+```kotlin
+suspend fun deleteCustomProvider(identifier: String): SupabaseResult<Unit>
+```
+
+- `identifier` — the provider's identifier.
+
+**Returns** `SupabaseResult<Unit>` — `Success` on deletion, `Failure` on error.
+
+```kotlin
+admin.deleteCustomProvider("acme")
+```
+
+### SAML SSO providers
+
+#### createSsoProvider
+
+Registers a new SAML SSO identity provider. Provide either `metadataUrl` or
+`metadataXml` on the request.
+
+```kotlin
+suspend fun createSsoProvider(request: SsoProviderCreateRequest): SupabaseResult<SsoProvider>
+```
+
+- `request` — the provider configuration (see [`SsoProviderCreateRequest`](#ssoprovidercreaterequest)).
+
+**Returns** `SupabaseResult<SsoProvider>` — `Success` with the created provider, `Failure` on error.
+
+```kotlin
+val provider = admin.createSsoProvider(
+    SsoProviderCreateRequest(
+        metadataUrl = "https://idp.example.com/metadata.xml",
+        domains = listOf("example.com"),
+    ),
+)
+```
+
+#### listSsoProviders
+
+Lists all registered SAML SSO providers. The API's `{ "items": [...] }` wrapper is
+unwrapped to a plain list.
+
+```kotlin
+suspend fun listSsoProviders(): SupabaseResult<List<SsoProvider>>
+```
+
+**Returns** `SupabaseResult<List<SsoProvider>>` — `Success` with the providers, `Failure` on error.
+
+```kotlin
+val providers = admin.listSsoProviders()
+```
+
+#### getSsoProvider
+
+Fetches a single SAML SSO provider by id.
+
+```kotlin
+suspend fun getSsoProvider(id: String): SupabaseResult<SsoProvider>
+```
+
+- `id` — the provider's id.
+
+**Returns** `SupabaseResult<SsoProvider>` — `Success` with the provider, `Failure` on error.
+
+```kotlin
+val provider = admin.getSsoProvider("provider-id")
+```
+
+#### updateSsoProvider
+
+Updates an existing SAML SSO provider. Omitted `domains` / `attribute_mapping`
+keep their existing values.
+
+```kotlin
+suspend fun updateSsoProvider(
+    id: String,
+    request: SsoProviderUpdateRequest,
+): SupabaseResult<SsoProvider>
+```
+
+- `id` — the provider's id.
+- `request` — fields to change (see [`SsoProviderUpdateRequest`](#ssoproviderupdaterequest)).
+
+**Returns** `SupabaseResult<SsoProvider>` — `Success` with the updated provider, `Failure` on error.
+
+```kotlin
+admin.updateSsoProvider(
+    id = "provider-id",
+    request = SsoProviderUpdateRequest(disabled = true),
+)
+```
+
+#### deleteSsoProvider
+
+Removes a SAML SSO provider and returns the provider that was deleted.
+
+```kotlin
+suspend fun deleteSsoProvider(id: String): SupabaseResult<SsoProvider>
+```
+
+- `id` — the provider's id.
+
+**Returns** `SupabaseResult<SsoProvider>` — `Success` with the deleted provider, `Failure` on error.
+
+```kotlin
+val removed = admin.deleteSsoProvider("provider-id")
+```
+
+### Passkeys
+
+#### listPasskeys
+
+Lists a user's registered passkeys.
+
+```kotlin
+suspend fun listPasskeys(userId: String): SupabaseResult<List<Passkey>>
+```
+
+- `userId` — the user's UUID.
+
+**Returns** `SupabaseResult<List<Passkey>>` — `Success` with the passkeys, `Failure` on error.
+
+```kotlin
+val passkeys = admin.listPasskeys("8f3a…")
+```
+
+#### deletePasskey
+
+Removes a passkey from a user.
+
+```kotlin
+suspend fun deletePasskey(
+    userId: String,
+    passkeyId: String,
+): SupabaseResult<Unit>
+```
+
+- `userId` — the user's UUID.
+- `passkeyId` — the passkey's id.
+
+**Returns** `SupabaseResult<Unit>` — `Success` on deletion, `Failure` on error.
+
+```kotlin
+admin.deletePasskey("8f3a…", "passkey-id")
+```
+
+### Audit logs
+
+#### listAuditLogEvents
+
+Fetches audit-log events. The endpoint returns a bare JSON array of entries.
+`page` and `perPage` are sent as `page` / `per_page` query params only when
+non-null.
+
+```kotlin
+suspend fun listAuditLogEvents(
+    page: Int? = null,
+    perPage: Int? = null,
+): SupabaseResult<List<AuditLogEntry>>
+```
+
+- `page` — 1-indexed page number. Default `null` (omitted).
+- `perPage` — entries per page. Default `null` (omitted).
+
+**Returns** `SupabaseResult<List<AuditLogEntry>>` — `Success` with the entries, `Failure` on error.
+
+```kotlin
+val events = admin.listAuditLogEvents(page = 1, perPage = 100)
+```
+
+---
+
+## Extension functions
+
+### listUsersOrThrow
+
+The plain (no-`SupabaseResult`) form of `listUsers`: returns the `List<User>`
+directly and **throws** on failure. Service-role only.
+
+```kotlin
+suspend fun AuthAdminClient.listUsersOrThrow(
+    page: Int? = null,
+    perPage: Int? = null,
+): List<User>
+```
+
+- `page` — 1-indexed page number. Default `null`.
+- `perPage` — users per page. Default `null`.
+
+**Returns** `List<User>` on success; **throws** the underlying error on failure.
+
+```kotlin
+val users = admin.listUsersOrThrow(page = 1, perPage = 50)
+```
+
+### usersPaginator
+
+Builds a demand-driven `Paginator` over all users, fetching one page per
+`loadNext`. GoTrue's admin list is page-based and 1-indexed; this adapter
+converts the offset the paginator tracks into the right `page` number, so callers
+just observe `Paginator.items` and call `loadNext` near the list end. A failure
+surfaces via `Paginator.error`. Service-role only.
+
+```kotlin
+fun AuthAdminClient.usersPaginator(perPage: Int = 50): Paginator<User>
+```
+
+- `perPage` — users per page; must be greater than 0. Default `50`.
+
+**Returns** a `Paginator<User>` you drive with `loadNext()`.
+
+```kotlin
+val paginator = admin.usersPaginator(perPage = 50)
+paginator.loadNext() // fetches page 1; observe paginator.items / paginator.error
+```
+
+---
+
+## Models
+
+### AdminUserAttributes
+
+The mutable user fields used by `createUser` and `updateUserById`. All fields are
+optional; on update, only non-null fields are changed. `toString()` masks
+`password`.
+
+```kotlin
+data class AdminUserAttributes(
+    val email: String? = null,
+    val phone: String? = null,
+    val password: String? = null,
+    val userMetadata: JsonObject? = null,   // user_metadata
+    val appMetadata: JsonObject? = null,     // app_metadata
+    val emailConfirm: Boolean? = null,       // email_confirm
+    val phoneConfirm: Boolean? = null,       // phone_confirm
+    val banDuration: String? = null,         // ban_duration, e.g. "24h" or "none"
+    val role: String? = null,
+)
+```
+
+### GenerateLinkType
+
+The kind of action link to generate.
+
+```kotlin
+enum class GenerateLinkType {
+    SIGNUP,                // signup
+    INVITE,                // invite
+    MAGIC_LINK,            // magiclink
+    RECOVERY,              // recovery
+    EMAIL_CHANGE_CURRENT,  // email_change_current
+    EMAIL_CHANGE_NEW,      // email_change_new
+}
+```
+
+### GenerateLinkRequest
+
+Input to `generateLink`.
+
+```kotlin
+data class GenerateLinkRequest(
+    val type: GenerateLinkType,
+    val email: String,
+    val password: String? = null,
+    val newEmail: String? = null,     // new_email (for email-change links)
+    val data: JsonObject? = null,
+    val redirectTo: String? = null,   // redirect_to
+)
+```
+
+### GenerateLinkResponse
+
+Result of `generateLink`.
+
+```kotlin
+data class GenerateLinkResponse(
+    val properties: GenerateLinkProperties,
+    val user: User? = null,
+)
+```
+
+### GenerateLinkProperties
+
+The generated link and its associated tokens.
+
+```kotlin
+data class GenerateLinkProperties(
+    val actionLink: String,            // action_link
+    val emailOtp: String? = null,      // email_otp
+    val hashedToken: String? = null,   // hashed_token
+    val redirectTo: String? = null,    // redirect_to
+    val verificationType: String? = null, // verification_type
+)
+```
+
+### ListUsersResponse
+
+A page of users from `listUsers`.
+
+```kotlin
+data class ListUsersResponse(
+    val users: List<User> = emptyList(),
+    val aud: String? = null,
+)
+```
+
+### MfaAdminListFactorsResponse
+
+A user's MFA factors from `listFactors`.
+
+```kotlin
+data class MfaAdminListFactorsResponse(
+    val factors: List<MfaFactor> = emptyList(),
+)
+```
+
+### MfaAdminDeleteFactorResponse
+
+Result of `deleteFactor` — the deleted factor's id.
+
+```kotlin
+data class MfaAdminDeleteFactorResponse(
+    val id: String,
+)
+```
+
+### OAuthClientType
+
+The OAuth client type. `UNKNOWN` is returned for any type this version does not
+recognise. Each entry exposes its wire `value`.
+
+```kotlin
+enum class OAuthClientType(val value: String) {
+    PUBLIC("public"),
+    CONFIDENTIAL("confidential"),
+    UNKNOWN("unknown"),
+}
+```
+
+### OAuthClientRegistrationType
+
+How an OAuth client was registered. `UNKNOWN` covers unrecognised values.
+
+```kotlin
+enum class OAuthClientRegistrationType(val value: String) {
+    DYNAMIC("dynamic"),
+    MANUAL("manual"),
+    UNKNOWN("unknown"),
+}
+```
+
+### OAuthClientTokenEndpointAuthMethod
+
+The token-endpoint authentication method an OAuth client uses. `UNKNOWN` covers
+unrecognised values.
+
+```kotlin
+enum class OAuthClientTokenEndpointAuthMethod(val value: String) {
+    NONE("none"),
+    CLIENT_SECRET_BASIC("client_secret_basic"),
+    CLIENT_SECRET_POST("client_secret_post"),
+    UNKNOWN("unknown"),
+}
+```
+
+### OAuthClient
+
+A registered OAuth client. Optional fields that GoTrue omits when empty decode to
+`null` / empty defaults. `toString()` masks `clientSecret`.
+
+```kotlin
+data class OAuthClient(
+    val clientId: String,                              // client_id
+    val clientName: String? = null,                    // client_name
+    val clientSecret: String? = null,                  // client_secret
+    val clientType: OAuthClientType = OAuthClientType.UNKNOWN, // client_type
+    val tokenEndpointAuthMethod: OAuthClientTokenEndpointAuthMethod =
+        OAuthClientTokenEndpointAuthMethod.UNKNOWN,    // token_endpoint_auth_method
+    val registrationType: OAuthClientRegistrationType =
+        OAuthClientRegistrationType.UNKNOWN,           // registration_type
+    val clientUri: String? = null,                     // client_uri
+    val logoUri: String? = null,                       // logo_uri
+    val redirectUris: List<String> = emptyList(),      // redirect_uris
+    val grantTypes: List<String> = emptyList(),        // grant_types
+    val responseTypes: List<String> = emptyList(),     // response_types
+    val scope: String? = null,
+    val createdAt: String? = null,                     // created_at
+    val updatedAt: String? = null,                     // updated_at
+)
+```
+
+### OAuthClientCreateRequest
+
+Input to `createOAuthClient`.
+
+```kotlin
+data class OAuthClientCreateRequest(
+    val clientName: String,                            // client_name
+    val redirectUris: List<String>,                    // redirect_uris
+    val clientUri: String? = null,                     // client_uri
+    val grantTypes: List<String>? = null,              // grant_types
+    val responseTypes: List<String>? = null,           // response_types
+    val scope: String? = null,
+    val tokenEndpointAuthMethod: OAuthClientTokenEndpointAuthMethod? = null, // token_endpoint_auth_method
+)
+```
+
+### OAuthClientUpdateRequest
+
+Input to `updateOAuthClient`. Only non-null fields are changed.
+
+```kotlin
+data class OAuthClientUpdateRequest(
+    val clientName: String? = null,                    // client_name
+    val clientUri: String? = null,                     // client_uri
+    val logoUri: String? = null,                       // logo_uri
+    val redirectUris: List<String>? = null,            // redirect_uris
+    val grantTypes: List<String>? = null,              // grant_types
+    val tokenEndpointAuthMethod: OAuthClientTokenEndpointAuthMethod? = null, // token_endpoint_auth_method
+)
+```
+
+### OAuthClientListResponse
+
+A page of OAuth clients from `listOAuthClients`.
+
+```kotlin
+data class OAuthClientListResponse(
+    val clients: List<OAuthClient> = emptyList(),
+    val aud: String? = null,
+)
+```
+
+### CustomProviderType
+
+The custom-provider type. `UNKNOWN` covers unrecognised values.
+
+```kotlin
+enum class CustomProviderType(val value: String) {
+    OAUTH2("oauth2"),
+    OIDC("oidc"),
+    UNKNOWN("unknown"),
+}
+```
+
+### OidcDiscoveryDocument
+
+The resolved OIDC discovery document attached to a custom provider.
+
+```kotlin
+data class OidcDiscoveryDocument(
+    val issuer: String,
+    val authorizationEndpoint: String,                 // authorization_endpoint
+    val tokenEndpoint: String,                         // token_endpoint
+    val jwksUri: String,                               // jwks_uri
+    val userinfoEndpoint: String? = null,              // userinfo_endpoint
+    val revocationEndpoint: String? = null,            // revocation_endpoint
+    val supportedScopes: List<String>? = null,         // supported_scopes
+    val supportedResponseTypes: List<String>? = null,  // supported_response_types
+    val supportedSubjectTypes: List<String>? = null,   // supported_subject_types
+    val supportedIdTokenSigningAlgs: List<String>? = null, // supported_id_token_signing_algs
+)
+```
+
+### CustomProvider
+
+A configured custom OIDC/OAuth2 provider.
+
+```kotlin
+data class CustomProvider(
+    val id: String,
+    val providerType: CustomProviderType = CustomProviderType.UNKNOWN, // provider_type
+    val identifier: String,
+    val name: String,
+    val clientId: String,                              // client_id
+    val acceptableClientIds: List<String>? = null,     // acceptable_client_ids
+    val scopes: List<String>? = null,
+    val pkceEnabled: Boolean? = null,                  // pkce_enabled
+    val attributeMapping: JsonObject? = null,          // attribute_mapping
+    val authorizationParams: Map<String, String>? = null, // authorization_params
+    val enabled: Boolean? = null,
+    val emailOptional: Boolean? = null,                // email_optional
+    val issuer: String? = null,
+    val discoveryUrl: String? = null,                  // discovery_url
+    val skipNonceCheck: Boolean? = null,               // skip_nonce_check
+    val authorizationUrl: String? = null,              // authorization_url
+    val tokenUrl: String? = null,                      // token_url
+    val userinfoUrl: String? = null,                   // userinfo_url
+    val jwksUri: String? = null,                       // jwks_uri
+    val discoveryDocument: OidcDiscoveryDocument? = null, // discovery_document
+    val createdAt: String? = null,                     // created_at
+    val updatedAt: String? = null,                     // updated_at
+)
+```
+
+### CustomProviderCreateRequest
+
+Input to `createCustomProvider`. `toString()` masks `clientSecret`.
+
+```kotlin
+data class CustomProviderCreateRequest(
+    val providerType: CustomProviderType,              // provider_type
+    val identifier: String,
+    val name: String,
+    val clientId: String,                              // client_id
+    val clientSecret: String,                          // client_secret
+    val acceptableClientIds: List<String>? = null,     // acceptable_client_ids
+    val scopes: List<String>? = null,
+    val pkceEnabled: Boolean? = null,                  // pkce_enabled
+    val attributeMapping: JsonObject? = null,          // attribute_mapping
+    val authorizationParams: Map<String, String>? = null, // authorization_params
+    val enabled: Boolean? = null,
+    val emailOptional: Boolean? = null,                // email_optional
+    val issuer: String? = null,
+    val discoveryUrl: String? = null,                  // discovery_url
+    val skipNonceCheck: Boolean? = null,               // skip_nonce_check
+    val authorizationUrl: String? = null,              // authorization_url
+    val tokenUrl: String? = null,                      // token_url
+    val userinfoUrl: String? = null,                   // userinfo_url
+    val jwksUri: String? = null,                       // jwks_uri
+)
+```
+
+### CustomProviderUpdateRequest
+
+Input to `updateCustomProvider`. Only non-null fields are changed. `toString()`
+masks `clientSecret`.
+
+```kotlin
+data class CustomProviderUpdateRequest(
+    val name: String? = null,
+    val clientId: String? = null,                      // client_id
+    val clientSecret: String? = null,                  // client_secret
+    val acceptableClientIds: List<String>? = null,     // acceptable_client_ids
+    val scopes: List<String>? = null,
+    val pkceEnabled: Boolean? = null,                  // pkce_enabled
+    val attributeMapping: JsonObject? = null,          // attribute_mapping
+    val authorizationParams: Map<String, String>? = null, // authorization_params
+    val enabled: Boolean? = null,
+    val emailOptional: Boolean? = null,                // email_optional
+    val issuer: String? = null,
+    val discoveryUrl: String? = null,                  // discovery_url
+    val skipNonceCheck: Boolean? = null,               // skip_nonce_check
+    val authorizationUrl: String? = null,              // authorization_url
+    val tokenUrl: String? = null,                      // token_url
+    val userinfoUrl: String? = null,                   // userinfo_url
+    val jwksUri: String? = null,                       // jwks_uri
+)
+```
+
+### CustomProviderListResponse
+
+The result of `listCustomProviders`.
+
+```kotlin
+data class CustomProviderListResponse(
+    val providers: List<CustomProvider> = emptyList(),
+)
+```
+
+### SsoProviderSaml
+
+The SAML configuration block of an SSO provider.
+
+```kotlin
+data class SsoProviderSaml(
+    val entityId: String? = null,           // entity_id
+    val metadataUrl: String? = null,        // metadata_url
+    val metadataXml: String? = null,        // metadata_xml
+    val attributeMapping: JsonObject? = null, // attribute_mapping
+    val nameIdFormat: String? = null,       // name_id_format
+)
+```
+
+### SsoDomain
+
+A domain bound to a SAML SSO provider.
+
+```kotlin
+data class SsoDomain(
+    val id: String? = null,
+    val domain: String? = null,
+    val createdAt: String? = null,          // created_at
+    val updatedAt: String? = null,          // updated_at
+)
+```
+
+### SsoProvider
+
+A registered SAML SSO identity provider.
+
+```kotlin
+data class SsoProvider(
+    val id: String,
+    val type: String? = null,
+    val resourceId: String? = null,         // resource_id
+    val disabled: Boolean? = null,
+    val saml: SsoProviderSaml? = null,
+    val domains: List<SsoDomain> = emptyList(),
+    val createdAt: String? = null,          // created_at
+    val updatedAt: String? = null,          // updated_at
+)
+```
+
+### SsoProviderCreateRequest
+
+Input to `createSsoProvider`. Provide either `metadataUrl` or `metadataXml`. The
+`type` field is always serialised even though it defaults to `"saml"`.
+
+```kotlin
+data class SsoProviderCreateRequest(
+    val type: String = "saml",              // always encoded
+    val metadataUrl: String? = null,        // metadata_url
+    val metadataXml: String? = null,        // metadata_xml
+    val domains: List<String>? = null,
+    val attributeMapping: JsonObject? = null, // attribute_mapping
+    val nameIdFormat: String? = null,       // name_id_format
+    val resourceId: String? = null,         // resource_id
+    val disabled: Boolean? = null,
+)
+```
+
+### SsoProviderUpdateRequest
+
+Input to `updateSsoProvider`. Omitted `domains` / `attributeMapping` keep their
+existing values. The `type` field is always serialised.
+
+```kotlin
+data class SsoProviderUpdateRequest(
+    val type: String = "saml",              // always encoded
+    val metadataUrl: String? = null,        // metadata_url
+    val metadataXml: String? = null,        // metadata_xml
+    val domains: List<String>? = null,
+    val attributeMapping: JsonObject? = null, // attribute_mapping
+    val nameIdFormat: String? = null,       // name_id_format
+    val resourceId: String? = null,         // resource_id
+    val disabled: Boolean? = null,
+)
+```
+
+### SsoProviderListResponse
+
+The raw `{ "items": [...] }` wrapper returned by the SSO list endpoint.
+`listSsoProviders` unwraps this for you, but the type is public for direct use.
+
+```kotlin
+data class SsoProviderListResponse(
+    val items: List<SsoProvider> = emptyList(),
+)
+```
+
+### Passkey
+
+A passkey registered to a user.
+
+```kotlin
+data class Passkey(
+    val id: String,
+    val friendlyName: String? = null,       // friendly_name
+    val createdAt: String,                  // created_at
+    val lastUsedAt: String? = null,         // last_used_at
+)
+```
+
+### AuditLogEntry
+
+A single audit-log entry from `listAuditLogEvents`. The `payload` shape depends on
+the recorded action, so it is kept as a raw `JsonObject` rather than a typed model.
+
+```kotlin
+data class AuditLogEntry(
+    val id: String,
+    val payload: JsonObject? = null,
+    val createdAt: String? = null,          // created_at
+    val ipAddress: String? = null,          // ip_address
+)
+```
+
+---
+
+## Related types
+
+These types come from other modules and appear in admin signatures:
+
+- `SupabaseResult<T>` — the result wrapper every method returns (`supabase-core`).
+- `User`, `MfaFactor`, `SignOutScope` — shared auth models (`supabase-auth`).
+- `Paginator<T>` — the demand-driven pager returned by `usersPaginator` (`supabase-core`).
+- `SupabaseClient` — the base client passed to `createAuthAdminClient`.

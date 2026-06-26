@@ -78,7 +78,7 @@ Pick the read method that matches how many rows you expect back:
 `columns` accepts PostgREST projection syntax — `"*"`, `"id,title"`, or embedded
 relations like `"*,author(*)"`. The typed read helpers all accept an optional
 `schema`. For PostGIS rows as a GeoJSON `FeatureCollection`, use `selectGeoJson(…)`
-(or the raw `select(…, geojson = true)`).
+(or pass `format = ResponseFormat.GEOJSON` to the raw `select(…)`).
 
 ## Insert, Update, Upsert, Delete
 

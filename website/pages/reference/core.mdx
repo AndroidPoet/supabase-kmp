@@ -1,0 +1,676 @@
+---
+title: Core — API Reference
+description: Complete public API of the supabase-core module — the SupabaseResult sealed type and its combinators, the SupabaseError model and error categories, the Column value class, and the typed filter DSL that every other Supabase KMP module is built on.
+---
+
+import { Callout } from 'nextra/components'
+
+# Core — API Reference
+
+`supabase-core` is the foundation layer of Supabase KMP. It defines the `SupabaseResult<T>` sealed type that every call returns instead of throwing, a normalized `SupabaseError` model with coarse error categories, the `Column<T>` value class, and the typed filter DSL (`where { }` / `query { }`). It has no dependency on a transport or a specific Supabase service, so every other module (`supabase-database`, `supabase-auth`, `supabase-storage`, `supabase-realtime`, …) depends on it.
+
+- **Artifact:** `io.github.androidpoet:supabase-core`
+- **Version:** `1.0.0`
+- **Packages:** `io.github.androidpoet.supabase.core.result`, `…core.models`, `…core.paging`, `…core.util`
+
+<Callout type="info">
+  You rarely add this dependency directly — pulling in any feature module brings `supabase-core` transitively. Import it explicitly only when you write shared helpers that pass `SupabaseResult` or `Column` around without touching a specific service.
+</Callout>
+
+---
+
+## SupabaseResult
+
+```kotlin
+public sealed interface SupabaseResult<out T> {
+    public data class Success<out T>(public val value: T) : SupabaseResult<T>
+    public data class Failure(public val error: SupabaseError) : SupabaseResult<Nothing>
+
+    public val isSuccess: Boolean
+    public val isFailure: Boolean
+
+    public fun getOrNull(): T?
+    public fun getOrThrow(): T
+    public fun errorOrNull(): SupabaseError?
+
+    public companion object {
+        public inline fun <T> catching(block: () -> T): SupabaseResult<T>
+        public suspend inline fun <T> suspendCatching(block: suspend () -> T): SupabaseResult<T>
+    }
+}
+```
+
+The return type of every fallible SDK call. It is a **closed two-case** type — either a `Success` holding a value of type `T`, or a `Failure` holding a [`SupabaseError`](#supabaseerror). It is deliberately **not** `kotlin.Result`: the failure side carries a structured `SupabaseError` (not an arbitrary `Throwable`), and it does not box.
+
+### Variants
+
+- **`Success<T>(value: T)`** — a successful outcome. `value` is the payload (a row, a list, a session, `Unit`, …). A `data class`, so `component1()`/`copy()`/`equals`/`hashCode` are available.
+- **`Failure(error: SupabaseError)`** — a failed outcome. `error` is the normalized failure. Declared as `SupabaseResult<Nothing>`, so a `Failure` is assignable to any `SupabaseResult<T>` (this is why combinators can return `this` on the failure branch).
+
+### Members
+
+- **`isSuccess` / `isFailure`** — convenience predicates; `isSuccess` is `this is Success`.
+- **`getOrNull(): T?`** — the value on success, or `null` on failure.
+- **`getOrThrow(): T`** — the value on success, or **throws** [`SupabaseException`](#supabaseexception) (via `error.toException()`) on failure. The bridge into exception-based code.
+- **`errorOrNull(): SupabaseError?`** — the error on failure, or `null` on success.
+
+### Companion factories
+
+- **`catching(block)`** — runs `block`, wrapping its return in `Success`. A thrown `SupabaseException` is unwrapped to its `error`; any other `Throwable` becomes a generic `SupabaseError`. `CancellationException` is always re-thrown so coroutine cancellation is honoured.
+- **`suspendCatching(block)`** — the `suspend` form of `catching` for suspending bodies.
+
+```kotlin
+val result: SupabaseResult<Int> = SupabaseResult.catching { "42".toInt() }
+
+when (result) {
+    is SupabaseResult.Success -> println("got ${result.value}")
+    is SupabaseResult.Failure -> println("failed: ${result.error.message}")
+}
+```
+
+---
+
+## Result combinators
+
+All combinators are extension functions on `SupabaseResult<T>` in the `…core.result` package. They let you transform, inspect and unwrap a result without ever writing a `when`. On a `Failure`, every transform short-circuits and passes the failure through unchanged.
+
+### Transforming the success value
+
+```kotlin
+public inline fun <T, R> SupabaseResult<T>.map(transform: (T) -> R): SupabaseResult<R>
+public inline fun <T, R> SupabaseResult<T>.flatMap(transform: (T) -> SupabaseResult<R>): SupabaseResult<R>
+```
+
+- **`map`** — applies `transform` to the success value; a `Failure` passes through.
+- **`flatMap`** — like `map`, but `transform` itself returns a `SupabaseResult`, so failures from chained calls compose. The success path of one call feeds the next.
+
+```kotlin
+val name: SupabaseResult<String> =
+    database.selectSingle<User>("users")     // SupabaseResult<User>
+        .map { it.name }                     // SupabaseResult<String>
+        .flatMap { validateNonEmpty(it) }    // SupabaseResult<String>
+```
+
+### Transforming or recovering from the error
+
+```kotlin
+public inline fun <T> SupabaseResult<T>.mapError(transform: (SupabaseError) -> SupabaseError): SupabaseResult<T>
+public inline fun <T> SupabaseResult<T>.recover(transform: (SupabaseError) -> T): SupabaseResult<T>
+public inline fun <T> SupabaseResult<T>.flatMapError(transform: (SupabaseError) -> SupabaseResult<T>): SupabaseResult<T>
+```
+
+- **`mapError`** — rewrites the `SupabaseError` on a `Failure`; a `Success` passes through. Useful to add context.
+- **`recover`** — turns a `Failure` into a `Success` by computing a fallback value from the error.
+- **`flatMapError`** — the failure-side mirror of `flatMap`: maps a failure to another `SupabaseResult` (e.g. retry after a token refresh). A `Success` passes through.
+
+```kotlin
+val profile = api.fetchProfile()
+    .flatMapError { err -> if (err.category == SupabaseErrorCategory.Unauthorized) refreshAndRetry() else SupabaseResult.Failure(err) }
+    .recover { Profile.GUEST }   // never fails after this
+```
+
+### Asserting invariants
+
+```kotlin
+public inline fun <T> SupabaseResult<T>.validate(predicate: (T) -> Boolean, lazyError: (T) -> SupabaseError): SupabaseResult<T>
+public inline fun <T> SupabaseResult<T>.filter(lazyError: (T) -> SupabaseError = …, predicate: (T) -> Boolean): SupabaseResult<T>
+public inline fun <T> SupabaseResult<T>.filterNot(lazyError: (T) -> SupabaseError = …, predicate: (T) -> Boolean): SupabaseResult<T>
+```
+
+- **`validate`** — turns a `Success` whose value fails `predicate` into a `Failure` built by `lazyError`. A passing value (and any existing `Failure`) passes through.
+- **`filter`** — lighter `validate`; keeps a `Success` only while its value satisfies `predicate`, otherwise fails with `lazyError` (default message: "Value did not match the predicate").
+- **`filterNot`** — the negation of `filter`: a `Success` survives only when `predicate` is **false** (default message: "Value matched the excluded predicate").
+
+```kotlin
+api.fetchCount()
+    .filter(lazyError = { SupabaseError("count must be positive, was $it") }) { it > 0 }
+```
+
+### Combining several results
+
+```kotlin
+public inline fun <A, B, R> SupabaseResult<A>.zip(other: SupabaseResult<B>, transform: (A, B) -> R): SupabaseResult<R>
+public inline fun <A, B, C, R> SupabaseResult<A>.zip(second: SupabaseResult<B>, third: SupabaseResult<C>, transform: (A, B, C) -> R): SupabaseResult<R>
+
+public fun <T> mergeAll(results: List<SupabaseResult<T>>): SupabaseResult<List<T>>
+public fun <T> mergeAll(vararg results: SupabaseResult<T>): SupabaseResult<List<T>>
+```
+
+- **`zip`** (two- and three-arg) — combines independent results: a `Success` of `transform` applied to all values when every result succeeds, otherwise the **first** `Failure` in receiver → `second` → `third` order.
+- **`mergeAll`** — collapses many homogeneous results into a single `SupabaseResult<List<T>>`, preserving order. Short-circuits on the first `Failure`, so the success path guarantees every input succeeded. Available as a `List` and a `vararg` overload.
+
+```kotlin
+val both = api.fetchUser().zip(api.fetchSettings()) { user, settings -> Screen(user, settings) }
+val all  = mergeAll(page1, page2, page3)   // SupabaseResult<List<Page>>
+```
+
+### Unwrapping (terminal operations)
+
+```kotlin
+public fun <T> SupabaseResult<T>.getOrDefault(defaultValue: T): T
+public inline fun <T> SupabaseResult<T>.getOrElse(defaultValue: (SupabaseError) -> T): T
+public inline fun <T, R> SupabaseResult<T>.fold(onSuccess: (T) -> R, onFailure: (SupabaseError) -> R): R
+```
+
+- **`getOrDefault`** — the success value, or an eagerly-supplied `defaultValue` on failure.
+- **`getOrElse`** — the success value, or a value computed from the error (the lazy sibling of `getOrDefault`).
+- **`fold`** — collapses both cases to a single `R` by supplying a handler for each branch. The most general terminal operator.
+
+```kotlin
+val label: String = api.fetchName().fold(
+    onSuccess = { it },
+    onFailure = { "anonymous (${it.category})" },
+)
+```
+
+### Side effects
+
+```kotlin
+public inline fun <T> SupabaseResult<T>.onSuccess(action: (T) -> Unit): SupabaseResult<T>
+public inline fun <T> SupabaseResult<T>.onFailure(action: (SupabaseError) -> Unit): SupabaseResult<T>
+public inline fun <T> SupabaseResult<T>.onFailureCategory(category: SupabaseErrorCategory, action: (SupabaseError) -> Unit): SupabaseResult<T>
+public inline fun <T, C> SupabaseResult<T>.onFailureCategory(category: C, classifier: (SupabaseError) -> C, action: (SupabaseError) -> Unit): SupabaseResult<T>
+
+public inline fun <T> SupabaseResult<T>.onConflict(action: (SupabaseError) -> Unit): SupabaseResult<T>
+public inline fun <T> SupabaseResult<T>.onNotFound(action: (SupabaseError) -> Unit): SupabaseResult<T>
+public inline fun <T> SupabaseResult<T>.onUnauthorized(action: (SupabaseError) -> Unit): SupabaseResult<T>
+public inline fun <T> SupabaseResult<T>.onRateLimited(action: (SupabaseError) -> Unit): SupabaseResult<T>
+public inline fun <T> SupabaseResult<T>.onNetworkError(action: (SupabaseError) -> Unit): SupabaseResult<T>
+```
+
+Each runs `action` for the matching case and returns the **same** result unchanged, so they chain. `onFailureCategory` fires only when `error.category` equals `category`; its second overload lets you supply a custom `classifier`. The five named helpers (`onConflict`, `onNotFound`, `onUnauthorized`, `onRateLimited`, `onNetworkError`) are shorthands for `onFailureCategory` with the corresponding [`SupabaseErrorCategory`](#supabaseerrorcategory).
+
+```kotlin
+api.deleteRow(id)
+    .onSuccess { toast("Deleted") }
+    .onNotFound { toast("Already gone") }
+    .onUnauthorized { signOut() }
+    .onFailure { log(it.message) }
+```
+
+### Suspending variants
+
+For when an `action`/`transform` must itself suspend. Behaviour matches the non-suspending sibling above.
+
+```kotlin
+public suspend inline fun <T> SupabaseResult<T>.onSuccessSuspend(action: suspend (T) -> Unit): SupabaseResult<T>
+public suspend inline fun <T> SupabaseResult<T>.onFailureSuspend(action: suspend (SupabaseError) -> Unit): SupabaseResult<T>
+public suspend inline fun <T> SupabaseResult<T>.onFailureCategorySuspend(category: SupabaseErrorCategory, action: suspend (SupabaseError) -> Unit): SupabaseResult<T>
+public suspend inline fun <T, C> SupabaseResult<T>.onFailureCategorySuspend(category: C, classifier: (SupabaseError) -> C, action: suspend (SupabaseError) -> Unit): SupabaseResult<T>
+public suspend inline fun <T, R> SupabaseResult<T>.foldSuspend(onSuccess: suspend (T) -> R, onFailure: suspend (SupabaseError) -> R): R
+public suspend inline fun <T, R> SupabaseResult<T>.mapSuspend(transform: suspend (T) -> R): SupabaseResult<R>
+public suspend inline fun <T> SupabaseResult<T>.recoverSuspend(transform: suspend (SupabaseError) -> T): SupabaseResult<T>
+public suspend inline fun <T> SupabaseResult<T>.flatMapErrorSuspend(transform: suspend (SupabaseError) -> SupabaseResult<T>): SupabaseResult<T>
+```
+
+### kotlin.Result interop
+
+```kotlin
+public fun <T> SupabaseResult<T>.toKotlinResult(): Result<T>
+public inline fun <T> Result<T>.toSupabaseResult(mapThrowable: (Throwable) -> SupabaseError = …): SupabaseResult<T>
+```
+
+- **`toKotlinResult`** — converts to a standard `kotlin.Result`; a `Failure` becomes a `Result.failure` carrying the `error.toException()`.
+- **`toSupabaseResult`** — converts a `kotlin.Result` back. By default a wrapped `SupabaseException` keeps its `error`; any other throwable becomes a generic `SupabaseError` (override via `mapThrowable`). `CancellationException` is re-thrown.
+
+### Flow bridges
+
+```kotlin
+public fun <T> SupabaseResult<T>.asFlow(): Flow<SupabaseResult<T>>
+public fun <T> supabaseFlow(block: suspend () -> SupabaseResult<T>): Flow<SupabaseResult<T>>
+public fun <T> dataFlow(block: suspend () -> SupabaseResult<T>): Flow<T>
+
+public fun <T> SupabaseResult<T>.toFlow(): Flow<T>
+public inline fun <T, R> SupabaseResult<T>.toFlow(transform: (T) -> R): Flow<R>
+public inline fun <T, R> SupabaseResult<T>.toSuspendFlow(transform: suspend (T) -> R): Flow<R>
+public fun <T> SupabaseResult<T>.toResultFlow(): Flow<SupabaseResult<T>>
+```
+
+- **`asFlow`** — emits an already-computed result as a single-value cold `Flow`, keeping the wrapper. Handy for seeding a stream with a cached result before live values arrive.
+- **`supabaseFlow`** — wraps a not-yet-run suspending call in a cold `Flow` that runs it on collection and emits the result once, **keeping** the `SupabaseResult` wrapper.
+- **`dataFlow`** — the no-`Result` escape hatch: emits the plain value on success and **throws** (`SupabaseException`) on failure, so the wrapper never enters your stream. Pairs with exception-based `Flow<T>.asResult()` UI helpers.
+- **`toFlow()`** — emits the success value, or an **empty** flow on failure (failures are dropped silently). A `transform` overload maps before emitting.
+- **`toSuspendFlow`** — `toFlow` with a `suspend` transform run in the collection context.
+- **`toResultFlow`** — emits the whole result as one element, so a failure (and its error) survives into the stream — the error-preserving counterpart of `toFlow`.
+
+```kotlin
+supabaseFlow { database.selectTyped<Todo>("todos") }
+    .collect { result -> result.onSuccess(::render).onFailure(::showError) }
+```
+
+### Concurrent fan-out
+
+```kotlin
+public fun <T> CoroutineScope.deferredResult(block: suspend () -> SupabaseResult<T>): Deferred<SupabaseResult<T>>
+public suspend fun <T> awaitMerged(deferreds: List<Deferred<SupabaseResult<T>>>): SupabaseResult<List<T>>
+public suspend fun <T> awaitMerged(vararg deferreds: Deferred<SupabaseResult<T>>): SupabaseResult<List<T>>
+```
+
+- **`deferredResult`** — launches `block` on the scope and returns a `Deferred` to its result, so independent calls run concurrently. Any throwable is captured as a `Failure`, so `await()` never throws and one failure can't cancel siblings; cooperative cancellation still propagates.
+- **`awaitMerged`** — awaits every deferred and `mergeAll`s them: an ordered success list when all succeed, or the first `Failure`. The collect step for a `deferredResult` fan-out (`List` and `vararg` overloads).
+
+```kotlin
+val pages = ids.map { id -> scope.deferredResult { api.fetchPage(id) } }
+val all: SupabaseResult<List<Page>> = awaitMerged(pages)
+```
+
+---
+
+## Error model
+
+### SupabaseError
+
+```kotlin
+@Serializable
+public data class SupabaseError(
+    public val message: String,
+    public val code: String? = null,
+    public val details: JsonElement? = null,
+    public val hint: String? = null,
+    public val httpStatus: Int? = null,
+    public val retryAfterSeconds: Long? = null,
+)
+```
+
+The normalized failure — the `error` half of a `Failure`, unifying PostgREST, GoTrue, Storage, Realtime and client-side faults.
+
+- **`message`** — human-readable description (required).
+- **`code`** — machine-readable service code (e.g. a PostgREST `PGRST…`/SQLSTATE, a GoTrue slug) or a synthetic [`SupabaseErrorCodes.Client`](#supabaseerrorcodes) code, when known. Default `null`.
+- **`details`** — additional structured context from the error body, as a raw `JsonElement`. Default `null`.
+- **`hint`** — a suggested remedy, when the server supplies one. Default `null`.
+- **`httpStatus`** — the HTTP status that produced this error, captured **independently** of `code` so [`category`](#supabaseerrorcategory) keeps working even when the body has no machine-readable code. Default `null`.
+- **`retryAfterSeconds`** — the server's `Retry-After` hint in seconds, typically on a `429`. Useful for "try again in N seconds" UI. Default `null`.
+
+```kotlin
+val err = SupabaseError(message = "Row not found", code = "PGRST116", httpStatus = 406)
+println(err.category)   // Validation
+```
+
+### SupabaseException
+
+```kotlin
+public class SupabaseException(public val error: SupabaseError, cause: Throwable? = null) : Exception(error.message, cause)
+public fun SupabaseError.toException(cause: Throwable? = null): SupabaseException
+```
+
+The throwable form of a `SupabaseError`, thrown by `getOrThrow()` / `dataFlow` and caught by `catching`. It keeps the original `error` so a `catch` block can still inspect `error.code`/`error.category`, and an optional `cause` so the underlying throwable stays in the stack trace. `toException()` is the convenience wrapper.
+
+### SupabaseErrorCategory
+
+```kotlin
+public enum class SupabaseErrorCategory {
+    Conflict, NotFound, Unauthorized, RateLimited, Validation, Internal, Network, Unknown
+}
+
+public val SupabaseError.category: SupabaseErrorCategory
+public val SupabaseErrorCategory.isRetryable: Boolean
+```
+
+A coarse classification of a failure so callers can branch on the **kind** of error without matching individual codes.
+
+- **`Conflict`** — uniqueness/foreign-key clash or already-existing resource (HTTP 409).
+- **`NotFound`** — the table, row, user or object does not exist (HTTP 404).
+- **`Unauthorized`** — missing/invalid/insufficient credentials or permissions (HTTP 401/403).
+- **`RateLimited`** — a rate limit was exceeded; back off and retry (HTTP 429).
+- **`Validation`** — the request was malformed or failed validation (HTTP 400/406/416/422).
+- **`Internal`** — a server-side failure unrelated to request content (HTTP 5xx, plus transient 408/425).
+- **`Network`** — the request never reached the server or never produced a usable response (offline, timeout, connection or decode failure). Distinct from `Unknown` so you can show offline/retry UI.
+- **`Unknown`** — the catch-all fallback when nothing more specific applied.
+
+**`category`** resolves from the textual `code` first (matched against the per-service code sets in [`SupabaseErrorCodes`](#supabaseerrorcodes)), then falls back to `httpStatus` (or a numeric `code` in the HTTP range), so structured bodies without a textual code are still classified.
+
+**`isRetryable`** is `true` for the transient categories — `RateLimited`, `Internal`, `Network` — and `false` for client-fault categories that would fail again unchanged.
+
+```kotlin
+result.onFailure { err ->
+    if (err.category.isRetryable) scheduleRetry(after = err.retryAfterSeconds)
+    else showPermanentError(err)
+}
+```
+
+### Code-specific predicates
+
+```kotlin
+public fun SupabaseError.isUniquenessViolation(): Boolean   // Postgres 23505 — duplicate row
+public fun SupabaseError.isForeignKeyViolation(): Boolean   // Postgres 23503 — missing referenced row
+public fun SupabaseError.isInvalidCredentials(): Boolean    // GoTrue invalid_credentials
+public fun SupabaseError.isUserAlreadyExists(): Boolean     // GoTrue user_already_exists
+public fun SupabaseError.isFileNotFound(): Boolean          // Storage NoSuchKey
+public fun SupabaseError.isNetworkError(): Boolean          // == (category == Network)
+```
+
+Convenience checks against the most common individual codes, for when a category is too coarse.
+
+### SupabaseErrorCodes
+
+```kotlin
+public object SupabaseErrorCodes {
+    public object Database { /* PGRST… + SQLSTATE constants */ }
+    public object Auth { /* GoTrue slug constants */ }
+    public object Storage { /* object/bucket + S3 constants */ }
+    public object Realtime { /* channel/auth/topic constants */ }
+    public object Functions { /* Edge Functions constants */ }
+    public object Client { /* synthetic client-side constants */ }
+    public object Management { /* project/org constants */ }
+}
+```
+
+A catalog of the string error codes Supabase services return, grouped by service, so matching against `SupabaseError.code` never needs magic strings. These drive the category sets behind `category` and the `is*` helpers. Every constant is a `public const val String`.
+
+- **`Database`** — PostgREST (`PGRST000`…`PGRST303`, `PGRSTX00`) and raw PostgreSQL `SQLSTATE` codes: `FOREIGN_KEY_VIOLATION` (`23503`), `UNIQUENESS_VIOLATION` (`23505`), `UNDEFINED_TABLE` (`42P01`), `INSUFFICIENT_PRIVILEGE` (`42501`), `STATEMENT_TIMEOUT` (`57014`), `TABLE_NOT_FOUND`, `COLUMN_NOT_FOUND`, `FUNCTION_NOT_FOUND`, `JWT_INVALID`, `SINGULAR_RESPONSE_VIOLATION`, and more.
+- **`Auth`** — GoTrue codes: `INVALID_CREDENTIALS`, `USER_NOT_FOUND`, `USER_ALREADY_EXISTS`, `EMAIL_NOT_CONFIRMED`, `WEAK_PASSWORD`, `OTP_EXPIRED`, `TOO_MANY_REQUESTS`, `MFA_VERIFICATION_FAILED`, `SIGNUP_DISABLED`, and others.
+- **`Storage`** — object/bucket and S3-compatibility codes: `NO_SUCH_BUCKET`, `NO_SUCH_KEY`, `KEY_ALREADY_EXISTS`, `ENTITY_TOO_LARGE`, `INVALID_MIME_TYPE`, `ACCESS_DENIED`, `THROTTLING`, `INTERNAL_ERROR`, and more.
+- **`Realtime`** — WebSocket codes: `CHANNEL_RATE_LIMIT_REACHED`, `CONNECTION_RATE_LIMIT_REACHED`, `ERROR_AUTHORIZING_WEBSOCKET`, `AUTH_EXPIRED`, `INVALID_TOPIC`, `PAYLOAD_TOO_LARGE`, and others.
+- **`Functions`** — Edge Functions codes: `BOOT_ERROR`, `WORKER_ERROR`, `WORKER_LIMIT`, `DEPLOYMENT_FAILED`, `UNSUPPORTED_NODE_VERSION`, `FUNCTION_NOT_RETURNING_RESPONSE`.
+- **`Client`** — the only group **not** emitted by a server; synthesized by the SDK when a request never produced a response: `NETWORK_ERROR`, `TIMEOUT`, `CONNECTION_FAILED`. These let `category` resolve to `Network` instead of `Unknown`.
+- **`Management`** — Management API codes: `PROJECT_NOT_FOUND`, `ORGANIZATION_NOT_FOUND`, `INVALID_PROJECT_REF`, `UNAUTHORIZED`, `FORBIDDEN`, `RATE_LIMIT_EXCEEDED`.
+
+```kotlin
+result.onFailure { err ->
+    when (err.code) {
+        SupabaseErrorCodes.Database.UNIQUENESS_VIOLATION -> toast("Already exists")
+        SupabaseErrorCodes.Auth.WEAK_PASSWORD -> showPasswordHint()
+    }
+}
+```
+
+---
+
+## Column and query enums
+
+### Column
+
+```kotlin
+@JvmInline
+public value class Column<T>(public val name: String)
+```
+
+A type-safe handle to a table column, carrying both its wire `name` and the Kotlin type `T` of the values it holds. Passing `Column<T>` into the [filter operators](#filter-dsl) makes the compiler reject type-mismatched comparisons like `age eq "oops"`. Being a `value class`, it costs nothing at runtime — it is just the `String` name. This is the **only** value class in `supabase-core`; typed IDs (user, bucket, session, channel, …) live in their respective feature modules.
+
+```kotlin
+public object Profiles {
+    public val age: Column<Int> = Column("age")
+    public val status: Column<String> = Column("status")
+}
+```
+
+### Order
+
+```kotlin
+public enum class Order { ASC, DESC }
+```
+
+Sort direction for [`QueryBuilder.orderBy`](#querybuilder). `ASC` renders to PostgREST `asc`, `DESC` to `desc`.
+
+### Nulls
+
+```kotlin
+public enum class Nulls { FIRST, LAST }
+```
+
+Placement of `NULL` values relative to non-null values for `orderBy`. `FIRST` → `nullsfirst`, `LAST` → `nullslast`.
+
+### TextSearchType
+
+```kotlin
+public enum class TextSearchType { Raw, Plain, Phrase, Websearch }
+```
+
+Full-text search mode for [`WhereBuilder.textSearch`](#full-text-search), selecting how the query is parsed into a `tsquery`. Maps to a PostgREST operator prefix: `Raw` → `fts`, `Plain` → `plfts`, `Phrase` → `phfts`, `Websearch` → `wfts`.
+
+### Filter
+
+```kotlin
+public sealed interface Filter
+```
+
+An immutable filter expression — the value the filter DSL builds internally. A `Filter` is either a single column predicate or a logical combination of others. It has no public implementations; you never construct one by hand, you build it through `where { }`. It is rendered to PostgREST query parameters when a request is issued.
+
+### FilterDsl
+
+```kotlin
+@DslMarker
+public annotation class FilterDsl
+```
+
+A [DSL marker](https://kotlinlang.org/docs/type-safe-builders.html#scope-control-dslmarker) that scopes the receiver of nested DSL blocks (`where`/`or`/`and`/`not`), so an inner block can't accidentally call methods on an outer builder.
+
+---
+
+## Filter DSL
+
+### WhereBuilder
+
+```kotlin
+@FilterDsl
+public class WhereBuilder
+```
+
+The receiver of a filter block. Each statement adds one predicate; multiple statements are **AND**-ed together. The operators are infix extensions on `Column<T>`, type-checked against `T`. String operands are escaped per PostgREST quoting rules when they contain a structural character (comma, parens, quote, backslash); numbers and booleans are emitted verbatim.
+
+**Comparison** (`eq`/`neq` for any `T`; the ordering operators require `T : Comparable<T>`):
+
+```kotlin
+public infix fun <T> Column<T>.eq(value: T)                       // column = value
+public infix fun <T> Column<T>.neq(value: T)                      // column <> value
+public infix fun <T> Column<T>.isDistinctFrom(value: T)           // IS DISTINCT FROM (null-aware)
+public infix fun <T : Comparable<T>> Column<T>.greater(value: T)    // >
+public infix fun <T : Comparable<T>> Column<T>.greaterEq(value: T)  // >=
+public infix fun <T : Comparable<T>> Column<T>.less(value: T)       // <
+public infix fun <T : Comparable<T>> Column<T>.lessEq(value: T)     // <=
+public infix fun <T : Comparable<T>> Column<T>.within(range: ClosedRange<T>)  // >= start AND <= end
+```
+
+**Null / boolean IS:**
+
+```kotlin
+public fun Column<*>.isNull()                          // IS NULL
+public fun Column<*>.isNotNull()                       // IS NOT NULL
+public infix fun Column<Boolean>.isExactly(value: Boolean)   // IS TRUE / IS FALSE
+```
+
+**Pattern matching** (on `Column<String>`):
+
+```kotlin
+public infix fun Column<String>.like(pattern: String)     // LIKE (case-sensitive, % = any run)
+public infix fun Column<String>.ilike(pattern: String)    // ILIKE (case-insensitive)
+public infix fun Column<String>.matches(pattern: String)  // ~  POSIX regex (case-sensitive)
+public infix fun Column<String>.imatches(pattern: String) // ~* POSIX regex (case-insensitive)
+public infix fun Column<String>.likeAllOf(patterns: List<String>)   // LIKE ALL
+public infix fun Column<String>.likeAnyOf(patterns: List<String>)   // LIKE ANY
+public infix fun Column<String>.ilikeAllOf(patterns: List<String>)  // ILIKE ALL
+public infix fun Column<String>.ilikeAnyOf(patterns: List<String>)  // ILIKE ANY
+```
+
+**Membership:**
+
+```kotlin
+public infix fun <T> Column<T>.inList(values: List<T>)      // IN (…)
+public infix fun <T> Column<T>.notInList(values: List<T>)   // NOT IN (…)
+```
+
+**Array** (on `Column<List<T>>`):
+
+```kotlin
+public infix fun <T> Column<List<T>>.contains(values: List<T>)     // @> contains every element
+public infix fun <T> Column<List<T>>.containedBy(values: List<T>)  // <@ contained by
+public infix fun <T> Column<List<T>>.overlaps(values: List<T>)     // && shares any element
+```
+
+**Range columns** (`int4range`, `tstzrange`, … — `range` is a Postgres range literal passed verbatim, e.g. `"[1,10)"`):
+
+```kotlin
+public infix fun Column<*>.rangeGt(range: String)        // >>  strictly right of
+public infix fun Column<*>.rangeGte(range: String)       // &>  does not extend left of
+public infix fun Column<*>.rangeLt(range: String)        // <<  strictly left of
+public infix fun Column<*>.rangeLte(range: String)       // &<  does not extend right of
+public infix fun Column<*>.rangeAdjacent(range: String)  // -|- adjacent to
+```
+
+**Full-text search:**
+
+```kotlin
+public fun Column<String>.textSearch(query: String, config: String? = null, type: TextSearchType = TextSearchType.Plain)
+```
+
+- `query` — the search string.
+- `config` — an optional text-search configuration (e.g. `"english"`), wrapped in parentheses on the wire. Default `null`.
+- `type` — the parse mode; default `TextSearchType.Plain`.
+
+**Logical grouping and escape hatch:**
+
+```kotlin
+public fun or(referencedTable: String? = null, block: WhereBuilder.() -> Unit)   // OR group
+public fun and(referencedTable: String? = null, block: WhereBuilder.() -> Unit)  // explicit AND group
+public fun not(block: WhereBuilder.() -> Unit)                                    // negates every predicate inside
+public fun raw(column: Column<*>, operator: String, value: String)               // column=<operator>.<value>, value escaped
+```
+
+- `or` / `and` — combine the predicates in `block` with that operator; the optional `referencedTable` scopes the group to an embedded resource.
+- `not` — negates every predicate declared in `block` (SQL `NOT`).
+- `raw` — an escape hatch for operators the DSL doesn't expose yet.
+
+```kotlin
+where {
+    Profiles.status eq "active"
+    Profiles.age within 18..30
+    or {
+        Profiles.status eq "pending"
+        Profiles.status eq "invited"
+    }
+}
+```
+
+### QueryBuilder
+
+```kotlin
+@FilterDsl
+public class QueryBuilder {
+    public fun where(block: WhereBuilder.() -> Unit)
+    public fun orderBy(column: Column<*>, order: Order = Order.ASC, nulls: Nulls? = null, referencedTable: String? = null)
+    public fun limit(count: Int, referencedTable: String? = null)
+    public fun offset(count: Int, referencedTable: String? = null)
+    public fun range(from: Int, to: Int, referencedTable: String? = null)
+}
+```
+
+The receiver of a full read query: a `where { }` predicate plus result modifiers. Modifiers are kept distinct from filters, so a `not { limit(1) }` is not expressible.
+
+- **`where`** — the filter predicate; multiple statements inside are AND-ed.
+- **`orderBy`** — sort by `column`. `order` defaults to `Order.ASC`; `nulls` is optional null placement; `referencedTable` scopes the sort to an embedded resource. Successive calls add **secondary** sort keys (merged into one `order` param).
+- **`limit`** — cap the result at `count` rows; last call wins.
+- **`offset`** — skip the first `count` rows; last call wins.
+- **`range`** — an inclusive, zero-based row window `[from, to]`, emitted as an `offset` plus a derived `limit` (`to - from + 1`). Requires `to >= from`.
+
+### where / query
+
+```kotlin
+public inline fun where(block: WhereBuilder.() -> Unit): List<Pair<String, String>>
+public inline fun query(block: QueryBuilder.() -> Unit): List<Pair<String, String>>
+```
+
+The two entry points that materialize a DSL block into PostgREST query parameters. `where { }` builds a filter-only predicate (used by `update`/`delete`); `query { }` builds a full read query (filter + modifiers, used by `select`). You normally pass the block straight to a feature-module method rather than calling these directly.
+
+```kotlin
+val params = query {
+    where { Profiles.status eq "active" }
+    orderBy(Profiles.age, Order.DESC)
+    limit(20)
+}
+// → [(status, eq.active), (order, age.desc), (limit, 20)]
+```
+
+---
+
+## Response model
+
+### PostgrestResponse
+
+```kotlin
+@Serializable
+public data class PostgrestResponse<T>(
+    public val data: T,
+    public val count: Long? = null,
+)
+```
+
+A successful PostgREST response: the decoded `data` plus an optional row `count`.
+
+- **`data`** — the decoded body (a row, a list of rows, or a scalar).
+- **`count`** — the total row count, populated **only** when the request asked for it (a `Prefer: count=…` header), e.g. to drive pagination; `null` otherwise.
+
+---
+
+## Paging
+
+### Paginator
+
+```kotlin
+public class Paginator<T>(
+    pageSize: Int = 20,
+    fetch: suspend (offset: Int, limit: Int) -> List<T>,
+) {
+    public val items: StateFlow<List<T>>
+    public val isLoading: StateFlow<Boolean>
+    public val endReached: StateFlow<Boolean>
+    public val error: StateFlow<Throwable?>
+
+    public suspend fun loadNext()
+    public suspend fun refresh()
+}
+```
+
+A small, dependency-free, **demand-driven** paginator for infinite-scroll UIs. It loads the next page only when asked, exposing its state as observable `StateFlow`s. It depends on nothing but coroutines, so it works on every target with or without Compose.
+
+- **`pageSize`** — rows requested per page; must be `> 0`. Default `20`.
+- **`fetch`** — returns one page given an `offset` and `limit`. Expected to **throw** on failure (e.g. via `getOrThrow()`); the throwable is captured into `error` rather than propagated, except `CancellationException`, which is always re-thrown.
+
+State:
+
+- **`items`** — the rows loaded so far, growing with each successful `loadNext`.
+- **`isLoading`** — `true` while a page is being fetched.
+- **`endReached`** — `true` once a page came back shorter than `pageSize`.
+- **`error`** — the last `fetch` failure, or `null`; cleared when a new load starts.
+
+Operations:
+
+- **`loadNext()`** — loads and appends the next page. A no-op if a load is running or `endReached` is set.
+- **`refresh()`** — resets to the first page and reloads it (pull-to-refresh); any in-flight page is discarded so it cannot append onto the cleared list.
+
+```kotlin
+val pager = Paginator(pageSize = 20) { offset, limit ->
+    database.selectTyped<Todo>("todos") { range(offset, offset + limit - 1) }.getOrThrow()
+}
+// observe pager.items; near the end of the list:
+LaunchedEffect(lastVisibleIndex) { pager.loadNext() }
+```
+
+---
+
+## Utilities
+
+### urlEncode
+
+```kotlin
+public fun urlEncode(value: String): String
+```
+
+Percent-encodes `value` for use as a single URL component (RFC 3986). The unreserved set (`A-Z a-z 0-9 - . _ ~`) passes through unchanged; everything else is encoded from its UTF-8 bytes. Shared so each module needn't carry its own copy.
+
+```kotlin
+urlEncode("a b/c")   // "a%20b%2Fc"
+```
+
+---
+
+## Design notes
+
+**Result-first, no exceptions.** Every fallible operation returns a `SupabaseResult<T>` rather than throwing. Failure is a value (`Failure(SupabaseError)`), not a stack-unwinding event, so the compiler forces you to acknowledge both branches and the happy path composes with `map`/`flatMap`/`zip`. Exceptions remain available as an opt-in (`getOrThrow`, `dataFlow`, `toKotlinResult`) for code that prefers `try`/`catch`, but they are never the default.
+
+**Not `kotlin.Result`.** The failure side is a structured, serializable `SupabaseError` — with a `code`, an `httpStatus`, a `category` and a `Retry-After` hint — not an opaque `Throwable`. That lets you branch on the *kind* of failure (`onUnauthorized`, `category.isRetryable`) without string-matching messages, and lets errors cross serialization boundaries.
+
+**Cancellation is sacred.** Every helper that catches throwables (`catching`, `deferredResult`, `Paginator`, `toSupabaseResult`) re-throws `CancellationException`, so structured concurrency and coroutine cancellation always work as expected.
+
+**Zero-cost types where it counts.** `Column<T>` is a `value class`, so type-safe filters carry no runtime overhead over a bare `String`. Filters are modelled as an immutable `Filter` tree and rendered in a single recursive walk, so logical combinators stay trivial and no already-serialized output is ever re-parsed.
+
+**Thin over the REST API.** The filter DSL maps directly onto PostgREST operators; nothing here hides or reinterprets the wire protocol, and the `raw` escape hatch is always available for operators the DSL doesn't yet name.

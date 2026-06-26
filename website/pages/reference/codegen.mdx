@@ -1,0 +1,242 @@
+---
+title: Codegen — API & Plugin Reference
+description: Reference for supabase-codegen (the JVM CLI/library) and supabase-codegen-gradle (the Gradle plugin) — every CLI flag, programmatic entry point, Gradle extension property, generated task, output layout, and the --format sqldelight output.
+---
+
+import { Callout } from 'nextra/components'
+
+# Codegen — API & Plugin Reference
+
+The codegen reads a Supabase project's PostgREST OpenAPI document and writes typed
+Kotlin `@Serializable` models — one file per table and per enum — plus the matching
+`@SerialName` column tokens so the generated code decodes real PostgREST responses.
+The output uses only multiplatform-common types, so it drops straight into a
+`commonMain` source set.
+
+It ships in two Maven Central artifacts (group `io.github.androidpoet`):
+
+| Artifact | What it is |
+| --- | --- |
+| `io.github.androidpoet:supabase-codegen` | The JVM tool/library — a CLI `main` plus the public generator objects. |
+| `io.github.androidpoet:supabase-codegen-gradle` | The Gradle plugin (id `io.github.androidpoet.supabase.codegen`). |
+
+This page is the API/CLI/plugin reference. For task-oriented setup, modes, and the
+type-mapping table, see the [Codegen guide](/codegen).
+
+## 1. CLI / programmatic entry points
+
+### CLI
+
+The `supabase-codegen` tool runs the `main` in
+`io.github.androidpoet.supabase.codegen.MainKt`. It fetches the schema live from
+`--url`/`--key`, or reads a saved OpenAPI document from `--spec`:
+
+```bash
+supabase-codegen \
+  --url https://<ref>.supabase.co \
+  --key <service_role key> \
+  --package com.example.db \
+  --out src/commonMain/kotlin
+```
+
+Read from a local spec instead — no network, no key:
+
+```bash
+supabase-codegen --spec schema.json --package com.example.db --out src/commonMain/kotlin
+```
+
+Emit SQLDelight `.sq` files (and the optional adapter glue):
+
+```bash
+supabase-codegen --spec schema.json --package com.example.db \
+  --out src/commonMain/sqldelight --format sqldelight --adapters true
+```
+
+#### Flags
+
+Flags are parsed as `--name value` pairs (each flag takes the next argument as its
+value). Unknown flags are ignored.
+
+| Flag | Type | Default | Effect |
+| --- | --- | --- | --- |
+| `--url` | string | `$SUPABASE_URL` | Project URL, e.g. `https://<ref>.supabase.co`. Used only when `--spec` is absent. |
+| `--key` | string | `$SUPABASE_KEY` | API key whose role can read the target tables. Used only when `--spec` is absent. |
+| `--spec` | file path | none | Read the OpenAPI JSON from disk instead of fetching. When set, `--url`/`--key` are not needed and no network call is made. |
+| `--package` | string | `supabase.generated` | Base package for the generated code. |
+| `--out` | directory | `build/generated/supabase` | Root output directory. |
+| `--format` | `kotlin` \| `sqldelight` | `kotlin` | `kotlin` emits one file per table/enum; `sqldelight` emits one `.sq` per table. Any other value is an error. |
+| `--adapters` | boolean | `false` | Only meaningful with `--format sqldelight`: also emits `SupabaseAdapters.kt`. See [section 4](#4---format-sqldelight-output). |
+
+<Callout type="info">
+If neither `--spec` nor a usable URL/key pair (flags or `SUPABASE_URL` / `SUPABASE_KEY`)
+is provided, the tool exits with an error telling you to supply one. Before generating,
+it clears the output it owns (the `tables/`/`enums/` sub-packages for `kotlin`, the `.sq`
+files for `sqldelight`) so a dropped table or enum can't leave a stale file behind.
+</Callout>
+
+### Programmatic API
+
+The same generators that the CLI and Gradle plugin call are public, so you can embed
+codegen in your own JVM tooling. Each takes the raw OpenAPI JSON and a base package and
+returns `GeneratedFile`s — it does not write to disk:
+
+```kotlin
+public data class GeneratedFile(
+    public val relativePath: String,
+    public val contents: String,
+)
+```
+
+| Entry point | Signature | Returns |
+| --- | --- | --- |
+| `SchemaFetcher.fetch` | `fetch(projectUrl: String, apiKey: String): String` | Raw OpenAPI JSON fetched from `<url>/rest/v1/`. |
+| `SupabaseModelGenerator.generate` | `generate(specJson: String, packageName: String): List<GeneratedFile>` | Kotlin model files (one per table/enum). |
+| `SupabaseModelGenerator.generatedSubpackages` | `List<String>` | The sub-packages the generator owns (`["tables", "enums"]`) — clear these before re-writing. |
+| `SupabaseSqlDelightGenerator.generate` | `generate(specJson: String, packageName: String): List<GeneratedFile>` | One `.sq` file per table. |
+| `SupabaseSqlDelightAdapterGenerator.generate` | `generate(specJson: String, packageName: String): GeneratedFile` | A single `SupabaseAdapters.kt` file. |
+
+```kotlin
+import io.github.androidpoet.supabase.codegen.SchemaFetcher
+import io.github.androidpoet.supabase.codegen.SupabaseModelGenerator
+
+val specJson = SchemaFetcher.fetch("https://<ref>.supabase.co", "<service_role key>")
+val files = SupabaseModelGenerator.generate(specJson, "com.example.db")
+files.forEach { println(it.relativePath) }
+```
+
+## 2. Gradle plugin
+
+**Plugin id:** `io.github.androidpoet.supabase.codegen`
+(implementation `io.github.androidpoet.supabase.codegen.gradle.SupabaseCodegenPlugin`).
+
+Add Maven Central to your plugin repositories in `settings.gradle.kts`, then apply the
+plugin in the module that owns the generated models:
+
+```kotlin
+plugins {
+    id("io.github.androidpoet.supabase.codegen") version "1.0.0"
+}
+```
+
+### Extension DSL — `supabaseCodegen { }`
+
+```kotlin
+supabaseCodegen {
+    url.set(providers.environmentVariable("SUPABASE_URL"))
+    key.set(providers.environmentVariable("SUPABASE_KEY"))
+    packageName.set("com.example.db")
+    outputDir.set(layout.projectDirectory.dir("src/commonMain/kotlin"))
+    autoSync.set(false)
+}
+```
+
+| Property | Type | Default | Effect |
+| --- | --- | --- | --- |
+| `url` | `Property<String>` | falls back to `$SUPABASE_URL` | Project URL, e.g. `https://<ref>.supabase.co`. |
+| `key` | `Property<String>` | falls back to `$SUPABASE_KEY` | API key whose role can read the target tables. |
+| `packageName` | `Property<String>` | `supabase.generated` | Base package; models go under `.tables` / `.enums`. |
+| `outputDir` | `DirectoryProperty` | `build/generated/supabase` | Where files are written. |
+| `autoSync` | `Property<Boolean>` | `false` | When `true`, regenerate from the live schema before every Kotlin compile. |
+
+<Callout type="info">
+`url`/`key` default to the `SUPABASE_URL` / `SUPABASE_KEY` environment variables — the
+task wires `extension.url.orElse(environmentVariable("SUPABASE_URL"))` (and the same for
+`key`), so you only set them in the DSL to override the environment.
+</Callout>
+
+### Generated task
+
+The plugin registers one task:
+
+| Task | Group | Does |
+| --- | --- | --- |
+| `generateSupabaseModels` | `supabase` | Fetches the schema and writes the Kotlin `@Serializable` models into `outputDir`. |
+
+```bash
+export SUPABASE_URL="https://<ref>.supabase.co"
+export SUPABASE_KEY="<service_role key>"
+./gradlew generateSupabaseModels
+```
+
+The task always runs when invoked (it is never reported up-to-date, since the remote
+schema can change with no local input change) and is not cached.
+
+**`autoSync` behaviour.** With `autoSync = true`, the plugin makes every
+`compile*Kotlin*` task depend on `generateSupabaseModels`, so the models regenerate
+before each compile. If neither `url`/`key` nor the env vars are set, an auto-sync build
+**skips** codegen with a warning instead of failing — keeping offline/CI builds green —
+while a configured-but-unreachable fetch still fails the build. With `autoSync = false`
+(the default), the task is **not** wired into compilation; you run it on demand and
+commit the result. In either mode you must add `outputDir` as a source directory yourself:
+
+```kotlin
+kotlin.sourceSets.commonMain {
+    kotlin.srcDir(layout.buildDirectory.dir("generated/supabase"))
+}
+```
+
+The Gradle plugin generates Kotlin models only. To emit SQLDelight `.sq` files, use the
+CLI or the programmatic API with `--format sqldelight`.
+
+## 3. Output layout
+
+Kotlin output (`--format kotlin`) is split by kind into typed sub-packages, one file
+each, under the base package:
+
+```
+com/example/db/
+  tables/
+    ChatRooms.kt
+    ChatMessages.kt
+  enums/
+    OrderStatus.kt
+```
+
+`SupabaseModelGenerator.generatedSubpackages` is exactly `["tables", "enums"]`. These are
+the only directories the generator owns: before each run it deletes them and rewrites
+them, so a table or enum dropped from the database leaves no stale file, while
+hand-written code elsewhere in the package (such as extension functions) is untouched.
+
+<Callout type="warning">
+**Auto-sync output is build output, never editable.** When `autoSync = true`, the models
+land under `build/` (default `build/generated/supabase`) and are regenerated on every run.
+Gitignore them and never hand-edit them. To add behaviour, write extension functions in
+your own file (the cleanup is scoped to `tables/`/`enums/`, so your file survives). When
+committing models instead, point `outputDir` (or `--out`) at a real source set and turn
+`autoSync` off.
+</Callout>
+
+## 4. `--format sqldelight` output
+
+With `--format sqldelight`, the tool emits one `.sq` file per table (named in PascalCase)
+under the package directory, ready for SQLDelight's own Gradle plugin to compile into a
+type-safe Kotlin database. Each file contains a `CREATE TABLE IF NOT EXISTS` plus a small
+set of standard labelled queries:
+
+- `selectAll`, `countAll`, and `upsert` (an `INSERT OR REPLACE` over every column) for
+  every table.
+- When a primary key is detected (a column PostgREST flags with `<pk/>`, or a column
+  literally named `id`): `selectById`, `deleteById`, `page` (offset pagination ordered by
+  the primary key), and `pageAfter` (keyset pagination after a given key).
+
+Postgres types are collapsed to SQLite storage classes (integer/bigint/boolean →
+`INTEGER`, numeric/real/double → `REAL`, arrays stored as JSON `TEXT`, everything else
+including `text`/`uuid`/`timestamp`/`json`/`money` → `TEXT`). Two tables whose names
+normalise to the same `.sq` file name fail fast rather than overwriting each other.
+
+```bash
+supabase-codegen --spec schema.json --package com.example.db \
+  --out src/commonMain/sqldelight --format sqldelight
+```
+
+Add `--adapters true` to also emit a single `SupabaseAdapters.kt` alongside the `.sq`
+files. It exposes `public fun supabaseAdapters(driver: SqlDriver): Map<String, TableAdapter>`,
+wiring each generated table into a local-store adapter map. This file imports the
+offline-sync runtime types, so that runtime must be on the classpath for the generated
+code to compile.
+
+```toml
+# gradle/libs.versions.toml — the generated .sq files are compiled by SQLDelight's plugin
+[plugins]
+sqldelight = { id = "app.cash.sqldelight", version = "<version>" }
+```

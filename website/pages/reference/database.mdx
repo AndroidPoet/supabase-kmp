@@ -1,0 +1,1579 @@
+---
+title: Database — API Reference
+description: Complete API reference for the supabase-database module — PostgREST reads, writes, and RPC, plus the typed Kotlin filter DSL. Every public symbol, signature, and return type.
+---
+
+import { Callout } from 'nextra/components'
+
+# Database — API Reference
+
+The `supabase-database` module is a thin, stateless Kotlin client over a Supabase
+project's PostgREST endpoint (`/rest/v1`). It gives you CRUD over your tables,
+calls to stored procedures (RPC), and a typed filter DSL for building `WHERE`
+clauses, ordering, and pagination — all mapped to a single HTTP request per call.
+
+- **Artifact:** `io.github.androidpoet:supabase-database`
+- **Entry point:** `createDatabaseClient(client)` or the `SupabaseClient.database` accessor.
+
+```kotlin
+val database = createDatabaseClient(client)
+// or
+val database = client.database
+```
+
+<Callout type="info">
+Every method returns a `SupabaseResult<T>` — a **sealed** type from
+`supabase-core` with two cases, `SupabaseResult.Success(value)` and
+`SupabaseResult.Failure(error)` where `error` is a typed `SupabaseError`. This is
+**not** `kotlin.Result`. Failures (HTTP errors, transport problems, malformed
+requests, decode failures) are returned, never thrown — except for the explicit
+`*OrThrow` helpers. Pattern-match on the result, or use `getOrNull()`,
+`getOrThrow()`, `errorOrNull()`, and `map`.
+</Callout>
+
+The interface methods return the raw response body as a `String` (the wire-level
+escape hatch). The ergonomic, type-safe access lives in `reified inline`
+extension functions named with a `Typed`/`Unit`/`Csv`/etc. suffix — these
+serialize and deserialize around the string core. See [Design notes](#design-notes)
+for why typed decoding is a separate name rather than an overload of `select`.
+
+---
+
+## Client construction
+
+### `createDatabaseClient`
+
+```kotlin
+public fun createDatabaseClient(supabaseClient: SupabaseClient): DatabaseClient
+```
+
+Creates a `DatabaseClient` bound to `supabaseClient`. The result is a thin,
+stateless wrapper that forwards every call to the client's transport, so it is
+cheap to create and holds no state of its own.
+
+- `supabaseClient` — the configured Supabase client whose transport is used.
+
+**Returns:** a `DatabaseClient`.
+
+```kotlin
+val database = createDatabaseClient(client)
+```
+
+### `SupabaseClient.database`
+
+```kotlin
+public val SupabaseClient.database: DatabaseClient
+```
+
+Accessor property that simply calls `createDatabaseClient(this)`. Use it for
+one-off access without keeping a named reference.
+
+```kotlin
+val rows = client.database.selectTyped<Todo>("todos")
+```
+
+---
+
+## Reads
+
+### `select` (interface method)
+
+```kotlin
+public suspend fun select(
+    table: String,
+    schema: String? = null,
+    columns: String = "*",
+    format: ResponseFormat = ResponseFormat.ROWS,
+    count: CountOption? = null,
+    stripNulls: Boolean = false,
+    explain: ExplainOptions? = null,
+    retry: Boolean = true,
+    headers: Map<String, String> = emptyMap(),
+    block: QueryBuilder.() -> Unit = {},
+): SupabaseResult<String>
+```
+
+Reads rows from `table` via `GET /rest/v1/{table}`, returning the response body as
+a raw string (typically a JSON array). This is the wire-level read; prefer
+[`selectTyped`](#selecttyped) for decoded results.
+
+- `table` — table (or view) name.
+- `schema` — target Postgres schema; sent as `Accept-Profile` when non-null, otherwise the default schema. Default `null`.
+- `columns` — the PostgREST `select=` projection (supports embedded resources and renames). Default `"*"`.
+- `format` — body shape requested via `Accept` (see [`ResponseFormat`](#responseformat)). Default `ResponseFormat.ROWS`.
+- `count` — adds a `count=` preference so the total appears in `Content-Range` (see [`CountOption`](#countoption)). Default `null`.
+- `stripNulls` — omits null fields from the response. Default `false`.
+- `explain` — when set, returns the query plan instead of data (see [`ExplainOptions`](#explainoptions)). Default `null`.
+- `retry` — whether this read may be transparently retried by the transport. Default `true`.
+- `headers` — extra request headers, merged with the computed ones. Default `emptyMap()`.
+- `block` — the [query DSL](#query-and-filter-dsl): row predicates, ordering, and range.
+
+**Returns:** `SupabaseResult<String>` — `Success` with the raw body, or `Failure` with a `SupabaseError`.
+
+```kotlin
+val json = database.select("todos", columns = "id,title") {
+    where { Todo.done eq false }
+    orderBy(Todo.createdAt, order = Order.DESC)
+    limit(20)
+}
+```
+
+### `selectTyped`
+
+```kotlin
+public suspend inline fun <reified T> DatabaseClient.selectTyped(
+    table: String,
+    schema: String? = null,
+    columns: String = "*",
+    noinline block: QueryBuilder.() -> Unit = {},
+): SupabaseResult<List<T>>
+```
+
+The type-safe wrapper over `select`: decodes the JSON array body into `List<T>`.
+
+- `table` — table or view name.
+- `schema` — target schema, or default. Default `null`.
+- `columns` — `select=` projection. Default `"*"`.
+- `block` — the [query DSL](#query-and-filter-dsl).
+
+**Returns:** `SupabaseResult<List<T>>`. Decode failures and HTTP errors both come back as `Failure`.
+
+```kotlin
+val todos: SupabaseResult<List<Todo>> = database.selectTyped("todos") {
+    where { Todo.done eq false }
+}
+```
+
+### `selectTypedOrThrow`
+
+```kotlin
+public suspend inline fun <reified T> DatabaseClient.selectTypedOrThrow(
+    table: String,
+    schema: String? = null,
+    columns: String = "*",
+    noinline block: QueryBuilder.() -> Unit = {},
+): List<T>
+```
+
+The plain (no-`SupabaseResult`) form of `selectTyped`: returns the decoded
+`List<T>` directly and **throws** `SupabaseException` on failure. A natural fit
+for a paging `fetch` lambda that reports errors through its own channel.
+
+- Parameters as for [`selectTyped`](#selecttyped).
+
+**Returns:** `List<T>` (throws on failure).
+
+```kotlin
+val todos: List<Todo> = database.selectTypedOrThrow("todos")
+```
+
+### `selectSingleTyped`
+
+```kotlin
+public suspend inline fun <reified T> DatabaseClient.selectSingleTyped(
+    table: String,
+    schema: String? = null,
+    columns: String = "*",
+    noinline block: QueryBuilder.() -> Unit = {},
+): SupabaseResult<T>
+```
+
+Reads the single row matching the filters and decodes it into `T`. Requests
+`format = SINGLE`, so PostgREST returns HTTP 406 (a `Failure` with
+`SupabaseErrorCategory.NotFound`) when zero or more than one row matches.
+
+- Parameters as for [`selectTyped`](#selecttyped).
+
+**Returns:** `SupabaseResult<T>`.
+
+```kotlin
+val todo = database.selectSingleTyped<Todo>("todos") { where { Todo.id eq 7 } }
+```
+
+### `selectMaybeSingleTyped`
+
+```kotlin
+public suspend inline fun <reified T> DatabaseClient.selectMaybeSingleTyped(
+    table: String,
+    schema: String? = null,
+    columns: String = "*",
+    noinline block: QueryBuilder.() -> Unit = {},
+): SupabaseResult<T?>
+```
+
+The lenient variant of `selectSingleTyped`: reads at most one row, mapping a "no
+rows" response (HTTP 406 / `NotFound`) to `Success(null)` instead of a failure.
+Still fails if more than one row matches.
+
+- Parameters as for [`selectTyped`](#selecttyped).
+
+**Returns:** `SupabaseResult<T?>` — `Success(null)` when absent.
+
+```kotlin
+val maybe = database.selectMaybeSingleTyped<Todo>("todos") { where { Todo.id eq 7 } }
+```
+
+### `selectWithCount`
+
+```kotlin
+public suspend inline fun <reified T> DatabaseClient.selectWithCount(
+    table: String,
+    schema: String? = null,
+    columns: String = "*",
+    count: CountOption = CountOption.EXACT,
+    noinline block: QueryBuilder.() -> Unit = {},
+): SupabaseResult<PostgrestPage<T>>
+```
+
+Selects rows and decodes them into a [`PostgrestPage`](#postgrestpage) carrying the
+total `count` from PostgREST's `Content-Range` header. Combine with `limit`/`range`
+for count-aware pagination.
+
+- `count` — how the total is computed (see [`CountOption`](#countoption)). Default `CountOption.EXACT`.
+- Other parameters as for [`selectTyped`](#selecttyped).
+
+**Returns:** `SupabaseResult<PostgrestPage<T>>`.
+
+```kotlin
+val page = database.selectWithCount<Todo>("todos") { range(0, 19) }
+// page.value.rows, page.value.count
+```
+
+### `selectGeoJson`
+
+```kotlin
+public suspend fun DatabaseClient.selectGeoJson(
+    table: String,
+    schema: String? = null,
+    columns: String = "*",
+    headers: Map<String, String> = emptyMap(),
+    block: QueryBuilder.() -> Unit = {},
+): SupabaseResult<String>
+```
+
+Selects rows as a PostGIS GeoJSON `FeatureCollection`, returned as the raw JSON
+string (`Accept: application/geo+json`). Equivalent to calling `select` with
+`format = ResponseFormat.GEOJSON`.
+
+- `headers` — extra request headers. Default `emptyMap()`.
+- Other parameters as for [`selectTyped`](#selecttyped).
+
+**Returns:** `SupabaseResult<String>` — the GeoJSON document.
+
+```kotlin
+val geo = database.selectGeoJson("stores", columns = "id,name,location")
+// or: database.select("stores", format = ResponseFormat.GEOJSON)
+```
+
+### `selectCsv`
+
+```kotlin
+public suspend fun DatabaseClient.selectCsv(
+    table: String,
+    schema: String? = null,
+    columns: String = "*",
+    block: QueryBuilder.() -> Unit = {},
+): SupabaseResult<String>
+```
+
+Reads rows as CSV (`Accept: text/csv`), returned as the raw response string with a
+header row — convenient for export/download.
+
+- Parameters as for [`selectTyped`](#selecttyped).
+
+**Returns:** `SupabaseResult<String>` — the CSV text.
+
+```kotlin
+val csv = database.selectCsv("todos")
+```
+
+### `selectHead`
+
+```kotlin
+public suspend fun DatabaseClient.selectHead(
+    table: String,
+    schema: String? = null,
+    columns: String = "*",
+    count: CountOption? = null,
+    block: QueryBuilder.() -> Unit = {},
+): SupabaseResult<Unit>
+```
+
+Issues a `HEAD` request to test that a query runs or to fetch a count without
+transferring rows; the empty body is discarded. A success means the query ran — it
+does not indicate whether any row matched. For the parsed total use
+[`selectCount`](#selectcount).
+
+- `count` — when set (e.g. `CountOption.EXACT`), the total is reported in `Content-Range`. Default `null`.
+- Other parameters as for [`selectTyped`](#selecttyped).
+
+**Returns:** `SupabaseResult<Unit>`.
+
+```kotlin
+val ran = database.selectHead("todos") { where { Todo.done eq false } }
+```
+
+### `selectCount` (interface method)
+
+```kotlin
+public suspend fun selectCount(
+    table: String,
+    schema: String? = null,
+    columns: String = "*",
+    count: CountOption = CountOption.EXACT,
+    headers: Map<String, String> = emptyMap(),
+    block: QueryBuilder.() -> Unit = {},
+): SupabaseResult<PostgrestRange>
+```
+
+Issues a count-only `HEAD` request and returns the total parsed from the
+`Content-Range` header. No rows are fetched.
+
+- `count` — `EXACT` (accurate, slowest), `PLANNED`, or `ESTIMATED` (faster, approximate). Default `CountOption.EXACT`.
+- Other parameters as for [`select`](#select-interface-method).
+
+**Returns:** `SupabaseResult<PostgrestRange>` — its `count` holds the total.
+
+```kotlin
+val total = database.selectCount("todos") { where { Todo.done eq true } }
+// total.value.count
+```
+
+### `selectRange` (interface method)
+
+```kotlin
+public suspend fun selectRange(
+    table: String,
+    schema: String? = null,
+    columns: String = "*",
+    format: ResponseFormat = ResponseFormat.ROWS,
+    count: CountOption = CountOption.EXACT,
+    stripNulls: Boolean = false,
+    headers: Map<String, String> = emptyMap(),
+    block: QueryBuilder.() -> Unit = {},
+): SupabaseResult<PostgrestRawPage>
+```
+
+Like `select`, but also returns the total and the fetched range from
+`Content-Range` alongside the raw body, packaged as a
+[`PostgrestRawPage`](#postgrestrawpage) (a data class with `body`, `count`, and
+`range` — **not** a `Pair`). The typed [`selectWithCount`](#selectwithcount) sits
+on top of this and decodes `body` into a `PostgrestPage`.
+
+- `count` — total computation strategy. Default `CountOption.EXACT`.
+- Other parameters as for [`select`](#select-interface-method).
+
+**Returns:** `SupabaseResult<PostgrestRawPage>`.
+
+```kotlin
+val raw = database.selectRange("todos") { range(0, 9) }
+// raw.value.body (String), raw.value.count (Long?), raw.value.range (LongRange?)
+```
+
+### `paginator`
+
+```kotlin
+public inline fun <reified T> DatabaseClient.paginator(
+    table: String,
+    pageSize: Int = 20,
+    schema: String? = null,
+    columns: String = "*",
+    crossinline block: QueryBuilder.() -> Unit = {},
+): Paginator<T>
+```
+
+Builds a demand-driven `Paginator` over `table`, fetching one offset-based page per
+`Paginator.loadNext()` via `selectTypedOrThrow` and a `range` window. The paginator
+exposes accumulated rows and loading/end/error state as `StateFlow`s; nothing is
+fetched until you call `loadNext()`.
+
+- `table` — table or view name.
+- `pageSize` — rows per page; must be greater than 0. Default `20`.
+- `schema` — target schema. Default `null`.
+- `columns` — `select=` projection. Default `"*"`.
+- `block` — ordering and predicates; always `orderBy` a stable column. Do **not** add your own `range`/`limit`/`offset` — the paginator owns the window.
+
+**Returns:** `Paginator<T>` (from `supabase-core`).
+
+```kotlin
+val pager = database.paginator<Todo>("todos", pageSize = 20) {
+    orderBy(Todo.createdAt, order = Order.DESC)
+}
+pager.loadNext()
+```
+
+---
+
+## Writes
+
+### `insert` (interface method)
+
+```kotlin
+public suspend fun insert(
+    table: String,
+    schema: String? = null,
+    body: String,
+    columns: List<String>? = null,
+    upsert: Boolean = false,
+    upsertResolution: UpsertResolution = UpsertResolution.MERGE_DUPLICATES,
+    defaultToNull: Boolean = true,
+    onConflict: String? = null,
+    returning: ReturnOption = ReturnOption.REPRESENTATION,
+    count: CountOption? = null,
+    stripNulls: Boolean = false,
+    rollback: Boolean = false,
+    contentType: String = "application/json",
+    headers: Map<String, String> = emptyMap(),
+): SupabaseResult<String>
+```
+
+Inserts (or upserts) into `table` via `POST /rest/v1/{table}`, with `body` the JSON
+of a single object or an array (bulk insert).
+
+- `table` — target table.
+- `schema` — target schema. Default `null`.
+- `body` — the JSON object or array to write.
+- `columns` — explicit column list (`columns=`); when null it is derived for bulk inserts as the union of all rows' keys. Default `null`.
+- `upsert` — when true, turns this into an upsert (`on_conflict=` + `resolution=`). Default `false`.
+- `upsertResolution` — conflict resolution when upserting (see [`UpsertResolution`](#upsertresolution)). Default `MERGE_DUPLICATES`.
+- `defaultToNull` — when `false`, sends `missing=default` so omitted fields take their column DEFAULT instead of NULL. Default `true`.
+- `onConflict` — the unique column(s) to match on for upsert. Default `null`.
+- `returning` — whether affected rows are echoed back or the body is empty (see [`ReturnOption`](#returnoption)). Default `REPRESENTATION`.
+- `count` — adds a `count=` preference, surfacing the affected total in `Content-Range`. Default `null`.
+- `stripNulls` — omit null fields from the response. Default `false`.
+- `rollback` — when true, sends `tx=rollback` so the write is validated but not committed. Default `false`.
+- `contentType` — the request body's `Content-Type`; lets callers send e.g. a `text/csv` bulk insert. Only the header changes — `body` is sent verbatim. Default `"application/json"`.
+- `headers` — extra request headers. Default `emptyMap()`.
+
+**Returns:** `SupabaseResult<String>` — representation rows, or empty for `MINIMAL`.
+
+```kotlin
+database.insert("todos", body = """{"title":"Buy milk"}""")
+```
+
+### `insertTyped`
+
+```kotlin
+public suspend inline fun <reified T> DatabaseClient.insertTyped(
+    table: String,
+    schema: String? = null,
+    value: T,
+    columns: List<String>? = null,
+    upsert: Boolean = false,
+    upsertResolution: UpsertResolution = UpsertResolution.MERGE_DUPLICATES,
+    defaultToNull: Boolean = true,
+    onConflict: String? = null,
+): SupabaseResult<List<T>>
+```
+
+Inserts a single `value` (serialized to JSON) and returns the inserted row(s)
+decoded as `List<T>` — `insert` with `REPRESENTATION`. DB defaults/triggers are
+reflected in the decoded result.
+
+- `value` — the object to insert.
+- Other parameters as on [`insert`](#insert-interface-method).
+
+**Returns:** `SupabaseResult<List<T>>`.
+
+```kotlin
+val inserted = database.insertTyped("todos", value = Todo(title = "Buy milk"))
+```
+
+### `insertTypedMany`
+
+```kotlin
+public suspend inline fun <reified T> DatabaseClient.insertTypedMany(
+    table: String,
+    schema: String? = null,
+    values: List<T>,
+    columns: List<String>? = null,
+    upsert: Boolean = false,
+    upsertResolution: UpsertResolution = UpsertResolution.MERGE_DUPLICATES,
+    defaultToNull: Boolean = true,
+    onConflict: String? = null,
+): SupabaseResult<List<T>>
+```
+
+Bulk-inserts `values` in one request and returns the inserted rows. The union of
+all elements' keys is sent as `columns=`, so a field present on only some rows is
+still inserted rather than dropped from first-row inference.
+
+- `values` — the objects to insert.
+- Other parameters as on [`insert`](#insert-interface-method).
+
+**Returns:** `SupabaseResult<List<T>>`.
+
+```kotlin
+database.insertTypedMany("todos", values = listOf(Todo("a"), Todo("b")))
+```
+
+### `insertUnit`
+
+```kotlin
+public suspend fun DatabaseClient.insertUnit(
+    table: String,
+    schema: String? = null,
+    body: String,
+    columns: List<String>? = null,
+    upsert: Boolean = false,
+    upsertResolution: UpsertResolution = UpsertResolution.MERGE_DUPLICATES,
+    defaultToNull: Boolean = true,
+    onConflict: String? = null,
+    count: CountOption? = null,
+): SupabaseResult<Unit>
+```
+
+Inserts the raw JSON `body` without fetching the result back (`ReturnOption.MINIMAL`),
+saving the round-trip payload. `body` may be a single object or an array.
+
+- `count` — when set, learn how many rows were written via `Content-Range`. Default `null`.
+- Other parameters as on [`insert`](#insert-interface-method).
+
+**Returns:** `SupabaseResult<Unit>`.
+
+```kotlin
+database.insertUnit("todos", body = """{"title":"Buy milk"}""")
+```
+
+### `insertUnitTyped`
+
+```kotlin
+public suspend inline fun <reified T> DatabaseClient.insertUnitTyped(
+    table: String,
+    schema: String? = null,
+    value: T,
+    columns: List<String>? = null,
+    upsert: Boolean = false,
+    upsertResolution: UpsertResolution = UpsertResolution.MERGE_DUPLICATES,
+    defaultToNull: Boolean = true,
+    onConflict: String? = null,
+    count: CountOption? = null,
+): SupabaseResult<Unit>
+```
+
+The typed counterpart to `insertUnit`: serializes `value` to JSON and inserts it
+without fetching it back.
+
+- `value` — the object to insert.
+- Other parameters as on [`insertUnit`](#insertunit).
+
+**Returns:** `SupabaseResult<Unit>`.
+
+```kotlin
+database.insertUnitTyped("todos", value = Todo(title = "Buy milk"))
+```
+
+### `upsertTyped`
+
+```kotlin
+public suspend inline fun <reified T> DatabaseClient.upsertTyped(
+    table: String,
+    schema: String? = null,
+    value: T,
+    columns: List<String>? = null,
+    upsertResolution: UpsertResolution = UpsertResolution.MERGE_DUPLICATES,
+    defaultToNull: Boolean = true,
+    onConflict: String? = null,
+): SupabaseResult<List<T>>
+```
+
+Upserts a single `value` (insert-or-update on conflict) and returns the resulting
+row(s) — `insertTyped` with `upsert = true` under a clearer name.
+
+- `onConflict` — the unique column(s) PostgREST matches on. Default `null`.
+- `upsertResolution` — merge or ignore existing rows. Default `MERGE_DUPLICATES`.
+- Other parameters as on [`insertTyped`](#inserttyped).
+
+**Returns:** `SupabaseResult<List<T>>`.
+
+```kotlin
+database.upsertTyped("todos", value = todo, onConflict = "id")
+```
+
+### `upsertTypedMany`
+
+```kotlin
+public suspend inline fun <reified T> DatabaseClient.upsertTypedMany(
+    table: String,
+    schema: String? = null,
+    values: List<T>,
+    columns: List<String>? = null,
+    upsertResolution: UpsertResolution = UpsertResolution.MERGE_DUPLICATES,
+    defaultToNull: Boolean = true,
+    onConflict: String? = null,
+): SupabaseResult<List<T>>
+```
+
+Bulk upserts `values` in one request and returns the resulting rows — the
+multi-row form of `upsertTyped`.
+
+- Parameters as on [`upsertTyped`](#upserttyped), with `values` in place of `value`.
+
+**Returns:** `SupabaseResult<List<T>>`.
+
+```kotlin
+database.upsertTypedMany("todos", values = todos, onConflict = "id")
+```
+
+### `update` (interface method)
+
+```kotlin
+public suspend fun update(
+    table: String,
+    schema: String? = null,
+    body: String,
+    returning: ReturnOption = ReturnOption.REPRESENTATION,
+    count: CountOption? = null,
+    stripNulls: Boolean = false,
+    rollback: Boolean = false,
+    maxAffected: Int? = null,
+    explain: ExplainOptions? = null,
+    headers: Map<String, String> = emptyMap(),
+    block: WhereBuilder.() -> Unit = {},
+): SupabaseResult<String>
+```
+
+Updates rows matching the filters via `PATCH /rest/v1/{table}`, applying the
+partial JSON object in `body` to every matched row. The mutation `block` is a
+**filter-only** `WhereBuilder` — there is no order/limit. An empty filter set
+updates the whole table.
+
+- `table` — target table.
+- `schema` — target schema. Default `null`.
+- `body` — the partial JSON object to apply.
+- `returning` — shape the echoed body (see [`ReturnOption`](#returnoption)). Default `REPRESENTATION`.
+- `count` — adds a `count=` preference, surfacing the affected total. Default `null`.
+- `stripNulls` — omit null fields from the response. Default `false`.
+- `rollback` — validate without committing (`tx=rollback`). Default `false`.
+- `maxAffected` — when set (must be > 0), caps the rows modified (`handling=strict` + `max-affected=`), failing rather than touching more. Default `null`.
+- `explain` — returns the query plan instead of mutating. Default `null`.
+- `headers` — extra request headers. Default `emptyMap()`.
+- `block` — the [filter DSL](#wherebuilder) (filter only).
+
+**Returns:** `SupabaseResult<String>`.
+
+```kotlin
+database.update("todos", body = """{"done":true}""") { Todo.id eq 7 }
+```
+
+### `updateTyped`
+
+```kotlin
+public suspend inline fun <reified T> DatabaseClient.updateTyped(
+    table: String,
+    schema: String? = null,
+    value: T,
+    noinline block: WhereBuilder.() -> Unit = {},
+): SupabaseResult<List<T>>
+```
+
+Updates rows matching the filters with the fields of `value` and returns the
+updated rows. `value` is applied as a partial update.
+
+<Callout type="warning">
+`null` fields of `value` are **omitted** from the request (the serializer uses
+`explicitNulls = false`), so they leave the existing column untouched rather than
+overwriting it with `NULL`. To clear a column to `NULL`, use [`update`](#update-interface-method)
+with a raw JSON body (e.g. `{"avatar_url": null}`).
+</Callout>
+
+- `value` — the object whose non-null fields are written.
+- `block` — the [filter DSL](#wherebuilder).
+
+**Returns:** `SupabaseResult<List<T>>`.
+
+```kotlin
+database.updateTyped("todos", value = Todo(done = true)) { Todo.id eq 7 }
+```
+
+### `updateUnit`
+
+```kotlin
+public suspend fun DatabaseClient.updateUnit(
+    table: String,
+    schema: String? = null,
+    body: String,
+    count: CountOption? = null,
+    block: WhereBuilder.() -> Unit = {},
+): SupabaseResult<Unit>
+```
+
+Updates rows matching the filters with the raw JSON `body` without fetching the
+result back (`ReturnOption.MINIMAL`). An empty filter block updates every row.
+
+- `count` — learn how many rows changed via `Content-Range`. Default `null`.
+- Other parameters as on [`update`](#update-interface-method).
+
+**Returns:** `SupabaseResult<Unit>`.
+
+```kotlin
+database.updateUnit("todos", body = """{"done":true}""") { Todo.id eq 7 }
+```
+
+### `updateUnitTyped`
+
+```kotlin
+public suspend inline fun <reified T> DatabaseClient.updateUnitTyped(
+    table: String,
+    schema: String? = null,
+    value: T,
+    count: CountOption? = null,
+    noinline block: WhereBuilder.() -> Unit = {},
+): SupabaseResult<Unit>
+```
+
+The typed counterpart to `updateUnit`: serializes `value` and updates without
+fetching rows back. As with `updateTyped`, `null` fields of `value` are omitted
+(not written as `NULL`).
+
+- `value` — the object whose non-null fields are written.
+- `count` — affected total via `Content-Range`. Default `null`.
+- `block` — the [filter DSL](#wherebuilder).
+
+**Returns:** `SupabaseResult<Unit>`.
+
+```kotlin
+database.updateUnitTyped("todos", value = Todo(done = true)) { Todo.id eq 7 }
+```
+
+### `replace` (interface method)
+
+```kotlin
+public suspend fun replace(
+    table: String,
+    body: String,
+    returning: ReturnOption = ReturnOption.REPRESENTATION,
+    columns: String = "*",
+    block: WhereBuilder.() -> Unit = {},
+): SupabaseResult<String>
+```
+
+Replaces (or inserts) a single row via `PUT /rest/v1/{table}` — the
+replace-by-primary-key write. Unlike `update`'s partial `PATCH`, this is a full-row
+replace: `body` must carry **every** column (including the primary key), and the
+filter must select **exactly** that primary key. PostgREST replaces the matching
+row, or inserts the row when none matches.
+
+- `table` — target table.
+- `body` — the complete JSON object (every column).
+- `returning` — whether the affected row is echoed back or the body is empty. Default `REPRESENTATION`.
+- `columns` — the `select=` projection applied to the returned representation. Default `"*"`.
+- `block` — the [filter DSL](#wherebuilder), selecting exactly the primary key.
+
+**Returns:** `SupabaseResult<String>` — the replaced row, or empty for non-representation returns.
+
+```kotlin
+database.replace("todos", body = """{"id":7,"title":"Buy milk","done":true}""") {
+    Todo.id eq 7
+}
+```
+
+### `delete` (interface method)
+
+```kotlin
+public suspend fun delete(
+    table: String,
+    schema: String? = null,
+    returning: ReturnOption = ReturnOption.REPRESENTATION,
+    count: CountOption? = null,
+    stripNulls: Boolean = false,
+    rollback: Boolean = false,
+    maxAffected: Int? = null,
+    explain: ExplainOptions? = null,
+    headers: Map<String, String> = emptyMap(),
+    block: WhereBuilder.() -> Unit = {},
+): SupabaseResult<String>
+```
+
+Deletes rows matching the filters via `DELETE /rest/v1/{table}`. As with `update`,
+the rows removed are exactly those the filter selects, so an empty filter set
+deletes the whole table — guard large or accidental deletes with `maxAffected`.
+
+- `table` — target table.
+- `schema` — target schema. Default `null`.
+- `returning` — whether deleted rows are echoed back or the body is empty. Default `REPRESENTATION`.
+- `count` — affected total via `Content-Range`. Default `null`.
+- `stripNulls` — omit null fields from the response. Default `false`.
+- `rollback` — validate without committing. Default `false`.
+- `maxAffected` — when set (> 0), caps the rows deleted, failing rather than removing more. Default `null`.
+- `explain` — returns the query plan instead of deleting. Default `null`.
+- `headers` — extra request headers. Default `emptyMap()`.
+- `block` — the [filter DSL](#wherebuilder).
+
+**Returns:** `SupabaseResult<String>`.
+
+```kotlin
+database.delete("todos") { Todo.id eq 7 }
+```
+
+### `deleteTyped`
+
+```kotlin
+public suspend inline fun <reified T> DatabaseClient.deleteTyped(
+    table: String,
+    schema: String? = null,
+    returning: ReturnOption = ReturnOption.REPRESENTATION,
+    count: CountOption? = null,
+    noinline block: WhereBuilder.() -> Unit = {},
+): SupabaseResult<List<T>>
+```
+
+Deletes rows matching the filters and returns the deleted rows as `List<T>` —
+useful when you need the removed data (e.g. to undo or audit).
+
+- Parameters as on [`delete`](#delete-interface-method).
+
+**Returns:** `SupabaseResult<List<T>>`.
+
+```kotlin
+val removed = database.deleteTyped<Todo>("todos") { Todo.done eq true }
+```
+
+### `deleteUnit`
+
+```kotlin
+public suspend fun DatabaseClient.deleteUnit(
+    table: String,
+    schema: String? = null,
+    count: CountOption? = null,
+    block: WhereBuilder.() -> Unit = {},
+): SupabaseResult<Unit>
+```
+
+Deletes rows matching the filters without fetching them back
+(`ReturnOption.MINIMAL`). An empty filter block deletes every row.
+
+- `count` — learn how many rows were removed via `Content-Range`. Default `null`.
+- Other parameters as on [`delete`](#delete-interface-method).
+
+**Returns:** `SupabaseResult<Unit>`.
+
+```kotlin
+database.deleteUnit("todos") { Todo.id eq 7 }
+```
+
+---
+
+## RPC (stored procedures)
+
+PostgREST exposes stored procedures both as `POST /rest/v1/rpc/{function}` (the
+mutating form, in [`rpc`](#rpc-interface-method)) and `GET /rest/v1/rpc/{function}`
+(the cacheable, read-only form, in [`rpcGet`](#rpcget-interface-method)). Each has a
+family of typed wrappers; most come in two overloads — one taking a raw JSON
+`params` string (or a `Map` for GET), and one taking a serializable `params`
+object that is encoded for you.
+
+### `rpc` (interface method)
+
+```kotlin
+public suspend fun rpc(
+    function: String,
+    schema: String? = null,
+    params: String? = null,
+    format: ResponseFormat = ResponseFormat.ROWS,
+    count: CountOption? = null,
+    stripNulls: Boolean = false,
+    rollback: Boolean = false,
+    maxAffected: Int? = null,
+    explain: ExplainOptions? = null,
+    contentType: String = "application/json",
+    headers: Map<String, String> = emptyMap(),
+    block: QueryBuilder.() -> Unit = {},
+): SupabaseResult<String>
+```
+
+Calls a stored procedure (`POST`) with `params` as the JSON request body. Suitable
+for functions with side effects or large argument payloads; for a read-only
+function prefer [`rpcGet`](#rpcget-interface-method).
+
+- `function` — the function name.
+- `schema` — target schema. Default `null`.
+- `params` — JSON object of named arguments, or null for a no-argument call. Default `null`.
+- `format` — body shape (see [`ResponseFormat`](#responseformat)). Default `ROWS`.
+- `count` — adds a `count=` preference. Default `null`.
+- `stripNulls` — omit null fields from the response. Default `false`.
+- `rollback` — roll back any writes (`tx=rollback`). Default `false`.
+- `maxAffected` — when set (> 0), caps rows the function may modify. Default `null`.
+- `explain` — returns the plan. Default `null`.
+- `contentType` — request body `Content-Type`; lets you send a scalar body (e.g. `text/plain`) to a single-parameter function. `params` is sent verbatim. Default `"application/json"`.
+- `headers` — extra request headers. Default `emptyMap()`.
+- `block` — PostgREST filters/ordering/pagination applied to a set-returning function's rows (the [query DSL](#query-and-filter-dsl)).
+
+**Returns:** `SupabaseResult<String>`.
+
+```kotlin
+database.rpc("increment", params = """{"row_id":7}""")
+```
+
+### `rpcTyped`
+
+```kotlin
+public suspend inline fun <reified T> DatabaseClient.rpcTyped(
+    function: String, schema: String? = null, params: String? = null,
+): SupabaseResult<T>
+
+public suspend inline fun <reified Request : Any, reified Response> DatabaseClient.rpcTyped(
+    function: String, schema: String? = null, params: Request,
+): SupabaseResult<Response>
+```
+
+Calls a stored procedure (POST) and decodes its result into `T`/`Response`. The
+second overload serializes a `params` object to a JSON object for you.
+
+- `function` — the function name.
+- `schema` — target schema. Default `null`.
+- `params` — raw JSON string (or null), or a serializable arguments object.
+
+**Returns:** `SupabaseResult<T>` (or `SupabaseResult<Response>`).
+
+```kotlin
+val total: SupabaseResult<Int> = database.rpcTyped("count_open_todos")
+```
+
+### `rpcListTyped`
+
+```kotlin
+public suspend inline fun <reified T> DatabaseClient.rpcListTyped(
+    function: String, schema: String? = null, params: String? = null,
+): SupabaseResult<List<T>>
+
+public suspend inline fun <reified Request : Any, reified Response> DatabaseClient.rpcListTyped(
+    function: String, schema: String? = null, params: Request,
+): SupabaseResult<List<Response>>
+```
+
+The list-result form of `rpcTyped` for set-returning functions: decodes into
+`List<T>`/`List<Response>`.
+
+- Parameters as on [`rpcTyped`](#rpctyped).
+
+**Returns:** `SupabaseResult<List<T>>`.
+
+```kotlin
+val rows = database.rpcListTyped<Todo>("search_todos", params = """{"q":"milk"}""")
+```
+
+### `rpcSingleTyped`
+
+```kotlin
+public suspend inline fun <reified T> DatabaseClient.rpcSingleTyped(
+    function: String, schema: String? = null, params: String? = null,
+): SupabaseResult<T>
+
+public suspend inline fun <reified Request : Any, reified Response> DatabaseClient.rpcSingleTyped(
+    function: String, schema: String? = null, params: Request,
+): SupabaseResult<Response>
+```
+
+Calls a procedure expecting exactly one row/scalar, decoded into `T`. Requests
+`format = SINGLE`, so zero or more than one row fails with HTTP 406 / `NotFound`.
+
+- Parameters as on [`rpcTyped`](#rpctyped).
+
+**Returns:** `SupabaseResult<T>`.
+
+```kotlin
+val one = database.rpcSingleTyped<Todo>("latest_todo")
+```
+
+### `rpcMaybeSingleTyped`
+
+```kotlin
+public suspend inline fun <reified T> DatabaseClient.rpcMaybeSingleTyped(
+    function: String, schema: String? = null, params: String? = null,
+): SupabaseResult<T?>
+
+public suspend inline fun <reified Request : Any, reified Response> DatabaseClient.rpcMaybeSingleTyped(
+    function: String, schema: String? = null, params: Request,
+): SupabaseResult<Response?>
+```
+
+The lenient variant of `rpcSingleTyped`: a "no rows" response (HTTP 406 /
+`NotFound`) maps to `Success(null)`; other failures propagate.
+
+- Parameters as on [`rpcTyped`](#rpctyped).
+
+**Returns:** `SupabaseResult<T?>`.
+
+```kotlin
+val maybe = database.rpcMaybeSingleTyped<Todo>("latest_todo")
+```
+
+### `rpcUnit`
+
+```kotlin
+public suspend fun DatabaseClient.rpcUnit(
+    function: String, schema: String? = null, params: String? = null,
+): SupabaseResult<Unit>
+
+public suspend inline fun <reified Request : Any> DatabaseClient.rpcUnit(
+    function: String, schema: String? = null, params: Request,
+): SupabaseResult<Unit>
+```
+
+Calls a procedure (POST) for its side effects, discarding the result.
+
+- Parameters as on [`rpcTyped`](#rpctyped).
+
+**Returns:** `SupabaseResult<Unit>`.
+
+```kotlin
+database.rpcUnit("reset_counters")
+```
+
+### `rpcCsv`
+
+```kotlin
+public suspend fun DatabaseClient.rpcCsv(
+    function: String, schema: String? = null, params: String? = null,
+): SupabaseResult<String>
+
+public suspend inline fun <reified Request : Any> DatabaseClient.rpcCsv(
+    function: String, schema: String? = null, params: Request,
+): SupabaseResult<String>
+```
+
+Calls a procedure (POST) requesting `text/csv`, returning the raw CSV string.
+
+- Parameters as on [`rpcTyped`](#rpctyped).
+
+**Returns:** `SupabaseResult<String>`.
+
+```kotlin
+val csv = database.rpcCsv("export_todos")
+```
+
+### `rpcHead`
+
+```kotlin
+public suspend fun DatabaseClient.rpcHead(
+    function: String, schema: String? = null, params: String? = null,
+    count: CountOption? = null,
+): SupabaseResult<Unit>
+
+public suspend inline fun <reified Request : Any> DatabaseClient.rpcHead(
+    function: String, schema: String? = null, params: Request,
+    count: CountOption? = null,
+): SupabaseResult<Unit>
+```
+
+Issues a procedure (POST) as a `HEAD` request for its headers/`count` only,
+discarding the empty body.
+
+- `count` — when set, the total is reported via `Content-Range`. Default `null`.
+- Other parameters as on [`rpcTyped`](#rpctyped).
+
+**Returns:** `SupabaseResult<Unit>`.
+
+```kotlin
+database.rpcHead("count_open_todos", count = CountOption.EXACT)
+```
+
+### `rpcGet` (interface method)
+
+```kotlin
+public suspend fun rpcGet(
+    function: String,
+    schema: String? = null,
+    queryParams: List<Pair<String, String>> = emptyList(),
+    format: ResponseFormat = ResponseFormat.ROWS,
+    count: CountOption? = null,
+    stripNulls: Boolean = false,
+    explain: ExplainOptions? = null,
+    retry: Boolean = true,
+    headers: Map<String, String> = emptyMap(),
+): SupabaseResult<String>
+```
+
+Calls a stored procedure over `GET`, passing arguments as `queryParams` rather than
+a body — the cacheable, side-effect-free counterpart to `rpc` for functions marked
+`STABLE`/`IMMUTABLE`.
+
+- `function` — the function name.
+- `schema` — target schema. Default `null`.
+- `queryParams` — ordered list of name/value argument pairs. Default `emptyList()`.
+- `format` — body shape. Default `ROWS`.
+- `count` — adds a `count=` preference. Default `null`.
+- `stripNulls` — omit null fields. Default `false`.
+- `explain` — returns the plan. Default `null`.
+- `retry` — whether this read may be transparently retried. Default `true`.
+- `headers` — extra request headers. Default `emptyMap()`.
+
+**Returns:** `SupabaseResult<String>`.
+
+```kotlin
+database.rpcGet("hello", queryParams = listOf("name" to "Ada"))
+```
+
+### `rpcGet` (Map and object overloads)
+
+```kotlin
+public suspend fun DatabaseClient.rpcGet(
+    function: String, schema: String? = null,
+    queryParams: Map<String, String>,
+): SupabaseResult<String>
+
+public suspend fun DatabaseClient.rpcGet(
+    function: String, schema: String? = null,
+    queryParams: Map<String, String>,
+    format: ResponseFormat = ResponseFormat.ROWS,
+    count: CountOption? = null,
+): SupabaseResult<String>
+
+public suspend inline fun <reified Request : Any> DatabaseClient.rpcGet(
+    function: String, schema: String? = null, params: Request,
+): SupabaseResult<String>
+```
+
+`Map`-based and serializable-object conveniences over the pair-list interface
+method. The object overload flattens the request's top-level fields into query
+arguments (object/array values re-encoded as JSON strings); a `null` argument is
+omitted so the function receives its SQL default.
+
+- `queryParams` — named arguments as a `Map` (RPC arguments are named).
+- `params` — a serializable arguments object.
+- `format` / `count` — as on [`rpcGet`](#rpcget-interface-method).
+
+**Returns:** `SupabaseResult<String>`.
+
+```kotlin
+database.rpcGet("hello", queryParams = mapOf("name" to "Ada"))
+```
+
+### `rpcGetTyped`
+
+```kotlin
+public suspend inline fun <reified T> DatabaseClient.rpcGetTyped(
+    function: String, schema: String? = null,
+    queryParams: Map<String, String> = emptyMap(),
+): SupabaseResult<T>
+
+public suspend inline fun <reified Request : Any, reified Response> DatabaseClient.rpcGetTyped(
+    function: String, schema: String? = null, params: Request,
+): SupabaseResult<Response>
+```
+
+The GET counterpart of `rpcTyped`: calls a read-only procedure and decodes the
+result into `T`/`Response`.
+
+- `queryParams` — named arguments. Default `emptyMap()`.
+- `params` — a serializable arguments object.
+
+**Returns:** `SupabaseResult<T>`.
+
+```kotlin
+val greeting = database.rpcGetTyped<String>("hello", mapOf("name" to "Ada"))
+```
+
+### `rpcGetListTyped`
+
+```kotlin
+public suspend inline fun <reified T> DatabaseClient.rpcGetListTyped(
+    function: String, schema: String? = null,
+    queryParams: Map<String, String> = emptyMap(),
+): SupabaseResult<List<T>>
+
+public suspend inline fun <reified Request : Any, reified Response> DatabaseClient.rpcGetListTyped(
+    function: String, schema: String? = null, params: Request,
+): SupabaseResult<List<Response>>
+```
+
+The GET counterpart of `rpcListTyped` for set-returning read-only functions.
+
+- Parameters as on [`rpcGetTyped`](#rpcgettyped).
+
+**Returns:** `SupabaseResult<List<T>>`.
+
+```kotlin
+val rows = database.rpcGetListTyped<Todo>("search_todos", mapOf("q" to "milk"))
+```
+
+### `rpcGetSingleTyped`
+
+```kotlin
+public suspend inline fun <reified T> DatabaseClient.rpcGetSingleTyped(
+    function: String, schema: String? = null,
+    queryParams: Map<String, String> = emptyMap(),
+): SupabaseResult<T>
+
+public suspend inline fun <reified Request : Any, reified Response> DatabaseClient.rpcGetSingleTyped(
+    function: String, schema: String? = null, params: Request,
+): SupabaseResult<Response>
+```
+
+The GET counterpart of `rpcSingleTyped`. Fails with HTTP 406 / `NotFound` when not
+exactly one row is returned.
+
+- Parameters as on [`rpcGetTyped`](#rpcgettyped).
+
+**Returns:** `SupabaseResult<T>`.
+
+```kotlin
+val one = database.rpcGetSingleTyped<Todo>("latest_todo")
+```
+
+### `rpcGetMaybeSingleTyped`
+
+```kotlin
+public suspend inline fun <reified T> DatabaseClient.rpcGetMaybeSingleTyped(
+    function: String, schema: String? = null,
+    queryParams: Map<String, String> = emptyMap(),
+): SupabaseResult<T?>
+
+public suspend inline fun <reified Request : Any, reified Response> DatabaseClient.rpcGetMaybeSingleTyped(
+    function: String, schema: String? = null, params: Request,
+): SupabaseResult<Response?>
+```
+
+The GET, lenient counterpart of `rpcSingleTyped`: "no rows" (HTTP 406 / `NotFound`)
+maps to `Success(null)`.
+
+- Parameters as on [`rpcGetTyped`](#rpcgettyped).
+
+**Returns:** `SupabaseResult<T?>`.
+
+```kotlin
+val maybe = database.rpcGetMaybeSingleTyped<Todo>("latest_todo")
+```
+
+### `rpcGetUnit`
+
+```kotlin
+public suspend fun DatabaseClient.rpcGetUnit(
+    function: String, schema: String? = null,
+    queryParams: Map<String, String> = emptyMap(),
+): SupabaseResult<Unit>
+
+public suspend inline fun <reified Request : Any> DatabaseClient.rpcGetUnit(
+    function: String, schema: String? = null, params: Request,
+): SupabaseResult<Unit>
+```
+
+Calls a read-only procedure (GET) for its effect alone, discarding the body.
+
+- Parameters as on [`rpcGetTyped`](#rpcgettyped).
+
+**Returns:** `SupabaseResult<Unit>`.
+
+```kotlin
+database.rpcGetUnit("ping")
+```
+
+### `rpcGetCsv`
+
+```kotlin
+public suspend fun DatabaseClient.rpcGetCsv(
+    function: String, schema: String? = null,
+    queryParams: Map<String, String> = emptyMap(),
+): SupabaseResult<String>
+
+public suspend inline fun <reified Request : Any> DatabaseClient.rpcGetCsv(
+    function: String, schema: String? = null, params: Request,
+): SupabaseResult<String>
+```
+
+The GET counterpart of `rpcCsv`: requests `text/csv` and returns the raw CSV string.
+
+- Parameters as on [`rpcGetTyped`](#rpcgettyped).
+
+**Returns:** `SupabaseResult<String>`.
+
+```kotlin
+val csv = database.rpcGetCsv("export_todos")
+```
+
+### `rpcGetHead`
+
+```kotlin
+public suspend fun DatabaseClient.rpcGetHead(
+    function: String, schema: String? = null,
+    queryParams: Map<String, String> = emptyMap(),
+    count: CountOption? = null,
+): SupabaseResult<Unit>
+
+public suspend inline fun <reified Request : Any> DatabaseClient.rpcGetHead(
+    function: String, schema: String? = null, params: Request,
+    count: CountOption? = null,
+): SupabaseResult<Unit>
+```
+
+The GET counterpart of `rpcHead`: issues a `HEAD` for headers/`count` only,
+discarding the empty body.
+
+- `count` — when set, total via `Content-Range`. Default `null`.
+- Other parameters as on [`rpcGetTyped`](#rpcgettyped).
+
+**Returns:** `SupabaseResult<Unit>`.
+
+```kotlin
+database.rpcGetHead("count_open_todos", count = CountOption.EXACT)
+```
+
+---
+
+## Query and filter DSL
+
+Reads take a `QueryBuilder` block (filters **plus** result modifiers); mutations
+(`update`/`delete`/`replace`) take a filter-only `WhereBuilder` block. These DSL
+types are provided by `supabase-core` (`io.github.androidpoet.supabase.core.models`)
+and re-used here.
+
+### `QueryBuilder`
+
+The receiver of the read-query block. Combines a `where { }` predicate with result
+modifiers; modifiers are kept distinct from filters.
+
+| Member | Signature | Effect |
+| --- | --- | --- |
+| `where` | `where(block: WhereBuilder.() -> Unit)` | Filter predicate; multiple statements are AND-ed. |
+| `orderBy` | `orderBy(column: Column<*>, order: Order = Order.ASC, nulls: Nulls? = null, referencedTable: String? = null)` | Sort key; successive calls add secondary keys into one `order=` param. |
+| `limit` | `limit(count: Int, referencedTable: String? = null)` | Cap rows; last call wins. |
+| `offset` | `offset(count: Int, referencedTable: String? = null)` | Skip rows; last call wins. |
+| `range` | `range(from: Int, to: Int, referencedTable: String? = null)` | Inclusive zero-based window `[from, to]`, emitted as `offset` + derived `limit`. Requires `to >= from`. |
+
+```kotlin
+database.selectTyped<Todo>("todos") {
+    where { Todo.done eq false }
+    orderBy(Todo.createdAt, order = Order.DESC, nulls = Nulls.LAST)
+    range(0, 19)
+}
+```
+
+### `WhereBuilder`
+
+Builds a `Filter` from column predicates combined with infix operators. Each
+statement adds one predicate; multiple statements are AND-ed. String operands are
+escaped per PostgREST's quoting rules; numbers and booleans are emitted verbatim.
+
+**Comparison:** `eq`, `neq`, `greater`, `greaterEq`, `less`, `lessEq`,
+`within` (a `ClosedRange`, inclusive), `isDistinctFrom` (null-aware `IS DISTINCT FROM`).
+
+**Null / boolean IS:** `isNull()`, `isNotNull()`, `isExactly` (`IS TRUE/FALSE`).
+
+**Pattern matching:** `like`, `ilike`, `matches` (POSIX `~`), `imatches` (`~*`),
+`likeAllOf`, `likeAnyOf`, `ilikeAllOf`, `ilikeAnyOf` (each taking a `List<String>`).
+
+**Membership:** `inList`, `notInList` (each taking a `List<T>`).
+
+**Array:** `contains` (`@>`), `containedBy` (`<@`), `overlaps` (`&&`) — on `Column<List<T>>`.
+
+**Range columns:** `rangeGt` (`sr`), `rangeGte` (`nxl`), `rangeLt` (`sl`),
+`rangeLte` (`nxr`), `rangeAdjacent` (`adj`) — each takes a range literal `String`.
+
+**Full-text search:** `textSearch(query: String, config: String? = null, type: TextSearchType = TextSearchType.Plain)`.
+
+**Escape hatch:** `raw(column: Column<*>, operator: String, value: String)` — emits `column=<operator>.<value>` for operators the DSL doesn't expose yet.
+
+**Logical groups:** `or(referencedTable: String? = null, block)`, `and(referencedTable: String? = null, block)`, `not(block)`.
+
+```kotlin
+database.deleteTyped<Todo>("todos") {
+    Todo.done eq true
+    or {
+        Todo.priority greater 5
+        Todo.title ilike "%urgent%"
+    }
+}
+```
+
+### `Column`
+
+```kotlin
+@JvmInline
+public value class Column<T>(public val name: String)
+```
+
+A type-safe handle to a column, carrying its wire `name` and Kotlin type `T` so the
+compiler rejects type-mismatched comparisons. Declare columns by hand, or let
+codegen emit a typed schema object.
+
+```kotlin
+object Todo {
+    val id = Column<Int>("id")
+    val title = Column<String>("title")
+    val done = Column<Boolean>("done")
+}
+```
+
+---
+
+## Models and enums
+
+### `ResponseFormat`
+
+```kotlin
+public enum class ResponseFormat { ROWS, SINGLE, CSV, GEOJSON, HEAD }
+```
+
+The mutually-exclusive body shape a read requests via its `Accept` header (one enum
+rather than parallel `single`/`csv`/`geojson`/`head` booleans, so illegal
+combinations are unrepresentable).
+
+- `ROWS` — the default JSON array.
+- `SINGLE` — expects exactly one row (`application/vnd.pgrst.object+json`; 406 otherwise).
+- `CSV` — returns `text/csv`.
+- `GEOJSON` — returns a PostGIS `FeatureCollection`.
+- `HEAD` — requests headers only and yields an empty body; pair with a `count` to fetch just a total.
+
+```kotlin
+database.select("stores", format = ResponseFormat.GEOJSON)
+```
+
+### `CountOption`
+
+```kotlin
+public enum class CountOption { EXACT, PLANNED, ESTIMATED }
+```
+
+How PostgREST should compute the total row count (the `count=` directive of the
+`Prefer` header); the result is surfaced in `Content-Range`.
+
+- `EXACT` — full count, accurate but slowest.
+- `PLANNED` — the query planner's estimate (fast).
+- `ESTIMATED` — the planner estimate, possibly falling back to an exact count for small results.
+
+### `ReturnOption`
+
+```kotlin
+public enum class ReturnOption { MINIMAL, REPRESENTATION, HEADERS_ONLY }
+```
+
+What a write should return (the `return=` directive of the `Prefer` header).
+
+- `MINIMAL` — empty body (used by the `*Unit` helpers).
+- `REPRESENTATION` — echoes the affected rows back (so typed helpers can decode them).
+- `HEADERS_ONLY` — empty body but keeps headers such as `Location` populated.
+
+### `UpsertResolution`
+
+```kotlin
+public enum class UpsertResolution { MERGE_DUPLICATES, IGNORE_DUPLICATES }
+```
+
+How an upsert resolves a conflict on the target key (the `resolution=` directive),
+used when `upsert` is enabled.
+
+- `MERGE_DUPLICATES` — update the existing row with the incoming values.
+- `IGNORE_DUPLICATES` — leave the existing row untouched.
+
+### `ExplainFormat`
+
+```kotlin
+public enum class ExplainFormat { TEXT, JSON, XML, YAML }
+```
+
+Output format for an `EXPLAIN` plan, selecting the
+`application/vnd.pgrst.plan+<format>` media type via [`ExplainOptions`](#explainoptions).
+
+### `ExplainOptions`
+
+```kotlin
+public data class ExplainOptions(
+    public val analyze: Boolean = false,
+    public val verbose: Boolean = false,
+    public val settings: Boolean = false,
+    public val buffers: Boolean = false,
+    public val wal: Boolean = false,
+    public val format: ExplainFormat = ExplainFormat.TEXT,
+)
+```
+
+Requests a PostgREST query plan (`EXPLAIN`) instead of executing the request for its
+result. Pass an instance to `select`, `update`, `delete`, or the `rpc` calls to have
+them return the plan text in the body rather than rows.
+
+- `analyze` — actually run the query and report real timings, not just the estimate. Default `false`.
+- `verbose` — include additional per-node detail. Default `false`.
+- `settings` — include configuration parameters that affect planning. Default `false`.
+- `buffers` — include buffer usage (requires `analyze`). Default `false`.
+- `wal` — include write-ahead-log usage (requires `analyze`). Default `false`.
+- `format` — the rendering format (see [`ExplainFormat`](#explainformat)). Default `ExplainFormat.TEXT`.
+
+```kotlin
+val plan = database.select("todos", explain = ExplainOptions(analyze = true))
+```
+
+### `PostgrestRange`
+
+```kotlin
+public data class PostgrestRange(
+    public val count: Long? = null,
+    public val range: LongRange? = null,
+)
+```
+
+The count and row range parsed from a `Content-Range` response header. For
+`Content-Range: 0-9/27`, `range` is `0..9` and `count` is `27`. Either part may be
+absent — `*` maps to `null` rather than failing. Returned by
+[`selectCount`](#selectcount-interface-method).
+
+### `PostgrestRawPage`
+
+```kotlin
+public data class PostgrestRawPage(
+    public val body: String,
+    public val count: Long? = null,
+    public val range: LongRange? = null,
+)
+```
+
+The raw response `body` of a [`selectRange`](#selectrange-interface-method) together
+with the total `count` and fetched `range` from `Content-Range`. The string analogue
+of `PostgrestPage` — **not** a `Pair`. The typed `selectWithCount` helper decodes
+`body` into a `PostgrestPage`.
+
+### `PostgrestPage`
+
+```kotlin
+public data class PostgrestPage<T>(
+    public val rows: List<T>,
+    public val count: Long? = null,
+    public val range: LongRange? = null,
+)
+```
+
+A page of decoded `rows` together with the total `count` reported by PostgREST.
+Produced by [`selectWithCount`](#selectwithcount).
+
+---
+
+## Design notes
+
+### `select` returns `String`; `selectTyped` is a separate name
+
+The interface method `select(...)` returns `SupabaseResult<String>` — the raw JSON
+escape hatch — while decoding into a `List<T>` is done by the **separate** `reified
+inline` extension `selectTyped<T>` (and `selectSingleTyped<T>` → `T`,
+`selectMaybeSingleTyped<T>` → `T?`). This split is deliberate and forced by the
+language:
+
+- Decoding the body into `T` needs the concrete type at runtime, which on Kotlin
+  Multiplatform means a `reified` type parameter.
+- A `reified` type parameter requires an `inline` function, and **an interface
+  method cannot be `inline`** (there is no body to inline at the call site, and a
+  virtual call can't carry a reified type). So the typed variant cannot live on the
+  `DatabaseClient` interface — it has to be a top-level extension.
+- A single function can't return both `String` and `List<T>`, and adding a typed
+  *overload* of `select` would create resolution ambiguity (the compiler couldn't
+  always tell the raw call from the typed one). Giving the typed variant its own
+  name — `selectTyped` — removes the ambiguity and makes the choice explicit at the
+  call site.
+
+The same reasoning produces the `*Typed`/`*Unit`/`*Csv` naming across the whole
+module: the interface holds the small set of raw, string-returning primitives
+(`select`, `insert`, `update`, `replace`, `delete`, `rpc`, `rpcGet`,
+`selectCount`, `selectRange`), and the ergonomic typed layer is a set of reified
+extensions on top.
+
+### Raw primitives vs. the decoding layer
+
+Keeping the wire-level methods on the interface and the serialization in extensions
+separates two concerns cleanly. The interface is a thin, mockable contract that owns
+exactly one thing — turning a call into one HTTP request and handing back the body
+and headers. Serialization policy (which `kotlinx.serialization` settings, how
+`null` fields are treated, how a "no rows" 406 becomes `Success(null)`) lives
+entirely in the extension layer, where it can evolve without changing the interface
+and where every helper is a pure, testable transformation over the same primitive.
+It also leaves the raw `String` methods available as an escape hatch for responses
+the typed helpers don't model (custom media types, hand-built queries, streaming the
+body elsewhere).

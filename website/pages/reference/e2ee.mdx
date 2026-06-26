@@ -1,0 +1,343 @@
+---
+title: End-to-End Encryption — API Reference
+description: Complete public API for supabase-e2ee — ECDH P-256 key pairs, HKDF-SHA256 key agreement, and AES-256-GCM encrypt/decrypt so Supabase only ever stores ciphertext.
+---
+
+import { Callout } from 'nextra/components'
+
+# End-to-End Encryption — API Reference
+
+`supabase-e2ee` is an optional, client-side end-to-end encryption module. It lets
+two devices derive the **same** symmetric key on-device — never sending it to the
+server — so anything you store in Supabase is opaque ciphertext the backend cannot
+read. The flow follows the cryptography-kotlin secure-messaging recipe:
+
+```
+ECDH (P-256) → HKDF-SHA256 → AES-256-GCM
+```
+
+Each side generates an ECDH P-256 key pair, publishes only its **public** key, and
+runs an ECDH agreement against the peer's public key. The raw shared secret is never
+used directly as a key; it is run through HKDF-SHA256 to produce a 256-bit AES key.
+That key encrypts and decrypts data with AES-GCM, an authenticated cipher whose
+nonce is embedded in the ciphertext.
+
+**Maven artifact**
+
+```kotlin
+implementation("io.github.androidpoet:supabase-e2ee:<version>")
+```
+
+This module is opt-in and fully independent of the other feature clients (auth,
+database, storage, realtime). It depends only on the core result types and a
+multiplatform cryptography provider; you can use it without a `SupabaseClient`.
+
+Every fallible call returns a [`SupabaseResult<T>`](/results-and-errors) — a
+success-or-failure box — rather than throwing. Crypto exceptions (including a
+failed AES-GCM authentication tag on tampered or wrong-key ciphertext) come back as
+`SupabaseResult.Failure`, not thrown exceptions. `kotlinx.coroutines`
+`CancellationException` is the one thing that still propagates.
+
+<Callout type="warning">
+  **Key management is your responsibility.** This module *derives and uses* keys; it
+  does not store them or establish trust. Public keys are exchanged as raw bytes,
+  and `deriveSession` runs **raw ECDH** — it does not verify that a peer's public key
+  truly belongs to the intended peer. An attacker who can substitute the published
+  key (for example by tampering with the table you fetch it from) can mount a
+  man-in-the-middle attack. Distribute public keys over a trusted channel or verify
+  their fingerprints out-of-band. Private keys (from `exportPrivateKey`) are secret:
+  persist them in platform secure storage (Keychain / Keystore / etc.), and never
+  log or upload them.
+</Callout>
+
+All symbols live in the package `io.github.androidpoet.supabase.e2ee`.
+
+## Key pairs and generation
+
+### `E2eeKeyPair`
+
+```kotlin
+public class E2eeKeyPair {
+    public val publicKey: ByteArray
+}
+```
+
+An ECDH (P-256) key pair. There is no public constructor — obtain one from
+[`generateE2eeKeyPair`](#generatee2eekeypair) or
+[`importE2eeKeyPair`](#importe2eekeypair).
+
+- `publicKey` — the raw-encoded public key bytes (`EC.PublicKey.Format.RAW`). Safe to
+  publish: store it in a Supabase table so peers can fetch it.
+
+The private key is held internally and is never exposed as a property. To persist a
+pair, export the private half explicitly with [`exportPrivateKey`](#exportprivatekey).
+
+P-256 (rather than X25519) is used because it is supported by every provider,
+including WebCrypto on `wasmJs`.
+
+### `generateE2eeKeyPair`
+
+```kotlin
+public suspend fun generateE2eeKeyPair(): SupabaseResult<E2eeKeyPair>
+```
+
+Generates a fresh ECDH P-256 key pair. The public key is raw-encoded for publishing.
+
+- Returns `SupabaseResult<E2eeKeyPair>` — `Success` with the new pair, or `Failure`
+  (error code `"keygen"`).
+
+```kotlin
+val keyPair = when (val r = generateE2eeKeyPair()) {
+    is SupabaseResult.Success -> r.value
+    is SupabaseResult.Failure -> return // handle r.error
+}
+// keyPair.publicKey is safe to upload; the private key stays on-device.
+```
+
+### `exportPrivateKey`
+
+```kotlin
+public suspend fun E2eeKeyPair.exportPrivateKey(): SupabaseResult<ByteArray>
+```
+
+Exports this pair's **private** key as PKCS#8 DER bytes so a device can persist its
+identity across launches. DER (PKCS#8) round-trips across JDK / Apple / OpenSSL /
+WebCrypto, so it works on every target including `wasmJs`.
+
+- Returns `SupabaseResult<ByteArray>` — `Success` with the PKCS#8 DER-encoded private
+  key bytes, or `Failure` (error code `"export"`).
+
+These bytes are secret. Store them in your platform's secure storage and never log or
+upload them; only `publicKey` is safe to publish. Restore later with
+[`importE2eeKeyPair`](#importe2eekeypair).
+
+```kotlin
+val privateDer = keyPair.exportPrivateKey().getOrNull() ?: return
+secureStorage.put("e2ee_priv", privateDer)        // PKCS#8 DER, keep secret
+secureStorage.put("e2ee_pub", keyPair.publicKey)  // raw public, may be published
+```
+
+### `importE2eeKeyPair`
+
+```kotlin
+public suspend fun importE2eeKeyPair(
+    privateKeyDer: ByteArray,
+    publicKey: ByteArray,
+): SupabaseResult<E2eeKeyPair>
+```
+
+Restores an `E2eeKeyPair` from a previously exported private key and its matching
+public key. This is the other half of at-rest, single-user encryption: a device
+generates a pair once, persists it, and re-imports it on the next launch to
+re-derive the same session and decrypt its own history.
+
+- `privateKeyDer` — PKCS#8 DER bytes produced by [`exportPrivateKey`](#exportprivatekey).
+- `publicKey` — the matching raw public key bytes (as published / from
+  [`E2eeKeyPair.publicKey`](#e2eekeypair)).
+- Returns `SupabaseResult<E2eeKeyPair>` — `Success` with the reconstructed pair, or
+  `Failure` (error code `"import"`).
+
+```kotlin
+val priv = secureStorage.get("e2ee_priv")
+val pub = secureStorage.get("e2ee_pub")
+val restored = importE2eeKeyPair(priv, pub).getOrNull() ?: return
+```
+
+## Key agreement (ECDH) and derivation (HKDF)
+
+Both derivation functions perform the full pipeline — ECDH key agreement, then
+HKDF-SHA256 to a 256-bit AES key — and return a ready-to-use [`E2eeSession`](#e2eesession).
+The raw shared secret is never used as a key directly. Both sides that agree on the
+same pair of public keys derive the **identical** key locally; the server never sees it.
+
+### `deriveSession`
+
+```kotlin
+public suspend fun E2eeKeyPair.deriveSession(
+    peerPublicKey: ByteArray,
+): SupabaseResult<E2eeSession>
+```
+
+Derives a shared session from this key pair and a peer's raw public key. To pair two
+devices, each calls this with the other's published public key.
+
+- `peerPublicKey` — the peer's raw-encoded public key bytes (their
+  [`E2eeKeyPair.publicKey`](#e2eekeypair)).
+- Returns `SupabaseResult<E2eeSession>` — `Success` with the shared session, or
+  `Failure` (error code `"derive"`).
+
+<Callout type="warning">
+  This is raw ECDH: it does **not** verify that `peerPublicKey` belongs to the
+  intended peer. Authenticate or fingerprint-verify peer keys out-of-band to prevent
+  a man-in-the-middle attack.
+</Callout>
+
+### `deriveSelfSession`
+
+```kotlin
+public suspend fun E2eeKeyPair.deriveSelfSession(): SupabaseResult<E2eeSession>
+```
+
+Derives a session keyed to **this device's own pair** — an ECDH agreement against its
+own public key, producing a stable deterministic self-key for single-user at-rest
+encryption (encrypt your own notes/files; the server only ever sees ciphertext).
+Equivalent to `deriveSession(publicKey)`. Persist the pair with
+[`exportPrivateKey`](#exportprivatekey) / [`importE2eeKeyPair`](#importe2eekeypair)
+so the same key returns on the next launch. Has no peer, so it is unaffected by the
+man-in-the-middle caveat above.
+
+- Returns `SupabaseResult<E2eeSession>` — `Success` with the self session, or `Failure`
+  (error code `"derive"`).
+
+```kotlin
+// Single-user, at-rest: same key every launch after import.
+val session = restored.deriveSelfSession().getOrNull() ?: return
+```
+
+## Encrypt / decrypt
+
+### `E2eeSession`
+
+```kotlin
+public class E2eeSession {
+    public suspend fun encrypt(plaintext: ByteArray): SupabaseResult<ByteArray>
+    public suspend fun encrypt(text: String): SupabaseResult<ByteArray>
+    public suspend fun decrypt(ciphertext: ByteArray): SupabaseResult<ByteArray>
+    public suspend fun decryptToString(ciphertext: ByteArray): SupabaseResult<String>
+}
+```
+
+A symmetric AES-256-GCM session derived from an ECDH key agreement. It encrypts and
+decrypts any data; the relay/server only ever sees the returned ciphertext, in which
+the GCM nonce is embedded. There is no public constructor — obtain one from
+[`deriveSession`](#derivesession) or [`deriveSelfSession`](#deriveselfsession).
+
+Because AES-GCM is authenticated, decrypting tampered ciphertext or ciphertext from a
+mismatched key fails the authentication tag and returns a `SupabaseResult.Failure`
+(it does not throw and does not return garbage).
+
+#### `encrypt(plaintext: ByteArray)`
+
+Encrypts arbitrary bytes; the nonce is embedded in the returned ciphertext.
+
+- `plaintext` — the raw bytes to encrypt.
+- Returns `SupabaseResult<ByteArray>` — `Success` with ciphertext (nonce embedded), or
+  `Failure` (error code `"encrypt"`).
+
+#### `encrypt(text: String)`
+
+Encrypts a UTF-8 string. Equivalent to encrypting `text.encodeToByteArray()`.
+
+- `text` — the string to encrypt; encoded as UTF-8.
+- Returns `SupabaseResult<ByteArray>` — `Success` with ciphertext, or `Failure`
+  (error code `"encrypt"`).
+
+#### `decrypt(ciphertext: ByteArray)`
+
+Decrypts bytes produced by `encrypt`.
+
+- `ciphertext` — bytes returned by an `encrypt` call (nonce embedded).
+- Returns `SupabaseResult<ByteArray>` — `Success` with the original plaintext bytes,
+  or `Failure` (error code `"decrypt"`) on a bad/tampered/wrong-key input.
+
+#### `decryptToString(ciphertext: ByteArray)`
+
+Decrypts ciphertext back into a UTF-8 string.
+
+- `ciphertext` — bytes returned by an `encrypt` call.
+- Returns `SupabaseResult<String>` — `Success` with the decoded UTF-8 string, or
+  `Failure` (error code `"decrypt"`).
+
+#### Two-party round-trip
+
+```kotlin
+// Alice and Bob each generate a pair and publish their public key.
+val alice = generateE2eeKeyPair().getOrThrow()
+val bob = generateE2eeKeyPair().getOrThrow()
+
+// Each derives a session from the OTHER's public key — the key never leaves the device.
+val aliceSession = alice.deriveSession(bob.publicKey).getOrThrow()
+val bobSession = bob.deriveSession(alice.publicKey).getOrThrow()
+
+// Alice encrypts; only the ciphertext is stored in / relayed by Supabase.
+val cipher = aliceSession.encrypt("hello bob 🔐").getOrThrow()
+
+// Bob derived the same key, so he can decrypt.
+val plain = bobSession.decryptToString(cipher).getOrThrow() // "hello bob 🔐"
+```
+
+## Typed value helpers
+
+These inline extensions encrypt and decrypt any `@Serializable` value by encoding it
+to JSON first, then applying the session cipher. They are `reified` over `T`.
+
+### `encryptValue`
+
+```kotlin
+public suspend inline fun <reified T> E2eeSession.encryptValue(
+    value: T,
+    json: Json = Json,
+): SupabaseResult<ByteArray>
+```
+
+Encrypts any `@Serializable` value: it is encoded to a JSON string, then to ciphertext.
+
+- `value` — the value to encrypt; its type `T` must be `@Serializable`.
+- `json` — the serializer to use. Default: the standard `kotlinx.serialization.json.Json`
+  instance.
+- Returns `SupabaseResult<ByteArray>` — `Success` with ciphertext, or `Failure`
+  (error code `"encrypt"`).
+
+### `decryptValue`
+
+```kotlin
+public suspend inline fun <reified T> E2eeSession.decryptValue(
+    ciphertext: ByteArray,
+    json: Json = Json,
+): SupabaseResult<T>
+```
+
+Decrypts and decodes ciphertext produced by `encryptValue` back into `T`. It first
+decrypts to a UTF-8 string, then JSON-decodes it.
+
+- `ciphertext` — bytes produced by [`encryptValue`](#encryptvalue).
+- `json` — the serializer to use; must match the one used to encrypt. Default: the
+  standard `Json` instance.
+- Returns `SupabaseResult<T>` — `Success` with the decoded value, `Failure` with the
+  decryption error code (e.g. `"decrypt"`) if the cipher step fails, or `Failure`
+  with error code `"decode"` if the JSON cannot be parsed into `T`.
+
+```kotlin
+@Serializable
+data class Message(val from: String, val body: String, val ts: Long)
+
+val msg = Message(from = "alice", body = "hello bob", ts = 1_700_000_000)
+
+val cipher = aliceSession.encryptValue(msg).getOrThrow()
+val back = bobSession.decryptValue<Message>(cipher).getOrThrow()
+// back == msg
+```
+
+## At-rest, single-user round-trip
+
+The export/import + self-session path lets one device encrypt its own data, persist
+its identity, and decrypt that data again after a restart.
+
+```kotlin
+// First launch: generate once and persist.
+val pair = generateE2eeKeyPair().getOrThrow()
+secureStorage.put("e2ee_priv", pair.exportPrivateKey().getOrThrow()) // PKCS#8 DER, secret
+secureStorage.put("e2ee_pub", pair.publicKey)                        // raw, may be published
+
+val cipher = pair.deriveSelfSession().getOrThrow()
+    .encryptValue(Message("me", "secret note", 1)).getOrThrow()
+// store `cipher` in Supabase — the server sees only ciphertext.
+
+// Next launch: restore and decrypt the same data.
+val restored = importE2eeKeyPair(
+    secureStorage.get("e2ee_priv"),
+    secureStorage.get("e2ee_pub"),
+).getOrThrow()
+val note = restored.deriveSelfSession().getOrThrow()
+    .decryptValue<Message>(cipher).getOrThrow()
+```

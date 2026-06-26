@@ -1,0 +1,451 @@
+---
+title: Edge Functions — API Reference
+description: Complete API reference for the supabase-functions module — invoke Supabase Edge Functions with raw, typed, binary, and streaming responses, all returned as SupabaseResult.
+---
+
+# Edge Functions — API Reference
+
+The `supabase-functions` module calls Supabase Edge Functions deployed under
+`/functions/v1/` and returns each result as a `SupabaseResult<T>` instead of
+throwing. Raw calls hand back the response body as a `String`; the typed
+extensions decode that body — and optionally encode the request — through the
+Functions JSON serializer; and a streaming variant surfaces a
+`text/event-stream` response as a `Flow`.
+
+Add the dependency:
+
+```kotlin
+implementation("io.github.androidpoet:supabase-functions")
+```
+
+Reach the API from an existing `SupabaseClient` through the `functions`
+accessor, or build a client explicitly with `createFunctionsClient(client)`:
+
+```kotlin
+val functions = client.functions
+// or
+val functions = createFunctionsClient(client)
+```
+
+Every call is authenticated with the wrapped client's current session token
+unless a token is pinned with `setAuth`.
+
+---
+
+## `SupabaseClient.functions`
+
+```kotlin
+public val SupabaseClient.functions: FunctionsClient
+```
+
+Extension property that returns the `FunctionsClient` for this Supabase project —
+a discoverable shortcut for `createFunctionsClient` so you can reach Edge
+Functions as `client.functions` instead of holding a separate factory reference.
+
+The returned client is a thin, stateless wrapper around the receiver client, so
+reading this property repeatedly is cheap and always talks to the same
+underlying transport.
+
+```kotlin
+val result = client.functions.invoke("hello-world")
+```
+
+---
+
+## `createFunctionsClient`
+
+```kotlin
+public fun createFunctionsClient(supabaseClient: SupabaseClient): FunctionsClient
+```
+
+Creates a `FunctionsClient` backed by `supabaseClient`, reusing its base URL,
+HTTP engine, and session token. This is the standard entry point to the
+Functions API.
+
+- `supabaseClient` — the project client whose base URL, transport, and session
+  token the Functions client reuses.
+
+The returned client holds no state of its own beyond an optionally pinned
+`setAuth` token, so one instance per `SupabaseClient` is enough.
+
+```kotlin
+val functions = createFunctionsClient(client)
+```
+
+---
+
+## `FunctionsClient`
+
+```kotlin
+public interface FunctionsClient
+```
+
+Calls Supabase Edge Functions deployed under `/functions/v1/`, returning each
+result as a `SupabaseResult` rather than throwing. One client wraps a
+`SupabaseClient` and reuses its base URL and session token, so calls are
+authenticated with the current session unless a token is pinned via `setAuth`.
+Obtain an instance with `createFunctionsClient` or the `functions` accessor.
+
+### `setAuth`
+
+```kotlin
+public fun setAuth(token: String)
+```
+
+Pins `token` as the bearer token for every subsequent call, overriding the
+wrapped client's current session token.
+
+- `token` — the bearer token to send on all following calls.
+
+Pass a new token to rotate it; there is no unset — to fall back to the session
+token, construct a fresh client.
+
+### `invoke`
+
+```kotlin
+public suspend fun invoke(
+    functionName: String,
+    body: String? = null,
+    method: FunctionMethod = FunctionMethod.POST,
+    headers: Map<String, String> = emptyMap(),
+    region: FunctionRegion? = null,
+): SupabaseResult<String>
+```
+
+Invokes the Edge Function named `functionName` with an optional text `body` and
+returns its full response body.
+
+- `functionName` — the deployed function name, appended to `/functions/v1/`.
+- `body` — optional text request body. Default `null`. When non-null and the
+  caller has not set one, a `Content-Type: application/json` header is added
+  (Edge Functions commonly branch on it). Ignored under `FunctionMethod.GET`,
+  which sends no body.
+- `method` — the HTTP method to issue. Default `FunctionMethod.POST`.
+- `headers` — extra request headers, merged last so they win over the
+  auth/region defaults. Default empty.
+- `region` — optional region to pin the call to via the `x-region` header.
+  Default `null` (Supabase routes to the nearest region).
+
+**Returns** `SupabaseResult<String>` — `Success` carries the full response body
+as a string; a non-2xx response is a `Failure`.
+
+```kotlin
+when (val result = client.functions.invoke("hello-world", body = """{"name":"Ada"}""")) {
+    is SupabaseResult.Success -> println(result.value)
+    is SupabaseResult.Failure -> println(result.error)
+}
+```
+
+### `invokeWithBody`
+
+```kotlin
+public suspend fun invokeWithBody(
+    functionName: String,
+    body: ByteArray,
+    contentType: String = "application/octet-stream",
+    method: FunctionMethod = FunctionMethod.POST,
+    headers: Map<String, String> = emptyMap(),
+    region: FunctionRegion? = null,
+): SupabaseResult<String>
+```
+
+Invokes `functionName` with a raw binary `body` (e.g. an image or protobuf),
+returning the full response. The byte-oriented counterpart to `invoke`, with the
+same routing and `x-region`/`headers` behavior.
+
+- `functionName` — the deployed function name, appended to `/functions/v1/`.
+- `body` — the raw bytes to upload.
+- `contentType` — the `Content-Type` for the uploaded bytes. Default
+  `"application/octet-stream"`.
+- `method` — the HTTP method to issue. Default `FunctionMethod.POST`.
+  `FunctionMethod.GET` is not meaningful here since it carries no body — pass a
+  body-bearing verb.
+- `headers` — extra request headers, merged over the auth/region defaults.
+  Default empty.
+- `region` — optional region to pin the call to via `x-region`. Default `null`.
+
+**Returns** `SupabaseResult<String>` — `Success` carries the full response body
+as a string; a non-2xx response is a `Failure`.
+
+```kotlin
+val png: ByteArray = readImageBytes()
+val result = client.functions.invokeWithBody(
+    functionName = "resize-image",
+    body = png,
+    contentType = "image/png",
+)
+```
+
+### `invokeSSE`
+
+```kotlin
+public fun invokeSSE(
+    functionName: String,
+    body: String? = null,
+    contentType: String = "application/json",
+    headers: Map<String, String> = emptyMap(),
+    region: FunctionRegion? = null,
+): Flow<FunctionServerSentEvent>
+```
+
+Invokes a streaming Edge Function and returns its response as a cold `Flow` of
+`FunctionServerSentEvent`s, parsed from the `text/event-stream` body as they
+arrive (nothing is buffered to completion).
+
+- `functionName` — the deployed function name, appended to `/functions/v1/`.
+- `body` — optional text request body. Default `null`.
+- `contentType` — the `Content-Type` for the request body. Default
+  `"application/json"`.
+- `headers` — extra request headers, merged over the auth/region defaults.
+  Default empty.
+- `region` — optional region to pin the call to via `x-region`. Default `null`.
+
+**Returns** `Flow<FunctionServerSentEvent>`. The request is a POST issued when
+the flow is collected; collecting twice invokes twice. Unlike the buffered
+`invoke`, a streamed call cannot return a `SupabaseResult` up front — a non-2xx
+response surfaces as a terminal exception in the flow rather than an empty
+stream, so collect within `try`/`catch` (or Flow `.catch`).
+
+```kotlin
+client.functions.invokeSSE("stream-tokens")
+    .catch { e -> println("stream failed: $e") }
+    .collect { event -> println(event.data) }
+```
+
+---
+
+## Typed invoke extensions
+
+These reified extensions decode the response body — and, in one overload, encode
+the request — through the Functions JSON serializer, staying Result-first end to
+end: a decode failure becomes a `SupabaseResult.Failure` rather than an
+exception.
+
+### `invokeTyped` (text body)
+
+```kotlin
+public suspend inline fun <reified T> FunctionsClient.invokeTyped(
+    functionName: String,
+    body: String? = null,
+    method: FunctionMethod = FunctionMethod.POST,
+    headers: Map<String, String> = emptyMap(),
+    region: FunctionRegion? = null,
+): SupabaseResult<T>
+```
+
+Invokes `functionName` and decodes its response JSON into `T`. Wraps `invoke`;
+pass a serialized `body` string (use the request-object overload to encode the
+request too).
+
+- `functionName` — the deployed function name.
+- `body` — optional serialized text request body. Default `null`.
+- `method` — the HTTP method to issue. Default `FunctionMethod.POST`.
+- `headers` — extra request headers, merged over the auth/region defaults.
+  Default empty.
+- `region` — optional region to pin the call to via `x-region`. Default `null`.
+
+**Returns** `SupabaseResult<T>` — `Success` carries the decoded value; a non-2xx
+response or a decode failure is a `Failure`.
+
+```kotlin
+@Serializable
+data class Greeting(val message: String)
+
+val result: SupabaseResult<Greeting> =
+    client.functions.invokeTyped("hello-world", body = """{"name":"Ada"}""")
+```
+
+### `invokeTyped` (typed request and response)
+
+```kotlin
+public suspend inline fun <reified Request : Any, reified Response> FunctionsClient.invokeTyped(
+    functionName: String,
+    request: Request,
+    method: FunctionMethod = FunctionMethod.POST,
+    headers: Map<String, String> = emptyMap(),
+    region: FunctionRegion? = null,
+): SupabaseResult<Response>
+```
+
+Encodes `request` to JSON, invokes `functionName` with it, and decodes the
+response into `Response` — both sides typed in one call. The fully typed
+counterpart to the text-body `invokeTyped`; both serialization steps use the
+Functions serializer and a failure at either end surfaces as
+`SupabaseResult.Failure`.
+
+- `functionName` — the deployed function name.
+- `request` — the request body, serialized to JSON via `Request`'s serializer.
+- `method` — the HTTP method to issue. Default `FunctionMethod.POST`.
+- `headers` — extra request headers, merged over the auth/region defaults.
+  Default empty.
+- `region` — optional region to pin the call to via `x-region`. Default `null`.
+
+**Returns** `SupabaseResult<Response>` — `Success` carries the decoded response;
+a non-2xx response or a decode failure at either end is a `Failure`.
+
+```kotlin
+@Serializable
+data class HelloRequest(val name: String)
+
+@Serializable
+data class Greeting(val message: String)
+
+val result: SupabaseResult<Greeting> =
+    client.functions.invokeTyped("hello-world", HelloRequest(name = "Ada"))
+```
+
+### `invokeWithBodyTyped`
+
+```kotlin
+public suspend inline fun <reified T> FunctionsClient.invokeWithBodyTyped(
+    functionName: String,
+    body: ByteArray,
+    contentType: String = "application/octet-stream",
+    method: FunctionMethod = FunctionMethod.POST,
+    headers: Map<String, String> = emptyMap(),
+    region: FunctionRegion? = null,
+): SupabaseResult<T>
+```
+
+Posts a raw binary `body` to `functionName` and decodes the JSON response into
+`T`. The byte-body analogue of `invokeTyped`, wrapping `invokeWithBody`.
+
+- `functionName` — the deployed function name.
+- `body` — the raw bytes to upload.
+- `contentType` — the `Content-Type` for the uploaded bytes. Default
+  `"application/octet-stream"`.
+- `method` — the HTTP method to issue. Default `FunctionMethod.POST`.
+- `headers` — extra request headers, merged over the auth/region defaults.
+  Default empty.
+- `region` — optional region to pin the call to via `x-region`. Default `null`.
+
+**Returns** `SupabaseResult<T>` — `Success` carries the decoded value; a non-2xx
+response or a decode failure is a `Failure`.
+
+```kotlin
+@Serializable
+data class ResizeResult(val width: Int, val height: Int)
+
+val result: SupabaseResult<ResizeResult> =
+    client.functions.invokeWithBodyTyped(
+        functionName = "resize-image",
+        body = readImageBytes(),
+        contentType = "image/png",
+    )
+```
+
+---
+
+## `FunctionServerSentEvent`
+
+```kotlin
+public data class FunctionServerSentEvent(
+    public val id: String? = null,
+    public val event: String? = null,
+    public val data: String? = null,
+)
+```
+
+One Server-Sent Event emitted by a streaming Edge Function, as produced by
+`invokeSSE`. Fields mirror the SSE wire format:
+
+- `id` — the last-event-id (`id:` line). It persists across events, so an event
+  that omits `id:` reports the most recently seen id (matching the browser
+  `EventSource.lastEventId`), and is `null` only until the server first sends
+  one. Default `null`.
+- `event` — the event type (`event:` line), defaulting to `"message"` on the
+  wire when omitted. Default `null`.
+- `data` — the payload (`data:` line); multiple `data:` lines in one event are
+  joined with `\n`. Default `null`.
+
+Keep-alive comment lines (`:`) are dropped by the parser and never surface as
+events.
+
+### `decodeAs`
+
+```kotlin
+public inline fun <reified T> decodeAs(): T?
+```
+
+Deserializes `data` into `T` using the Functions serializer.
+
+**Returns** the decoded value, or `null` when this event carries no `data` (e.g.
+an event with only an `id:`/`event:` line). Throws if `data` is present but not
+valid JSON for `T` — wrap the call site if you need that as a value.
+
+```kotlin
+@Serializable
+data class Token(val text: String)
+
+client.functions.invokeSSE("stream-tokens")
+    .collect { event ->
+        val token = event.decodeAs<Token>()
+        if (token != null) print(token.text)
+    }
+```
+
+---
+
+## `FunctionMethod`
+
+```kotlin
+public enum class FunctionMethod
+```
+
+The HTTP method an Edge Function call is issued with, used by `invoke` and
+`invokeWithBody`. Functions default to `POST`; pass another verb when a function
+routes on the request method. `GET` carries no request body (a GET with a body
+is invalid) — any body supplied alongside it is ignored.
+
+| Entry | Meaning |
+| --- | --- |
+| `POST` | HTTP `POST` — the default; carries the request body. |
+| `GET` | HTTP `GET` — no request body is sent. |
+| `PUT` | HTTP `PUT` — carries the request body. |
+| `PATCH` | HTTP `PATCH` — carries the request body. |
+| `DELETE` | HTTP `DELETE` — carries the request body. |
+
+---
+
+## `FunctionRegion`
+
+```kotlin
+public enum class FunctionRegion(
+    public val value: String,
+)
+```
+
+The Edge Functions region to pin a call to, sent as the `x-region` request
+header by `invoke` and friends. Edge Functions are normally routed to the region
+nearest the caller; pin one when a function must run close to a regional
+resource (e.g. a co-located database) to avoid the cross-region round trip.
+
+- `value` — the wire string placed in the `x-region` header.
+
+`ANY` (the default behavior when no region is passed) leaves routing to
+Supabase.
+
+| Entry | `value` |
+| --- | --- |
+| `ANY` | `any` |
+| `US_EAST_1` | `us-east-1` |
+| `US_WEST_1` | `us-west-1` |
+| `US_WEST_2` | `us-west-2` |
+| `CA_CENTRAL_1` | `ca-central-1` |
+| `SA_EAST_1` | `sa-east-1` |
+| `EU_WEST_1` | `eu-west-1` |
+| `EU_WEST_2` | `eu-west-2` |
+| `EU_WEST_3` | `eu-west-3` |
+| `EU_CENTRAL_1` | `eu-central-1` |
+| `AP_SOUTH_1` | `ap-south-1` |
+| `AP_SOUTHEAST_1` | `ap-southeast-1` |
+| `AP_SOUTHEAST_2` | `ap-southeast-2` |
+| `AP_NORTHEAST_1` | `ap-northeast-1` |
+| `AP_NORTHEAST_2` | `ap-northeast-2` |
+
+`FunctionRegion` is `@Serializable`; each entry serializes to its `value`
+string.
+
+```kotlin
+client.functions.invoke("nearby", region = FunctionRegion.EU_WEST_2)
+```

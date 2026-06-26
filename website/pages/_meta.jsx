@@ -17,6 +17,7 @@ export default {
   encryption: 'End-to-End Encryption',
   'vector-search': 'Vector Search',
   platforms: 'Platforms',
+  reference: 'API Reference',
   github_link: {
     title: 'GitHub',
     type: 'page',

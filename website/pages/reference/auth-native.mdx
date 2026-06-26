@@ -1,0 +1,389 @@
+---
+title: Native Sign-In — API Reference
+description: API reference for the optional supabase-auth-google, supabase-auth-apple and supabase-auth-passkey add-on modules, which layer native platform credential flows on top of supabase-auth.
+---
+
+import { Callout } from 'nextra/components'
+
+# Native Sign-In — API Reference
+
+These are three **optional add-on modules** that sit on top of `supabase-auth`.
+Each drives a platform-native credential flow — a Google account chooser, "Sign
+in with Apple", or a WebAuthn passkey ceremony — and hands the resulting
+credential back to the core SDK to redeem for a Supabase session. The core never
+bundles a provider SDK you did not ask for, so you only pull in the piece you
+use.
+
+Add whichever you need (version `1.0.0`):
+
+```kotlin
+implementation("io.github.androidpoet:supabase-auth-google:1.0.0")
+implementation("io.github.androidpoet:supabase-auth-apple:1.0.0")
+implementation("io.github.androidpoet:supabase-auth-passkey:1.0.0")
+```
+
+<Callout type="info">
+  The Google and Apple modules produce a
+  [`NativeAuthProvider`](#how-the-pieces-fit) that you pass to
+  `AuthClient.signInWith(...)`. The passkey module instead exposes
+  `registerPasskey` / `signInWithPasskey` extensions that run the whole ceremony
+  for you. All public functions are `suspend` and return a
+  `SupabaseResult<T>` — `SupabaseResult.Success` carries the value,
+  `SupabaseResult.Failure` carries a `SupabaseError`. A user-cancelled sheet is a
+  `Failure` with a stable, branchable `code`, never a thrown exception.
+</Callout>
+
+### How the pieces fit
+
+All three modules build on two core symbols already in `supabase-auth`:
+
+- `NativeAuthProvider` — the SDK's single extension point for native sign-in.
+  `googleAuthProvider(...)` and `appleAuthProvider(...)` return one. You hand it
+  to `suspend fun AuthClient.signInWith(provider, captchaToken, onCredential): SupabaseResult<Session>`,
+  which runs the native flow, then exchanges the returned ID token for a session.
+- `generateNonce(byteCount: Int = 32): String` — a CSPRNG-backed, URL-safe,
+  single-use nonce. Pass it to a config's `nonce` and the provider hashes it for
+  the platform while returning the raw value for Supabase to validate. Throws
+  `IllegalArgumentException` if `byteCount` is below 16.
+
+---
+
+## Google
+
+**Artifact:** `io.github.androidpoet:supabase-auth-google`
+
+**Supported platforms.** The shared `GoogleSignInConfig` is available on every
+target the module publishes (Android, JVM, iOS, macOS, Wasm/JS). The native
+ceremony itself is **Android-only**: the `googleAuthProvider(...)` factory is
+declared solely in the Android source set and is backed by Android's Credential
+Manager plus Google Identity Services. There is no native Google flow on iOS,
+macOS, JVM or the browser in this module — on those platforms supply your own
+`NativeAuthProvider` or use a different sign-in method.
+
+### `GoogleSignInConfig`
+
+Configuration for a native Google sign-in flow.
+
+```kotlin
+public data class GoogleSignInConfig(
+    public val serverClientId: String,
+    public val nonce: String? = null,
+    public val filterByAuthorizedAccounts: Boolean = false,
+    public val autoSelectEnabled: Boolean = false,
+)
+```
+
+- `serverClientId` — your Google **Web** client ID (the OAuth client of type
+  "Web application"), the same value configured as the Supabase Google provider's
+  client ID. The returned ID token is audienced for it so Supabase can validate
+  the token.
+- `nonce` — optional raw nonce. When set it is hashed and forwarded to Google,
+  and the raw value is carried back in the credential so Supabase can validate
+  the token's hashed `nonce` claim. Use a fresh value per sign-in from
+  `generateNonce()`. Default `null`.
+- `filterByAuthorizedAccounts` — when `true`, only accounts that previously
+  authorized this app are offered; set `false` to allow first-time sign-ups.
+  Default `false`.
+- `autoSelectEnabled` — enables Google's auto sign-in when a single matching
+  credential exists. Default `false`.
+
+Being a `data class`, it also exposes `copy`, `equals`, `hashCode`, `toString`
+and `componentN` destructuring.
+
+### `googleAuthProvider` (Android)
+
+Creates a Google `NativeAuthProvider` backed by Credential Manager and Google
+Identity Services.
+
+```kotlin
+public fun googleAuthProvider(
+    context: Context,
+    config: GoogleSignInConfig,
+): NativeAuthProvider
+```
+
+- `context` — an **Activity** context; Credential Manager presents its UI from it.
+- `config` — the `GoogleSignInConfig` above.
+
+Returns a `NativeAuthProvider` synchronously. Its `signIn()` returns
+`SupabaseResult<NativeAuthCredential>` — a `Failure` with code
+`google_sign_in_cancelled` (user dismissed the sheet),
+`google_no_credentials` (no eligible account) or `google_sign_in_failed`
+(any other error). Pass the provider to `AuthClient.signInWith(...)` to obtain a
+`Session`.
+
+```kotlin
+// Android
+val config = GoogleSignInConfig(
+    serverClientId = "YOUR_WEB_CLIENT_ID.apps.googleusercontent.com",
+    nonce = generateNonce(),
+)
+val provider = googleAuthProvider(activity, config)
+
+when (val result = supabase.auth.signInWith(provider)) {
+    is SupabaseResult.Success -> println("Signed in: ${result.value.user?.email}")
+    is SupabaseResult.Failure -> println("Sign-in failed: ${result.error.code}")
+}
+```
+
+---
+
+## Apple
+
+**Artifact:** `io.github.androidpoet:supabase-auth-apple`
+
+**Supported platforms.** The shared `AppleSignInConfig` is available on every
+published target (Android, JVM, iOS, macOS, Wasm/JS). The native ceremony is
+restricted to **Apple targets only** — `iosArm64`, `iosSimulatorArm64`,
+`iosX64`, `macosArm64`, `macosX64` — where `appleAuthProvider(...)` is backed by
+the system `AuthenticationServices` sheet. The factory is not present on Android,
+JVM or the browser; "Sign in with Apple" is not offered there by this module.
+
+### `AppleSignInConfig`
+
+Configuration for a native "Sign in with Apple" flow.
+
+```kotlin
+public data class AppleSignInConfig(
+    public val nonce: String? = null,
+    public val requestEmail: Boolean = true,
+    public val requestFullName: Boolean = true,
+)
+```
+
+- `nonce` — optional raw nonce. When set, its SHA-256 hash is sent to Apple and
+  the raw value is returned in the credential so Supabase can validate the
+  token's hashed `nonce` claim. Use a fresh value per sign-in from
+  `generateNonce()`. Default `null`.
+- `requestEmail` — request the email scope. When granted, the email is surfaced
+  on the **first** authorization in the credential's `email`. Default `true`.
+- `requestFullName` — request the full-name scope. When granted, the name is
+  surfaced on the **first** authorization in the credential's `fullName`. Apple
+  returns the name and email only once, so persist them on that first sign-in.
+  Default `true`.
+
+Being a `data class`, it also exposes `copy`, `equals`, `hashCode`, `toString`
+and `componentN` destructuring.
+
+### `appleAuthProvider` (Apple targets)
+
+Creates a "Sign in with Apple" `NativeAuthProvider` backed by
+`AuthenticationServices`.
+
+```kotlin
+public fun appleAuthProvider(
+    config: AppleSignInConfig,
+): NativeAuthProvider
+```
+
+- `config` — the `AppleSignInConfig` above.
+
+Returns a `NativeAuthProvider` synchronously. Its `signIn()` returns
+`SupabaseResult<NativeAuthCredential>` — a `Failure` with code
+`apple_sign_in_cancelled` (user dismissed) or `apple_sign_in_failed` (no
+identity token, or any other error). Because the name and email only arrive on
+the first authorization and are absent from the ID token, capture them via the
+`onCredential` hook of `signInWith` before the token is redeemed.
+
+```kotlin
+// iOS / macOS
+val provider = appleAuthProvider(AppleSignInConfig(nonce = generateNonce()))
+
+val result = supabase.auth.signInWith(provider) { credential ->
+    // Apple returns these only on the first sign-in — persist them now.
+    credential.fullName?.let { saveDisplayName(it) }
+    credential.email?.let { saveEmail(it) }
+}
+when (result) {
+    is SupabaseResult.Success -> println("Signed in")
+    is SupabaseResult.Failure -> println("Failed: ${result.error.code}")
+}
+```
+
+---
+
+## Passkey
+
+**Artifact:** `io.github.androidpoet:supabase-auth-passkey`
+
+**Supported platforms.** This module is published for Android, JVM, iOS, macOS
+and Wasm/JS. A passkey flow has three steps — Supabase returns options (a
+challenge), the device's authenticator produces a credential, and Supabase
+verifies it. The HTTP steps live in `supabase-auth`; this module provides the
+middle (ceremony) step plus the extensions that stitch all three together. Two
+authenticators ship:
+
+- `PasskeysKmpAuthenticator` — common to **every** target; it drives a real
+  native WebAuthn ceremony on each platform through a cross-platform passkey
+  client.
+- `CredentialManagerPasskeyAuthenticator` — **Android-only**, backed by AndroidX
+  Credential Manager directly.
+
+The `registerPasskey` / `signInWithPasskey` extensions are common and run on any
+target; they are only as portable as the `PasskeyAuthenticator` you give them.
+
+### `PasskeyAuthenticator`
+
+The contract for driving the platform's WebAuthn ceremony — the one step the
+Supabase HTTP API cannot perform. Implement it to support a platform yourself;
+cancellation or authenticator failure must be reported as a `Failure`, not
+thrown.
+
+```kotlin
+public interface PasskeyAuthenticator {
+    public suspend fun createCredential(options: JsonObject): SupabaseResult<JsonObject>
+    public suspend fun getCredential(options: JsonObject): SupabaseResult<JsonObject>
+}
+```
+
+- `createCredential(options)` — runs the registration ceremony
+  (`navigator.credentials.create`): prompts the user to create a passkey for the
+  WebAuthn `options` and returns the credential JSON for the registration verify
+  endpoint.
+- `getCredential(options)` — runs the authentication ceremony
+  (`navigator.credentials.get`): prompts the user to assert an existing passkey
+  for the `options` and returns the credential JSON for the authentication verify
+  endpoint.
+
+Both take the WebAuthn options object Supabase returned and yield a
+`SupabaseResult<JsonObject>` — the credential JSON on `Success`.
+
+### `PasskeysKmpAuthenticator` (all targets)
+
+A `PasskeyAuthenticator` backed by a cross-platform passkey client, giving a real
+native ceremony on Android, iOS, macOS, JVM/Compose Desktop and the browser from
+a single adapter. Authenticator failures are mapped to stable codes
+(`passkey_cancelled`, `passkey_no_credentials`, `passkey_unsupported`,
+`passkey_ceremony_failed`) so callers branch identically regardless of platform.
+
+```kotlin
+public class PasskeysKmpAuthenticator(
+    client: PasskeyClient,
+) : PasskeyAuthenticator
+```
+
+- `client` — the cross-platform passkey client for the current platform,
+  constructed with the right presentation anchor.
+
+It implements the interface's `createCredential` and `getCredential`, each
+returning `SupabaseResult<JsonObject>`.
+
+```kotlin
+// Compose Multiplatform — anchor resolved for you
+val authenticator = PasskeysKmpAuthenticator(rememberPasskeyClient())
+supabase.signInWithPasskey(authenticator)
+```
+
+### `CredentialManagerPasskeyAuthenticator` (Android)
+
+A `PasskeyAuthenticator` backed by AndroidX Credential Manager, which speaks the
+W3C WebAuthn JSON serialization directly. It maps Credential Manager's exceptions
+to the same stable codes as the cross-platform authenticator.
+
+```kotlin
+public class CredentialManagerPasskeyAuthenticator(
+    context: Context,
+    credentialManager: CredentialManager = CredentialManager.create(context),
+) : PasskeyAuthenticator
+```
+
+- `context` — an **Activity** context; Credential Manager shows system UI and
+  needs an activity to host it.
+- `credentialManager` — overridable for testing; defaults to one created from
+  `context`.
+
+It implements `createCredential` and `getCredential`, each returning
+`SupabaseResult<JsonObject>`.
+
+### `AuthClient.registerPasskey`
+
+Registers a new passkey for the signed-in user, driving the whole ceremony:
+fetch registration options from Supabase, run the device authenticator, then
+verify the resulting credential. Short-circuits to `Failure` at the first failing
+step.
+
+```kotlin
+public suspend fun AuthClient.registerPasskey(
+    accessToken: String,
+    authenticator: PasskeyAuthenticator,
+): SupabaseResult<PasskeyMetadata>
+```
+
+- `accessToken` — the current session's access token.
+- `authenticator` — the platform ceremony driver.
+
+Returns `SupabaseResult<PasskeyMetadata>` — the registered passkey's metadata on
+`Success`.
+
+### `AuthClient.signInWithPasskey`
+
+Signs in passwordlessly with a passkey, driving the whole ceremony: fetch
+authentication options, run the device authenticator, then verify the assertion
+to obtain a `Session`. Short-circuits to `Failure` at the first failing step.
+
+```kotlin
+public suspend fun AuthClient.signInWithPasskey(
+    authenticator: PasskeyAuthenticator,
+    captchaToken: String? = null,
+): SupabaseResult<Session>
+```
+
+- `authenticator` — the platform ceremony driver.
+- `captchaToken` — optional CAPTCHA token when bot protection is enabled.
+  Default `null`.
+
+Returns `SupabaseResult<Session>` — the new session on `Success`. Note this
+`AuthClient` variant does not apply the session to the client; use the
+`SupabaseClient` variant below for that.
+
+### `SupabaseClient.registerPasskey`
+
+The client-level convenience over `AuthClient.registerPasskey`: registers a
+passkey for the currently signed-in user using this client's own access token.
+Fails with a `Failure` if no session is active.
+
+```kotlin
+public suspend fun SupabaseClient.registerPasskey(
+    authenticator: PasskeyAuthenticator,
+): SupabaseResult<PasskeyMetadata>
+```
+
+- `authenticator` — the platform ceremony driver.
+
+Returns `SupabaseResult<PasskeyMetadata>`.
+
+### `SupabaseClient.signInWithPasskey`
+
+The client-level counterpart to `AuthClient.signInWithPasskey`: signs in and, on
+success, applies the returned access token to this client so subsequent requests
+are authenticated. For persisted or multi-session apps, prefer a `SessionManager`
+instead.
+
+```kotlin
+public suspend fun SupabaseClient.signInWithPasskey(
+    authenticator: PasskeyAuthenticator,
+    captchaToken: String? = null,
+): SupabaseResult<Session>
+```
+
+- `authenticator` — the platform ceremony driver.
+- `captchaToken` — optional CAPTCHA token when bot protection is enabled.
+  Default `null`.
+
+Returns `SupabaseResult<Session>`.
+
+```kotlin
+val authenticator = PasskeysKmpAuthenticator(rememberPasskeyClient())
+
+// Register a passkey for the signed-in user.
+when (val reg = supabase.registerPasskey(authenticator)) {
+    is SupabaseResult.Success -> println("Passkey registered: ${reg.value}")
+    is SupabaseResult.Failure -> println("Register failed: ${reg.error.code}")
+}
+
+// Later, sign in passwordlessly — applies the session to `supabase` on success.
+when (val result = supabase.signInWithPasskey(authenticator)) {
+    is SupabaseResult.Success -> println("Signed in")
+    is SupabaseResult.Failure -> println("Failed: ${result.error.code}")
+}
+```
