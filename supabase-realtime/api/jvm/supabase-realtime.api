@@ -75,14 +75,14 @@ public final class io/github/androidpoet/supabase/realtime/RealtimeChannelBuilde
 }
 
 public abstract interface class io/github/androidpoet/supabase/realtime/RealtimeClient {
-	public abstract fun activeChannelDetails ()Ljava/util/Set;
-	public abstract fun activeChannels ()Ljava/util/Set;
 	public abstract fun broadcast (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun broadcast$default (Lio/github/androidpoet/supabase/realtime/RealtimeClient;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun channel (Ljava/lang/String;)Lio/github/androidpoet/supabase/realtime/RealtimeChannelBuilder;
 	public abstract fun close (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun connect (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun disconnect (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getActiveChannelNames ()Ljava/util/Set;
+	public abstract fun getActiveChannels ()Ljava/util/Set;
 	public abstract fun getConnectionState ()Lkotlinx/coroutines/flow/StateFlow;
 	public abstract fun getDebugEvents ()Lkotlinx/coroutines/flow/Flow;
 	public abstract fun getDebugState ()Lkotlinx/coroutines/flow/StateFlow;
@@ -92,13 +92,12 @@ public abstract interface class io/github/androidpoet/supabase/realtime/Realtime
 	public abstract fun isConnected ()Z
 	public abstract fun isConnecting ()Z
 	public abstract fun isDisconnecting ()Z
-	public abstract fun removeAllChannels (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun removeChannel (Lio/github/androidpoet/supabase/realtime/RealtimeSubscription;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun removeChannel (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun removeChannelsByTopic (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun removeAllSubscriptions (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun removeSubscription (Lio/github/androidpoet/supabase/realtime/RealtimeSubscription;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun removeSubscription (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun removeSubscriptionByTopic (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun removeSubscriptions (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun removeSubscriptionsByTopic (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun sendHeartbeat (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun setAuth (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun setAuth$default (Lio/github/androidpoet/supabase/realtime/RealtimeClient;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;

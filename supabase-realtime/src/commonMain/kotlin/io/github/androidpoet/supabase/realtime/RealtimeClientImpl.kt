@@ -170,10 +170,10 @@ internal class RealtimeClientImpl(
     override fun getSubscriptions(): Set<RealtimeSubscription> =
         synchronized(subscriptionsLock) { activeSubscriptions.values.toSet() }
 
-    override fun activeChannels(): Set<String> =
+    override fun getActiveChannelNames(): Set<String> =
         synchronized(subscriptionsLock) { activeSubscriptions.values.mapTo(mutableSetOf()) { it.channel } }
 
-    override fun activeChannelDetails(): Set<RealtimeChannel> =
+    override fun getActiveChannels(): Set<RealtimeChannel> =
         synchronized(subscriptionsLock) {
             activeSubscriptions.values.mapTo(mutableSetOf()) { RealtimeChannel(name = it.channel, topic = it.topic) }
         }
@@ -188,27 +188,22 @@ internal class RealtimeClientImpl(
         }
     }
 
-    @Deprecated("Use removeSubscription instead", ReplaceWith("removeSubscription(subscription)"))
-    override suspend fun removeChannel(subscription: RealtimeSubscription) {
-        removeSubscription(subscription)
-    }
-
     override suspend fun removeSubscriptionByTopic(topic: String) {
         synchronized(subscriptionsLock) { activeSubscriptions[topic] }?.unsubscribe()
     }
 
-    override suspend fun removeChannelsByTopic(topics: List<String>) {
+    override suspend fun removeSubscriptionsByTopic(topics: List<String>) {
         topics.forEach { topic ->
             synchronized(subscriptionsLock) { activeSubscriptions[topic] }?.unsubscribe()
         }
     }
 
-    override suspend fun removeChannel(name: String) {
+    override suspend fun removeSubscription(name: String) {
         val topic = "realtime:$name"
         synchronized(subscriptionsLock) { activeSubscriptions[topic] }?.unsubscribe()
     }
 
-    override suspend fun removeAllChannels() {
+    override suspend fun removeAllSubscriptions() {
         synchronized(subscriptionsLock) { activeSubscriptions.values.toList() }
             .forEach { it.unsubscribe() }
     }

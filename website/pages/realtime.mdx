@@ -299,7 +299,7 @@ this can leak the connection and keep your app awake in the background.
 
 ```kotlin
 subscription.unsubscribe()
-realtime.removeAllChannels()
+realtime.removeAllSubscriptions()
 realtime.disconnect()
 realtime.close()
 ```

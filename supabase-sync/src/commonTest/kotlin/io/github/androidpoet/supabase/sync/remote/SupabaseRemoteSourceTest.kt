@@ -287,24 +287,21 @@ private class FakeRealtimeClient : RealtimeClient {
 
     override fun getSubscriptions(): Set<RealtimeSubscription> = emptySet()
 
-    override fun activeChannels(): Set<String> = emptySet()
+    override fun getActiveChannelNames(): Set<String> = emptySet()
 
-    override fun activeChannelDetails(): Set<RealtimeChannel> = emptySet()
+    override fun getActiveChannels(): Set<RealtimeChannel> = emptySet()
 
     override suspend fun removeSubscription(subscription: RealtimeSubscription) = Unit
 
     override suspend fun removeSubscriptions(subscriptions: List<RealtimeSubscription>) = Unit
 
-    @Deprecated("Use removeSubscription instead", ReplaceWith("removeSubscription(subscription)"))
-    override suspend fun removeChannel(subscription: RealtimeSubscription) = Unit
-
     override suspend fun removeSubscriptionByTopic(topic: String) = Unit
 
-    override suspend fun removeChannelsByTopic(topics: List<String>) = Unit
+    override suspend fun removeSubscriptionsByTopic(topics: List<String>) = Unit
 
-    override suspend fun removeChannel(name: String) = Unit
+    override suspend fun removeSubscription(name: String) = Unit
 
-    override suspend fun removeAllChannels() = Unit
+    override suspend fun removeAllSubscriptions() = Unit
 
     override suspend fun setAuth(token: String?) = Unit
 

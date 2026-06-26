@@ -63,7 +63,7 @@ public enum class PostgresChangeEvent {
 public typealias PresenceState = Map<String, JsonObject>
 
 /** Identifies an active channel by its [name] and fully-qualified Phoenix
- * [topic] (e.g. `realtime:room1`); returned by [RealtimeClient.activeChannelDetails]. */
+ * [topic] (e.g. `realtime:room1`); returned by [RealtimeClient.getActiveChannels]. */
 public data class RealtimeChannel(
     public val name: String,
     public val topic: String,
