@@ -113,6 +113,14 @@ handled in source.
 - Realtime + sync are **not** converted to `SupabaseResult`. Reactive in-band (status `StateFlow`
   + sealed events) and throw-plus-status-Flow are the idiomatic, more-correct surfaces — see Rule 1.
 - `SupabaseResult` stays (not `kotlin.Result`).
+- **Sync `PullResult`/`PushResult`/`SyncResult` keep the `Result` suffix.** They are plain
+  operation-summary data classes (counts, accepted/rejected ids, next cursor), the idiomatic name
+  for "the result of an operation" (cf. WorkManager). They never appear *inside* a `SupabaseResult`,
+  so there's no monad confusion at a call site; renaming to `*Summary`/`*Outcome` is churn without a
+  clear ergonomic gain. (`PullProgress` already uses a non-`Result` name where it read better.)
+- **Paging width split (`Long` in the store layer, `Int pageSize` in `supabase-sync-paging`) is
+  intentional** — the AndroidX Paging 3 API is `Int`-based, while the low-level `LocalStore`/
+  `TableAdapter` use `Long` for large offsets. Each matches its layer's convention.
 
 **Do before 1.0 (breaking — free now, expensive later):**
 - ~~**Database query surface (format enum):**~~ **DONE** — `select`/`rpc`/`rpcGet`/`selectRange`
@@ -150,6 +158,12 @@ handled in source.
     package — including the `Cursor` that collided with the hand-written `sync.Cursor` — is excluded
     from the tracked ABI.
 
+- ~~**`selectRange` raw `Pair` return:**~~ **DONE** — `selectRange` returned
+  `SupabaseResult<Pair<String, PostgrestRange>>` (callers had to remember `.first`/`.second`); it now
+  returns a named `PostgrestRawPage(body, count, range)`, the raw-string analogue of `PostgrestPage<T>`.
+
 **Decide before 1.0 (additive, can land in 1.x but design now):**
 - Storage streaming: add `kotlinx.io` `Source`/`Sink` (file-backed) overloads so large
-  upload/download isn't forced through an in-memory `ByteArray`.
+  upload/download isn't forced through an in-memory `ByteArray`. A bytes-returning functions
+  response accessor (`invokeForBytes`) is the same shape of additive gap — both are purely new
+  surface, safe to land post-1.0.
