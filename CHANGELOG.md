@@ -2,6 +2,66 @@
 
 ## Unreleased
 
+### Added
+
+- **Codegen emits typed `Column<T>` filter tokens.** Each generated table data class
+  now carries a `companion object` of `Column<T>` tokens — one per column — so a
+  generated model works with the typed filter DSL out of the box, no hand-written
+  schema object required:
+  ```kotlin
+  database.selectTyped<Todos>(table = "todos") {
+      where { Todos.done eq false }       // Todos.done is the generated companion token
+      orderBy(Todos.createdAt, Order.DESC)
+  }
+  ```
+  The token name shadows nothing: `Todos.done` is the companion token, `row.done` the
+  row value. Token types drop nullability (`Column<Long>`, not `Column<Long?>`) so the
+  operators take a bare value; use `isNull()` / `isNotNull()` for the null cases.
+- **Filter DSL: range, `ilike`-set and `notInList` operators.** Closes the remaining
+  gaps against the PostgREST operator surface (all additive):
+  - Range-column operators `rangeGt` / `rangeGte` / `rangeLt` / `rangeLte` /
+    `rangeAdjacent` (PostgREST `sr` / `nxl` / `sl` / `nxr` / `adj`), names and token
+    mapping mirroring the supabase-js client.
+  - `ilikeAllOf` / `ilikeAnyOf` — the case-insensitive counterparts of the existing
+    `likeAllOf` / `likeAnyOf`.
+  - `notInList` — `NOT IN`, the direct negation of `inList` (was only reachable via
+    `not { … inList … }`).
+- **`SyncStore<T>` — one always-in-sync model per table** (new module
+  `supabase-sync-paging`). A typed façade over the `supabase-sync*` engine: the UI binds
+  a list or a single row and calls `upsert` / `delete`; it never touches the network or
+  SQL. Optimistic local writes push through the outbox in the background. The Paging 3
+  dependency lives only in this module, so the headless engine (`supabase-sync-core`)
+  stays paging-free.
+  ```kotlin
+  val notes = SyncStore("notes", local, engine, Note.serializer(), { it.id }, scope, now)
+  val list: Flow<PagingData<Note>> = notes.paged(20)   // local-first, auto-invalidating
+  val one:  Flow<Note?>            = notes.observe(id)
+  notes.upsert(note); notes.delete(id)
+  ```
+  - **Paging 3** (`app.cash.paging`, the KMP port): `paged()` is a local-first
+    `PagingData` stream that loads one window at a time and invalidates on any write or
+    sync. `pagedSynced()` adds a `RemoteMediator` that pulls the next backend page on
+    demand as you scroll (for tables too large to download up front).
+  - New engine primitive `SyncEngine.pullPage()` (cursor-advancing, merge-only) backs
+    the mediator.
+
+### Changed
+
+- **`LocalStore` gains `page` / `pageAfter` / `count` (breaking for custom stores).**
+  Implementors of the `LocalStore` interface must add these three methods (the bundled
+  `supabase-sync-sqldelight` store already does). They back keyset/offset paging and the
+  live row count; `pageAfter` and `page` return only live (non-tombstone) rows.
+
+### Fixed
+
+- **Local writes no longer subject to the remote monotonic guard.** `SyncStore.upsert` /
+  `delete` now route through the store's `enqueue` (which applies the row optimistically
+  *and* queues it, atomically) instead of `LocalStore.upsert`. `upsert` carries a
+  last-write-wins guard meant for *remote* pulls; a local edit stamped by a client clock
+  trailing the row's stored (server) `updated_at` could otherwise be silently dropped.
+  The two write paths are now documented as distinct on `LocalStore`. Paging queries also
+  exclude soft-deleted rows so tombstones never surface in a list.
+
 ## 0.10.0 - 2026-06-24
 
 > First `0.10.x` release. Carries a **breaking** filter-DSL redesign — pre-1.0, so we

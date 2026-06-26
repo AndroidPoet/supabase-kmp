@@ -120,7 +120,7 @@ public class SqlDelightLocalStore(
     // --- pagination: three list slots (offset page / keyset page / count) ---
 
     /** Offset pagination — a [Page] of [limit] rows starting at [offset], with the table's total. */
-    public suspend fun page(table: String, limit: Long, offset: Long): Page<Record> {
+    override suspend fun page(table: String, limit: Long, offset: Long): Page<Record> {
         val adapter = adapterFor(table)
         if (adapter != null) {
             val items = adapter.page(limit, offset).map { (id, fields) -> typedRecord(table, id, fields) }
@@ -135,7 +135,7 @@ public class SqlDelightLocalStore(
     }
 
     /** Keyset pagination — the next [limit] rows after [afterId] (`null` = first page). */
-    public suspend fun pageAfter(table: String, afterId: String?, limit: Long): List<Record> {
+    override suspend fun pageAfter(table: String, afterId: String?, limit: Long): List<Record> {
         val adapter = adapterFor(table)
         if (adapter != null) {
             return adapter.pageAfter(afterId, limit).map { (id, fields) -> typedRecord(table, id, fields) }
@@ -147,7 +147,7 @@ public class SqlDelightLocalStore(
     }
 
     /** Total row count for [table] (drives [Page.total] / "page x of y"). */
-    public suspend fun count(table: String): Long =
+    override suspend fun count(table: String): Long =
         adapterFor(table)?.count() ?: db.syncRecordQueries.countAll(table).executeAsOne()
 
     // --- internals ---

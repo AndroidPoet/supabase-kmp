@@ -33,6 +33,7 @@ val publishedModules =
         "supabase-sync-core",
         "supabase-sync-sqldelight",
         "supabase-sync",
+        "supabase-sync-paging",
     )
 
 // Validate the binary (ABI) compatibility of every published module so an

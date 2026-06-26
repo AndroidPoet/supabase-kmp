@@ -138,12 +138,30 @@ private class FakeLocalStore : LocalStore {
     override suspend fun pending(table: String): List<PendingChange> = outbox[table]?.toList() ?: emptyList()
 
     override suspend fun enqueue(table: String, change: PendingChange) {
-        outbox.getOrPut(table) { mutableListOf() }.add(change)
+        // Mirror the SQLDelight store: apply the row optimistically (unguarded) AND queue it, atomically;
+        // the outbox holds one entry per id (latest local intent), like INSERT OR REPLACE on (table, id).
+        tables.getOrPut(table) { mutableMapOf() }[change.record.id] = change.record
+        val queue = outbox.getOrPut(table) { mutableListOf() }
+        queue.removeAll { it.record.id == change.record.id }
+        queue.add(change)
     }
 
     override suspend fun clearPending(table: String, ids: List<String>) {
         outbox[table]?.removeAll { it.record.id in ids }
     }
+
+    private fun live(table: String): List<Record> =
+        tables[table]?.values?.filterNot { it.deleted }?.sortedBy { it.id } ?: emptyList()
+
+    override suspend fun page(table: String, limit: Long, offset: Long): Page<Record> {
+        val all = live(table)
+        return Page(all.drop(offset.toInt()).take(limit.toInt()), offset, limit, all.size.toLong())
+    }
+
+    override suspend fun pageAfter(table: String, afterId: String?, limit: Long): List<Record> =
+        live(table).filter { afterId == null || it.id > afterId }.take(limit.toInt())
+
+    override suspend fun count(table: String): Long = live(table).size.toLong()
 }
 
 private class FakeRemoteSource(

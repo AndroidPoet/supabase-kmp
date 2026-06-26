@@ -31,12 +31,12 @@ public final class io/github/androidpoet/supabase/sync/store/SqlDelightLocalStor
 	public fun <init> (Lio/github/androidpoet/supabase/sync/store/db/OfflineSyncDb;Ljava/util/Map;)V
 	public synthetic fun <init> (Lio/github/androidpoet/supabase/sync/store/db/OfflineSyncDb;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun clearPending (Ljava/lang/String;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public final fun count (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun count (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun cursor (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun enqueue (Ljava/lang/String;Lio/github/androidpoet/supabase/sync/PendingChange;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun get (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public final fun page (Ljava/lang/String;JJLkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public final fun pageAfter (Ljava/lang/String;Ljava/lang/String;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun page (Ljava/lang/String;JJLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun pageAfter (Ljava/lang/String;Ljava/lang/String;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun pending (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun setCursor (Ljava/lang/String;Lio/github/androidpoet/supabase/sync/Cursor;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun upsert (Ljava/lang/String;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

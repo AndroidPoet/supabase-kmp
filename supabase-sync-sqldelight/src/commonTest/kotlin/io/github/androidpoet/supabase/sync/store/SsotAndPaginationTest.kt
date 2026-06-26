@@ -135,4 +135,19 @@ class SsotAndPaginationTest {
             assertEquals(listOf("n2", "n3"), after.map { it.id })
             assertEquals(3, store.count("notes"))
         }
+
+    @Test
+    fun blob_pagination_excludes_tombstoned_rows() =
+        runTest {
+            // "notes" has no adapter -> blob cache, where tombstones live as deleted=1 rows.
+            store.upsert("notes", (1..3).map { record("n$it", updatedAt = it.toLong()) })
+            store.upsert("notes", listOf(record("n2", updatedAt = 9, deleted = true)))
+
+            // A deleted row must never surface in a paged list or the total…
+            assertEquals(listOf("n1", "n3"), store.page("notes", limit = 10, offset = 0).items.map { it.id })
+            assertEquals(listOf("n1", "n3"), store.pageAfter("notes", afterId = null, limit = 10).map { it.id })
+            assertEquals(2, store.count("notes"))
+            // …but the tombstone itself stays readable for the sync engine.
+            assertEquals(true, store.get("notes", "n2")?.deleted)
+        }
 }

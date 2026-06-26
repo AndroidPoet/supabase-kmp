@@ -60,3 +60,9 @@ public data class SyncResult(
     public val pushed: Int,
     public val rejected: Int,
 )
+
+/** Outcome of one [SyncEngine.pullPage]: rows merged, and whether another page likely follows. */
+public data class PullProgress(
+    public val pulled: Int,
+    public val hasMore: Boolean,
+)
