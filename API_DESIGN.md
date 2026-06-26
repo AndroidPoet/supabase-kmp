@@ -25,10 +25,23 @@ deliberately **unlike** the established Kotlin Supabase SDK, and the difference 
 
 ## Design rules (apply on every API change)
 
-1. **Return `SupabaseResult<T>` for anything fallible.** The one carve-out: a layer that
-   *feeds* a `Flow`/Paging source may stay throw-based (Flows need exceptions) — but say so
-   in KDoc. The discoverable, short-named method is always the safe one; a throwing variant,
-   if needed, is the explicit `…OrThrow`.
+1. **Surface failure by operation kind — don't reflexively wrap everything in a Result.**
+   This is the rule industry research corrected us on: no shipping Kotlin SDK (supabase-kt,
+   Firebase, Apollo, Ktor, AWS, SqlDelight) wraps streaming or local-DB ops in a result type,
+   because a `Result<Channel>` on `subscribe()` describes only the first attempt and goes stale
+   on the mid-stream disconnect that actually matters. So:
+   - **Request/response (HTTP: postgrest/auth/storage/functions)** → return `SupabaseResult<T>`.
+     This is our deliberate differentiator from the throwing established SDK, and the one place
+     a per-call result genuinely fits. (`kotlin.Result` is officially *not* for domain errors —
+     KEEP — so our own sealed `SupabaseResult` carrying `SupabaseError` is the sanctioned shape.)
+   - **Connection / streaming (realtime)** → surface failure **in-band**: a `status: StateFlow`
+     and sealed events in the `Flow`, *not* a `Result` on `subscribe()`. Prefer a cold
+     `callbackFlow { … awaitClose { unsubscribe() } }`; if a stream is hot (`replay = 0`,
+     lifecycle owned by `subscribe`/`unsubscribe`), the KDoc must say so — never mislabel it cold.
+   - **Local-DB / cache writes (sync)** → let them **throw** (SqlDelight-native) and surface the
+     pipeline outcome as a `status: StateFlow<SyncStatus>` — mirroring Firebase's offline model.
+   The discoverable, short-named method is always the safe one; a throwing variant on an HTTP
+   call, if needed, is the explicit `…OrThrow`.
 2. **The default name returns the rich/safe type.** Don't ship `foo()` (lossy/throwing) next
    to `fooWithResult()` (rich) — fold it into one. Avoid `WithResult`/`Unit`/`OrThrow` suffix
    sprawl: pick one axis (a `returning`/`format` param) over parallel methods.
@@ -71,3 +84,41 @@ above is worth doing before the tag; an additive convenience can wait for 1.x.
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the mechanics (explicitApi, BCV `apiDump`,
 detekt, coverage gate) that enforce the surface.
+
+## 1.0 stabilization ledger
+
+The outcome of the full-SDK audit (6 surface auditors) reconciled against industry research
+(Kotlin/AndroidX guidelines, Google AIP, and the conventions of supabase-kt, Firebase, Apollo,
+Ktor, AWS, SqlDelight, jOOQ, Exposed). Findings were **source-verified** — a `.api` dump hides
+`toString`/`equals` overrides, KDoc, and deprecations, so several dump-based "P0s" were already
+handled in source.
+
+**Done (stabilized):**
+- Credential `toString()` redaction — already present on `Session` / `OAuthClient` (false-positive P0).
+- `ErrorResponse` (wire-only) → `internal`; deleted unused typed-id value classes (dead public API).
+- `SupabaseConfig` → plain `class` (function-typed fields; no meaningful `copy`/`equals`).
+- `MAX_PULL_PAGES` / `DEFAULT_PAGE_SIZE` no longer leak as public static fields.
+- `asFlow()` relabeled hot (was mislabeled "Cold"); `streamLines` / `invokeSSE` defaults defer
+  their throw into the cold `flow { }` instead of throwing eagerly.
+
+**Won't-fix (industry says current design is correct):**
+- Realtime + sync are **not** converted to `SupabaseResult`. Reactive in-band (status `StateFlow`
+  + sealed events) and throw-plus-status-Flow are the idiomatic, more-correct surfaces — see Rule 1.
+- `SupabaseResult` stays (not `kotlin.Result`).
+
+**Do before 1.0 (breaking — free now, expensive later):**
+- **Database query surface:** fold the raw `select`/`rpc` exclusive response booleans
+  (head/single/csv/geojson — all return `String`) into one `ResponseFormat`/`Accept` enum; keep
+  the *typed* terminals (`selectTyped`/`selectSingleTyped`/`selectMaybeSingleTyped`) as separate
+  methods (cardinality changes the return type — an enum can't). Trim the `rpcGet × List/Map ×
+  csv/head/unit` matrix (~66 → ~30–35 public fns) via generic `<T>` + a few terminal decoders +
+  builder flags.
+- **Naming sweep:** one verb per concept (`get`/`list`/`create`/`update`/`delete`; drop
+  `fetch`/`load`/`remove`/`getAll`); collapse `WithResult`/`Unit`/`OrThrow` twins into one method
+  + a `returning` param (PostgREST `Prefer`); make `accessToken` position consistent; align auth
+  vs auth-admin verbs; `MessagingChannel`/`LogLevel` enums for the remaining stringly-typed sets.
+
+**Decide before 1.0 (additive, can land in 1.x but design now):**
+- Storage streaming: add `kotlinx.io` `Source`/`Sink` (file-backed) overloads so large
+  upload/download isn't forced through an in-memory `ByteArray`.
+- Add `getFunctions()` / `getRealtime()` accessors for construction parity.

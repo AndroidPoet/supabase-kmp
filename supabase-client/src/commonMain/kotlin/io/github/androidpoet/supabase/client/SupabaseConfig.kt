@@ -104,28 +104,33 @@ public class SupabaseConfigBuilder {
  * Mirrors the builder field-for-field; see [SupabaseConfigBuilder] for the
  * meaning and defaults of each option. Construct it via the DSL rather than
  * directly so the documented defaults and validation apply.
+ *
+ * Not a `data class`: it carries function-typed fields ([httpClientConfig],
+ * [accessTokenProvider]) whose reference-based `equals`/`hashCode` would make a generated
+ * `copy`/`equals` meaningless, and per Kotlin/AndroidX guidance a stable public config should
+ * not expose `copy`/`componentN` (adding a field later would break their ABI).
  */
-public data class SupabaseConfig(
+public class SupabaseConfig(
     /** Whether HTTP wire logging is enabled. See [SupabaseConfigBuilder.logging]. */
-    val logging: Boolean,
+    public val logging: Boolean,
     /** Verbosity of the wire log. See [SupabaseConfigBuilder.logLevel]. */
-    val logLevel: LogLevel,
+    public val logLevel: LogLevel,
     /** Extra headers attached to every request. See [SupabaseConfigBuilder.headers]. */
-    val headers: Map<String, String>,
+    public val headers: Map<String, String>,
     /** Retry policy for transient failures. See [RetryConfig]. */
-    val retry: RetryConfig = RetryConfig.Default,
+    public val retry: RetryConfig = RetryConfig.Default,
     /** Sink for HTTP wire logs, or `null` for the default. See [SupabaseConfigBuilder.logger]. */
-    val logger: SupabaseLogger? = null,
+    public val logger: SupabaseLogger? = null,
     /** Observation hooks fired around every request. See [SupabaseInterceptor]. */
-    val interceptor: SupabaseInterceptor? = null,
+    public val interceptor: SupabaseInterceptor? = null,
     /** Connection-establishment timeout in ms, or `null` for unbounded. See [SupabaseConfigBuilder.connectTimeoutMillis]. */
-    val connectTimeoutMillis: Long? = null,
+    public val connectTimeoutMillis: Long? = null,
     /** Max inactivity between packets in ms, or `null` for unbounded. See [SupabaseConfigBuilder.socketTimeoutMillis]. */
-    val socketTimeoutMillis: Long? = null,
+    public val socketTimeoutMillis: Long? = null,
     /** Whole-request timeout in ms, or `null` for unbounded. See [SupabaseConfigBuilder.requestTimeoutMillis]. */
-    val requestTimeoutMillis: Long? = null,
+    public val requestTimeoutMillis: Long? = null,
     /** Raw Ktor escape hatch applied after the library's own installs. See [SupabaseConfigBuilder.httpClientConfig]. */
-    val httpClientConfig: (HttpClientConfig<*>.() -> Unit)? = null,
+    public val httpClientConfig: (HttpClientConfig<*>.() -> Unit)? = null,
     /** Per-request Bearer token provider for third-party auth. See [SupabaseConfigBuilder.accessTokenProvider]. */
-    val accessTokenProvider: (suspend () -> String?)? = null,
+    public val accessTokenProvider: (suspend () -> String?)? = null,
 )

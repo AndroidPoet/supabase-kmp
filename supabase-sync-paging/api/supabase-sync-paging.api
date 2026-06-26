@@ -8,7 +8,6 @@ public final class io/github/androidpoet/supabase/sync/paging/SyncStatus : java/
 }
 
 public final class io/github/androidpoet/supabase/sync/paging/SyncStore {
-	public static final field DEFAULT_PAGE_SIZE I
 	public fun <init> (Ljava/lang/String;Lio/github/androidpoet/supabase/sync/LocalStore;Lio/github/androidpoet/supabase/sync/SyncEngine;Lkotlinx/serialization/KSerializer;Lkotlin/jvm/functions/Function1;Lkotlinx/coroutines/CoroutineScope;Lkotlin/jvm/functions/Function0;Lkotlinx/serialization/json/Json;)V
 	public synthetic fun <init> (Ljava/lang/String;Lio/github/androidpoet/supabase/sync/LocalStore;Lio/github/androidpoet/supabase/sync/SyncEngine;Lkotlinx/serialization/KSerializer;Lkotlin/jvm/functions/Function1;Lkotlinx/coroutines/CoroutineScope;Lkotlin/jvm/functions/Function0;Lkotlinx/serialization/json/Json;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun delete (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

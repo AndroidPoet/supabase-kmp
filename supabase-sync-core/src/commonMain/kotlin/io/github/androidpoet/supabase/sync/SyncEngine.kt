@@ -107,7 +107,9 @@ public class SyncEngine(
     private companion object {
         // A full sync drains at most this many remote pages — a backstop against a server that
         // keeps reporting `hasMore` without advancing. At the default 1000 rows/page that's 10M rows.
-        const val MAX_PULL_PAGES = 10_000
+        // Non-`const`: a `const val` in a private companion still leaks as a public static field.
+        @Suppress("MayBeConst")
+        val MAX_PULL_PAGES = 10_000
     }
 
     public fun observe(table: String): Flow<RemoteChange> =

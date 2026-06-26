@@ -157,7 +157,6 @@ public final class io/github/androidpoet/supabase/sync/ResolverRegistry {
 }
 
 public final class io/github/androidpoet/supabase/sync/SyncEngine {
-	public static final field MAX_PULL_PAGES I
 	public fun <init> (Lio/github/androidpoet/supabase/sync/LocalStore;Lio/github/androidpoet/supabase/sync/RemoteSource;Lio/github/androidpoet/supabase/sync/ResolverRegistry;)V
 	public synthetic fun <init> (Lio/github/androidpoet/supabase/sync/LocalStore;Lio/github/androidpoet/supabase/sync/RemoteSource;Lio/github/androidpoet/supabase/sync/ResolverRegistry;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun observe (Ljava/lang/String;)Lkotlinx/coroutines/flow/Flow;

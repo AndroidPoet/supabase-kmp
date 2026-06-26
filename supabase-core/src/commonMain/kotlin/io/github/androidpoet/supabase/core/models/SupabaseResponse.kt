@@ -25,9 +25,9 @@ public data class PostgrestResponse<T>(
  * @param hint a suggested remedy, when present.
  */
 @Serializable
-public data class ErrorResponse(
-    public val message: String = "",
-    public val code: String? = null,
-    public val details: String? = null,
-    public val hint: String? = null,
+internal data class ErrorResponse(
+    val message: String = "",
+    val code: String? = null,
+    val details: String? = null,
+    val hint: String? = null,
 )

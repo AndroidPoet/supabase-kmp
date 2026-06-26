@@ -1,6 +1,7 @@
 package io.github.androidpoet.supabase.client
 import io.github.androidpoet.supabase.core.result.SupabaseResult
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 /** HTTP method for [SupabaseClient.rawRequest]. */
 public enum class SupabaseHttpMethod {
@@ -163,7 +164,7 @@ public interface SupabaseClient : AutoCloseable {
         body: String? = null,
         contentType: String? = null,
         headers: Map<String, String> = emptyMap(),
-    ): Flow<String> = throw UnsupportedOperationException("streamLines is not supported by this SupabaseClient")
+    ): Flow<String> = flow { throw UnsupportedOperationException("streamLines is not supported by this SupabaseClient") }
 
     /**
      * Sets the bearer [token] applied to subsequent requests (typically the

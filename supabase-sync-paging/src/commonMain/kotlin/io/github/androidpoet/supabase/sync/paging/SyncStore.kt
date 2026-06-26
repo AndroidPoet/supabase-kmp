@@ -181,7 +181,9 @@ public class SyncStore<T : Any>(
     private fun encode(value: T): JsonObject = json.encodeToJsonElement(serializer, value).jsonObject
 
     private companion object {
-        const val DEFAULT_PAGE_SIZE = 20
+        // Non-`const`: a `const val` in a private companion still leaks as a public static field.
+        @Suppress("MayBeConst")
+        val DEFAULT_PAGE_SIZE = 20
         val EMPTY_FIELDS = JsonObject(emptyMap())
     }
 }
