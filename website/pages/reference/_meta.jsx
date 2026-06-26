@@ -1,0 +1,15 @@
+export default {
+  index: 'Overview',
+  core: 'Core',
+  client: 'Client',
+  auth: 'Authentication',
+  'auth-admin': 'Auth Admin',
+  'auth-native': 'Native Sign-In',
+  database: 'Database',
+  storage: 'Storage',
+  realtime: 'Realtime',
+  functions: 'Edge Functions',
+  e2ee: 'End-to-End Encryption',
+  sync: 'Offline Sync',
+  codegen: 'Codegen',
+}

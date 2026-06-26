@@ -1,0 +1,1780 @@
+---
+title: Authentication — API Reference
+description: Complete API reference for the supabase-auth module — AuthClient methods, session management, OAuth, MFA, passkeys, JWT helpers, and every public model type.
+---
+
+import { Callout } from 'nextra/components'
+
+# Authentication — API Reference
+
+`supabase-auth` is a typed Kotlin Multiplatform client over Supabase's GoTrue auth
+API: email/phone/anonymous sign-in, OTP and magic links, OAuth (17 providers), MFA,
+passkeys, identity linking, Web3, SSO, and local JWT/JWKS verification. The module is
+published as `io.github.androidpoet:supabase-auth`. The entry point is
+`createAuthClient(client)`, or the `SupabaseClient.auth` shortcut property.
+
+<Callout type="info">
+Every suspending call follows the **Result-first** contract: HTTP and parse errors
+come back as `SupabaseResult.Failure` rather than being thrown. `SupabaseResult<T>`
+is a sealed type with `Success(value)` and `Failure(error)` arms — it is **not**
+`kotlin.Result`. The core `AuthClient` is *stateless* with respect to the session:
+its methods return a `Session` (or take an `accessToken` you pass in) but never
+persist or refresh it. Layer a `SessionManager` on top, or use the `…AndSaveSession`
+extensions, for storage and auto-refresh.
+</Callout>
+
+## Entry points
+
+### `createAuthClient`
+
+```kotlin
+public fun createAuthClient(supabaseClient: SupabaseClient): AuthClient
+```
+
+Builds an `AuthClient` over an existing `SupabaseClient`. The returned client is a
+thin, stateless wrapper — creating one is cheap.
+
+- `supabaseClient` — the configured project client.
+
+```kotlin
+val auth = createAuthClient(client)
+```
+
+### `SupabaseClient.auth`
+
+```kotlin
+public val SupabaseClient.auth: AuthClient
+```
+
+A discoverable shortcut for `createAuthClient(this)`, so you can write
+`client.auth.signInWithEmail(...)`. Reading it repeatedly is cheap and always talks
+to the same underlying transport.
+
+```kotlin
+val session = client.auth.signInWithEmail("a@b.com", "secret")
+```
+
+---
+
+## AuthClient — sign-up & sign-in
+
+### `signUpWithEmail`
+
+```kotlin
+public suspend fun signUpWithEmail(
+    email: String,
+    password: String,
+    data: JsonObject? = null,
+    emailRedirectTo: String? = null,
+    captchaToken: String? = null,
+    pkceParams: PkceParams? = null,
+): SupabaseResult<Session>
+```
+
+Signs up a new user against `POST /signup`. When email confirmation is enabled the
+returned `Session` may carry no tokens until the user confirms; otherwise it is fully
+authenticated.
+
+- `email` — new user's email; fails if blank.
+- `password` — chosen password.
+- `data` — optional `user_metadata` stored on the new user. Default `null`.
+- `emailRedirectTo` — URL the confirmation email links back to (`redirect_to` query param). Default `null`.
+- `captchaToken` — captcha response when bot protection is enabled. Default `null`.
+- `pkceParams` — PKCE challenge to bind a PKCE-flow sign-up; complete via `exchangeCodeForSession`. Default `null` (implicit flow).
+
+Returns `SupabaseResult<Session>`. Success carries the new session; Failure carries a `SupabaseError`.
+
+```kotlin
+when (val r = auth.signUpWithEmail("a@b.com", "secret")) {
+    is SupabaseResult.Success -> println(r.value.user.id)
+    is SupabaseResult.Failure -> println(r.error.message)
+}
+```
+
+### `signUpWithPhone`
+
+```kotlin
+public suspend fun signUpWithPhone(
+    phone: String,
+    password: String,
+    data: JsonObject? = null,
+    redirectTo: String? = null,
+    captchaToken: String? = null,
+    pkceParams: PkceParams? = null,
+    channel: MessagingChannel? = null,
+): SupabaseResult<Session>
+```
+
+Signs up a new user with phone + password against `POST /signup`. When phone
+confirmation (SMS OTP) is enabled the user must verify before the session is usable.
+
+- `phone` — new user's phone; fails if blank.
+- `password` — chosen password.
+- `data` — optional `user_metadata`. Default `null`.
+- `redirectTo` — post-confirmation redirect (`redirect_to`). Default `null`.
+- `captchaToken` — captcha response. Default `null`.
+- `pkceParams` — PKCE challenge for a PKCE-flow sign-up. Default `null`.
+- `channel` — phone delivery channel (`SMS` server default, or `WHATSAPP`). Default `null`.
+
+Returns `SupabaseResult<Session>`.
+
+### `signInWithEmail`
+
+```kotlin
+public suspend fun signInWithEmail(
+    email: String,
+    password: String,
+    captchaToken: String? = null,
+): SupabaseResult<Session>
+```
+
+Signs in via the `password` grant (`POST /token?grant_type=password`).
+
+- `email` — registered email.
+- `password` — the password.
+- `captchaToken` — captcha response. Default `null`.
+
+Returns `SupabaseResult<Session>`. Failure on bad credentials.
+
+### `signInWithPhone`
+
+```kotlin
+public suspend fun signInWithPhone(
+    phone: String,
+    password: String,
+    captchaToken: String? = null,
+): SupabaseResult<Session>
+```
+
+Signs in with phone + password via the `password` grant. Same parameters and return
+contract as `signInWithEmail`, keyed by `phone`.
+
+### `signInAnonymously`
+
+```kotlin
+public suspend fun signInAnonymously(
+    data: JsonObject? = null,
+    captchaToken: String? = null,
+): SupabaseResult<Session>
+```
+
+Creates and signs in an anonymous user via `POST /signup` with no credentials,
+yielding a session whose `User.isAnonymous` is `true`. Later convertible to a
+permanent account by adding an email/phone identity.
+
+- `data` — optional `user_metadata` for the anonymous user. Default `null`.
+- `captchaToken` — captcha response. Default `null`.
+
+Returns `SupabaseResult<Session>`.
+
+### `signInWithIdToken`
+
+```kotlin
+public suspend fun signInWithIdToken(
+    provider: OAuthProvider,
+    idToken: String,
+    accessToken: String? = null,
+    nonce: String? = null,
+    captchaToken: String? = null,
+    clientId: String? = null,
+    issuer: String? = null,
+): SupabaseResult<Session>
+```
+
+Signs in with an OpenID Connect ID token from a native provider SDK (Sign in with
+Apple, Google One Tap, …) via the `id_token` grant. No browser redirect is involved.
+
+- `provider` — the OIDC provider the token came from.
+- `idToken` — the provider's ID token (a JWT).
+- `accessToken` — the provider's access token, when it also issues one. Default `null`.
+- `nonce` — the raw nonce bound into the ID token, for replay protection. Default `null`.
+- `captchaToken` — captcha response. Default `null`.
+- `clientId` — OIDC client id, when the provider requires it sent explicitly. Default `null`.
+- `issuer` — OIDC issuer to verify against; required for custom OIDC providers. Default `null`.
+
+Returns `SupabaseResult<Session>`.
+
+### `signInWithOAuth`
+
+```kotlin
+public suspend fun signInWithOAuth(
+    provider: OAuthProvider,
+    redirectTo: String? = null,
+    scopes: List<String> = emptyList(),
+    queryParams: Map<String, String> = emptyMap(),
+    skipBrowserRedirect: Boolean = false,
+    pkceParams: PkceParams? = null,
+    inviteToken: String? = null,
+): SupabaseResult<OAuthResponse>
+```
+
+Begins a browser-redirect OAuth flow by building the provider authorize URL — it
+does **not** perform a network call, it returns the `OAuthResponse` URL for your app
+to open. Complete the flow with `exchangeCodeForSession` (PKCE) or by importing the
+redirect fragment. Equivalent to `getOAuthSignInUrl` wrapped in a result.
+
+- `provider` — the OAuth provider.
+- `redirectTo` — where the provider sends the user back after consent. Default `null`.
+- `scopes` — provider scopes (space-joined on the wire). Default `emptyList()`.
+- `queryParams` — extra authorize-URL params (e.g. `prompt`, or a CSRF `state`). Default `emptyMap()`.
+- `skipBrowserRedirect` — adds `skip_http_redirect=true` so the endpoint returns JSON instead of a 302. Default `false`.
+- `pkceParams` — PKCE challenge to bind the request. Default `null`.
+- `inviteToken` — a prior invitation token to complete on success (`invite_token`). Default `null`.
+
+Returns `SupabaseResult<OAuthResponse>` (the `url` to open and the `provider`).
+
+```kotlin
+val pkce = auth.generatePkceParams()
+val r = auth.signInWithOAuth(OAuthProvider.GITHUB, pkceParams = pkce)
+// open r.value.url in a browser/custom tab
+```
+
+### `signInWithWeb3`
+
+```kotlin
+public suspend fun signInWithWeb3(
+    chain: Web3Chain,
+    message: String,
+    signature: String,
+    captchaToken: String? = null,
+): SupabaseResult<Session>
+```
+
+Signs in by proving control of a Web3 wallet via the `web3` grant: the user signs
+`message` with their wallet and `signature` is verified server-side for the given
+`chain` (Ethereum/Solana).
+
+- `chain` — `Web3Chain.ETHEREUM` or `Web3Chain.SOLANA`.
+- `message` — the signed message.
+- `signature` — the wallet signature.
+- `captchaToken` — captcha response. Default `null`.
+
+Returns `SupabaseResult<Session>`.
+
+---
+
+## OTP & passwordless
+
+### `signInWithOtp`
+
+```kotlin
+public suspend fun signInWithOtp(
+    email: String? = null,
+    phone: String? = null,
+    createUser: Boolean? = null,
+    captchaToken: String? = null,
+    emailRedirectTo: String? = null,
+    channel: MessagingChannel? = null,
+    data: JsonObject? = null,
+    pkceParams: PkceParams? = null,
+): SupabaseResult<Unit>
+```
+
+Starts a passwordless OTP / magic-link sign-in by requesting a one-time code be sent
+to an email or phone (`POST /otp`). Complete the flow with `verifyOtp`. Set exactly
+one of `email` or `phone`.
+
+- `email` / `phone` — the recipient; provide exactly one. Default `null`.
+- `createUser` — auto-create the user if absent (server default when `null`). Default `null`.
+- `captchaToken` — captcha response. Default `null`.
+- `emailRedirectTo` — magic-link redirect for the email channel. Default `null`.
+- `channel` — phone delivery channel (`SMS`/`WHATSAPP`); ignored for email. Default `null`.
+- `data` — `user_metadata` stored when the user is auto-created. Default `null`.
+- `pkceParams` — PKCE challenge for a PKCE-flow magic link. Default `null`.
+
+Returns `SupabaseResult<Unit>` (success on dispatch).
+
+### `verifyOtp`
+
+```kotlin
+public suspend fun verifyOtp(
+    email: String? = null,
+    phone: String? = null,
+    token: String,
+    type: OtpType,
+    captchaToken: String? = null,
+    redirectTo: String? = null,
+): SupabaseResult<OtpVerifyResult>
+```
+
+Verifies an OTP / magic-link code against `POST /verify`, completing a flow started by
+`signInWithOtp`, a confirmation, or a recovery. Pass the same `email`/`phone` the code
+was sent to.
+
+- `email` / `phone` — the recipient the code was sent to. Default `null`.
+- `token` — the user-entered code.
+- `type` — which OTP flow the token belongs to (`SIGNUP`, `RECOVERY`, …).
+- `captchaToken` — captcha response. Default `null`.
+- `redirectTo` — post-verification redirect, used by link-style flows. Default `null`.
+
+Returns `SupabaseResult<OtpVerifyResult>`. The sealed result distinguishes a
+verification that produced a session (`OtpVerifyResult.Authenticated`, the common
+case — reach the session via `.session`) from one that succeeded without one
+(`OtpVerifyResult.VerifiedNoSession`, e.g. some email-change confirmations), so a
+no-session success isn't reported as a failure.
+
+```kotlin
+when (val r = auth.verifyOtp(email = "a@b.com", token = "123456", type = OtpType.EMAIL)) {
+    is SupabaseResult.Success -> when (val v = r.value) {
+        is OtpVerifyResult.Authenticated -> save(v.session)
+        OtpVerifyResult.VerifiedNoSession -> {}
+    }
+    is SupabaseResult.Failure -> showError(r.error)
+}
+```
+
+### `verifyOtpWithTokenHash`
+
+```kotlin
+public suspend fun verifyOtpWithTokenHash(
+    tokenHash: String,
+    type: OtpType,
+    captchaToken: String? = null,
+): SupabaseResult<OtpVerifyResult>
+```
+
+Verifies an email-link confirmation by its `token_hash` (the value embedded in a
+Supabase confirmation/recovery link) rather than a user-entered code, via
+`POST /verify`. Use this when handling a deep link the user clicked.
+
+- `tokenHash` — the `token_hash` from the link.
+- `type` — the OTP flow.
+- `captchaToken` — captcha response. Default `null`.
+
+Returns `SupabaseResult<OtpVerifyResult>` (same shape as `verifyOtp`).
+
+### `resendEmailOtp`
+
+```kotlin
+public suspend fun resendEmailOtp(
+    type: OtpType,
+    email: String,
+    captchaToken: String? = null,
+    redirectTo: String? = null,
+): SupabaseResult<Unit>
+```
+
+Re-sends a pending email OTP / confirmation (`POST /resend`), e.g. after the first
+code expired.
+
+- `type` — the OTP flow to resend (e.g. `SIGNUP`, `EMAIL_CHANGE`).
+- `email` — the recipient.
+- `captchaToken` — captcha response. Default `null`.
+- `redirectTo` — magic-link redirect for the resent email. Default `null`.
+
+Returns `SupabaseResult<Unit>`.
+
+### `resendPhoneOtp`
+
+```kotlin
+public suspend fun resendPhoneOtp(
+    type: OtpType,
+    phone: String,
+    captchaToken: String? = null,
+): SupabaseResult<Unit>
+```
+
+Re-sends a pending phone OTP (`POST /resend`).
+
+- `type` — the OTP flow to resend (e.g. `SMS`, `PHONE_CHANGE`).
+- `phone` — the recipient.
+- `captchaToken` — captcha response. Default `null`.
+
+Returns `SupabaseResult<Unit>`.
+
+---
+
+## Password reset & reauthentication
+
+### `resetPasswordForEmail`
+
+```kotlin
+public suspend fun resetPasswordForEmail(
+    email: String,
+    redirectTo: String? = null,
+    captchaToken: String? = null,
+    pkceParams: PkceParams? = null,
+): SupabaseResult<Unit>
+```
+
+Sends a password-reset email (`POST /recover`); the link lets the user set a new
+password.
+
+- `email` — the recipient.
+- `redirectTo` — where the recovery link returns the user (`redirect_to`). Default `null`.
+- `captchaToken` — captcha response. Default `null`.
+- `pkceParams` — PKCE challenge for a PKCE-flow recovery. Default `null`.
+
+Returns `SupabaseResult<Unit>` (success on dispatch).
+
+### `reauthenticate`
+
+```kotlin
+public suspend fun reauthenticate(accessToken: String): SupabaseResult<Unit>
+```
+
+Requests a reauthentication nonce for the user identified by `accessToken`
+(`GET /reauthenticate`). Sends a one-time code the user must supply when performing a
+sensitive change such as a password update without the current password.
+
+- `accessToken` — the current session's access token.
+
+Returns `SupabaseResult<Unit>`.
+
+---
+
+## Session tokens & user
+
+### `refreshToken`
+
+```kotlin
+public suspend fun refreshToken(refreshToken: String): SupabaseResult<Session>
+```
+
+Exchanges a `refreshToken` for a fresh `Session` via the `refresh_token` grant. The
+returned session carries new access and refresh tokens.
+
+- `refreshToken` — the current refresh token.
+
+Returns `SupabaseResult<Session>`.
+
+### `getUser`
+
+```kotlin
+public suspend fun getUser(accessToken: String): SupabaseResult<User>
+```
+
+Fetches the user the `accessToken` belongs to (`GET /user`). Because this hits the
+Auth server, it also validates the token; for purely local claim checks without a
+round-trip see [`getClaims`](#getclaims).
+
+- `accessToken` — the access token to inspect.
+
+Returns `SupabaseResult<User>`.
+
+### `getUserIdentities`
+
+```kotlin
+public suspend fun getUserIdentities(accessToken: String): SupabaseResult<List<UserIdentity>>
+```
+
+Returns the linked third-party identities of the `accessToken`'s user — the
+`identities` of `getUser`.
+
+Returns `SupabaseResult<List<UserIdentity>>`.
+
+### `updateUser`
+
+```kotlin
+public suspend fun updateUser(
+    accessToken: String,
+    updates: UserUpdateRequest,
+): SupabaseResult<User>
+```
+
+Updates the authenticated user (`PUT /user`) with the non-null fields of `updates` —
+email, phone, password, or `user_metadata`. Changing email/phone may require
+confirmation; a password change may require `currentPassword`/`nonce` (see
+`reauthenticate`).
+
+- `accessToken` — the current session's access token.
+- `updates` — the fields to change, as a `UserUpdateRequest`.
+
+Returns `SupabaseResult<User>`.
+
+### `signOut`
+
+```kotlin
+public suspend fun signOut(accessToken: String): SupabaseResult<Unit>
+public suspend fun signOut(accessToken: String, scope: SignOutScope): SupabaseResult<Unit>
+```
+
+Signs out via `POST /logout`. The single-arg overload uses `SignOutScope.LOCAL`. The
+two-arg overload revokes refresh tokens for the chosen `scope`: just this session
+(`LOCAL`), every session (`GLOBAL`), or all *other* sessions (`OTHERS`).
+
+- `accessToken` — the session's access token.
+- `scope` — which sessions to revoke (two-arg overload).
+
+Returns `SupabaseResult<Unit>`.
+
+---
+
+## OAuth URLs, PKCE & state
+
+### `getOAuthSignInUrl`
+
+```kotlin
+public fun getOAuthSignInUrl(
+    provider: OAuthProvider,
+    redirectTo: String? = null,
+    scopes: List<String> = emptyList(),
+    queryParams: Map<String, String> = emptyMap(),
+    skipBrowserRedirect: Boolean = false,
+    pkceParams: PkceParams? = null,
+    inviteToken: String? = null,
+): String
+```
+
+Builds the absolute provider authorize URL (`GET /authorize?provider=…`) **locally,
+without a network call** — the synchronous core behind `signInWithOAuth`. Open the
+returned URL in a browser/custom tab to start the flow. Parameters match
+`signInWithOAuth`; returns the URL `String` directly (not a `SupabaseResult`).
+
+### `generatePkceParams`
+
+```kotlin
+public fun generatePkceParams(sha256: ((ByteArray) -> ByteArray)? = null): PkceParams
+```
+
+Generates a PKCE `PkceParams` (verifier + challenge) for an OAuth flow, drawing the
+verifier from a cryptographically secure RNG per RFC 7636. Persist the `codeVerifier`
+and pass it to `exchangeCodeForSession` on callback.
+
+- `sha256` — a SHA-256 implementation to derive an `S256` challenge; when `null`, falls back to a `plain` challenge (verifier used verbatim). Default `null`.
+
+Returns `PkceParams`.
+
+### `generateOAuthState`
+
+```kotlin
+public fun generateOAuthState(): String
+```
+
+Generates a cryptographically-random opaque `state` value for CSRF protection on the
+OAuth implicit/redirect flow. Pass it via `queryParams = mapOf("state" to ...)`,
+persist it, and on callback compare it with `verifyOAuthState`. The PKCE flow already
+binds the request via `code_verifier`, so `state` is additive there; it matters most
+for the implicit flow.
+
+Returns the `state` `String`.
+
+### `exchangeCodeForSession`
+
+```kotlin
+public suspend fun exchangeCodeForSession(
+    authCode: String,
+    codeVerifier: String,
+): SupabaseResult<Session>
+```
+
+Completes the PKCE flow by exchanging the authorization `authCode` for a `Session`
+via the `pkce` grant (`POST /token?grant_type=pkce`).
+
+- `authCode` — the authorization code from the redirect.
+- `codeVerifier` — the `codeVerifier` from the `generatePkceParams` used to start the flow.
+
+Returns `SupabaseResult<Session>`.
+
+---
+
+## Identity linking
+
+### `linkIdentity`
+
+```kotlin
+public suspend fun linkIdentity(
+    accessToken: String,
+    provider: OAuthProvider,
+    redirectTo: String? = null,
+    scopes: List<String> = emptyList(),
+    queryParams: Map<String, String> = emptyMap(),
+    pkceParams: PkceParams? = null,
+): SupabaseResult<LinkIdentityResponse>
+```
+
+Starts linking an additional OAuth identity to the signed-in user, returning a
+`LinkIdentityResponse` whose `url` your app opens to complete provider consent
+(`GET /user/identities/authorize`). The new identity attaches to the existing account
+rather than creating a new user.
+
+- `accessToken` — the current session's access token.
+- `provider` — the provider to link.
+- `redirectTo` — where the provider returns the user. Default `null`.
+- `scopes` — provider scopes. Default `emptyList()`.
+- `queryParams` — extra authorize-URL params. Default `emptyMap()`.
+- `pkceParams` — PKCE challenge to bind the link. Default `null`.
+
+Returns `SupabaseResult<LinkIdentityResponse>`.
+
+### `linkIdentityWithIdToken`
+
+```kotlin
+public suspend fun linkIdentityWithIdToken(
+    accessToken: String,
+    provider: OAuthProvider,
+    idToken: String,
+    providerAccessToken: String? = null,
+    nonce: String? = null,
+): SupabaseResult<Session>
+```
+
+Links an OAuth identity using a provider ID token (the native-SDK counterpart to
+`linkIdentity`) via the `id_token` grant with `link_identity` set, returning the
+updated `Session`. No browser redirect is involved.
+
+- `accessToken` — the current session's access token.
+- `provider` — the provider to link.
+- `idToken` — the provider's ID token.
+- `providerAccessToken` — the provider's access token, when it issues one. Default `null`.
+- `nonce` — the nonce bound into the ID token. Default `null`.
+
+Returns `SupabaseResult<Session>`.
+
+### `unlinkIdentity`
+
+```kotlin
+public suspend fun unlinkIdentity(
+    accessToken: String,
+    identityId: String,
+): SupabaseResult<Unit>
+```
+
+Removes a linked identity from the signed-in user
+(`DELETE /user/identities/{id}`).
+
+- `accessToken` — the current session's access token.
+- `identityId` — the identity's primary key — pass `UserIdentity.id`, **not** `UserIdentity.identityId`.
+
+Returns `SupabaseResult<Unit>`.
+
+---
+
+## SSO
+
+### `getSsoUrl`
+
+```kotlin
+public suspend fun getSsoUrl(
+    accessToken: String? = null,
+    domain: String? = null,
+    providerId: String? = null,
+    redirectTo: String? = null,
+    pkceParams: PkceParams? = null,
+    captchaToken: String? = null,
+): SupabaseResult<SsoResponse>
+```
+
+Resolves the SSO sign-in URL for an enterprise provider (`POST /sso`), identified by
+exactly one of `domain` or `providerId`; the returned `SsoResponse.url` is opened to
+start the IdP flow. Fails if neither or both identifiers are supplied.
+
+- `accessToken` — optional bearer token (some SSO setups require an authenticated caller). Default `null`.
+- `domain` — the org domain (one of domain/providerId). Default `null`.
+- `providerId` — the SSO provider id (one of domain/providerId). Default `null`.
+- `redirectTo` — where the IdP returns the user. Default `null`.
+- `pkceParams` — PKCE challenge for a PKCE-flow SSO. Default `null`.
+- `captchaToken` — captcha response. Default `null`.
+
+Returns `SupabaseResult<SsoResponse>`.
+
+---
+
+## Server health & settings
+
+### `getSettings`
+
+```kotlin
+public suspend fun getSettings(): SupabaseResult<AuthSettings>
+```
+
+Fetches the Auth server's public settings (`GET /auth/v1/settings`) — which providers
+and flows are enabled. Requires only the project `apikey`. Returns
+`SupabaseResult<AuthSettings>`.
+
+### `getHealth`
+
+```kotlin
+public suspend fun getHealth(): SupabaseResult<AuthHealthStatus>
+```
+
+Fetches the Auth server's health status (`GET /auth/v1/health`), reporting its name
+and version. Requires only the project `apikey`. Returns
+`SupabaseResult<AuthHealthStatus>`.
+
+### `getJwks`
+
+```kotlin
+public suspend fun getJwks(): SupabaseResult<String>
+```
+
+Fetches the raw JSON Web Key Set (JWKS) from `/auth/v1/.well-known/jwks.json`. Used by
+`getClaims` to verify asymmetric token signatures locally without an Auth server
+round-trip. Returns `SupabaseResult<String>` (the raw JSON).
+
+### `resolveSigningKey`
+
+```kotlin
+public suspend fun resolveSigningKey(kid: String): SupabaseResult<Jwk?>
+```
+
+Resolves the signing key for `kid` from the project JWKS, backed by an in-memory cache
+so repeated local verifications don't re-fetch on every call. A cache miss forces
+exactly one refetch (to pick up a rotated key) before giving up. Concurrent callers
+share a single in-flight refetch.
+
+- `kid` — the key id from the JWT header.
+
+Returns `SupabaseResult<Jwk?>` — the key, `null` if absent even after a forced
+refetch, or `Failure` only when the JWKS fetch itself failed.
+
+---
+
+## MFA
+
+### `mfaEnroll`
+
+```kotlin
+public suspend fun mfaEnroll(
+    accessToken: String,
+    factorType: MfaFactorType,
+    friendlyName: String? = null,
+    issuer: String? = null,
+    phone: String? = null,
+): SupabaseResult<MfaEnrollResponse>
+```
+
+Enrols a new MFA factor (`POST /factors`). For a TOTP factor the response carries the
+QR code / secret to display; the factor starts unverified and must be confirmed via
+`mfaChallenge` + `mfaVerify`.
+
+- `accessToken` — the current session's access token (first parameter).
+- `factorType` — the factor kind (`TOTP`, `PHONE`, `WEBAUTHN`).
+- `friendlyName` — human-readable label. Default `null`.
+- `issuer` — issuer shown in authenticator apps (TOTP). Default `null`.
+- `phone` — destination number for a phone factor. Default `null`.
+
+Returns `SupabaseResult<MfaEnrollResponse>`.
+
+### `mfaChallenge`
+
+```kotlin
+public suspend fun mfaChallenge(
+    accessToken: String,
+    factorId: String,
+    channel: MessagingChannel? = null,
+): SupabaseResult<MfaChallengeResponse>
+```
+
+Creates a challenge for an enrolled factor (`POST /factors/{id}/challenge`), returning
+a `MfaChallengeResponse` whose `id` is passed to `mfaVerify`. For a phone factor this
+dispatches the code.
+
+- `accessToken` — the current session's access token.
+- `factorId` — the enrolled factor's id.
+- `channel` — phone delivery channel (`SMS`/`WHATSAPP`); ignored for TOTP. Default `null`.
+
+Returns `SupabaseResult<MfaChallengeResponse>`.
+
+### `mfaVerify`
+
+```kotlin
+public suspend fun mfaVerify(
+    accessToken: String,
+    factorId: String,
+    challengeId: String,
+    code: String,
+    webauthn: MfaWebauthnVerification? = null,
+): SupabaseResult<MfaVerifyResponse>
+```
+
+Verifies a challenge by submitting the user's `code` (`POST /factors/{id}/verify`). On
+success the `MfaVerifyResponse` carries a new AAL2 session that upgrades the caller's
+assurance level.
+
+- `accessToken` — the current session's access token.
+- `factorId` — the factor being verified.
+- `challengeId` — the `id` returned by `mfaChallenge`.
+- `code` — the user-entered code.
+- `webauthn` — for a WebAuthn factor, the device's credential response (stands in for `code`). Default `null`.
+
+Returns `SupabaseResult<MfaVerifyResponse>`.
+
+### `mfaUnenroll`
+
+```kotlin
+public suspend fun mfaUnenroll(
+    accessToken: String,
+    factorId: String,
+): SupabaseResult<MfaUnenrollResponse>
+```
+
+Removes an enrolled factor by `factorId` (`DELETE /factors/{id}`). Returns
+`SupabaseResult<MfaUnenrollResponse>`.
+
+### `mfaListFactors`
+
+```kotlin
+public suspend fun mfaListFactors(accessToken: String): SupabaseResult<MfaListFactorsResponse>
+```
+
+Lists the user's enrolled MFA factors, grouped by type. Derived from the `factors` of
+`getUser`, so it reflects both verified and unverified factors. Returns
+`SupabaseResult<MfaListFactorsResponse>`.
+
+### `mfaGetAuthenticatorAssuranceLevel`
+
+```kotlin
+public suspend fun mfaGetAuthenticatorAssuranceLevel(accessToken: String): SupabaseResult<AuthenticatorAssuranceLevel>
+```
+
+Returns the *current* authenticator assurance level of the session, read from the
+`aal` claim of `accessToken`. Returns `SupabaseResult<AuthenticatorAssuranceLevel>`.
+
+### `mfaGetAuthenticatorAssuranceLevels`
+
+```kotlin
+public suspend fun mfaGetAuthenticatorAssuranceLevels(accessToken: String): SupabaseResult<AuthenticatorAssuranceLevels>
+```
+
+Returns both the *current* level (from the `aal` claim) and the *next* level the
+session could reach (derived from the user's enrolled factors). Returns
+`SupabaseResult<AuthenticatorAssuranceLevels>`.
+
+---
+
+## Passkeys
+
+### `passkeyStartRegistration`
+
+```kotlin
+public suspend fun passkeyStartRegistration(accessToken: String): SupabaseResult<PasskeyRegistrationOptionsResponse>
+```
+
+Requests WebAuthn registration options for the signed-in user — step one of adding a
+passkey. The response carries the `challengeId` and the WebAuthn `options` to hand to
+the device authenticator; the produced credential is sent back via
+`passkeyVerifyRegistration`. Returns `SupabaseResult<PasskeyRegistrationOptionsResponse>`.
+
+### `passkeyVerifyRegistration`
+
+```kotlin
+public suspend fun passkeyVerifyRegistration(
+    accessToken: String,
+    challengeId: String,
+    credential: JsonObject,
+): SupabaseResult<PasskeyMetadata>
+```
+
+Verifies a freshly created passkey `credential` against the `challengeId` from
+`passkeyStartRegistration`, persisting the passkey.
+
+- `accessToken` — the current session's access token.
+- `challengeId` — from `passkeyStartRegistration`.
+- `credential` — the device's WebAuthn credential as a `JsonObject`.
+
+Returns `SupabaseResult<PasskeyMetadata>`.
+
+### `passkeyStartAuthentication`
+
+```kotlin
+public suspend fun passkeyStartAuthentication(captchaToken: String? = null): SupabaseResult<PasskeyAuthenticationOptionsResponse>
+```
+
+Requests WebAuthn authentication options — step one of passwordless passkey sign-in
+(no access token needed). The result is verified via `passkeyVerifyAuthentication`.
+
+- `captchaToken` — captcha response. Default `null`.
+
+Returns `SupabaseResult<PasskeyAuthenticationOptionsResponse>`.
+
+### `passkeyVerifyAuthentication`
+
+```kotlin
+public suspend fun passkeyVerifyAuthentication(
+    challengeId: String,
+    credential: JsonObject,
+): SupabaseResult<Session>
+```
+
+Verifies a passkey assertion `credential` against the `challengeId` from
+`passkeyStartAuthentication`, returning the authenticated `Session`. Returns
+`SupabaseResult<Session>`.
+
+### `passkeyList`
+
+```kotlin
+public suspend fun passkeyList(accessToken: String): SupabaseResult<List<Passkey>>
+```
+
+Lists the signed-in user's registered passkeys. Returns
+`SupabaseResult<List<Passkey>>`.
+
+### `passkeyUpdate`
+
+```kotlin
+public suspend fun passkeyUpdate(
+    accessToken: String,
+    passkeyId: String,
+    friendlyName: String,
+): SupabaseResult<Passkey>
+```
+
+Renames a registered passkey by `passkeyId`, returning the updated `Passkey`. Returns
+`SupabaseResult<Passkey>`.
+
+### `passkeyDelete`
+
+```kotlin
+public suspend fun passkeyDelete(
+    accessToken: String,
+    passkeyId: String,
+): SupabaseResult<Unit>
+```
+
+Deletes a registered passkey by `passkeyId`. Returns `SupabaseResult<Unit>`.
+
+---
+
+## Acting as an OAuth provider (consent)
+
+These methods are used when *this* project acts as an OAuth provider and must render a
+consent screen for a third-party client.
+
+### `oauthGetAuthorizationDetails`
+
+```kotlin
+public suspend fun oauthGetAuthorizationDetails(
+    accessToken: String,
+    authorizationId: String,
+): SupabaseResult<OAuthAuthorizationDetails>
+```
+
+Fetches the details of a pending OAuth authorization request by `authorizationId` —
+the requesting client, user and scopes. Returns
+`SupabaseResult<OAuthAuthorizationDetails>`.
+
+### `oauthApproveAuthorization` / `oauthDenyAuthorization`
+
+```kotlin
+public suspend fun oauthApproveAuthorization(accessToken: String, authorizationId: String): SupabaseResult<OAuthRedirect>
+public suspend fun oauthDenyAuthorization(accessToken: String, authorizationId: String): SupabaseResult<OAuthRedirect>
+```
+
+Approve (grant consent) or deny a pending OAuth authorization, returning the
+`OAuthRedirect` URL to send the third-party client back to.
+
+### `oauthListGrants`
+
+```kotlin
+public suspend fun oauthListGrants(accessToken: String): SupabaseResult<List<OAuthGrant>>
+```
+
+Lists the OAuth grants (consents) the user has previously given to third-party
+clients. Returns `SupabaseResult<List<OAuthGrant>>`.
+
+### `oauthRevokeGrant`
+
+```kotlin
+public suspend fun oauthRevokeGrant(accessToken: String, clientId: String): SupabaseResult<Unit>
+```
+
+Revokes a previously granted OAuth consent for the client identified by `clientId`.
+Returns `SupabaseResult<Unit>`.
+
+---
+
+## JWT & claims helpers
+
+These are top-level / extension functions on `AuthClient` (package
+`io.github.androidpoet.supabase.auth`).
+
+### `getClaims`
+
+```kotlin
+public suspend fun AuthClient.getClaims(
+    jwt: String,
+    verify: Boolean = true,
+    allowExpired: Boolean = false,
+    expectedIssuer: String? = null,
+    expectedAudience: String? = null,
+): SupabaseResult<JwtClaimsResult>
+```
+
+Decodes and (by default) verifies the claims of a Supabase JWT. The header and payload
+are decoded locally into `JwtClaims`. When `verify` is true: an asymmetric `ES256`
+(ECDSA P-256) token is verified **locally** against the project's JWKS (no network
+round-trip); any other case (symmetric `HS256`, missing `kid`, unreachable JWKS, or a
+platform without local crypto) falls back to validating against the Auth server (the
+same check `getUser` performs — always safe). `exp`/`nbf` are always checked with
+clock-skew leeway; `iss`/`aud` only when an expected value is given.
+
+- `jwt` — the JWT to inspect, e.g. a session access token.
+- `verify` — verify the signature before returning. Default `true`.
+- `allowExpired` — when `false`, a token whose `exp` is past is rejected without a network call. Default `false`.
+- `expectedIssuer` — when non-null, the token's `iss` must equal this. Default `null`.
+- `expectedAudience` — when non-null, the token's `aud` must contain this. Default `null`.
+
+Returns `SupabaseResult<JwtClaimsResult>`.
+
+```kotlin
+val claims = auth.getClaims(session.accessToken)
+```
+
+### `parseJwtClaims`
+
+```kotlin
+public fun parseJwtClaims(jwt: String): SupabaseResult<JsonObject>
+```
+
+Decodes the payload of a `jwt` into its raw claims `JsonObject` **without verifying the
+signature** — a cheap local read for claims you don't need to trust. When the
+signature matters, use `getClaims`. Returns `SupabaseResult<JsonObject>`.
+
+### `verifyOAuthState`
+
+```kotlin
+public fun verifyOAuthState(expected: String, returned: String?): SupabaseResult<Unit>
+```
+
+Verifies an OAuth `state` (CSRF) parameter on callback. Succeeds only when `expected`
+(the value you persisted from `generateOAuthState`) matches `returned` (the `state`
+query param the provider sent back). A blank/absent `returned` is always a failure;
+the comparison is constant-time. Returns `SupabaseResult<Unit>`.
+
+---
+
+## Implicit-flow redirect helpers
+
+Top-level functions and `AuthClient`/`SessionManager` extensions for adopting tokens
+that arrive in a redirect URL fragment.
+
+### `ParsedSessionTokens`
+
+```kotlin
+public data class ParsedSessionTokens(
+    public val accessToken: String,
+    public val refreshToken: String,
+    public val expiresIn: Long,
+    public val tokenType: String,
+)
+```
+
+Session tokens parsed out of an implicit-flow redirect URL fragment.
+
+### `parseSessionTokensFromFragment` / `parseSessionTokensFromUrl`
+
+```kotlin
+public fun parseSessionTokensFromFragment(fragment: String): SupabaseResult<ParsedSessionTokens>
+public fun parseSessionTokensFromUrl(url: String): SupabaseResult<ParsedSessionTokens>
+```
+
+Parses `ParsedSessionTokens` from an OAuth implicit-flow URL fragment (the
+`#access_token=…&refresh_token=…&expires_in=…&token_type=…` part). A leading `#` is
+tolerated and components are percent-decoded. `parseSessionTokensFromUrl` extracts the
+fragment from a full `url` first. Returns `Failure` if any required field is missing.
+
+### `importSessionFromFragment` / `importSessionFromUrl`
+
+```kotlin
+public suspend fun AuthClient.importSessionFromFragment(fragment: String, sessionManager: SessionManager): SupabaseResult<Session>
+public suspend fun AuthClient.importSessionFromUrl(url: String, sessionManager: SessionManager): SupabaseResult<Session>
+```
+
+Parse tokens from an implicit-flow redirect, fetch the matching `User`, build a
+`Session` and save it to `sessionManager` — the implicit-flow counterpart to
+`exchangeCodeForSessionAndSave`. Returns `SupabaseResult<Session>`.
+
+### `exchangeCodeForSessionAndSave`
+
+```kotlin
+public suspend fun AuthClient.exchangeCodeForSessionAndSave(
+    authCode: String,
+    codeVerifier: String,
+    sessionManager: SessionManager,
+): SupabaseResult<Session>
+```
+
+Exchanges a PKCE auth code for a session and saves it on success. Returns
+`SupabaseResult<Session>`.
+
+---
+
+## AuthClient convenience extensions
+
+Shorthands over the core methods, in package `io.github.androidpoet.supabase.auth`.
+All return the same `SupabaseResult<T>` contract as the method they wrap.
+
+| Extension | Wraps |
+| --- | --- |
+| `signUp(email, password, data?)` | `signUpWithEmail` |
+| `signIn(email, password)` | `signInWithEmail` |
+| `signUpPhone(phone, password, data?)` | `signUpWithPhone` |
+| `signInPhone(phone, password)` | `signInWithPhone` |
+| `sendOtp(email)` | `signInWithOtp` (email) |
+| `sendPhoneOtp(phone, channel?)` | `signInWithOtp` (phone) |
+| `resendSignUpEmailOtp(email, captchaToken?, redirectTo?)` | `resendEmailOtp` with `OtpType.EMAIL` |
+| `resendPhoneSignInOtp(phone, captchaToken?)` | `resendPhoneOtp` with `OtpType.SMS` |
+| `verifyEmailOtp(email, token, type, captchaToken?)` | `verifyOtp` (email) |
+| `verifyPhoneOtp(phone, token, type, captchaToken?)` | `verifyOtp` (phone) |
+| `verifyEmailSignUpOtp(email, token, captchaToken?)` | `verifyEmailOtp` with `OtpType.EMAIL` |
+| `verifyPhoneSignInOtp(phone, token, captchaToken?)` | `verifyPhoneOtp` with `OtpType.SMS` |
+| `verifyEmailOtpWithTokenHash(tokenHash, type, captchaToken?)` | `verifyOtpWithTokenHash` |
+| `forgotPassword(email, redirectTo?, captchaToken?)` | `resetPasswordForEmail` |
+| `signOutGlobal/signOutLocal/signOutOthers(accessToken)` | `signOut` with the matching scope |
+| `mfaChallengeAndVerify(factorId, code, accessToken)` | `mfaChallenge` then `mfaVerify` in one call |
+
+### Session-aware extensions (require a `SessionManager`)
+
+These read/refresh/persist the current session. Each fails with a `SupabaseError`
+(`"No active session"`) when there is no active session, unless noted.
+
+- `getUserForCurrentSession(sessionManager, updateStoredSession = false): SupabaseResult<User>` — fetch the current user; when `updateStoredSession`, write the refreshed `User` back into stored session.
+- `reauthenticateCurrentSession(sessionManager): SupabaseResult<Unit>`
+- `updateUserForCurrentSession(sessionManager, updates, updateStoredSession = true): SupabaseResult<User>`
+- `refreshCurrentSession(sessionManager): SupabaseResult<Session>` — delegates to `SessionManager.refreshSession`.
+- `signOutCurrentSession(sessionManager, scope = SignOutScope.LOCAL, clearStoredSessionOnSuccess = true, succeedIfNoSession = true): SupabaseResult<Unit>` — signs out and clears storage; an absent session is an idempotent success when `succeedIfNoSession`.
+- `getSsoUrlForCurrentSession(sessionManager, domain?, providerId?, redirectTo?): SupabaseResult<SsoResponse>`
+- `getUserIdentitiesForCurrentSession(sessionManager): SupabaseResult<List<UserIdentity>>`
+- `linkIdentityForCurrentSession(sessionManager, provider, redirectTo?, scopes, queryParams): SupabaseResult<LinkIdentityResponse>`
+- `linkIdentityWithIdTokenForCurrentSession(sessionManager, provider, idToken, providerAccessToken?, nonce?, updateStoredSession = true): SupabaseResult<Session>`
+- `unlinkIdentityForCurrentSession(sessionManager, identityId, updateStoredSession = true): SupabaseResult<Unit>`
+- `unlinkIdentityAndUpdateSession(accessToken, identityId, sessionManager, updateStoredSession = true): SupabaseResult<Unit>` — unlinks and removes the identity from the stored session's user.
+- `importAuthToken(sessionManager, accessToken, refreshToken = "", expiresIn = 0L, tokenType = "bearer", retrieveUser = true): SupabaseResult<Session>` — adopts an externally minted token as a saved `Session`.
+- `getClaimsForCurrentSession(authClient, verify = true, allowExpired = false, expectedIssuer?, expectedAudience?): SupabaseResult<JwtClaimsResult>` — extension on `SessionManager`.
+- `parseCurrentSessionJwtClaims(): SupabaseResult<JsonObject>` — extension on `SessionManager`; parses the current access token's raw claims without verifying.
+
+### `…AndSaveSession` extensions
+
+Run the wrapped call and, on success, save the resulting session via
+`SessionManager.saveSession`. All return `SupabaseResult<Session>` (or
+`SupabaseResult<OtpVerifyResult>` for the OTP ones):
+
+`signInWithEmailAndSaveSession`, `signInWithPhoneAndSaveSession`,
+`signUpWithEmailAndSaveSession`, `signUpWithPhoneAndSaveSession`,
+`signInAnonymouslyAndSaveSession`, `signInWithIdTokenAndSaveSession`,
+`refreshTokenAndSaveSession`, `verifyOtpAndSaveSession`,
+`verifyOtpWithTokenHashAndSaveSession`. The two OTP variants save only when the result
+is `OtpVerifyResult.Authenticated`; a no-session verification is returned untouched.
+
+---
+
+## SupabaseClient sign-in helpers
+
+Package `io.github.androidpoet.supabase.auth`. These run the same call as the core
+`AuthClient` and, on success, apply the returned access token to the client so every
+following request is authenticated. Use these for "sign in and stay signed in for the
+process lifetime" without a full `SessionManager`.
+
+### `applySession`
+
+```kotlin
+public fun SupabaseClient.applySession(session: Session): Session
+```
+
+Stores `session`'s access token on this client so subsequent requests are
+authenticated. A blank token is ignored (e.g. a sign-up awaiting email confirmation).
+Returns `session` for chaining.
+
+### Sign-in / sign-up / sign-out
+
+```kotlin
+public suspend fun SupabaseClient.signInWithEmail(email: String, password: String): SupabaseResult<Session>
+public suspend fun SupabaseClient.signInWithPhone(phone: String, password: String): SupabaseResult<Session>
+public suspend fun SupabaseClient.signInAnonymously(data: JsonObject? = null, captchaToken: String? = null): SupabaseResult<Session>
+public suspend fun SupabaseClient.signInWithIdToken(provider: OAuthProvider, idToken: String, accessToken: String? = null, nonce: String? = null, captchaToken: String? = null): SupabaseResult<Session>
+public suspend fun SupabaseClient.signUpWithEmail(email: String, password: String, data: JsonObject? = null): SupabaseResult<Session>
+public suspend fun SupabaseClient.signOut(scope: SignOutScope = SignOutScope.GLOBAL): SupabaseResult<Unit>
+```
+
+Each sign-in/up authenticates the client on success (`signUpWithEmail` only when a
+session is returned, i.e. email confirmation isn't required). `signOut` clears the
+access token; if the client isn't authenticated it clears and returns success without
+a network call, and leaves the token in place if the server call fails so the sign-out
+can be retried.
+
+---
+
+## Native sign-in
+
+Package `io.github.androidpoet.supabase.auth.native`. The provider-agnostic hand-off
+for platform-native flows (Google, Apple, …).
+
+### `NativeAuthProvider`
+
+```kotlin
+public interface NativeAuthProvider {
+    public val provider: OAuthProvider
+    public suspend fun signIn(): SupabaseResult<NativeAuthCredential>
+}
+```
+
+The SDK's one extension point for native sign-in. Implement it for any provider,
+platform, or SDK. `signIn()` launches the native UI and returns the credential, or a
+failure if the user cancelled, the flow errored, or native sign-in isn't available.
+
+### `NativeAuthCredential`
+
+```kotlin
+public data class NativeAuthCredential(
+    public val provider: OAuthProvider,
+    public val idToken: String,
+    public val accessToken: String? = null,
+    public val nonce: String? = null,
+    public val fullName: String? = null,
+    public val email: String? = null,
+)
+```
+
+A credential obtained from a native sign-in flow, ready to exchange for a Supabase
+session.
+
+- `provider` — the Supabase provider the token came from.
+- `idToken` — the OIDC ID token (a JWT).
+- `accessToken` — optional provider access token. Default `null`.
+- `nonce` — the raw (un-hashed) nonce, if one was used. Default `null`.
+- `fullName` — the user's full name, if surfaced. Sign in with Apple returns it only on the **first** authorization. Default `null`.
+- `email` — the user's email, if surfaced out-of-band. Like `fullName`, Apple returns it only once. Default `null`.
+
+`toString()` masks the token/name/email fields so the credential is log-safe.
+
+### `signInWith` / `signInWithAndSaveSession`
+
+```kotlin
+public suspend fun AuthClient.signInWith(
+    provider: NativeAuthProvider,
+    captchaToken: String? = null,
+    onCredential: ((NativeAuthCredential) -> Unit)? = null,
+): SupabaseResult<Session>
+
+public suspend fun AuthClient.signInWithAndSaveSession(
+    sessionManager: SessionManager,
+    provider: NativeAuthProvider,
+    captchaToken: String? = null,
+    onCredential: ((NativeAuthCredential) -> Unit)? = null,
+): SupabaseResult<Session>
+```
+
+Runs the native flow via `NativeAuthProvider.signIn()` and, on success, redeems the
+credential through `signInWithIdToken`. `signInWithAndSaveSession` also persists the
+session to `sessionManager`.
+
+- `provider` — the native sign-in implementation to run.
+- `captchaToken` — captcha token forwarded to the token exchange. Default `null`.
+- `onCredential` — hook invoked with the raw credential on a successful native flow, **before** redemption — the only way to reach Apple's first-sign-in name/email. Default `null`.
+
+Returns `SupabaseResult<Session>`.
+
+### `generateNonce`
+
+```kotlin
+public fun generateNonce(byteCount: Int = 32): String
+```
+
+Generates a fresh, high-entropy, URL-safe nonce for a native sign-in flow, drawn from
+a cryptographically secure RNG. Pass the returned value to the provider config's
+`nonce`.
+
+- `byteCount` — number of characters to draw (6 bits each). Default `32` (192 bits); must be at least 16. Throws `IllegalArgumentException` if below 16.
+
+Returns the nonce `String`.
+
+---
+
+## Session management
+
+Package `io.github.androidpoet.supabase.auth.session`.
+
+### `createSessionManager`
+
+```kotlin
+public fun createSessionManager(
+    authClient: AuthClient,
+    supabaseClient: SupabaseClient,
+    config: SessionConfig = SessionConfig(),
+): SessionManager
+```
+
+Builds a `SessionManager` that persists, restores, and (optionally) auto-refreshes the
+session, applying the access token to `supabaseClient` as it changes.
+
+- `authClient` — the auth client used for refresh.
+- `supabaseClient` — the client whose access token is kept in sync.
+- `config` — storage and refresh configuration. Default `SessionConfig()`.
+
+### `SessionManager`
+
+```kotlin
+public interface SessionManager {
+    public val sessionState: StateFlow<SessionState>
+    public val currentSession: Session?
+    public val accessToken: String?
+
+    public suspend fun saveSession(session: Session)
+    public suspend fun clearSession()
+    public suspend fun refreshSession(): SupabaseResult<Session>
+    public suspend fun restoreSession(): SupabaseResult<Session>
+    public suspend fun initialize(): SupabaseResult<Session>
+    public fun startAutoRefresh()
+    public fun stopAutoRefresh()
+    public fun dispose()
+    public fun close()
+}
+```
+
+- `sessionState` — a `StateFlow` of the current `SessionState`; observe it to drive UI.
+- `currentSession` — the active `Session`, or `null`.
+- `accessToken` — the active access token, or `null`.
+- `saveSession(session)` — persists a session, applies its token, and schedules refresh.
+- `clearSession()` — clears stored session (sign-out).
+- `refreshSession()` — refreshes and persists; returns `SupabaseResult<Session>`.
+- `restoreSession()` — loads a persisted session from storage.
+- `initialize()` — restores and starts auto-refresh; call at startup.
+- `startAutoRefresh()` / `stopAutoRefresh()` — control background token refresh.
+- `dispose()` / `close()` — release the manager's coroutine resources.
+
+```kotlin
+val sessions = createSessionManager(auth, client, SessionConfig(storage = myStorage))
+sessions.initialize()
+sessions.sessionState.collect { state -> /* update UI */ }
+```
+
+### `SessionState`
+
+```kotlin
+public sealed interface SessionState {
+    public data object NotAuthenticated : SessionState
+    public data object Loading : SessionState
+    public data class Authenticated(public val session: Session) : SessionState
+    public data class Expired(public val lastSession: Session) : SessionState
+}
+```
+
+The current authentication state. `Authenticated` carries the live `session`;
+`Expired` carries the `lastSession` whose access token has lapsed (refresh may
+recover it).
+
+### `SessionConfig`
+
+```kotlin
+public data class SessionConfig(
+    public val autoRefresh: Boolean = true,
+    public val refreshBufferSeconds: Long = 60,
+    public val storage: SessionStorage = InMemorySessionStorage(),
+)
+```
+
+- `autoRefresh` — refresh the access token in the background before it expires. Default `true`.
+- `refreshBufferSeconds` — how many seconds before expiry to refresh. Default `60`.
+- `storage` — where the session is persisted. Default `InMemorySessionStorage()`.
+
+<Callout type="warning">
+The default `InMemorySessionStorage` **does not survive a process restart** — the user
+is silently signed out when the app is killed. For production, provide a durable
+`SessionStorage` (e.g. a `KeyValueSessionStorage` over your platform's secure store).
+</Callout>
+
+### `SessionStorage`
+
+```kotlin
+public interface SessionStorage {
+    public suspend fun save(session: Session)
+    public suspend fun load(): Session?
+    public suspend fun clear()
+}
+```
+
+Where a session is persisted. Implement it (or use the provided implementations) and
+pass it via `SessionConfig.storage`.
+
+### `KeyValueStore` & `KeyValueSessionStorage`
+
+```kotlin
+public interface KeyValueStore {
+    public suspend fun get(key: String): String?
+    public suspend fun set(key: String, value: String)
+    public suspend fun remove(key: String)
+}
+
+public class KeyValueSessionStorage(
+    store: KeyValueStore,
+    key: String = KeyValueSessionStorage.DEFAULT_KEY,
+) : SessionStorage
+```
+
+`KeyValueStore` is the minimal persistent backend you implement over the platform's
+secure/persistent store (Keychain, `EncryptedSharedPreferences`/DataStore,
+`localStorage`, a file, …) — three string operations, serialization handled for you.
+`KeyValueSessionStorage` serializes the `Session` to JSON and defers to your
+`KeyValueStore`. It treats a corrupt or structurally-unusable payload (empty tokens,
+negative expiry) as "no session" rather than crashing. `DEFAULT_KEY` is
+`"io.github.androidpoet.supabase.session"`.
+
+```kotlin
+val storage = KeyValueSessionStorage(myKeychainStore)
+val sessions = createSessionManager(auth, client, SessionConfig(storage = storage))
+```
+
+### `InMemorySessionStorage`
+
+```kotlin
+public class InMemorySessionStorage : SessionStorage
+```
+
+A `SessionStorage` that keeps the session only in memory; **lost when the process is
+killed**. The `SessionConfig` default — fine for tests and short-lived processes, not
+production.
+
+### `onAuthStateChange` & `AuthStateChangeEvent`
+
+```kotlin
+public enum class AuthStateChangeEvent {
+    INITIAL_SESSION, SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED,
+    USER_UPDATED, PASSWORD_RECOVERY, MFA_CHALLENGE_VERIFIED,
+}
+
+public fun SessionManager.onAuthStateChange(
+    scope: CoroutineScope,
+    emitInitialSession: Boolean = true,
+    callback: suspend (event: AuthStateChangeEvent, session: Session?) -> Unit,
+): Job
+```
+
+Subscribes to `sessionState` and translates transitions into auth events, invoking
+`callback` for each. Returns the collecting `Job`.
+
+- `scope` — the coroutine scope the collection runs in.
+- `emitInitialSession` — emit `INITIAL_SESSION` with the current session immediately. Default `true`.
+- `callback` — invoked with the `event` and the session (or `null`).
+
+```kotlin
+sessions.onAuthStateChange(scope) { event, session ->
+    if (event == AuthStateChangeEvent.SIGNED_OUT) navigateToLogin()
+}
+```
+
+---
+
+## Models & data types
+
+Package `io.github.androidpoet.supabase.auth.models` unless noted. All are
+`@Serializable` `data class`es (or enums) except where stated.
+
+### `Session`
+
+```kotlin
+public data class Session(
+    val accessToken: String,
+    val refreshToken: String,
+    val expiresIn: Long,
+    val expiresAt: Long? = null,
+    val tokenType: String = "bearer",
+    val user: User,
+    val providerToken: String? = null,
+    val providerRefreshToken: String? = null,
+)
+```
+
+An authenticated session. `expiresAt` is the absolute Unix timestamp (seconds) at
+which `accessToken` expires (prefer it over `now + expiresIn` when present); `null` for
+older servers. `providerToken`/`providerRefreshToken` are present only for provider
+flows that return them. `toString()` masks all token fields.
+
+### `User`
+
+```kotlin
+public data class User(
+    val id: String,
+    val email: String? = null,
+    val phone: String? = null,
+    val createdAt: String? = null,
+    val updatedAt: String? = null,
+    val appMetadata: JsonObject? = null,
+    val userMetadata: JsonObject? = null,
+    val identities: List<UserIdentity>? = null,
+    val factors: List<MfaFactor>? = null,
+    val isAnonymous: Boolean? = null,
+    val role: String? = null,
+    val emailConfirmedAt: String? = null,
+    val phoneConfirmedAt: String? = null,
+    val confirmedAt: String? = null,
+    val lastSignInAt: String? = null,
+)
+```
+
+A Supabase auth user: stable `id` plus profile, metadata, linked `identities` and MFA
+`factors`. `isAnonymous` is `true` for anonymous sign-ins with no confirmed email or
+phone.
+
+### `UserIdentity`
+
+```kotlin
+public data class UserIdentity(
+    val id: String,
+    val identityId: String? = null,
+    val provider: String? = null,
+    val userId: String? = null,
+    val identityData: JsonObject? = null,
+)
+```
+
+One third-party identity linked to a `User`. Pass `id` (not `identityId`) to
+`unlinkIdentity`.
+
+### `UserUpdateRequest`
+
+```kotlin
+public data class UserUpdateRequest(
+    val email: String? = null,
+    val phone: String? = null,
+    val password: String? = null,
+    val currentPassword: String? = null,
+    val data: JsonObject? = null,
+    val nonce: String? = null,
+    val channel: String? = null,
+)
+```
+
+Fields to change on the authenticated user; only non-null fields are applied. `data`
+sets `user_metadata`; a password change may require `currentPassword` or a reauth
+`nonce`. `toString()` masks the password fields.
+
+### `OtpVerifyResult`
+
+```kotlin
+public sealed interface OtpVerifyResult {
+    public data class Authenticated(public val session: Session) : OtpVerifyResult
+    public data object VerifiedNoSession : OtpVerifyResult
+}
+```
+
+The outcome of an OTP verification: either a new `Session` was minted
+(`Authenticated.session`) or the code verified without one (`VerifiedNoSession`, e.g.
+an email change).
+
+### `PkceParams`
+
+```kotlin
+public data class PkceParams(
+    val codeVerifier: String,
+    val codeChallenge: String,
+    val codeChallengeMethod: String = "S256",
+)
+```
+
+PKCE parameters. Persist `codeVerifier` when starting the flow and replay it to
+`exchangeCodeForSession`; `codeChallenge`/`codeChallengeMethod` go into the authorize
+URL.
+
+### `OAuthResponse` / `LinkIdentityResponse` / `SsoResponse`
+
+```kotlin
+public data class OAuthResponse(val url: String, val provider: String)
+public data class LinkIdentityResponse(val url: String, val provider: String? = null)
+public data class SsoResponse(val url: String)
+```
+
+Each carries the `url` to open to continue a flow (OAuth authorize, identity-link
+consent, SSO IdP respectively).
+
+### MFA models
+
+```kotlin
+public data class MfaEnrollResponse(
+    val id: String,
+    val type: MfaFactorType = MfaFactorType.UNKNOWN,
+    val totp: MfaTotpDetails? = null,
+    val friendlyName: String? = null,
+    val phone: String? = null,
+)
+
+public data class MfaTotpDetails(val qrCode: String, val secret: String, val uri: String) // toString() masks secret + uri
+
+public data class MfaChallengeResponse(val id: String, val type: String? = null, val expiresAt: Long? = null)
+
+public data class MfaVerifyResponse(
+    val accessToken: String,
+    val refreshToken: String,
+    val tokenType: String = "bearer",
+    val expiresIn: Long,
+    val expiresAt: Long? = null,
+    val user: User,
+) // new AAL2 session; toString() masks the tokens
+
+public data class MfaUnenrollResponse(val id: String)
+
+public data class MfaListFactorsResponse(
+    val all: List<MfaFactor> = emptyList(),
+    val totp: List<MfaFactor> = emptyList(),
+    val phone: List<MfaFactor> = emptyList(),
+    val webauthn: List<MfaFactor> = emptyList(),
+)
+
+public data class MfaFactor(
+    val id: String,
+    val friendlyName: String? = null,
+    val factorType: MfaFactorType = MfaFactorType.UNKNOWN,
+    val status: MfaFactorStatus = MfaFactorStatus.UNKNOWN,
+    val createdAt: String? = null,
+    val updatedAt: String? = null,
+)
+
+public data class MfaWebauthnVerification(val type: String? = null, val credentialResponse: JsonObject? = null)
+
+public data class AuthenticatorAssuranceLevels(
+    val current: AuthenticatorAssuranceLevel,
+    val next: AuthenticatorAssuranceLevel,
+) // not @Serializable
+```
+
+`MfaEnrollResponse.totp` carries the QR/secret to present for a TOTP factor.
+`AuthenticatorAssuranceLevels.current` is read from the `aal` claim; `next` is `AAL2`
+when at least one verified factor exists, else `AAL1`.
+
+### Passkey models
+
+```kotlin
+public data class PasskeyRegistrationOptionsResponse(val challengeId: String, val options: JsonObject, val expiresAt: Long)
+public data class PasskeyAuthenticationOptionsResponse(val challengeId: String, val options: JsonObject, val expiresAt: Long)
+public data class PasskeyMetadata(val id: String, val friendlyName: String? = null, val createdAt: String)
+public data class Passkey(val id: String, val friendlyName: String? = null, val createdAt: String, val lastUsedAt: String? = null)
+```
+
+The `…OptionsResponse` types carry the `challengeId` and WebAuthn `options` for the
+device authenticator. `PasskeyMetadata` is returned by verify-registration; `Passkey`
+is returned when listing.
+
+### OAuth-provider (consent) models
+
+```kotlin
+public data class OAuthAuthorizationClient(val id: String, val name: String, val uri: String, val logoUri: String)
+public data class OAuthAuthorizationUser(val id: String, val email: String)
+public data class OAuthAuthorizationDetails(
+    val authorizationId: String? = null,
+    val redirectUrl: String? = null,
+    val redirectUri: String? = null,
+    val client: OAuthAuthorizationClient? = null,
+    val user: OAuthAuthorizationUser? = null,
+    val scope: String? = null,
+)
+public data class OAuthRedirect(val redirectUrl: String)
+public data class OAuthGrant(val client: OAuthAuthorizationClient, val scopes: List<String>, val grantedAt: String)
+```
+
+Used to render and act on a consent screen when the project acts as an OAuth provider.
+
+### JWT / JWKS models
+
+```kotlin
+public data class JwtHeader(val algorithm: String? = null, val type: String? = null, val keyId: String? = null)
+
+public data class JwtClaims(
+    val subject: String? = null,
+    val email: String? = null,
+    val phone: String? = null,
+    val role: String? = null,
+    val issuer: String? = null,
+    val expiresAt: Long? = null,
+    val notBefore: Long? = null,
+    val issuedAt: Long? = null,
+    val sessionId: String? = null,
+    val authenticatorAssuranceLevel: String? = null,
+    val isAnonymous: Boolean? = null,
+    val appMetadata: JsonObject? = null,
+    val userMetadata: JsonObject? = null,
+)
+
+public data class JwtClaimsResult(
+    val claims: JwtClaims,
+    val header: JwtHeader,
+    val signature: String,
+    val raw: JsonObject,
+) // not @Serializable
+
+public data class Jwk(
+    val keyType: String,
+    val algorithm: String? = null,
+    val keyId: String? = null,
+    val curve: String? = null,
+    val use: String? = null,
+    val x: String? = null,
+    val y: String? = null,
+    val modulus: String? = null,
+    val exponent: String? = null,
+)
+
+public data class JwkSet(val keys: List<Jwk> = emptyList())
+```
+
+`JwtClaims` is the strongly-typed view of standard Supabase claims; use
+`JwtClaimsResult.raw` for any non-standard claim. `Jwk` models only the fields needed
+to reconstruct a public key for signature verification.
+
+### `AuthSettings` / `AuthHealthStatus`
+
+```kotlin
+public data class AuthSettings(
+    val external: Map<String, Boolean>? = null,
+    val disableSignup: Boolean? = null,
+    val mailerAutoconfirm: Boolean? = null,
+    val phoneAutoconfirm: Boolean? = null,
+    val smsProvider: String? = null,
+    val mfaEnabled: Boolean? = null,
+    val samlEnabled: Boolean? = null,
+)
+
+public data class AuthHealthStatus(val name: String? = null, val version: String? = null, val description: String? = null)
+```
+
+`AuthSettings.external` is a per-provider enablement map (slug → enabled). Every field
+is nullable so a server that omits or adds a key still decodes.
+
+---
+
+## Enums
+
+### `OAuthProvider`
+
+The 17 supported third-party OAuth providers. Each has a `value` slug GoTrue expects on
+the wire:
+
+| Entry | Wire `value` |
+| --- | --- |
+| `GOOGLE` | `google` |
+| `APPLE` | `apple` |
+| `GITHUB` | `github` |
+| `GITLAB` | `gitlab` |
+| `BITBUCKET` | `bitbucket` |
+| `DISCORD` | `discord` |
+| `FACEBOOK` | `facebook` |
+| `TWITTER` | `twitter` |
+| `SLACK` | `slack` |
+| `SPOTIFY` | `spotify` |
+| `TWITCH` | `twitch` |
+| `AZURE` | `azure` |
+| `KEYCLOAK` | `keycloak` |
+| `LINKEDIN` | `linkedin_oidc` |
+| `NOTION` | `notion` |
+| `ZOOM` | `zoom` |
+| `FIGMA` | `figma` |
+
+### `OtpType`
+
+The flow an OTP / email-link belongs to: `SMS`, `EMAIL`, `RECOVERY`, `INVITE`,
+`EMAIL_CHANGE`, `PHONE_CHANGE`, `SIGNUP`, `MAGIC_LINK`.
+
+### `MessagingChannel`
+
+Delivery channel for a phone OTP / MFA challenge: `SMS` (server default) or
+`WHATSAPP`. Ignored for email OTP and TOTP factors.
+
+### `SignOutScope`
+
+How widely a sign-out revokes sessions: `GLOBAL` (all), `LOCAL` (just this one),
+`OTHERS` (all others).
+
+### `MfaFactorType`
+
+`TOTP`, `PHONE`, `WEBAUTHN`, `UNKNOWN` (a type this version doesn't recognise).
+
+### `MfaFactorStatus`
+
+`VERIFIED`, `UNVERIFIED`, `UNKNOWN`.
+
+### `AuthenticatorAssuranceLevel`
+
+`AAL1` (single factor) or `AAL2` (MFA satisfied).
+
+### `Web3Chain`
+
+Blockchain network for a Web3 wallet sign-in: `ETHEREUM` or `SOLANA`.

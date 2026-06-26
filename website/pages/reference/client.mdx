@@ -1,0 +1,715 @@
+---
+title: Client — API Reference
+description: Full public API of the supabase-client module — the Supabase.create factory, its configuration DSL, the SupabaseClient transport interface, auth-state plumbing, and typed request helpers.
+---
+
+import { Callout } from 'nextra/components'
+
+# Client — API Reference
+
+`supabase-client` is the HTTP/transport foundation every feature client (Auth,
+PostgREST, Storage, Functions, Realtime, …) is built on: it owns the Ktor
+engine, base-URL resolution, authentication, retries, logging, and request
+observation in one seam. You build a client with the `Supabase.create` factory
+and tune it through a small configuration DSL. Maven artifact:
+`io.github.androidpoet:supabase-client`.
+
+All symbols live under `io.github.androidpoet.supabase.client` (auth-state types
+under `io.github.androidpoet.supabase.client.auth`).
+
+<Callout type="warning">
+In client apps (mobile, desktop, web) use the project's **anon** key. Never ship
+the **service-role** key in a distributed application — it bypasses Row Level
+Security and grants full access to your data.
+</Callout>
+
+## `Supabase.create`
+
+The single entry point. Validates its arguments, normalizes the project URL, and
+returns a ready-to-use [`SupabaseClient`](#supabaseclient).
+
+```kotlin
+fun create(
+    projectUrl: String,
+    apiKey: String,
+    engineFactory: HttpClientEngineFactory<*> = platformEngine(),
+    configure: SupabaseConfigBuilder.() -> Unit = {},
+): SupabaseClient
+```
+
+- `projectUrl` — your project's base URL. Must be non-blank and start with
+  `http://` or `https://`, or an `IllegalArgumentException` is thrown. A single
+  trailing slash is stripped so endpoint paths that begin with `/` don't produce
+  a doubled `//`.
+- `apiKey` — the project API key (use the **anon** key in client apps). Must be
+  non-blank. Sent on every request and used as the fallback bearer credential.
+- `engineFactory` — the Ktor HTTP engine factory. Defaults to the platform's
+  built-in engine via `platformEngine()`; override it to supply your own engine
+  (for example a custom-configured or mock engine in tests).
+- `configure` — the [config DSL](#supabaseconfigbuilder--config-dsl) block.
+  Optional; an empty block yields a working client.
+
+Returns a `SupabaseClient`. Because the client owns an HTTP engine it is
+`AutoCloseable` — call [`close()`](#lifecycle) when done.
+
+```kotlin
+val client = Supabase.create(
+    projectUrl = "https://your-project.supabase.co",
+    apiKey = "your-anon-key",
+) {
+    logging = true
+    logLevel = HttpLogLevel.HEADERS
+    headers["X-App-Version"] = "1.4.0"
+}
+```
+
+## `SupabaseConfigBuilder` — config DSL
+
+The receiver of the `configure` block. Every property has a default, so set only
+what you need. Reach for `httpClientConfig` only for raw transport tweaks the
+typed fields don't cover.
+
+| Option | Type | Default | Effect |
+| --- | --- | --- | --- |
+| `logging` | `Boolean` | `false` | Enable HTTP wire logging at `logLevel`. |
+| `logLevel` | `HttpLogLevel` | `NONE` | Verbosity of the wire log when `logging` is on. |
+| `headers` | `MutableMap<String, String>` | empty | Extra headers attached to every request, merged under any per-call headers. |
+| `retry` | `RetryConfig` | `RetryConfig.Default` | Backoff policy for transient (opt-in) retries. |
+| `logger` | `SupabaseLogger?` | `null` | Sink that routes wire logs into your logging framework. |
+| `interceptor` | `SupabaseInterceptor?` | `null` | Observation hooks fired around every request. |
+| `connectTimeoutMillis` | `Long?` | `null` | Max time to establish a connection; `null` is unbounded. |
+| `socketTimeoutMillis` | `Long?` | `null` | Max inactivity between data packets; `null` is unbounded. |
+| `requestTimeoutMillis` | `Long?` | `null` | Whole-request timeout including body; `null` is unbounded. |
+| `httpClientConfig` | `(HttpClientConfig<*>.() -> Unit)?` | `null` | Raw Ktor escape hatch applied after the library's own installs. |
+| `accessTokenProvider` | `(suspend () -> String?)?` | `null` | Per-request Bearer-token provider for third-party auth. |
+
+### `logging` / `logLevel`
+
+```kotlin
+var logging: Boolean = false
+var logLevel: HttpLogLevel = HttpLogLevel.NONE
+```
+
+`logging` turns HTTP wire logging on; `logLevel` controls how much it prints. The
+verbosity values are an SDK-owned enum (see [`HttpLogLevel`](#httploglevel)) so
+the transport's logging library isn't part of the public surface.
+
+```kotlin
+Supabase.create(url, key) {
+    logging = true
+    logLevel = HttpLogLevel.BODY
+}
+```
+
+### `headers`
+
+```kotlin
+val headers: MutableMap<String, String> = mutableMapOf()
+```
+
+Headers added to every request. Per-call headers passed to a request method are
+merged *over* these, so a request can override a default.
+
+```kotlin
+Supabase.create(url, key) {
+    headers["X-App-Version"] = "1.4.0"
+    headers["Accept-Language"] = "en"
+}
+```
+
+### `retry`
+
+```kotlin
+var retry: RetryConfig = RetryConfig.Default
+```
+
+The backoff policy applied when a call opts into retrying. See
+[`RetryConfig`](#retryconfig).
+
+```kotlin
+Supabase.create(url, key) {
+    retry = RetryConfig(maxRetries = 5)
+}
+```
+
+### `logger`
+
+```kotlin
+var logger: SupabaseLogger? = null
+```
+
+Routes wire logs into your own framework instead of the default
+`println`-style logger. Verbosity is still governed by `logLevel`; this only
+changes where the lines go. See [`SupabaseLogger`](#supabaselogger).
+
+### `interceptor`
+
+```kotlin
+var interceptor: SupabaseInterceptor? = null
+```
+
+Observation hooks fired before and after every request — for telemetry, tracing,
+and metrics. See [`SupabaseInterceptor`](#supabaseinterceptor).
+
+### Timeouts
+
+```kotlin
+var connectTimeoutMillis: Long? = null
+var socketTimeoutMillis: Long? = null
+var requestTimeoutMillis: Long? = null
+```
+
+- `connectTimeoutMillis` — maximum time to establish a connection. `null`
+  (default) leaves it unbounded. Safe to set without affecting streaming
+  responses.
+- `socketTimeoutMillis` — maximum inactivity between data packets. `null`
+  leaves it unbounded. Avoid combining with long-idle streams (SSE).
+- `requestTimeoutMillis` — maximum total time for a whole request *including the
+  response body*. `null` leaves it unbounded. Do **not** set this when streaming
+  (`streamLines` / SSE) or transferring large uploads/downloads — it caps the
+  entire transfer, not just connection setup.
+
+```kotlin
+Supabase.create(url, key) {
+    connectTimeoutMillis = 10_000
+    socketTimeoutMillis = 10_000
+}
+```
+
+### `httpClientConfig`
+
+```kotlin
+var httpClientConfig: (HttpClientConfig<*>.() -> Unit)? = null
+```
+
+A raw Ktor escape hatch applied to the underlying `HttpClientConfig` **after**
+the library's own installs (content negotiation, optional timeouts/logging, the
+default `apikey` / `X-Client-Info` headers). Use it to install arbitrary Ktor
+plugins or tweak engine behaviour the library doesn't expose — e.g. `HttpCache`,
+a proxy, custom TLS/cookies. This is the unfiltered Ktor builder, not a
+filtered plugin DSL, so anything you do here can override or conflict with the
+library's own configuration. Prefer the typed fields where they exist.
+
+```kotlin
+Supabase.create(url, key) {
+    httpClientConfig = {
+        // install or tweak any Ktor plugin here
+    }
+}
+```
+
+### `accessTokenProvider`
+
+```kotlin
+var accessTokenProvider: (suspend () -> String?)? = null
+```
+
+Supplies the `Authorization: Bearer` token per request, resolved fresh on every
+call. Intended for third-party-auth setups (e.g. Firebase/Auth0) where a JWT
+comes from an external identity provider rather than the library's session
+manager.
+
+When set and it returns a non-null value, that token wins over both the session
+token (`setAccessToken`) and the API key. Returning `null` falls back to the
+normal rules (session token, then the API key). A caller-supplied
+`Authorization` header on an individual request still takes precedence and is
+never overwritten.
+
+```kotlin
+Supabase.create(url, key) {
+    accessTokenProvider = { firebaseUser.getIdToken() }
+}
+```
+
+## `SupabaseConfig`
+
+The resolved, immutable configuration produced by the builder. It mirrors
+`SupabaseConfigBuilder` field-for-field and is constructed for you by
+`Supabase.create`; you rarely build it directly.
+
+```kotlin
+class SupabaseConfig(
+    val logging: Boolean,
+    val logLevel: HttpLogLevel,
+    val headers: Map<String, String>,
+    val retry: RetryConfig = RetryConfig.Default,
+    val logger: SupabaseLogger? = null,
+    val interceptor: SupabaseInterceptor? = null,
+    val connectTimeoutMillis: Long? = null,
+    val socketTimeoutMillis: Long? = null,
+    val requestTimeoutMillis: Long? = null,
+    val httpClientConfig: (HttpClientConfig<*>.() -> Unit)? = null,
+    val accessTokenProvider: (suspend () -> String?)? = null,
+)
+```
+
+It is intentionally not a `data class`: it carries function-typed fields whose
+reference-based equality would make a generated `copy`/`equals` meaningless, and
+a stable public config should not expose `copy`/`componentN`. See
+[`SupabaseConfigBuilder`](#supabaseconfigbuilder--config-dsl) for the meaning and
+defaults of each field.
+
+## `SupabaseClient`
+
+The transport interface returned by `Supabase.create`. Every feature module talks
+to Supabase through this one seam. Implementations resolve relative `endpoint`
+paths against `projectUrl`, attach the `apiKey` and the current bearer token, and
+are safe to share across coroutines.
+
+Every call returns a `SupabaseResult` — transport and non-2xx errors come back as
+`SupabaseResult.Failure` rather than being thrown. The one exception is
+[`streamLines`](#streaming), which surfaces errors as a terminal exception in its
+`Flow`.
+
+### Properties
+
+```kotlin
+val projectUrl: String
+val apiKey: String
+val accessTokenOrNull: String?
+```
+
+- `projectUrl` — base URL of the project; relative `endpoint` paths resolve
+  against it.
+- `apiKey` — the project's `apikey`, sent on every request and used as the
+  fallback bearer credential.
+- `accessTokenOrNull` — the bearer token currently applied to requests, or
+  `null` when no session/override token is set.
+
+### JSON request verbs
+
+The typed verbs cover the common JSON-over-REST case and return the response body
+as a `String`.
+
+```kotlin
+suspend fun get(
+    endpoint: String,
+    queryParams: List<Pair<String, String>> = emptyList(),
+    headers: Map<String, String> = emptyMap(),
+): SupabaseResult<String>
+
+suspend fun post(
+    endpoint: String,
+    body: String? = null,
+    headers: Map<String, String> = emptyMap(),
+): SupabaseResult<String>
+
+suspend fun put(endpoint: String, body: String? = null, headers: Map<String, String> = emptyMap()): SupabaseResult<String>
+suspend fun patch(endpoint: String, body: String? = null, headers: Map<String, String> = emptyMap()): SupabaseResult<String>
+suspend fun delete(endpoint: String, body: String? = null, headers: Map<String, String> = emptyMap()): SupabaseResult<String>
+```
+
+- `endpoint` — a path resolved against `projectUrl`.
+- `queryParams` (`get` only) — URL-encoded and appended to the query string.
+- `body` — the request body, typically JSON. Optional on `post`/`put`/`patch`/`delete`.
+- `headers` — per-call headers, merged *over* the client's defaults.
+
+`patch` is the verb for partial updates; otherwise these behave identically. A
+non-2xx status comes back as `SupabaseResult.Failure`.
+
+```kotlin
+val result = client.get(
+    endpoint = "/rest/v1/todos",
+    queryParams = listOf("select" to "*", "limit" to "10"),
+)
+```
+
+### Binary request verbs
+
+The raw-bytes counterparts to `post`/`put`, used for uploads where the payload
+isn't JSON (e.g. Storage object writes).
+
+```kotlin
+suspend fun postRaw(
+    url: String,
+    body: ByteArray,
+    contentType: String,
+    headers: Map<String, String> = emptyMap(),
+): SupabaseResult<String>
+
+suspend fun putRaw(
+    url: String,
+    body: ByteArray,
+    contentType: String,
+    headers: Map<String, String> = emptyMap(),
+): SupabaseResult<String>
+```
+
+- `url` — an endpoint path (prefixed with the project URL) **or** an
+  already-absolute `http(s)://…` URL, which is used verbatim and never
+  re-prefixed.
+- `body` — the raw bytes to send.
+- `contentType` — the MIME type of the body.
+- `headers` — per-call headers, merged over the client's defaults.
+
+```kotlin
+client.postRaw(
+    url = "/storage/v1/object/avatars/me.png",
+    body = pngBytes,
+    contentType = "image/png",
+)
+```
+
+### `rawRequest`
+
+Performs an arbitrary HTTP request and returns the status, headers, and raw body
+bytes — for needs the typed helpers can't express, notably `HEAD` and reading
+response headers (as required by resumable/TUS uploads).
+
+```kotlin
+suspend fun rawRequest(
+    method: SupabaseHttpMethod,
+    url: String,
+    body: ByteArray? = null,
+    contentType: String? = null,
+    headers: Map<String, String> = emptyMap(),
+): SupabaseResult<SupabaseHttpResponse>
+```
+
+- `method` — the [`SupabaseHttpMethod`](#supabasehttpmethod).
+- `url` — an absolute URL or an endpoint path (prefixed with the project URL).
+- `body` — optional raw request body.
+- `contentType` — optional MIME type for the body.
+- `headers` — per-call headers, merged over the client's defaults.
+
+Returns a [`SupabaseHttpResponse`](#supabasehttpresponse).
+
+```kotlin
+val res = client.rawRequest(SupabaseHttpMethod.HEAD, "/storage/v1/object/info/...")
+val offset = res.getOrNull()?.header("Upload-Offset")
+```
+
+### Streaming
+
+```kotlin
+fun streamLines(
+    endpoint: String,
+    body: String? = null,
+    contentType: String? = null,
+    headers: Map<String, String> = emptyMap(),
+): Flow<String>
+```
+
+Streams the body of a POST to `endpoint` as a cold `Flow` of decoded UTF-8 lines,
+read incrementally rather than buffered — for Server-Sent Events and other
+long-lived responses. The request is issued on collection; a non-2xx status
+surfaces as a *terminal exception in the flow* (not a `SupabaseResult`).
+`endpoint` may be a path or an absolute URL.
+
+This method has a default that throws `UnsupportedOperationException`, so existing
+non-streaming implementations (notably test fakes) keep compiling; the real
+client overrides it.
+
+```kotlin
+client.streamLines("/functions/v1/chat", body = requestJson)
+    .collect { line -> println(line) }
+```
+
+### Auth-token plumbing
+
+```kotlin
+fun setAccessToken(token: String)
+fun clearAccessToken()
+```
+
+- `setAccessToken` — sets the bearer token applied to subsequent requests
+  (typically the current session's access token), overriding the API-key fallback
+  until `clearAccessToken` is called.
+- `clearAccessToken` — clears any token set via `setAccessToken`, reverting to the
+  API-key credential.
+
+If the client was built with an `accessTokenProvider`, that provider always wins
+and these calls are ignored — drive auth through the provider instead, returning
+`null` from it to fall back to the API key.
+
+### Lifecycle
+
+```kotlin
+override fun close()
+```
+
+`SupabaseClient` is `AutoCloseable`; `close()` releases the underlying HTTP
+engine. After closing, the client must not be used again.
+
+## Typed request helpers
+
+Extension functions that issue a request and deserialize the JSON response body
+into `T` using [`defaultJson`](#defaultjson). Each mirrors a `SupabaseClient`
+verb and returns `SupabaseResult<T>`; a decode failure becomes a
+`SupabaseResult.Failure`.
+
+```kotlin
+suspend inline fun <reified T> SupabaseClient.getTyped(
+    endpoint: String,
+    queryParams: List<Pair<String, String>> = emptyList(),
+    headers: Map<String, String> = emptyMap(),
+): SupabaseResult<T>
+
+suspend inline fun <reified T> SupabaseClient.postTyped(endpoint: String, body: String? = null, headers: Map<String, String> = emptyMap()): SupabaseResult<T>
+suspend inline fun <reified T> SupabaseClient.putTyped(endpoint: String, body: String? = null, headers: Map<String, String> = emptyMap()): SupabaseResult<T>
+suspend inline fun <reified T> SupabaseClient.patchTyped(endpoint: String, body: String? = null, headers: Map<String, String> = emptyMap()): SupabaseResult<T>
+suspend inline fun <reified T> SupabaseClient.deleteTyped(endpoint: String, body: String? = null, headers: Map<String, String> = emptyMap()): SupabaseResult<T>
+```
+
+Parameters match the corresponding verb. `T` must be a
+`kotlinx.serialization`-serializable type.
+
+```kotlin
+@Serializable data class Todo(val id: Int, val title: String)
+
+val todos: SupabaseResult<List<Todo>> =
+    client.getTyped("/rest/v1/todos", queryParams = listOf("select" to "*"))
+```
+
+### `deserialize`
+
+The building block the `*Typed` helpers use — decode a `SupabaseResult<String>`
+into `SupabaseResult<T>`.
+
+```kotlin
+inline fun <reified T> SupabaseResult<String>.deserialize(): SupabaseResult<T>
+```
+
+On `Success`, decodes the string body into `T` (a thrown decode error becomes a
+`Failure`); a `Failure` is passed through unchanged.
+
+```kotlin
+val parsed: SupabaseResult<Todo> = client.get("/rest/v1/todos?id=eq.1").deserialize()
+```
+
+### `defaultJson`
+
+```kotlin
+val defaultJson: Json
+```
+
+The `kotlinx.serialization` `Json` instance used by the typed helpers, configured
+with `ignoreUnknownKeys = true`, `isLenient = true`, `explicitNulls = false`, and
+`coerceInputValues = true`. The coercion settings let an unknown enum value (or a
+null for a non-null field that has a default) fall back to that property's default
+rather than failing the whole decode.
+
+## `RetryConfig`
+
+The tunable backoff policy for transient request failures. Retries are opt-in per
+call (e.g. a PostgREST `select` with `retry = true`, which is safe for idempotent
+reads); this config controls *how* a retried call backs off and which statuses
+count as transient. A `Retry-After` response header always takes precedence over
+the computed backoff.
+
+```kotlin
+data class RetryConfig(
+    val maxRetries: Int = DEFAULT_MAX_RETRIES,            // 3
+    val baseDelayMillis: Long = DEFAULT_BASE_DELAY_MILLIS, // 1_000
+    val maxDelayMillis: Long = DEFAULT_MAX_DELAY_MILLIS,   // 30_000
+    val retryableStatuses: Set<Int> = DEFAULT_RETRYABLE_STATUSES, // {429,500,502,503,504,520}
+    val jitter: Boolean = true,
+)
+```
+
+- `maxRetries` — maximum retry attempts after the initial try; `0` disables
+  retries. Must be `>= 0`. Default `3`.
+- `baseDelayMillis` — base backoff for the first retry; doubles each subsequent
+  attempt. Must be `>= 0`. Default `1_000`.
+- `maxDelayMillis` — upper bound on a single backoff delay. Must be `>=
+  baseDelayMillis`. Default `30_000`.
+- `retryableStatuses` — HTTP status codes treated as transient and therefore
+  retryable. Default `{429, 500, 502, 503, 504, 520}`.
+- `jitter` — when `true` (default), randomise each backoff within its exponential
+  ceiling so clients that failed together don't all retry on the same beat.
+
+The constructor validates its bounds and throws `IllegalArgumentException` on
+violation.
+
+### `backoffMillis`
+
+```kotlin
+fun backoffMillis(attempt: Int): Long
+```
+
+The backoff delay (ms) before the given zero-based retry `attempt`. The ceiling is
+exponential — `min(maxDelayMillis, baseDelayMillis shl attempt)`. With `jitter`
+off it returns the ceiling; with `jitter` on it returns a uniform draw from
+`floor..ceiling`, where the floor is half the ceiling capped at `baseDelayMillis`.
+
+### `RetryConfig.Companion`
+
+| Member | Type | Value |
+| --- | --- | --- |
+| `DEFAULT_MAX_RETRIES` | `Int` | `3` |
+| `DEFAULT_BASE_DELAY_MILLIS` | `Long` | `1_000` |
+| `DEFAULT_MAX_DELAY_MILLIS` | `Long` | `30_000` |
+| `DEFAULT_RETRYABLE_STATUSES` | `Set<Int>` | `{429, 500, 502, 503, 504, 520}` |
+| `Default` | `RetryConfig` | the all-defaults policy (3 retries, 1s base, 30s cap) |
+
+```kotlin
+Supabase.create(url, key) {
+    retry = RetryConfig(maxRetries = 5, baseDelayMillis = 500)
+}
+```
+
+## `HttpLogLevel`
+
+SDK-owned enum controlling how verbose the HTTP wire log is when `logging` is on.
+
+```kotlin
+enum class HttpLogLevel { NONE, INFO, HEADERS, BODY, ALL }
+```
+
+- `NONE` — logs nothing.
+- `INFO` — the request line and status.
+- `HEADERS` — adds request/response headers.
+- `BODY` — adds bodies.
+- `ALL` — everything (the most verbose).
+
+## `SupabaseLogLevel`
+
+Severity for [`SupabaseLogger`](#supabaselogger) messages.
+
+```kotlin
+enum class SupabaseLogLevel { DEBUG, INFO, WARN, ERROR }
+```
+
+## `SupabaseLogger`
+
+A pluggable sink for the SDK's diagnostic output. Provide one via
+`SupabaseConfigBuilder.logger` to route HTTP wire logs into your app's logging
+framework instead of the default `println`-style logger. Verbosity is still
+governed by `logLevel`; this only changes where the lines go.
+
+```kotlin
+interface SupabaseLogger {
+    fun log(level: SupabaseLogLevel, message: String, throwable: Throwable? = null)
+}
+```
+
+- `level` — the message severity.
+- `message` — the log text.
+- `throwable` — an optional associated error; defaults to `null`.
+
+```kotlin
+class PrintlnLogger : SupabaseLogger {
+    override fun log(level: SupabaseLogLevel, message: String, throwable: Throwable?) {
+        println("[$level] $message")
+        throwable?.printStackTrace()
+    }
+}
+```
+
+## `SupabaseInterceptor`
+
+Observation hooks fired around every HTTP request — for telemetry, tracing, and
+metrics. All methods are `suspend` and default to no-ops, so implement only what
+you need. Hooks are observational: they must not throw and cannot alter the
+request or its result. Exactly one terminal hook fires per call: `onResponse`
+when an HTTP response is received (any status), or `onError` when no response was
+obtained (offline, DNS/TLS failure, timeout).
+
+```kotlin
+interface SupabaseInterceptor {
+    suspend fun onRequest(method: String, url: String) {}
+    suspend fun onResponse(method: String, url: String, statusCode: Int, durationMillis: Long) {}
+    suspend fun onError(method: String, url: String, error: SupabaseError, durationMillis: Long) {}
+}
+```
+
+- `onRequest` — fired before a request is sent.
+- `onResponse` — fired when an HTTP response is received, regardless of status;
+  `statusCode` is the HTTP status, `durationMillis` the elapsed time.
+- `onError` — fired when the request failed without a response; `error` is the
+  transport [`SupabaseError`](/results-and-errors), `durationMillis` the elapsed
+  time.
+
+```kotlin
+class TimingInterceptor : SupabaseInterceptor {
+    override suspend fun onResponse(method: String, url: String, statusCode: Int, durationMillis: Long) {
+        metrics.record(method, statusCode, durationMillis)
+    }
+}
+```
+
+## `SupabaseHttpMethod`
+
+The HTTP method enum used by [`rawRequest`](#rawrequest).
+
+```kotlin
+enum class SupabaseHttpMethod { GET, POST, PUT, PATCH, DELETE, HEAD }
+```
+
+## `SupabaseHttpResponse`
+
+A low-level HTTP response exposing the status code, response headers, and raw body
+bytes — returned by [`rawRequest`](#rawrequest) and used by features that need to
+read response headers (e.g. the resumable-upload `Location` / `Upload-Offset`).
+
+```kotlin
+class SupabaseHttpResponse(
+    val status: Int,
+    val headers: Map<String, String>,
+    val body: ByteArray,
+) {
+    fun header(name: String): String?
+}
+```
+
+- `status` — the HTTP status code.
+- `headers` — the response headers.
+- `body` — the raw response body bytes.
+- `header(name)` — case-insensitive header lookup; returns `null` if absent.
+
+```kotlin
+val res = client.rawRequest(SupabaseHttpMethod.HEAD, url).getOrNull()
+val length = res?.header("Content-Length")
+```
+
+## Auth state
+
+Helper types in `io.github.androidpoet.supabase.client.auth` that model the
+credential applied to a request. Feature modules use these to derive the
+`apikey` and `Authorization` headers.
+
+### `AuthState`
+
+A sealed interface with three cases.
+
+```kotlin
+sealed interface AuthState {
+    data object None : AuthState
+    data class ApiKey(val key: String) : AuthState
+    data class Bearer(val token: String) : AuthState
+}
+```
+
+- `None` — no credential.
+- `ApiKey(key)` — authenticate with the project API key; it also becomes the
+  bearer credential.
+- `Bearer(token)` — authenticate with an explicit bearer token (e.g. a session
+  access token).
+
+### `apiKeyHeader` / `authorizationHeader`
+
+```kotlin
+fun AuthState.apiKeyHeader(): String?
+fun AuthState.authorizationHeader(): String?
+```
+
+- `apiKeyHeader()` — the value for the `apikey` header: the key for `ApiKey`,
+  `null` for `None` and `Bearer`.
+- `authorizationHeader()` — the value for the `Authorization` header: `Bearer
+  <key>` for `ApiKey`, `Bearer <token>` for `Bearer`, `null` for `None`.
+
+```kotlin
+val state: AuthState = AuthState.Bearer(sessionToken)
+val auth = state.authorizationHeader() // "Bearer <token>"
+```
+
+## `SupabaseDsl`
+
+The `@DslMarker` annotation scoping the [`SupabaseConfigBuilder`](#supabaseconfigbuilder--config-dsl)
+receiver so nested DSLs can't accidentally leak into it. You don't apply it
+yourself; it shapes how the `configure` block resolves implicit receivers.
+
+```kotlin
+@DslMarker
+annotation class SupabaseDsl
+```

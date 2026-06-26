@@ -1,0 +1,49 @@
+---
+title: API Reference
+description: Complete, symbol-by-symbol reference for every Supabase KMP module — signatures, parameters, return types, and examples, generated from the real 1.0.0 public API.
+---
+
+import { Callout } from 'nextra/components'
+
+# API Reference
+
+This section documents the **complete public API** of Supabase KMP — every client
+interface, extension function, data type, enum, and value class that ships in the
+1.0.0 artifacts. Each page is organized by module and lists real signatures,
+every parameter, the return type, and a short example.
+
+<Callout type="info">
+  Looking to *learn* a feature rather than look up a symbol? Start with the
+  task-oriented guides — [Getting Started](/getting-started),
+  [Database](/database), [Authentication](/auth), [Storage](/storage),
+  [Realtime](/realtime). This reference is the exhaustive companion to those.
+</Callout>
+
+## How to read these pages
+
+Every fallible call returns a **`SupabaseResult<T>`** — a sealed `Success<T>` /
+`Failure` type (it is *not* `kotlin.Result`). You branch with
+`onSuccess` / `onFailure` and transform with `map` / `flatMap` / `recover`; no
+exceptions leak onto the happy path. See [Results & Errors](/results-and-errors)
+for the full contract, and the [Core](/reference/core) reference for the type
+itself.
+
+Each module is published independently under the group
+`io.github.androidpoet` — depend only on what you use.
+
+## Modules
+
+| Reference | Artifact | What it covers |
+| --- | --- | --- |
+| [Core](/reference/core) | `supabase-core` | `SupabaseResult`, error model, value-class IDs, typed filter DSL |
+| [Client](/reference/client) | `supabase-client` | `Supabase.create`, configuration, HTTP transport |
+| [Authentication](/reference/auth) | `supabase-auth` | Email/phone/OTP, OAuth, MFA, PKCE, sessions, passkeys |
+| [Auth Admin](/reference/auth-admin) | `supabase-auth-admin` | Service-role user management (server-side only) |
+| [Native Sign-In](/reference/auth-native) | `supabase-auth-google` · `-apple` · `-passkey` | Native Google / Apple / WebAuthn ceremonies |
+| [Database](/reference/database) | `supabase-database` | PostgREST CRUD, RPC, typed read/write helpers |
+| [Storage](/reference/storage) | `supabase-storage` | Buckets, objects, signed & public URLs |
+| [Realtime](/reference/realtime) | `supabase-realtime` | WebSocket channels, postgres changes, broadcast, presence |
+| [Edge Functions](/reference/functions) | `supabase-functions` | Typed edge-function invocation |
+| [End-to-End Encryption](/reference/e2ee) | `supabase-e2ee` | ECDH → HKDF → AES-256-GCM client-side crypto |
+| [Offline Sync](/reference/sync) | `supabase-sync-core` · `-sqldelight` · `-sync` · `-paging` | Offline-first pull/merge/push engine |
+| [Codegen](/reference/codegen) | `supabase-codegen` · Gradle plugin | Generate typed models from your schema |

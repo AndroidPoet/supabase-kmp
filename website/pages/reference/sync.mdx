@@ -1,0 +1,709 @@
+---
+title: Offline Sync — API Reference
+description: Full public API of the offline-sync family — the transport-agnostic SyncEngine and its model/store interfaces (supabase-sync-core), the SQLDelight-backed local store (supabase-sync-sqldelight), the Supabase PostgREST + Realtime remote source (supabase-sync), and the Paging 3 bridge (supabase-sync-paging).
+---
+
+import { Callout } from 'nextra/components'
+
+# Offline Sync — API Reference
+
+The offline-sync family is an offline-first sync layer for `supabase-kmp`. Each
+table runs a **pull → merge → push** cycle: changed rows are pulled from the
+remote since the last position, merged into a local database (resolving
+conflicts row-by-row), then queued local edits are pushed back. Incremental
+pulls resume from a **keyset cursor** on the composite `(updatedAt, id)`, so the
+sync stays stable even when many rows share the same modification timestamp.
+
+The layer is split across four Maven artifacts so you only depend on what you
+use:
+
+| Artifact | Provides |
+| --- | --- |
+| `io.github.androidpoet:supabase-sync-core` | The transport-agnostic engine, the domain model, and the `LocalStore` / `RemoteSource` / `TableAdapter` seams. No Supabase or database dependency. |
+| `io.github.androidpoet:supabase-sync-sqldelight` | An on-device `LocalStore` backed by SQLDelight — durable synced rows, pull cursors, and the outbox across iOS, macOS, and the JVM. |
+| `io.github.androidpoet:supabase-sync` | A `RemoteSource` over Supabase PostgREST (pull/push) and Realtime (live deltas). |
+| `io.github.androidpoet:supabase-sync-paging` | A Paging 3 bridge: a typed per-table façade exposing local-first `PagingData` streams and optimistic writes. |
+
+<Callout type="info">
+The engine talks only to the `LocalStore` and `RemoteSource` interfaces, so the
+same logic that drives Supabase today drives anything else behind those seams
+tomorrow. Mix-and-match: core alone is usable with a hand-written store and
+source.
+</Callout>
+
+## `supabase-sync-core`
+
+Artifact: `io.github.androidpoet:supabase-sync-core`. All symbols live under the
+package `io.github.androidpoet.supabase.sync`.
+
+### `Record`
+
+The transport-neutral form of a synced row.
+
+```kotlin
+data class Record(
+    val id: String,
+    val updatedAt: Long,
+    val deleted: Boolean = false,
+    val fields: JsonObject,
+)
+```
+
+- `id` — the row's primary key as a string.
+- `updatedAt` — the **server-set** modification time (epoch millis). This is what
+  last-write-wins compares and what the cursor keyset advances on.
+- `deleted` — a soft-delete tombstone. Deletions propagate as tombstoned rows so
+  an incremental "changed since" pull can still observe them; a hard delete would
+  be invisible to such a query.
+- `fields` — the domain payload as a `kotlinx.serialization` `JsonObject`.
+
+### `Cursor`
+
+A per-table pull position.
+
+```kotlin
+data class Cursor(
+    val updatedAt: Long,
+    val id: String = "",
+)
+```
+
+- `updatedAt` — the high-water modification time reached so far (epoch millis).
+- `id` — the tie-breaker id at that timestamp; defaults to the empty string (the
+  low bound), so a cursor of just an `updatedAt` is valid.
+
+Incremental pulls resume *after* this point using a keyset on `(updatedAt, id)`:
+rows where `updatedAt > cursor.updatedAt`, plus rows at exactly
+`cursor.updatedAt` whose `id > cursor.id`. The composite (rather than a bare
+timestamp high-water mark) is what keeps the pull from skipping or re-looping
+rows written in the same millisecond.
+
+### `ChangeKind`
+
+```kotlin
+enum class ChangeKind { UPSERT, DELETE }
+```
+
+The kind of local mutation queued in the outbox.
+
+### `PendingChange`
+
+A local mutation waiting to be pushed to the remote.
+
+```kotlin
+data class PendingChange(
+    val record: Record,
+    val kind: ChangeKind,
+)
+```
+
+- `record` — the row payload to push (for a `DELETE`, a tombstone).
+- `kind` — whether the change is an upsert or a delete.
+
+### `PullResult`
+
+What a single `RemoteSource.pull` returned.
+
+```kotlin
+data class PullResult(
+    val changed: List<Record>,
+    val nextCursor: Cursor?,
+)
+```
+
+- `changed` — the rows that changed since the supplied cursor.
+- `nextCursor` — the position to resume from next time, or `null` to leave the
+  stored cursor unchanged (e.g. when nothing changed). Returning `null` must
+  never force a full re-sync.
+
+### `PushResult`
+
+Per-id outcome of a push.
+
+```kotlin
+data class PushResult(
+    val accepted: List<String>,
+    val rejected: List<String> = emptyList(),
+)
+```
+
+- `accepted` — ids the server accepted; the engine clears these from the outbox.
+- `rejected` — ids the server rejected; left pending. Defaults to empty.
+
+### `SyncResult`
+
+Summary of one full `SyncEngine.sync` cycle.
+
+```kotlin
+data class SyncResult(
+    val pulled: Int,
+    val pushed: Int,
+    val rejected: Int,
+)
+```
+
+- `pulled` — rows merged in from the remote across all drained pages.
+- `pushed` — local changes the server accepted.
+- `rejected` — local changes the server rejected.
+
+### `PullProgress`
+
+Outcome of one `SyncEngine.pullPage`.
+
+```kotlin
+data class PullProgress(
+    val pulled: Int,
+    val hasMore: Boolean,
+)
+```
+
+- `pulled` — how many rows this page carried.
+- `hasMore` — whether another page likely follows (true only when the server both
+  advanced the cursor and returned rows).
+
+### `Page<T>`
+
+One page of rows from a `LocalStore` offset list query.
+
+```kotlin
+data class Page<T>(
+    val items: List<T>,
+    val offset: Long,
+    val limit: Long,
+    val total: Long,
+) {
+    val hasMore: Boolean
+}
+```
+
+- `items` — the rows in this page.
+- `offset` / `limit` — echo the request.
+- `total` — the full live row count for the table (for "page x of y").
+- `hasMore` — computed: `true` when `offset + items.size < total`.
+
+### `LocalStore`
+
+The local-database side of sync: it stores synced rows, remembers each table's
+pull cursor, and holds the outbox of local changes still to push.
+
+```kotlin
+interface LocalStore {
+    suspend fun upsert(table: String, records: List<Record>)
+    suspend fun get(table: String, id: String): Record?
+    suspend fun cursor(table: String): Cursor?
+    suspend fun setCursor(table: String, cursor: Cursor?)
+    suspend fun pending(table: String): List<PendingChange>
+    suspend fun enqueue(table: String, change: PendingChange)
+    suspend fun clearPending(table: String, ids: List<String>)
+    suspend fun page(table: String, limit: Long, offset: Long): Page<Record>
+    suspend fun pageAfter(table: String, afterId: String?, limit: Long): List<Record>
+    suspend fun count(table: String): Long
+}
+```
+
+- `upsert` — the **pull** path: applies remote `records`. Implementations apply a
+  monotonic guard per row (a record older than the stored one is skipped), so
+  re-applying an earlier pull never clobbers newer local state. Not for local
+  edits — use `enqueue`.
+- `get` — the row `id` in `table`, or `null` if absent.
+- `cursor` — the last pull position stored for `table`, or `null` if it has never
+  synced.
+- `setCursor` — persists the pull position (`null` clears it).
+- `pending` — local changes for `table` still waiting to be pushed.
+- `enqueue` — the **optimistic write** path: in one transaction it applies the row
+  (unguarded, so the user's edit always wins locally) and appends the change to
+  the outbox. The outbox holds one entry per row id (latest intent wins), so
+  re-editing a row before it syncs replaces its pending entry.
+- `clearPending` — removes outbox entries for `ids` after they were pushed or
+  superseded.
+- `page` — offset page of live (non-tombstone) rows, ordered by id. Drives
+  `SyncStore.paged`.
+- `pageAfter` — keyset page: the next `limit` live rows after `afterId` (`null` =
+  first page), ordered by id.
+- `count` — total live row count for `table`.
+
+### `RemoteSource`
+
+The remote-API side of sync.
+
+```kotlin
+interface RemoteSource {
+    suspend fun pull(table: String, since: Cursor?): PullResult
+    suspend fun push(table: String, changes: List<PendingChange>): PushResult
+    fun changes(table: String): Flow<Record>
+}
+```
+
+- `pull` — fetches rows changed since `since` (all rows when `null`) and reports
+  the cursor to resume from.
+- `push` — sends local `changes` and reports which were accepted.
+- `changes` — a live stream of remote deltas, one `Record` per change.
+
+### `TableAdapter`
+
+The seam that makes a consumer's own typed table the single source of truth for a
+synced table, on any local database. A `LocalStore` reads and writes domain rows
+only through this adapter; the adapter handles only the domain `JsonObject`
+fields, while sync metadata (server `updatedAt`, the tombstone) stays the store's
+responsibility. Methods are synchronous; the store calls them from its `suspend`
+functions.
+
+```kotlin
+interface TableAdapter {
+    val table: String
+    fun upsert(id: String, fields: JsonObject)
+    fun get(id: String): JsonObject?
+    fun delete(id: String)
+    fun page(limit: Long, offset: Long): List<Pair<String, JsonObject>>
+    fun pageAfter(afterId: String?, limit: Long): List<Pair<String, JsonObject>>
+    fun count(): Long
+}
+```
+
+- `table` — the table name as the engine/remote knows it.
+- `upsert` — inserts or replaces the row `id` with `fields`.
+- `get` — the row `id`'s fields, or `null` if absent.
+- `delete` — removes the row `id`.
+- `page` — offset pagination, rows ordered by id as `(id, fields)` pairs.
+- `pageAfter` — keyset pagination: the next `limit` rows with id greater than
+  `afterId` (`null` = start).
+- `count` — total row count (feeds `Page.total`).
+
+### `ConflictResolver`
+
+Decides the winner when a local pending change and an incoming remote record touch
+the same row.
+
+```kotlin
+fun interface ConflictResolver {
+    fun resolve(local: Record, remote: Record): Record
+}
+```
+
+Implement it (it is a functional interface) for field-level merges or any custom
+policy, and register per table on a `ResolverRegistry`.
+
+### `LastWriteWins`
+
+The default resolver.
+
+```kotlin
+object LastWriteWins : ConflictResolver {
+    override fun resolve(local: Record, remote: Record): Record
+}
+```
+
+Higher `Record.updatedAt` wins; ties go to the remote, since the server is
+authoritative.
+
+### `ResolverRegistry`
+
+Maps tables to their resolver, falling back to a default for unregistered tables.
+
+```kotlin
+class ResolverRegistry(default: ConflictResolver = LastWriteWins) {
+    fun register(table: String, resolver: ConflictResolver): ResolverRegistry
+    fun forTable(table: String): ConflictResolver
+}
+```
+
+- constructor `default` — the fallback resolver for unregistered tables
+  (`LastWriteWins` by default).
+- `register` — registers `resolver` for `table`; returns `this` for chaining.
+- `forTable` — the resolver for `table`, or the default if none was registered.
+
+### `SyncEngine`
+
+Orchestrates one offline-first sync cycle per table. Transport-agnostic — it
+talks only to a `LocalStore` and a `RemoteSource`.
+
+```kotlin
+class SyncEngine(
+    local: LocalStore,
+    remote: RemoteSource,
+    resolvers: ResolverRegistry = ResolverRegistry(),
+) {
+    suspend fun sync(table: String): SyncResult
+    suspend fun pullPage(table: String): PullProgress
+    fun observe(table: String): Flow<Record>
+}
+```
+
+- constructor `local` / `remote` — the store and source halves.
+- constructor `resolvers` — per-table conflict resolvers; defaults to
+  last-write-wins for every table.
+- `sync` — runs a full pull → merge → push cycle and returns a `SyncResult`. It
+  drains every pending remote page (bounded internally against a server that
+  never lowers `hasMore`) before pushing the outbox, then clears accepted ids. If
+  the remote version wins a conflict the local edit is dropped; otherwise the
+  resolved winner is re-queued so the merged value — not the stale original — is
+  what gets pushed.
+- `pullPage` — pulls and merges a single page (no push), advancing the table's
+  cursor; returns a `PullProgress`. Call repeatedly to walk a large table
+  page-by-page. Powers `SyncStore.pagedSynced`.
+- `observe` — a live `Flow` of the table's remote changes, each merged into the
+  local store as it arrives through the same conflict resolver as `sync`. Collect
+  it alongside periodic `sync` calls; still re-run `sync` on reconnect to backfill
+  deltas missed while disconnected.
+
+<Callout type="warning">
+`pull` and `push` propagate transport/server failures by throwing — a failed
+push leaves the outbox intact for the next cycle. Wrap `sync` / `pullPage` calls
+accordingly, or use the `SyncStore` façade in `supabase-sync-paging`, which folds
+failures into a `SyncStatus.ERROR` state.
+</Callout>
+
+### `createSyncEngine`
+
+The convention-matching factory that mirrors the SDK's other `create*` entry
+points.
+
+```kotlin
+fun createSyncEngine(
+    local: LocalStore,
+    remote: RemoteSource,
+    resolvers: ResolverRegistry = ResolverRegistry(),
+): SyncEngine
+```
+
+Equivalent to calling the `SyncEngine` constructor directly; prefer it for
+consistency.
+
+```kotlin
+val engine = createSyncEngine(
+    local = openOfflineSyncStore(driver),
+    remote = createSupabaseRemoteSource(database, realtime),
+    resolvers = ResolverRegistry().register("notes", LastWriteWins),
+)
+val result = engine.sync("notes")   // SyncResult(pulled, pushed, rejected)
+```
+
+## `supabase-sync-sqldelight`
+
+Artifact: `io.github.androidpoet:supabase-sync-sqldelight`. All symbols live under
+the package `io.github.androidpoet.supabase.sync.store`. The store is
+driver-agnostic: you bring your own SQLDelight `SqlDriver`, so the same code runs
+on iOS, macOS, and the JVM.
+
+<Callout type="info">
+The generated SQLDelight database type (the `...sync.store.db` package) is an
+internal implementation detail and is not part of the public API. Construct the
+store from a `SqlDriver` via `openOfflineSyncStore` or the public
+`SqlDelightLocalStore(driver, ...)` constructor — never from the generated type.
+</Callout>
+
+### `ColumnKind`
+
+The SQLite storage class of a column, and how its value maps to and from JSON.
+
+```kotlin
+enum class ColumnKind { TEXT, INTEGER, REAL, BOOL, JSON }
+```
+
+`BOOL` is stored as `INTEGER` (0/1); `JSON` columns are stored as `TEXT`,
+matching the schema the SQLDelight generator emits.
+
+### `Column`
+
+One column of a synced table.
+
+```kotlin
+data class Column(
+    val name: String,
+    val kind: ColumnKind,
+    val nullable: Boolean = false,
+)
+```
+
+- `name` — the column name.
+- `kind` — its storage/JSON mapping.
+- `nullable` — whether it accepts `null` (defaults to `false`).
+
+### `SqlDelightTableAdapter`
+
+A generic `TableAdapter` over any SQLite table reachable through a `SqlDriver`,
+driven entirely by a column descriptor. All JSON ↔ typed-column conversion lives
+here, so codegen only emits the trivial descriptor. Reads and writes go straight
+to the same SQLite table your `.sq` `CREATE TABLE` defines, so your typed queries
+and the sync engine share one set of rows.
+
+```kotlin
+class SqlDelightTableAdapter(
+    driver: SqlDriver,
+    table: String,
+    columns: List<Column>,
+    pk: String,
+) : TableAdapter
+```
+
+- `driver` — the SQLDelight driver to read/write through.
+- `table` — the SQLite table name.
+- `columns` — the column descriptor for the table.
+- `pk` — the primary-key column name.
+
+Implements every `TableAdapter` member (`table`, `upsert`, `get`, `delete`,
+`page`, `pageAfter`, `count`) against that table.
+
+### `SqlDelightLocalStore`
+
+A `LocalStore` backed by SQLDelight, so synced rows, pull cursors, and the outbox
+survive process restarts on every Kotlin/Native and JVM target. For each table you
+can register a `TableAdapter`: that table then becomes a single source of truth
+(rows live in your own typed table, with only sync metadata kept in a sidecar).
+Tables with no adapter fall back to a generic JSON blob cache — zero-config.
+
+```kotlin
+class SqlDelightLocalStore(
+    driver: SqlDriver,
+    adapters: Map<String, TableAdapter> = emptyMap(),
+) : LocalStore
+```
+
+- `driver` — your SQLDelight driver. The schema must already be created on it
+  (use `openOfflineSyncStore`, which does this for you).
+- `adapters` — per-table adapters; tables not in the map use the blob cache.
+
+Implements all of `LocalStore` (`upsert`, `get`, `cursor`, `setCursor`,
+`pending`, `enqueue`, `clearPending`, `page`, `pageAfter`, `count`) with the
+monotonic-apply guard on the pull path and an atomic apply-plus-enqueue on the
+optimistic-write path.
+
+### `openOfflineSyncStore`
+
+Creates the schema on the driver and returns a ready-to-use store.
+
+```kotlin
+fun openOfflineSyncStore(
+    driver: SqlDriver,
+    adapters: Map<String, TableAdapter> = emptyMap(),
+): SqlDelightLocalStore
+```
+
+- `driver` — your SQLDelight driver; the offline-sync schema is created on it.
+- `adapters` — optional per-table adapters.
+
+```kotlin
+val store = openOfflineSyncStore(
+    driver = driver,
+    adapters = mapOf(
+        "notes" to SqlDelightTableAdapter(
+            driver = driver,
+            table = "notes",
+            columns = listOf(
+                Column("id", ColumnKind.TEXT),
+                Column("body", ColumnKind.TEXT),
+                Column("pinned", ColumnKind.BOOL),
+            ),
+            pk = "id",
+        ),
+    ),
+)
+```
+
+## `supabase-sync`
+
+Artifact: `io.github.androidpoet:supabase-sync`. All symbols live under the
+package `io.github.androidpoet.supabase.sync.remote`. This module provides the
+`RemoteSource` half over a `supabase-kmp` `DatabaseClient` (PostgREST) and
+`RealtimeClient`.
+
+### `SyncColumns`
+
+Names of the three columns the engine needs on every synced Supabase table.
+
+```kotlin
+data class SyncColumns(
+    val id: String = "id",
+    val updatedAt: String = "updated_at",
+    val deleted: String = "deleted",
+)
+```
+
+- `id` — the primary-key column (stays a domain field, since it is part of the
+  row). Defaults to `"id"`.
+- `updatedAt` — the modification-time column. Must be an **integer epoch-millis**
+  column (`bigint`) so it compares as the `Long` the cursor keyset uses; a
+  `timestamptz` column won't compare correctly. Stripped out as sync metadata.
+  Defaults to `"updated_at"`.
+- `deleted` — a `boolean` soft-delete column defaulting to `false`. Deletes are
+  soft so an incremental "changed since" pull can still observe them. Stripped out
+  as sync metadata. Defaults to `"deleted"`.
+
+### `SupabaseRemoteSource`
+
+The `RemoteSource` backed by Supabase: incremental pulls and bulk upserts over
+PostgREST and a live delta stream over Realtime.
+
+```kotlin
+class SupabaseRemoteSource(
+    database: DatabaseClient,
+    realtime: RealtimeClient,
+    columns: SyncColumns = SyncColumns(),
+    schema: String = "public",
+    pageSize: Int = 1000,
+) : RemoteSource {
+    suspend fun pull(table: String, since: Cursor?): PullResult
+    suspend fun push(table: String, changes: List<PendingChange>): PushResult
+    fun changes(table: String): Flow<Record>
+}
+```
+
+- `database` — the PostgREST client for pulls and pushes.
+- `realtime` — the Realtime client for the live stream.
+- `columns` — the id / updated-at / deleted column names (defaults to
+  `SyncColumns()`).
+- `schema` — the Postgres schema the tables live in (`"public"` by default).
+- `pageSize` — max rows fetched per `pull`; if more changed, the advanced cursor
+  lets the next `sync` pick up the remainder. Defaults to `1000`.
+- `pull` — fetches rows whose `(updatedAt, id)` is greater than `since` (all rows
+  when `null`), ordered by that keyset and capped at `pageSize`, and returns the
+  new high-water cursor (or `null` when nothing changed). Throws on a
+  transport/server error.
+- `push` — bulk-upserts the outbox records with `on_conflict` on the id column. A
+  push is all-or-nothing per request: on success every id is accepted; an error
+  throws and leaves the outbox intact. Deletes are soft (the record carries
+  `deleted = true`).
+- `changes` — a cold `Flow` of the table's Realtime `postgres_changes`, each
+  emitted as a `Record` (a DELETE surfaces as a tombstone). Connects the client if
+  needed and tears the channel down when collection stops.
+
+Build `database` and `realtime` from the same client and share one auth token so
+Row Level Security applies to both the pulled rows and the Realtime subscription.
+
+### `createSupabaseRemoteSource`
+
+The convention-matching factory mirroring the SDK's other `create*` entry points.
+
+```kotlin
+fun createSupabaseRemoteSource(
+    database: DatabaseClient,
+    realtime: RealtimeClient,
+    columns: SyncColumns = SyncColumns(),
+    schema: String = "public",
+    pageSize: Int = 1000,
+): SupabaseRemoteSource
+```
+
+Same parameters and defaults as the constructor; prefer it for consistency.
+
+```kotlin
+val remote = createSupabaseRemoteSource(
+    database = client.database,
+    realtime = client.realtime,
+    columns = SyncColumns(updatedAt = "updated_at_ms"),
+)
+```
+
+## `supabase-sync-paging`
+
+Artifact: `io.github.androidpoet:supabase-sync-paging`. All symbols live under the
+package `io.github.androidpoet.supabase.sync.paging`. This module is the Paging 3
+bridge: a typed per-table façade an app binds directly to its UI.
+
+<Callout type="info">
+The Paging 3 surface is **Int-keyed** (page sizes are `Int`), matching the
+Paging 3 API, while the underlying `LocalStore` pages with `Long` limits/offsets
+and the engine advances `Long`-based keyset cursors. The Int/Long split at this
+boundary is intentional — the façade bridges the Int-based Paging 3 API onto the
+Long-based store and cursor model.
+</Callout>
+
+### `SyncStatus`
+
+```kotlin
+enum class SyncStatus { IDLE, SYNCING, ERROR }
+```
+
+Where the store is in its current sync cycle — bind it to a spinner or error
+banner.
+
+### `DefaultJson`
+
+The lenient, default-encoding `Json` used when no custom instance is supplied.
+
+```kotlin
+val DefaultJson: Json
+```
+
+Configured with `ignoreUnknownKeys = true` and `encodeDefaults = true`.
+
+### `SyncStore<T>`
+
+The one always-in-sync model an app touches per table: a value of type `T` is the
+same on screen, in the local database, and on the wire. The UI binds `paged` or
+`observe` and calls `upsert` / `delete`; it never touches the network or SQL.
+Reads reflect a local write immediately (optimistic), and the change is pushed in
+the background through the engine's outbox. Writes are single-flighted: a burst of
+edits collapses to at most one follow-up sync.
+
+```kotlin
+class SyncStore<T : Any>(
+    table: String,
+    local: LocalStore,
+    engine: SyncEngine,
+    serializer: KSerializer<T>,
+    idOf: (T) -> String,
+    scope: CoroutineScope,
+    now: () -> Long,
+    json: Json = DefaultJson,
+) {
+    val status: StateFlow<SyncStatus>
+    fun observe(id: String): Flow<T?>
+    fun paged(pageSize: Int = 20): Flow<PagingData<T>>
+    fun pagedSynced(pageSize: Int = 20): Flow<PagingData<T>>
+    suspend fun get(id: String): T?
+    suspend fun upsert(value: T)
+    suspend fun delete(id: String)
+    suspend fun sync(): SyncResult
+}
+```
+
+- `table` — the table name to sync.
+- `local` / `engine` — the store and engine this façade drives.
+- `serializer` — the `kotlinx.serialization` serializer for `T` (the row must
+  serialize to a JSON object).
+- `idOf` — extracts the primary-key string from a value of `T`.
+- `scope` — the coroutine scope the background sync loop runs on.
+- `now` — a wall-clock epoch-millis source (e.g.
+  `{ Clock.System.now().toEpochMilliseconds() }`), stamped on optimistic writes so
+  last-write-wins resolves correctly across devices.
+- `json` — the `Json` used to encode/decode rows (defaults to `DefaultJson`).
+- `status` — a `StateFlow` of the latest `SyncStatus` (`IDLE` / `SYNCING` /
+  `ERROR`).
+- `observe` — a reactive single row that re-emits whenever the row changes locally
+  or after a sync; emits `null` if absent or tombstoned.
+- `paged` — a Paging 3 `PagingData` stream over the **local** store, loading one
+  `pageSize` window at a time (never the whole table) and invalidating on any
+  local write or completed sync. Drops into a Compose `LazyColumn` via
+  `collectAsLazyPagingItems()`. `pageSize` defaults to `20`.
+- `pagedSynced` — like `paged`, but backed by a Paging 3 `RemoteMediator` that
+  pulls the next backend page on demand as the user scrolls (via
+  `SyncEngine.pullPage`) and writes it to the local store, so it is then available
+  offline. `pageSize` defaults to `20`.
+- `get` — a one-shot local read of the row `id`, or `null` if absent or
+  tombstoned.
+- `upsert` — optimistically inserts/replaces `value`: visible to reads at once,
+  queued to push on the next sync.
+- `delete` — optimistically deletes `id` via a soft-delete tombstone, queued to
+  push on the next sync.
+- `sync` — runs one pull → merge → push cycle, updating `status`, and returns the
+  `SyncResult`. Serialized so a manual call and the background trigger never
+  overlap.
+
+```kotlin
+val notes = SyncStore(
+    table = "notes",
+    local = store,
+    engine = engine,
+    serializer = Note.serializer(),
+    idOf = { it.id },
+    scope = appScope,
+    now = { Clock.System.now().toEpochMilliseconds() },
+)
+
+val list: Flow<PagingData<Note>> = notes.paged(20)   // local-first, auto-invalidating
+val one: Flow<Note?> = notes.observe(id)
+
+notes.upsert(Note(id = "n1", body = "buy milk"))
+notes.delete("n1")
+```

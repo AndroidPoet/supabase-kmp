@@ -1,0 +1,2538 @@
+---
+title: Storage — API Reference
+description: Typed, Result-first client for Supabase Storage. Manage buckets, upload and download objects, list with offset or cursor paging, build public/authenticated/signed/render URLs, run resumable (TUS) uploads, and drive the analytics (Apache Iceberg) and S3-Vectors surfaces. Complete 1.0.0 reference for io.github.androidpoet:supabase-storage.
+---
+
+import { Callout } from 'nextra/components'
+
+# Storage — API Reference
+
+The **supabase-storage** module is a typed, Result-first wrapper over the
+Supabase Storage REST API (`/storage/v1`). It manages buckets, uploads and
+downloads objects, lists them with offset or cursor paging, builds
+public/authenticated/signed/render URLs locally, runs resumable (TUS) uploads,
+and exposes the analytics (Apache Iceberg) catalog and S3-Vectors surfaces.
+
+Every suspending call returns a `SupabaseResult<T>` rather than throwing —
+network and HTTP errors (for example `404` for a missing object, `409` on an
+upsert conflict) arrive as `Failure`, so they are values you handle rather than
+exceptions you catch. The non-suspending URL builders compute a string locally
+and never touch the network.
+
+- **Maven artifact:** `io.github.androidpoet:supabase-storage`
+- **Entry point:** `createStorageClient(client)` (or the `client.storage` accessor)
+- **Package:** `io.github.androidpoet.supabase.storage` (models in `…storage.models`)
+
+Object paths are bucket-relative keys (for example `folder/file.png`) and are
+URL-encoded for you, with `/` preserved as a path separator.
+
+## Setup
+
+### createStorageClient
+
+Builds a [`StorageClient`](#storageclient) from an existing `SupabaseClient`.
+
+```kotlin
+fun createStorageClient(supabaseClient: SupabaseClient): StorageClient
+```
+
+- `supabaseClient` — the configured client whose project URL the storage calls target.
+
+**Returns** a `StorageClient`. This call does no I/O and does not fail.
+
+```kotlin
+val storage = createStorageClient(client)
+```
+
+### SupabaseClient.storage
+
+A discoverable extension property that calls `createStorageClient` for you, so
+you can reach storage as `client.storage`. The returned client is a thin,
+stateless wrapper, so reading the property repeatedly is cheap.
+
+```kotlin
+val SupabaseClient.storage: StorageClient
+```
+
+```kotlin
+val files = client.storage.list(bucket = "avatars")
+```
+
+---
+
+## StorageClient
+
+The interface exposing every storage operation. Suspending calls return
+`SupabaseResult<T>`; the URL builders return a `String` (or collection) computed
+locally. The sections below group the members by area.
+
+## Buckets
+
+### listBuckets
+
+Lists the buckets visible to the current credentials (`GET /bucket`).
+
+```kotlin
+suspend fun listBuckets(
+    limit: Int? = null,
+    offset: Int? = null,
+    sortColumn: String? = null,
+    sortOrder: SortOrder? = null,
+    search: String? = null,
+): SupabaseResult<List<Bucket>>
+```
+
+- `limit` — maximum number of buckets to return. Default `null`.
+- `offset` — number of buckets to skip, for paging. Default `null`.
+- `sortColumn` — column to sort by (server-defined, e.g. `name`/`created_at`). Default `null`.
+- `sortOrder` — ascending or descending order for `sortColumn`. Default `null`.
+- `search` — case-insensitive filter applied server-side to bucket names. Default `null`.
+
+**Returns** `SupabaseResult<List<Bucket>>` — `Success` with the buckets, `Failure` on error.
+
+```kotlin
+val buckets = storage.listBuckets(search = "avatars")
+```
+
+### getBucket
+
+Fetches a single bucket by `id`.
+
+```kotlin
+suspend fun getBucket(id: String): SupabaseResult<Bucket>
+```
+
+- `id` — the bucket id.
+
+**Returns** `SupabaseResult<Bucket>` — `Success` with the bucket, `Failure` (`404`) if no such bucket exists.
+
+```kotlin
+val bucket = storage.getBucket("avatars")
+```
+
+### createBucket
+
+Creates a bucket, returning the created [`Bucket`](#bucket).
+
+```kotlin
+suspend fun createBucket(
+    id: String,
+    name: String,
+    public: Boolean = false,
+    fileSizeLimit: Long? = null,
+    allowedMimeTypes: List<String>? = null,
+): SupabaseResult<Bucket>
+```
+
+- `id` — the bucket id (its stable identifier and URL segment).
+- `name` — human-readable bucket name.
+- `public` — when `true`, objects are readable via the public endpoint without a token. Default `false`.
+- `fileSizeLimit` — optional per-object size cap in bytes; `null` leaves it unset. Default `null`.
+- `allowedMimeTypes` — optional whitelist of accepted content types; `null` allows any. Default `null`.
+
+**Returns** `SupabaseResult<Bucket>` — `Success` with the created bucket, `Failure` (e.g. `409`) if `id` is already taken.
+
+```kotlin
+val bucket = storage.createBucket(
+    id = "avatars",
+    name = "avatars",
+    public = true,
+    fileSizeLimit = 5 * 1024 * 1024,
+    allowedMimeTypes = listOf("image/png", "image/jpeg"),
+)
+```
+
+### updateBucket
+
+Updates a bucket's mutable attributes. Only non-null arguments are sent, so
+omitted fields are left unchanged.
+
+```kotlin
+suspend fun updateBucket(
+    id: String,
+    name: String? = null,
+    public: Boolean? = null,
+    fileSizeLimit: Long? = null,
+    allowedMimeTypes: List<String>? = null,
+): SupabaseResult<Bucket>
+```
+
+- `id` — the bucket to update.
+- `name` — new bucket name, or `null` to keep it. Default `null`.
+- `public` — new public flag, or `null` to keep it. Default `null`.
+- `fileSizeLimit` — new per-object size cap in bytes, or `null` to keep it. Default `null`.
+- `allowedMimeTypes` — new MIME whitelist, or `null` to keep it. Default `null`.
+
+**Returns** `SupabaseResult<Bucket>` — `Success` with the updated bucket, `Failure` on error.
+
+```kotlin
+storage.updateBucket(id = "avatars", public = false)
+```
+
+### deleteBucket
+
+Deletes a bucket. The bucket must be empty first; see [`clearBucket`](#clearbucket).
+
+```kotlin
+suspend fun deleteBucket(id: String): SupabaseResult<Unit>
+```
+
+- `id` — the bucket to delete.
+
+**Returns** `SupabaseResult<Unit>` — `Success` on deletion, `Failure` (e.g. if the bucket is not empty) otherwise.
+
+```kotlin
+storage.deleteBucket("avatars")
+```
+
+### clearBucket
+
+Removes every object from a bucket without deleting the bucket itself.
+
+```kotlin
+suspend fun clearBucket(id: String): SupabaseResult<Unit>
+```
+
+- `id` — the bucket to empty.
+
+**Returns** `SupabaseResult<Unit>` — `Success` when cleared, `Failure` on error.
+
+```kotlin
+storage.clearBucket("avatars")        // then deleteBucket succeeds
+```
+
+---
+
+## Objects
+
+### upload
+
+Uploads `data` to `path` in `bucket`.
+
+```kotlin
+suspend fun upload(
+    bucket: String,
+    path: String,
+    data: ByteArray,
+    contentType: String = "application/octet-stream",
+    upsert: Boolean = false,
+    cacheControl: Int? = null,
+    metadata: JsonObject? = null,
+): SupabaseResult<String>
+```
+
+- `bucket` — target bucket.
+- `path` — bucket-relative key to write.
+- `data` — the bytes to upload.
+- `contentType` — MIME type stored for the object. Default `"application/octet-stream"`.
+- `upsert` — when `true`, overwrite an existing object at `path`. Default `false`.
+- `cacheControl` — cache-control max-age in seconds, when set. Default `null`.
+- `metadata` — optional user metadata; Base64-encoded into the `x-metadata` header. Default `null`.
+
+**Returns** `SupabaseResult<String>` — `Success` with the server-reported key, `Failure` (e.g. `409` without `upsert`) on error.
+
+```kotlin
+val key = storage.upload(
+    bucket = "avatars",
+    path = "jane/profile.png",
+    data = pngBytes,
+    contentType = "image/png",
+    upsert = true,
+)
+```
+
+### update
+
+Replaces the object at `path` in `bucket` with `data`. Same parameters and
+return as [`upload`](#upload).
+
+```kotlin
+suspend fun update(
+    bucket: String,
+    path: String,
+    data: ByteArray,
+    contentType: String = "application/octet-stream",
+    upsert: Boolean = false,
+    cacheControl: Int? = null,
+    metadata: JsonObject? = null,
+): SupabaseResult<String>
+```
+
+**Returns** `SupabaseResult<String>` — `Success` with the key, `Failure` on error.
+
+```kotlin
+storage.update(bucket = "avatars", path = "jane/profile.png", data = newBytes)
+```
+
+### createResumableUpload
+
+Creates a resumable (TUS) upload handle. The upload is not started until
+[`ResumableUpload.await`](#resumableupload) is called. Pass `uploadUrl` (a
+previously captured [`ResumableUpload.uploadUrl`](#resumableupload)) to resume an
+interrupted upload instead of starting a new one.
+
+```kotlin
+fun createResumableUpload(
+    bucket: String,
+    path: String,
+    data: ByteArray,
+    contentType: String = "application/octet-stream",
+    upsert: Boolean = false,
+    cacheControl: Int? = null,
+    chunkSize: Int = RESUMABLE_DEFAULT_CHUNK_SIZE,
+    uploadUrl: String? = null,
+    metadata: JsonObject? = null,
+): ResumableUpload
+```
+
+- `bucket` — target bucket.
+- `path` — bucket-relative key to write.
+- `data` — the full payload to upload in chunks.
+- `contentType` — MIME type stored for the object. Default `"application/octet-stream"`.
+- `upsert` — overwrite an existing object. Default `false`.
+- `cacheControl` — cache-control max-age in seconds, when set. Default `null`.
+- `chunkSize` — bytes per chunk; must be positive (a non-positive value throws `IllegalArgumentException` eagerly). Every chunk except the last must be a multiple of [`RESUMABLE_DEFAULT_CHUNK_SIZE`](#resumable_default_chunk_size) (6 MiB). Default `RESUMABLE_DEFAULT_CHUNK_SIZE`.
+- `uploadUrl` — a previously persisted upload URL to resume; `null` starts a new upload. Default `null`.
+- `metadata` — optional user metadata; Base64-encoded into the TUS `Upload-Metadata` header. Default `null`.
+
+**Returns** a [`ResumableUpload`](#resumableupload) handle (no I/O until `await`).
+
+```kotlin
+val handle = storage.createResumableUpload("videos", "clip.mp4", videoBytes)
+val result = handle.await()
+```
+
+### uploadResumable
+
+Extension that runs a resumable upload to completion in one call. Use
+[`createResumableUpload`](#createresumableupload) directly when you need progress
+or pause/resume.
+
+```kotlin
+suspend fun StorageClient.uploadResumable(
+    bucket: String,
+    path: String,
+    data: ByteArray,
+    contentType: String = "application/octet-stream",
+    upsert: Boolean = false,
+    cacheControl: Int? = null,
+    chunkSize: Int = RESUMABLE_DEFAULT_CHUNK_SIZE,
+    metadata: JsonObject? = null,
+): SupabaseResult<Unit>
+```
+
+- Parameters mirror [`createResumableUpload`](#createresumableupload) (without `uploadUrl`).
+
+**Returns** `SupabaseResult<Unit>` — `Success` when the upload completes, `Failure` on error.
+
+```kotlin
+storage.uploadResumable("videos", "clip.mp4", videoBytes)
+```
+
+### uploadToSignedUrl
+
+Uploads `data` to a pre-signed upload URL identified by `token` (see
+[`createUploadSignedUrl`](#createuploadsignedurl)).
+
+```kotlin
+suspend fun uploadToSignedUrl(
+    bucket: String,
+    path: String,
+    token: String,
+    data: ByteArray,
+    contentType: String = "application/octet-stream",
+    upsert: Boolean = false,
+    cacheControl: Int? = null,
+    metadata: JsonObject? = null,
+): SupabaseResult<String>
+```
+
+- `bucket` — bucket the token was issued for.
+- `path` — the object path bound to the token.
+- `token` — the signed upload token.
+- `data` — the bytes to upload.
+- `contentType` — MIME type stored for the object. Default `"application/octet-stream"`.
+- `upsert` — overwrite an existing object. Default `false`.
+- `cacheControl` — cache-control max-age in seconds, when set. Default `null`.
+- `metadata` — optional user metadata; Base64-encoded into the `x-metadata` header. Default `null`.
+
+**Returns** `SupabaseResult<String>` — `Success` with the key, `Failure` on error.
+
+```kotlin
+storage.uploadToSignedUrl("avatars", "jane/profile.png", token, pngBytes)
+```
+
+### download
+
+Downloads an object's body as a UTF-8 string from the authenticated endpoint.
+Text-only — for binary data use [`downloadBytes`](#downloadbytes). Two overloads:
+
+```kotlin
+suspend fun download(bucket: String, path: String): SupabaseResult<String>
+
+suspend fun download(
+    bucket: String,
+    path: String,
+    download: Boolean = true,
+    fileName: String? = null,
+): SupabaseResult<String>
+```
+
+- `bucket` / `path` — the object to read.
+- `download` — when `true`, send the `download` query so the server marks the response as an attachment. Default `true` (in the second overload).
+- `fileName` — optional file name suggested for the saved attachment. Default `null`.
+
+**Returns** `SupabaseResult<String>` — `Success` with the decoded text, `Failure` on error.
+
+```kotlin
+val text = storage.download(bucket = "docs", path = "notes.txt")
+```
+
+### downloadPublic
+
+Like [`download`](#download) but reads from the public endpoint; no token
+required. Same two overloads (`download` defaults to `true` in the parameterized one).
+
+```kotlin
+suspend fun downloadPublic(bucket: String, path: String): SupabaseResult<String>
+
+suspend fun downloadPublic(
+    bucket: String,
+    path: String,
+    download: Boolean = true,
+    fileName: String? = null,
+): SupabaseResult<String>
+```
+
+**Returns** `SupabaseResult<String>` — `Success` with the decoded text, `Failure` on error.
+
+```kotlin
+val text = storage.downloadPublic("public-docs", "readme.txt")
+```
+
+### downloadBytes
+
+Downloads an object's raw bytes from the authenticated endpoint. Prefer this over
+[`download`](#download) for any non-text content. An empty object returns an empty
+`ByteArray`, not a failure. Two overloads — plain and with an image
+[`transform`](#imagetransformoptions) (the render endpoint):
+
+```kotlin
+suspend fun downloadBytes(
+    bucket: String,
+    path: String,
+    download: Boolean = false,
+    fileName: String? = null,
+): SupabaseResult<ByteArray>
+
+suspend fun downloadBytes(
+    bucket: String,
+    path: String,
+    transform: ImageTransformOptions,
+    download: Boolean = false,
+    fileName: String? = null,
+): SupabaseResult<ByteArray>
+```
+
+- `bucket` / `path` — the object to read.
+- `transform` — server-side image resize/format/quality (render endpoint).
+- `download` — request an attachment response. Default `false`.
+- `fileName` — suggested attachment file name. Default `null`.
+
+**Returns** `SupabaseResult<ByteArray>` — `Success` with the bytes, `Failure` on error.
+
+```kotlin
+val bytes = storage.downloadBytes("avatars", "jane/profile.png")
+val thumb = storage.downloadBytes(
+    "avatars", "jane/profile.png",
+    transform = ImageTransformOptions(width = 64, height = 64),
+)
+```
+
+### downloadPublicBytes
+
+Binary download from the public endpoint. Same two overloads as
+[`downloadBytes`](#downloadbytes) (plain and with `transform`, the public render endpoint).
+
+```kotlin
+suspend fun downloadPublicBytes(
+    bucket: String,
+    path: String,
+    download: Boolean = false,
+    fileName: String? = null,
+): SupabaseResult<ByteArray>
+
+suspend fun downloadPublicBytes(
+    bucket: String,
+    path: String,
+    transform: ImageTransformOptions,
+    download: Boolean = false,
+    fileName: String? = null,
+): SupabaseResult<ByteArray>
+```
+
+**Returns** `SupabaseResult<ByteArray>` — `Success` with the bytes, `Failure` on error.
+
+```kotlin
+val bytes = storage.downloadPublicBytes("public-images", "logo.png")
+```
+
+### info
+
+Fetches an object's metadata ([`FileObject`](#fileobject)) without its body, via
+the authenticated info endpoint.
+
+```kotlin
+suspend fun info(bucket: String, path: String): SupabaseResult<FileObject>
+```
+
+- `bucket` / `path` — the object to inspect.
+
+**Returns** `SupabaseResult<FileObject>` — `Success` with the metadata, `Failure` (`404`) if the object does not exist.
+
+```kotlin
+val meta = storage.info("avatars", "jane/profile.png")
+```
+
+### infoPublic
+
+Like [`info`](#info) but from the public info endpoint.
+
+```kotlin
+suspend fun infoPublic(bucket: String, path: String): SupabaseResult<FileObject>
+```
+
+**Returns** `SupabaseResult<FileObject>` — `Success` with the metadata, `Failure` on error.
+
+```kotlin
+val meta = storage.infoPublic("public-images", "logo.png")
+```
+
+### exists
+
+Reports whether an object exists, via [`info`](#info). A `404` maps to
+`Success(false)`; any other failure (auth, network) is still surfaced as `Failure`.
+
+```kotlin
+suspend fun exists(bucket: String, path: String): SupabaseResult<Boolean>
+```
+
+**Returns** `SupabaseResult<Boolean>` — `Success(true/false)`, or `Failure` for non-404 errors.
+
+```kotlin
+val present = storage.exists("avatars", "jane/profile.png")
+```
+
+### existsPublic
+
+Like [`exists`](#exists) but probes the public endpoint via [`infoPublic`](#infopublic).
+
+```kotlin
+suspend fun existsPublic(bucket: String, path: String): SupabaseResult<Boolean>
+```
+
+**Returns** `SupabaseResult<Boolean>` — `Success(true/false)`, or `Failure` on error.
+
+```kotlin
+val present = storage.existsPublic("public-images", "logo.png")
+```
+
+### list
+
+Lists objects and folders under `prefix` in `bucket` (`POST /object/list`). This
+is the offset-paged listing; for cursor paging use [`listV2`](#listv2).
+
+```kotlin
+suspend fun list(
+    bucket: String,
+    prefix: String = "",
+    limit: Int = 100,
+    offset: Int = 0,
+    sortBy: String? = null,
+    sortOrder: SortOrder = SortOrder.ASC,
+    search: String? = null,
+): SupabaseResult<List<FileObject>>
+```
+
+- `bucket` — bucket to list.
+- `prefix` — folder path to list within; empty lists the bucket root. Default `""`.
+- `limit` — maximum entries to return. Default `100`.
+- `offset` — entries to skip, for paging. Default `0`.
+- `sortBy` — column to sort by; `null` leaves the server default ordering. Default `null`.
+- `sortOrder` — ascending or descending, applied when `sortBy` is set. Default `SortOrder.ASC`.
+- `search` — case-insensitive filter applied server-side to entry names. Default `null`.
+
+**Returns** `SupabaseResult<List<FileObject>>` — `Success` with the entries, `Failure` on error.
+
+```kotlin
+val entries = storage.list(bucket = "avatars", prefix = "jane")
+```
+
+### listV2
+
+Cursor-paged object listing (`POST /object/list-v2`) returning an
+[`ObjectListV2Result`](#objectlistv2result) that separates folders from objects
+and carries a `nextCursor`/`hasNext` for continuation. Prefer this over
+[`list`](#list) for large buckets or delimiter-style folder navigation.
+
+```kotlin
+suspend fun listV2(
+    bucket: String,
+    prefix: String? = null,
+    cursor: String? = null,
+    limit: Int? = null,
+    withDelimiter: Boolean? = null,
+    sortBy: String? = null,
+    sortOrder: SortOrder = SortOrder.ASC,
+): SupabaseResult<ObjectListV2Result>
+```
+
+- `bucket` — bucket to list.
+- `prefix` — folder path to list within; `null` lists the bucket root. Default `null`.
+- `cursor` — continuation cursor from a previous result's `nextCursor`. Default `null`.
+- `limit` — maximum entries to return in this page. Default `null`.
+- `withDelimiter` — when `true`, collapse nested keys into folder entries. Default `null`.
+- `sortBy` — column to sort by; `null` leaves the server default. Default `null`.
+- `sortOrder` — order applied when `sortBy` is set. Default `SortOrder.ASC`.
+
+**Returns** `SupabaseResult<ObjectListV2Result>` — `Success` with the page, `Failure` on error.
+
+```kotlin
+var page = storage.listV2(bucket = "avatars", withDelimiter = true).getOrThrow()
+while (page.hasNext) {
+    page = storage.listV2(bucket = "avatars", cursor = page.nextCursor).getOrThrow()
+}
+```
+
+### listOrThrow
+
+Extension form of [`list`](#list) that returns the `List<FileObject>` directly and
+**throws** on failure — the exception-channel variant for paging or try/catch callers.
+
+```kotlin
+suspend fun StorageClient.listOrThrow(
+    bucket: String,
+    prefix: String = "",
+    limit: Int = 100,
+    offset: Int = 0,
+    sortBy: String? = null,
+    sortOrder: SortOrder = SortOrder.ASC,
+    search: String? = null,
+): List<FileObject>
+```
+
+- Parameters mirror [`list`](#list).
+
+**Returns** `List<FileObject>` directly; throws on failure.
+
+```kotlin
+val entries = storage.listOrThrow(bucket = "avatars")
+```
+
+### listPaginator
+
+Extension that builds a demand-driven `Paginator<FileObject>` over the objects
+under `prefix`, fetching one offset-based page per `loadNext` via [`list`](#list).
+Nothing is fetched until `loadNext` is called; the accumulated entries and the
+loading/end/error state are exposed as `StateFlow`s.
+
+```kotlin
+fun StorageClient.listPaginator(
+    bucket: String,
+    prefix: String = "",
+    pageSize: Int = 100,
+    sortBy: String? = null,
+    sortOrder: SortOrder = SortOrder.ASC,
+    search: String? = null,
+): Paginator<FileObject>
+```
+
+- `bucket` — bucket to page over.
+- `prefix` — folder path to list within. Default `""`.
+- `pageSize` — entries per page; must be greater than 0. Default `100`.
+- `sortBy` / `sortOrder` / `search` — as in [`list`](#list).
+
+**Returns** a `Paginator<FileObject>`; a failure surfaces via `Paginator.error`.
+
+```kotlin
+val paginator = storage.listPaginator(bucket = "avatars", pageSize = 50)
+paginator.loadNext()
+```
+
+### move
+
+Moves (renames) the object at `fromPath` to `toPath` (`POST /object/move`),
+optionally across buckets. Unlike [`copy`](#copy), the source no longer exists
+afterward.
+
+```kotlin
+suspend fun move(
+    bucket: String,
+    fromPath: String,
+    toPath: String,
+    destinationBucket: String? = null,
+): SupabaseResult<Unit>
+```
+
+- `bucket` — source bucket.
+- `fromPath` — object key to move.
+- `toPath` — target object key.
+- `destinationBucket` — target bucket when moving across buckets; `null` moves within `bucket`. Default `null`.
+
+**Returns** `SupabaseResult<Unit>` — `Success` on success, `Failure` on error.
+
+```kotlin
+storage.move("avatars", "tmp/upload.png", "jane/profile.png")
+```
+
+### copy
+
+Copies the object at `fromPath` to `toPath` (`POST /object/copy`), optionally
+across buckets; the source is left in place (contrast [`move`](#move)).
+
+```kotlin
+suspend fun copy(
+    bucket: String,
+    fromPath: String,
+    toPath: String,
+    destinationBucket: String? = null,
+    copyMetadata: Boolean? = null,
+): SupabaseResult<Unit>
+```
+
+- `bucket` — source bucket.
+- `fromPath` — object key to copy.
+- `toPath` — target object key.
+- `destinationBucket` — target bucket when copying across buckets; `null` copies within `bucket`. Default `null`.
+- `copyMetadata` — when `true`, also copy the object's user metadata. Default `null`.
+
+**Returns** `SupabaseResult<Unit>` — `Success` on success, `Failure` on error.
+
+```kotlin
+storage.copy("avatars", "jane/profile.png", "jane/profile-backup.png")
+```
+
+### deleteObject
+
+Deletes a single object at `path` in `bucket`. For batch deletes prefer
+[`deleteObjects`](#deleteobjects).
+
+```kotlin
+suspend fun deleteObject(bucket: String, path: String): SupabaseResult<Unit>
+```
+
+- `bucket` / `path` — the object to delete.
+
+**Returns** `SupabaseResult<Unit>` — `Success` on deletion, `Failure` on error.
+
+```kotlin
+storage.deleteObject("avatars", "jane/profile.png")
+```
+
+### deleteObjects
+
+Deletes multiple objects by `paths` in one request and returns the
+[`FileObject`](#fileobject) entries the server reports as removed. Callers that
+don't need the removed set can ignore the value. A `vararg` extension overload is
+also provided.
+
+```kotlin
+suspend fun deleteObjects(bucket: String, paths: List<String>): SupabaseResult<List<FileObject>>
+
+// extension
+suspend fun StorageClient.deleteObjects(
+    bucket: String,
+    vararg paths: String,
+): SupabaseResult<List<FileObject>>
+```
+
+- `bucket` — bucket to delete from.
+- `paths` — object keys to remove.
+
+**Returns** `SupabaseResult<List<FileObject>>` — `Success` with the removed entries, `Failure` on error.
+
+```kotlin
+storage.deleteObjects("avatars", "jane/old.png", "jane/older.png")
+```
+
+---
+
+## URLs
+
+The URL builders compute a string locally and never hit the network. Signing
+operations (`createSignedUrl`, `createUploadSignedUrl`) are suspending and do call
+the server.
+
+### createSignedUrl
+
+Creates a time-limited signed download URL for a private object
+(`POST /object/sign`), letting an unauthenticated client read it until the URL
+expires.
+
+```kotlin
+suspend fun createSignedUrl(
+    bucket: String,
+    path: String,
+    expiresIn: Long,
+    download: Boolean = false,
+    fileName: String? = null,
+    transform: ImageTransformOptions? = null,
+): SupabaseResult<String>
+```
+
+- `bucket` / `path` — the object to sign.
+- `expiresIn` — lifetime of the signed URL in seconds.
+- `download` — when `true`, the URL carries the `download` param so the object is served as an attachment. Default `false`.
+- `fileName` — suggested attachment file name. Default `null`.
+- `transform` — optional image transform baked into the signed URL (render endpoint). Default `null`.
+
+**Returns** `SupabaseResult<String>` — `Success` with the signed URL, `Failure` on error.
+
+```kotlin
+val url = storage.createSignedUrl("avatars", "jane/profile.png", expiresIn = 3600)
+```
+
+### createSignedUrls
+
+Batch variant of [`createSignedUrl`](#createsignedurl): signs every path in
+one request and returns the URLs in the same order.
+
+```kotlin
+suspend fun createSignedUrls(
+    bucket: String,
+    paths: List<String>,
+    expiresIn: Long,
+    download: Boolean = false,
+    fileName: String? = null,
+): SupabaseResult<List<String>>
+```
+
+- `bucket` — bucket to sign within.
+- `paths` — object keys to sign.
+- `expiresIn` / `download` / `fileName` — as in [`createSignedUrl`](#createsignedurl).
+
+**Returns** `SupabaseResult<List<String>>` — `Success` with the URLs in order, `Failure` on error.
+
+```kotlin
+val urls = storage.createSignedUrls("avatars", listOf("a.png", "b.png"), expiresIn = 600)
+```
+
+### createSignedDownloadUrl / createSignedDownloadUrls
+
+Extension conveniences over [`createSignedUrl`](#createsignedurl) /
+[`createSignedUrls`](#createsignedurls) that always set `download = true`, so the
+object is served as an attachment.
+
+```kotlin
+suspend fun StorageClient.createSignedDownloadUrl(
+    bucket: String, path: String, expiresIn: Long, fileName: String? = null,
+): SupabaseResult<String>
+
+suspend fun StorageClient.createSignedDownloadUrl(
+    bucket: String, path: String, expiresIn: Long,
+    fileName: String? = null, transform: ImageTransformOptions? = null,
+): SupabaseResult<String>
+
+suspend fun StorageClient.createSignedDownloadUrls(
+    bucket: String, paths: List<String>, expiresIn: Long, fileName: String? = null,
+): SupabaseResult<List<String>>
+suspend fun StorageClient.createSignedDownloadUrls(
+    bucket: String, expiresIn: Long, vararg paths: String,
+): SupabaseResult<List<String>>
+suspend fun StorageClient.createSignedDownloadUrls(
+    bucket: String, expiresIn: Long, fileName: String?, vararg paths: String,
+): SupabaseResult<List<String>>
+```
+
+- `bucket` / `path` / `paths` — object(s) to sign.
+- `expiresIn` — URL lifetime in seconds.
+- `fileName` — suggested attachment file name. Default `null`.
+- `transform` — optional image transform (render endpoint). Default `null`.
+
+**Returns** `SupabaseResult<String>` (single) or `SupabaseResult<List<String>>` (batch) — `Success` with attachment URL(s), `Failure` on error.
+
+```kotlin
+val url = storage.createSignedDownloadUrl("docs", "report.pdf", expiresIn = 3600)
+```
+
+### createSignedDownloadUrlsByPath
+
+Like [`createSignedDownloadUrls`](#createsigneddownloadurl--createsigneddownloadurls)
+but returns a path-to-URL `Map` instead of a positional list.
+
+```kotlin
+suspend fun StorageClient.createSignedDownloadUrlsByPath(
+    bucket: String, paths: List<String>, expiresIn: Long, fileName: String? = null,
+): SupabaseResult<Map<String, String>>
+suspend fun StorageClient.createSignedDownloadUrlsByPath(
+    bucket: String, expiresIn: Long, vararg paths: String,
+): SupabaseResult<Map<String, String>>
+suspend fun StorageClient.createSignedDownloadUrlsByPath(
+    bucket: String, expiresIn: Long, fileName: String?, vararg paths: String,
+): SupabaseResult<Map<String, String>>
+```
+
+**Returns** `SupabaseResult<Map<String, String>>` — `Success` mapping each path to its signed URL, `Failure` on error.
+
+```kotlin
+val byPath = storage.createSignedDownloadUrlsByPath("docs", 600, "a.pdf", "b.pdf")
+```
+
+### createSignedRenderUrl / createSignedRenderUrls
+
+Extension conveniences that sign an inline (non-download) render URL applying an
+image [`transform`](#imagetransformoptions). The batch form signs sequentially and
+short-circuits to `Failure` on the first failing path.
+
+```kotlin
+suspend fun StorageClient.createSignedRenderUrl(
+    bucket: String, path: String, expiresIn: Long, transform: ImageTransformOptions,
+): SupabaseResult<String>
+
+suspend fun StorageClient.createSignedRenderUrls(
+    bucket: String, paths: List<String>, expiresIn: Long, transform: ImageTransformOptions,
+): SupabaseResult<List<String>>
+suspend fun StorageClient.createSignedRenderUrls(
+    bucket: String, expiresIn: Long, transform: ImageTransformOptions, vararg paths: String,
+): SupabaseResult<List<String>>
+```
+
+**Returns** `SupabaseResult<String>` / `SupabaseResult<List<String>>` — `Success` with render URL(s), `Failure` on error.
+
+```kotlin
+val url = storage.createSignedRenderUrl(
+    "avatars", "jane/profile.png", 600,
+    ImageTransformOptions(width = 200, height = 200),
+)
+```
+
+### createSignedRenderUrlsByPath
+
+Like [`createSignedRenderUrls`](#createsignedrenderurl--createsignedrenderurls) but
+returns a path-to-URL `Map`.
+
+```kotlin
+suspend fun StorageClient.createSignedRenderUrlsByPath(
+    bucket: String, paths: List<String>, expiresIn: Long, transform: ImageTransformOptions,
+): SupabaseResult<Map<String, String>>
+suspend fun StorageClient.createSignedRenderUrlsByPath(
+    bucket: String, expiresIn: Long, transform: ImageTransformOptions, vararg paths: String,
+): SupabaseResult<Map<String, String>>
+```
+
+**Returns** `SupabaseResult<Map<String, String>>` — `Success` mapping each path to its render URL, `Failure` on error.
+
+### createUploadSignedUrl
+
+Creates a signed *upload* token (`POST /object/upload/sign`) so a client without
+storage credentials can later upload to `path` via
+[`uploadToSignedUrl`](#uploadtosignedurl). Returns just the token.
+
+```kotlin
+suspend fun createUploadSignedUrl(
+    bucket: String,
+    path: String,
+    upsert: Boolean = false,
+): SupabaseResult<String>
+```
+
+- `bucket` / `path` — the upload target.
+- `upsert` — when `true`, the token permits overwriting an existing object. Default `false`.
+
+**Returns** `SupabaseResult<String>` — `Success` with the token, `Failure` on error.
+
+```kotlin
+val token = storage.createUploadSignedUrl("avatars", "jane/profile.png")
+```
+
+### createUploadSignedUrlWithPath
+
+Like [`createUploadSignedUrl`](#createuploadsignedurl) but returns the full
+[`UploadSignedUrl`](#uploadsignedurl) (absolute upload URL, token, and bound path)
+instead of only the token.
+
+```kotlin
+suspend fun createUploadSignedUrlWithPath(
+    bucket: String,
+    path: String,
+    upsert: Boolean = false,
+): SupabaseResult<UploadSignedUrl>
+```
+
+**Returns** `SupabaseResult<UploadSignedUrl>` — `Success` with the signed target, `Failure` on error.
+
+```kotlin
+val signed = storage.createUploadSignedUrlWithPath("avatars", "jane/profile.png")
+```
+
+### getSignedDownloadUrl
+
+Builds the signed download URL for a previously issued signed-URL `token`
+locally, without a network call.
+
+```kotlin
+fun getSignedDownloadUrl(
+    bucket: String,
+    path: String,
+    token: String,
+    download: Boolean = false,
+    fileName: String? = null,
+): String
+```
+
+- `bucket` / `path` — the object the token addresses.
+- `token` — the signed-URL token.
+- `download` — when `true`, append the `download` param. Default `false`.
+- `fileName` — suggested attachment file name. Default `null`.
+
+**Returns** the addressable `String` URL (no I/O, never fails).
+
+```kotlin
+val url = storage.getSignedDownloadUrl("avatars", "jane/profile.png", token)
+```
+
+### getPublicUrl
+
+Builds the public URL (`/object/public`) for `path` locally — no network call and
+no token. Only resolves for objects in a public bucket. Two overloads:
+
+```kotlin
+fun getPublicUrl(
+    bucket: String,
+    path: String,
+    transform: ImageTransformOptions? = null,
+): String
+
+fun getPublicUrl(
+    bucket: String,
+    path: String,
+    download: Boolean = false,
+    fileName: String? = null,
+    transform: ImageTransformOptions? = null,
+): String
+```
+
+- `bucket` / `path` — the object to address.
+- `download` — when `true`, append the `download` param. Default `false`.
+- `fileName` — suggested attachment file name. Default `null`.
+- `transform` — target the render endpoint with a server-side image transform. Default `null`.
+
+**Returns** the `String` URL (no I/O, never fails).
+
+```kotlin
+val url = storage.getPublicUrl("public-images", "logo.png")
+```
+
+### getAuthenticatedUrl
+
+Builds the authenticated URL (`/object/authenticated`) for `path` locally. The URL
+still requires valid credentials when fetched; this only composes the address. Two
+overloads matching [`getPublicUrl`](#getpublicurl).
+
+```kotlin
+fun getAuthenticatedUrl(
+    bucket: String, path: String, transform: ImageTransformOptions? = null,
+): String
+
+fun getAuthenticatedUrl(
+    bucket: String, path: String,
+    download: Boolean = false, fileName: String? = null,
+    transform: ImageTransformOptions? = null,
+): String
+```
+
+**Returns** the `String` URL (no I/O, never fails).
+
+```kotlin
+val url = storage.getAuthenticatedUrl("avatars", "jane/profile.png")
+```
+
+### getPublicRenderUrl
+
+Builds the public render/transform URL (`/render/image/public`) for `path`
+locally, applying `transform` as query params.
+
+```kotlin
+fun getPublicRenderUrl(
+    bucket: String,
+    path: String,
+    transform: ImageTransformOptions? = null,
+): String
+```
+
+**Returns** the `String` render URL (no I/O, never fails).
+
+```kotlin
+val url = storage.getPublicRenderUrl(
+    "public-images", "logo.png", ImageTransformOptions(width = 128),
+)
+```
+
+### getAuthenticatedRenderUrl
+
+Builds the authenticated render/transform URL (`/render/image/authenticated`) for
+`path` locally. The URL still requires credentials when fetched.
+
+```kotlin
+fun getAuthenticatedRenderUrl(
+    bucket: String,
+    path: String,
+    transform: ImageTransformOptions? = null,
+): String
+```
+
+**Returns** the `String` render URL (no I/O, never fails).
+
+```kotlin
+val url = storage.getAuthenticatedRenderUrl(
+    "avatars", "jane/profile.png", ImageTransformOptions(width = 128),
+)
+```
+
+### Bulk URL builders
+
+Extension helpers build URLs for many paths at once. Each comes in a `List<String>`
+overload, a `vararg` overload, and a `…ByPath` variant returning a path-to-URL
+`Map`. All are purely local (no network call); the authenticated variants still
+require credentials when fetched.
+
+```kotlin
+// public object URLs
+fun StorageClient.getPublicUrls(
+    bucket: String, paths: List<String>,
+    download: Boolean = false, fileName: String? = null,
+    transform: ImageTransformOptions? = null,
+): List<String>
+fun StorageClient.getPublicUrls(bucket: String, vararg paths: String): List<String>
+fun StorageClient.getPublicUrls(
+    bucket: String, download: Boolean = false, fileName: String? = null,
+    transform: ImageTransformOptions? = null, vararg paths: String,
+): List<String>
+fun StorageClient.getPublicUrlsByPath(/* same params */): Map<String, String>   // 3 overloads
+
+// authenticated object URLs
+fun StorageClient.getAuthenticatedUrls(/* same shape as getPublicUrls */): List<String>      // 3 overloads
+fun StorageClient.getAuthenticatedUrlsByPath(/* … */): Map<String, String>                   // 3 overloads
+
+// public render URLs
+fun StorageClient.getPublicRenderUrls(
+    bucket: String, paths: List<String>, transform: ImageTransformOptions? = null,
+): List<String>
+fun StorageClient.getPublicRenderUrls(
+    bucket: String, transform: ImageTransformOptions? = null, vararg paths: String,
+): List<String>
+fun StorageClient.getPublicRenderUrlsByPath(/* … */): Map<String, String>                    // 2 overloads
+
+// authenticated render URLs
+fun StorageClient.getAuthenticatedRenderUrls(/* same shape as getPublicRenderUrls */): List<String>   // 2 overloads
+fun StorageClient.getAuthenticatedRenderUrlsByPath(/* … */): Map<String, String>                      // 2 overloads
+```
+
+- `bucket` — bucket to address.
+- `paths` — object keys to build URLs for (positional `List` or `vararg`).
+- `download` / `fileName` — attachment control (object URL families only). Defaults `false` / `null`.
+- `transform` — server-side image transform. Default `null`.
+
+**Returns** `List<String>` in input order, or `Map<String, String>` keyed by path for the `…ByPath` variants.
+
+```kotlin
+val urls = storage.getPublicUrls("public-images", "a.png", "b.png")
+val byPath = storage.getAuthenticatedUrlsByPath("avatars", "x.png", "y.png")
+```
+
+### withCacheNonce
+
+Appends a cache-busting query param to a previously built storage URL (public,
+authenticated, signed, or render). Useful to force a CDN/browser to re-fetch an
+object overwritten at the same path. Returns the URL unchanged when `nonce` is
+`null`/blank.
+
+```kotlin
+fun withCacheNonce(url: String, nonce: String?, name: String = "cacheNonce"): String
+```
+
+- `url` — the storage URL to annotate.
+- `nonce` — the cache-busting value, appended verbatim (pass a URL-safe value); `null`/blank returns `url` unchanged.
+- `name` — the query-param name. Default `"cacheNonce"`.
+
+**Returns** the annotated `String` URL.
+
+```kotlin
+val fresh = withCacheNonce(url, nonce = updatedAtTimestamp)
+```
+
+---
+
+## Analytics buckets
+
+The analytics surface manages Apache-Iceberg-backed buckets and their catalog.
+
+### createAnalyticsBucket
+
+Creates an analytics (Iceberg) bucket. Use [`analyticsCatalog`](#analyticscatalog)
+afterward to manage its namespaces and tables.
+
+```kotlin
+suspend fun createAnalyticsBucket(name: String): SupabaseResult<AnalyticsBucket>
+```
+
+- `name` — the analytics bucket name.
+
+**Returns** `SupabaseResult<AnalyticsBucket>` — `Success` with the bucket, `Failure` on error.
+
+```kotlin
+val bucket = storage.createAnalyticsBucket("warehouse")
+```
+
+### listAnalyticsBuckets
+
+Lists analytics (Iceberg) buckets. Mirrors [`listBuckets`](#listbuckets)'s
+paging/sort/search semantics over the analytics-bucket endpoint.
+
+```kotlin
+suspend fun listAnalyticsBuckets(
+    limit: Int? = null,
+    offset: Int? = null,
+    sortColumn: String? = null,
+    sortOrder: SortOrder? = null,
+    search: String? = null,
+): SupabaseResult<List<AnalyticsBucket>>
+```
+
+- Parameters mirror [`listBuckets`](#listbuckets).
+
+**Returns** `SupabaseResult<List<AnalyticsBucket>>` — `Success` with the buckets, `Failure` on error.
+
+```kotlin
+val buckets = storage.listAnalyticsBuckets()
+```
+
+### deleteAnalyticsBucket
+
+Deletes the analytics (Iceberg) bucket `name`.
+
+```kotlin
+suspend fun deleteAnalyticsBucket(name: String): SupabaseResult<Unit>
+```
+
+**Returns** `SupabaseResult<Unit>` — `Success` on deletion, `Failure` on error.
+
+```kotlin
+storage.deleteAnalyticsBucket("warehouse")
+```
+
+### analyticsCatalog
+
+Returns an [`AnalyticsCatalogClient`](#analyticscatalogclient) scoped to the
+analytics bucket `bucketName` for managing its Iceberg namespaces and tables.
+Validates `bucketName` eagerly and throws `IllegalArgumentException` if it is blank
+or contains characters outside `[A-Za-z0-9._-]`.
+
+```kotlin
+fun analyticsCatalog(bucketName: String): AnalyticsCatalogClient
+```
+
+- `bucketName` — the analytics bucket the catalog targets (fixed at creation).
+
+**Returns** an [`AnalyticsCatalogClient`](#analyticscatalogclient).
+
+```kotlin
+val catalog = storage.analyticsCatalog("warehouse")
+```
+
+---
+
+## AnalyticsCatalogClient
+
+An Apache Iceberg REST catalog client scoped to one analytics bucket, exposing the
+namespace and table operations the Supabase analytics endpoint
+(`/storage/v1/iceberg`) speaks. Obtain one via
+[`analyticsCatalog`](#analyticscatalog).
+
+Most operations come in two flavours: a raw `…` variant returning the server's
+`JsonObject` verbatim (forward-compatible with Iceberg fields not yet modeled) and
+a `…Typed` variant deserializing into a model. Prefer the typed variants unless you
+need a spec field not yet mapped. Namespaces are multi-level and modeled as
+`List<String>` (for example `["analytics", "sales"]`). Every call returns a
+`SupabaseResult`.
+
+### getConfig / getConfigTyped
+
+Loads the raw Iceberg catalog config (`GET /v1/config`) for this bucket. The config
+carries the `defaults`/`overrides` property maps, including the route `prefix`.
+
+```kotlin
+suspend fun getConfig(): SupabaseResult<JsonObject>
+suspend fun getConfigTyped(): SupabaseResult<IcebergCatalogConfig>
+```
+
+**Returns** `SupabaseResult<JsonObject>` (raw) / `SupabaseResult<IcebergCatalogConfig>` (typed) — `Success` with the config, `Failure` on error.
+
+```kotlin
+val config = catalog.getConfigTyped()
+```
+
+### listNamespaces / listNamespacesTyped
+
+Lists namespaces under the catalog.
+
+```kotlin
+suspend fun listNamespaces(
+    parent: List<String>? = null,
+    pageToken: String? = null,
+    pageSize: Int? = null,
+): SupabaseResult<JsonObject>
+suspend fun listNamespacesTyped(
+    parent: List<String>? = null,
+    pageToken: String? = null,
+    pageSize: Int? = null,
+): SupabaseResult<IcebergNamespaceListResponse>
+```
+
+- `parent` — restrict results to direct children of this namespace; `null` lists from the catalog root. Default `null`.
+- `pageToken` — continuation token from a previous page. Default `null`.
+- `pageSize` — maximum namespaces to return in this page. Default `null`.
+
+**Returns** `SupabaseResult<JsonObject>` / `SupabaseResult<IcebergNamespaceListResponse>` — `Success` with the page, `Failure` on error.
+
+```kotlin
+val namespaces = catalog.listNamespacesTyped()
+```
+
+### createNamespace / createNamespaceTyped
+
+Creates a namespace with optional properties.
+
+```kotlin
+suspend fun createNamespace(
+    namespace: List<String>,
+    properties: Map<String, String> = emptyMap(),
+): SupabaseResult<JsonObject>
+suspend fun createNamespaceTyped(
+    request: IcebergCreateNamespaceRequest,
+): SupabaseResult<IcebergNamespaceMetadata>
+```
+
+- `namespace` — the multi-level namespace to create.
+- `properties` — initial namespace properties; omitted from the body when empty. Default `emptyMap()`.
+- `request` — the typed request object (typed overload).
+
+**Returns** `SupabaseResult<JsonObject>` / `SupabaseResult<IcebergNamespaceMetadata>` — `Success` on creation, `Failure` on error.
+
+```kotlin
+catalog.createNamespace(listOf("analytics", "sales"))
+```
+
+### deleteNamespace
+
+Drops a namespace from the catalog.
+
+```kotlin
+suspend fun deleteNamespace(namespace: List<String>): SupabaseResult<Unit>
+```
+
+- `namespace` — the namespace to drop.
+
+**Returns** `SupabaseResult<Unit>` — `Success` on deletion, `Failure` if missing or still containing tables.
+
+```kotlin
+catalog.deleteNamespace(listOf("analytics", "sales"))
+```
+
+### getNamespaceMetadata / getNamespaceMetadataTyped
+
+Loads a namespace's metadata (its property map).
+
+```kotlin
+suspend fun getNamespaceMetadata(namespace: List<String>): SupabaseResult<JsonObject>
+suspend fun getNamespaceMetadataTyped(namespace: List<String>): SupabaseResult<IcebergNamespaceMetadata>
+```
+
+- `namespace` — the namespace to inspect.
+
+**Returns** `SupabaseResult<JsonObject>` / `SupabaseResult<IcebergNamespaceMetadata>` — `Success` with the metadata, `Failure` on error.
+
+```kotlin
+val meta = catalog.getNamespaceMetadataTyped(listOf("analytics", "sales"))
+```
+
+### updateNamespaceProperties / updateNamespacePropertiesTyped
+
+Adds/updates and/or removes properties on a namespace in one call.
+
+```kotlin
+suspend fun updateNamespaceProperties(
+    namespace: List<String>,
+    removals: List<String>? = null,
+    updates: Map<String, String>? = null,
+): SupabaseResult<JsonObject>
+suspend fun updateNamespacePropertiesTyped(
+    namespace: List<String>,
+    request: IcebergUpdateNamespacePropertiesRequest,
+): SupabaseResult<IcebergUpdateNamespacePropertiesResponse>
+```
+
+- `namespace` — the namespace to mutate.
+- `removals` — property keys to remove. Default `null`.
+- `updates` — property keys to set or overwrite. Default `null`.
+- `request` — the typed request object (typed overload).
+
+**Returns** `SupabaseResult<JsonObject>` / `SupabaseResult<IcebergUpdateNamespacePropertiesResponse>` — `Success` reporting removed/updated/missing keys, `Failure` on error.
+
+```kotlin
+catalog.updateNamespaceProperties(
+    listOf("analytics", "sales"), updates = mapOf("owner" to "data-team"),
+)
+```
+
+### listTables / listTablesTyped
+
+Lists the tables in a namespace.
+
+```kotlin
+suspend fun listTables(
+    namespace: List<String>,
+    pageToken: String? = null,
+    pageSize: Int? = null,
+): SupabaseResult<JsonObject>
+suspend fun listTablesTyped(
+    namespace: List<String>,
+    pageToken: String? = null,
+    pageSize: Int? = null,
+): SupabaseResult<IcebergTableListResponse>
+```
+
+- `namespace` — the namespace to list.
+- `pageToken` — continuation token from a previous page. Default `null`.
+- `pageSize` — maximum table identifiers to return. Default `null`.
+
+**Returns** `SupabaseResult<JsonObject>` / `SupabaseResult<IcebergTableListResponse>` — `Success` with the page, `Failure` on error.
+
+```kotlin
+val tables = catalog.listTablesTyped(listOf("analytics", "sales"))
+```
+
+### createTable / createTableTyped
+
+Creates a table in a namespace.
+
+```kotlin
+suspend fun createTable(
+    namespace: List<String>,
+    request: JsonObject,
+): SupabaseResult<JsonObject>
+suspend fun createTableTyped(
+    namespace: List<String>,
+    request: IcebergTableCreateRequest,
+): SupabaseResult<IcebergTableMetadataResponse>
+```
+
+- `namespace` — the target namespace.
+- `request` — the create-table body (raw `JsonObject`, or typed [`IcebergTableCreateRequest`](#icebergtablecreaterequest)).
+
+**Returns** `SupabaseResult<JsonObject>` / `SupabaseResult<IcebergTableMetadataResponse>` — `Success` with the table metadata, `Failure` on error.
+
+```kotlin
+val table = catalog.createTableTyped(
+    listOf("analytics", "sales"),
+    IcebergTableCreateRequest(name = "orders", schema = schemaJson),
+)
+```
+
+### updateTable / updateTableTyped
+
+Commits requirements/updates to a table (the Iceberg commit-table endpoint).
+
+```kotlin
+suspend fun updateTable(
+    namespace: List<String>,
+    name: String,
+    request: JsonObject,
+): SupabaseResult<JsonObject>
+suspend fun updateTableTyped(
+    namespace: List<String>,
+    name: String,
+    request: IcebergTableCommitRequest,
+): SupabaseResult<IcebergTableMetadataResponse>
+```
+
+- `namespace` — the table's namespace.
+- `name` — the table name.
+- `request` — the commit body (raw `JsonObject`, or typed [`IcebergTableCommitRequest`](#icebergtablecommitrequest) of requirements + updates).
+
+**Returns** `SupabaseResult<JsonObject>` / `SupabaseResult<IcebergTableMetadataResponse>` — `Success` with updated metadata, `Failure` on error.
+
+```kotlin
+catalog.updateTableTyped(listOf("analytics", "sales"), "orders", commitRequest)
+```
+
+### deleteTable
+
+Drops a table from a namespace.
+
+```kotlin
+suspend fun deleteTable(
+    namespace: List<String>,
+    name: String,
+    purge: Boolean = false,
+): SupabaseResult<Unit>
+```
+
+- `namespace` — the table's namespace.
+- `name` — the table to drop.
+- `purge` — when `true`, ask the server to also delete the table's underlying data files. Default `false`.
+
+**Returns** `SupabaseResult<Unit>` — `Success` on deletion, `Failure` on error.
+
+```kotlin
+catalog.deleteTable(listOf("analytics", "sales"), "orders", purge = true)
+```
+
+### getTable / getTableTyped
+
+Loads a table's current metadata.
+
+```kotlin
+suspend fun getTable(
+    namespace: List<String>,
+    name: String,
+    snapshots: String? = null,
+): SupabaseResult<JsonObject>
+suspend fun getTableTyped(
+    namespace: List<String>,
+    name: String,
+    snapshots: String? = null,
+): SupabaseResult<IcebergTableMetadataResponse>
+```
+
+- `namespace` — the table's namespace.
+- `name` — the table name.
+- `snapshots` — optional snapshot-loading mode passed through to the server. Default `null`.
+
+**Returns** `SupabaseResult<JsonObject>` / `SupabaseResult<IcebergTableMetadataResponse>` — `Success` with the metadata, `Failure` on error.
+
+```kotlin
+val table = catalog.getTableTyped(listOf("analytics", "sales"), "orders")
+```
+
+### registerTable / registerTableTyped
+
+Registers an existing table (one whose metadata file already lives in storage)
+into a namespace.
+
+```kotlin
+suspend fun registerTable(
+    namespace: List<String>,
+    request: JsonObject,
+): SupabaseResult<JsonObject>
+suspend fun registerTableTyped(
+    namespace: List<String>,
+    request: IcebergTableRegisterRequest,
+): SupabaseResult<IcebergTableMetadataResponse>
+```
+
+- `namespace` — the target namespace.
+- `request` — the register body (raw `JsonObject`, or typed [`IcebergTableRegisterRequest`](#icebergtableregisterrequest) of name + metadata location).
+
+**Returns** `SupabaseResult<JsonObject>` / `SupabaseResult<IcebergTableMetadataResponse>` — `Success` with the table metadata, `Failure` on error.
+
+```kotlin
+catalog.registerTableTyped(
+    listOf("analytics", "sales"),
+    IcebergTableRegisterRequest(name = "orders", metadataLocation = location),
+)
+```
+
+### renameTable / renameTableTyped
+
+Renames/moves a table, optionally across namespaces.
+
+```kotlin
+suspend fun renameTable(request: JsonObject): SupabaseResult<Unit>
+suspend fun renameTableTyped(
+    source: IcebergTableIdentifier,
+    destination: IcebergTableIdentifier,
+): SupabaseResult<Unit>
+```
+
+- `request` — raw body holding `source`/`destination` identifiers (raw overload).
+- `source` — the table to move (typed overload).
+- `destination` — the new identifier (may live in a different namespace).
+
+**Returns** `SupabaseResult<Unit>` — `Success` on rename, `Failure` on error.
+
+```kotlin
+catalog.renameTableTyped(
+    IcebergTableIdentifier(listOf("analytics", "sales"), "orders"),
+    IcebergTableIdentifier(listOf("analytics", "sales"), "orders_v2"),
+)
+```
+
+---
+
+## Vectors (S3-Vectors)
+
+The S3-Vectors surface manages vector buckets, indexes, and the vectors within
+them.
+
+### createVectorBucket
+
+Creates an S3-Vectors bucket.
+
+```kotlin
+suspend fun createVectorBucket(vectorBucketName: String): SupabaseResult<Unit>
+```
+
+- `vectorBucketName` — the bucket name.
+
+**Returns** `SupabaseResult<Unit>` — `Success` on creation, `Failure` on error.
+
+```kotlin
+storage.createVectorBucket("embeddings")
+```
+
+### getVectorBucket
+
+Fetches an S3-Vectors bucket.
+
+```kotlin
+suspend fun getVectorBucket(vectorBucketName: String): SupabaseResult<VectorBucket>
+```
+
+**Returns** `SupabaseResult<VectorBucket>` — `Success` with the bucket, `Failure` if it does not exist.
+
+```kotlin
+val bucket = storage.getVectorBucket("embeddings")
+```
+
+### listVectorBuckets
+
+Lists S3-Vectors buckets.
+
+```kotlin
+suspend fun listVectorBuckets(
+    prefix: String? = null,
+    maxResults: Int? = null,
+    nextToken: String? = null,
+): SupabaseResult<VectorBucketListResponse>
+```
+
+- `prefix` — restrict results to bucket names starting with this prefix. Default `null`.
+- `maxResults` — maximum buckets to return in this page. Default `null`.
+- `nextToken` — continuation token from a previous response. Default `null`.
+
+**Returns** `SupabaseResult<VectorBucketListResponse>` — `Success` with the page, `Failure` on error.
+
+```kotlin
+val buckets = storage.listVectorBuckets()
+```
+
+### deleteVectorBucket
+
+Deletes an S3-Vectors bucket.
+
+```kotlin
+suspend fun deleteVectorBucket(vectorBucketName: String): SupabaseResult<Unit>
+```
+
+**Returns** `SupabaseResult<Unit>` — `Success` on deletion, `Failure` on error.
+
+```kotlin
+storage.deleteVectorBucket("embeddings")
+```
+
+### createVectorIndex
+
+Creates a vector index inside a bucket.
+
+```kotlin
+suspend fun createVectorIndex(
+    vectorBucketName: String,
+    indexName: String,
+    dataType: VectorDataType,
+    dimension: Int,
+    distanceMetric: VectorDistanceMetric,
+    metadataConfiguration: VectorMetadataConfiguration? = null,
+): SupabaseResult<Unit>
+```
+
+- `vectorBucketName` — the owning bucket.
+- `indexName` — the index name.
+- `dataType` — element type of stored vectors (see [`VectorDataType`](#vectordatatype)).
+- `dimension` — fixed dimensionality every stored vector must match.
+- `distanceMetric` — similarity metric used for queries (see [`VectorDistanceMetric`](#vectordistancemetric)).
+- `metadataConfiguration` — optional declaration of non-filterable metadata keys. Default `null`.
+
+**Returns** `SupabaseResult<Unit>` — `Success` on creation, `Failure` on error.
+
+```kotlin
+storage.createVectorIndex(
+    "embeddings", "docs",
+    dataType = VectorDataType.FLOAT32,
+    dimension = 1536,
+    distanceMetric = VectorDistanceMetric.COSINE,
+)
+```
+
+### getVectorIndex
+
+Fetches a vector index, including its dimension and metric.
+
+```kotlin
+suspend fun getVectorIndex(
+    vectorBucketName: String,
+    indexName: String,
+): SupabaseResult<VectorIndex>
+```
+
+**Returns** `SupabaseResult<VectorIndex>` — `Success` with the index, `Failure` on error.
+
+```kotlin
+val index = storage.getVectorIndex("embeddings", "docs")
+```
+
+### listVectorIndexes
+
+Lists the vector indexes in a bucket.
+
+```kotlin
+suspend fun listVectorIndexes(
+    vectorBucketName: String,
+    prefix: String? = null,
+    maxResults: Int? = null,
+    nextToken: String? = null,
+): SupabaseResult<VectorIndexListResponse>
+```
+
+- `vectorBucketName` — the bucket to list.
+- `prefix` — restrict results to index names starting with this prefix. Default `null`.
+- `maxResults` — maximum indexes to return in this page. Default `null`.
+- `nextToken` — continuation token from a previous response. Default `null`.
+
+**Returns** `SupabaseResult<VectorIndexListResponse>` — `Success` with the page, `Failure` on error.
+
+```kotlin
+val indexes = storage.listVectorIndexes("embeddings")
+```
+
+### deleteVectorIndex
+
+Deletes a vector index from a bucket.
+
+```kotlin
+suspend fun deleteVectorIndex(
+    vectorBucketName: String,
+    indexName: String,
+): SupabaseResult<Unit>
+```
+
+**Returns** `SupabaseResult<Unit>` — `Success` on deletion, `Failure` on error.
+
+```kotlin
+storage.deleteVectorIndex("embeddings", "docs")
+```
+
+### putVectors
+
+Inserts or overwrites vectors in an index. The batch must contain between 1 and
+500 vectors; an out-of-range size throws `IllegalArgumentException` before any
+request is sent.
+
+```kotlin
+suspend fun putVectors(
+    vectorBucketName: String,
+    indexName: String,
+    vectors: List<VectorObject>,
+): SupabaseResult<Unit>
+```
+
+- `vectorBucketName` — the owning bucket.
+- `indexName` — the target index.
+- `vectors` — 1..500 [`VectorObject`](#vectorobject) entries to store.
+
+**Returns** `SupabaseResult<Unit>` — `Success` on write, `Failure` on error.
+
+```kotlin
+storage.putVectors(
+    "embeddings", "docs",
+    listOf(VectorObject(key = "doc-1", data = VectorData(floats))),
+)
+```
+
+### getVectors
+
+Fetches vectors by key.
+
+```kotlin
+suspend fun getVectors(
+    vectorBucketName: String,
+    indexName: String,
+    keys: List<String>,
+    returnData: Boolean? = null,
+    returnMetadata: Boolean? = null,
+): SupabaseResult<List<VectorMatch>>
+```
+
+- `vectorBucketName` / `indexName` — the index to read from.
+- `keys` — the vector keys to fetch.
+- `returnData` — when `true`, include each vector's raw data. Default `null`.
+- `returnMetadata` — when `true`, include each vector's metadata. Default `null`.
+
+**Returns** `SupabaseResult<List<VectorMatch>>` — `Success` with the matches, `Failure` on error.
+
+```kotlin
+val vectors = storage.getVectors("embeddings", "docs", listOf("doc-1"), returnData = true)
+```
+
+### listVectors
+
+Lists vectors in an index, optionally sharded for parallel scans.
+
+```kotlin
+suspend fun listVectors(
+    vectorBucketName: String,
+    indexName: String,
+    maxResults: Int? = null,
+    nextToken: String? = null,
+    returnData: Boolean? = null,
+    returnMetadata: Boolean? = null,
+    segmentCount: Int? = null,
+    segmentIndex: Int? = null,
+): SupabaseResult<VectorListResponse>
+```
+
+- `vectorBucketName` / `indexName` — the index to scan.
+- `maxResults` — maximum vectors to return in this page. Default `null`.
+- `nextToken` — continuation token from a previous response. Default `null`.
+- `returnData` — include each vector's raw data. Default `null`.
+- `returnMetadata` — include each vector's metadata. Default `null`.
+- `segmentCount` — split the index into this many segments (1..16) for parallel listing; out-of-range values throw `IllegalArgumentException`. Default `null`.
+- `segmentIndex` — which segment (`0 until segmentCount`) this call scans. Default `null`.
+
+**Returns** `SupabaseResult<VectorListResponse>` — `Success` with the page, `Failure` on error.
+
+```kotlin
+val page = storage.listVectors("embeddings", "docs", maxResults = 100)
+```
+
+### queryVectors
+
+Runs a nearest-neighbor search against an index.
+
+```kotlin
+suspend fun queryVectors(
+    vectorBucketName: String,
+    indexName: String,
+    queryVector: VectorData,
+    topK: Int? = null,
+    filter: JsonObject? = null,
+    returnDistance: Boolean? = null,
+    returnMetadata: Boolean? = null,
+): SupabaseResult<VectorQueryResponse>
+```
+
+- `vectorBucketName` / `indexName` — the index to query.
+- `queryVector` — the query [`VectorData`](#vectordata).
+- `topK` — number of closest matches to return. Default `null`.
+- `filter` — optional metadata filter expression to restrict candidates. Default `null`.
+- `returnDistance` — include each match's distance score. Default `null`.
+- `returnMetadata` — include each match's metadata. Default `null`.
+
+**Returns** `SupabaseResult<VectorQueryResponse>` — `Success` with ranked matches, `Failure` on error.
+
+```kotlin
+val results = storage.queryVectors(
+    "embeddings", "docs", VectorData(queryFloats), topK = 5, returnDistance = true,
+)
+```
+
+### deleteVectors
+
+Deletes vectors by key. The batch must contain between 1 and 500 keys; an
+out-of-range size throws `IllegalArgumentException` before any request is sent.
+
+```kotlin
+suspend fun deleteVectors(
+    vectorBucketName: String,
+    indexName: String,
+    keys: List<String>,
+): SupabaseResult<Unit>
+```
+
+- `vectorBucketName` / `indexName` — the index to delete from.
+- `keys` — 1..500 vector keys to remove.
+
+**Returns** `SupabaseResult<Unit>` — `Success` on deletion, `Failure` on error.
+
+```kotlin
+storage.deleteVectors("embeddings", "docs", listOf("doc-1"))
+```
+
+---
+
+## Resumable uploads
+
+### ResumableUpload
+
+A resumable (TUS) upload handle returned by
+[`createResumableUpload`](#createresumableupload). Uploads in chunks with
+server-side offset tracking, so an interrupted upload resumes from where it
+stopped. To pause, cancel the coroutine running [`await`](#resumableupload); to
+resume — even after an app restart — persist `uploadUrl` and create a new handle
+with `createResumableUpload(..., uploadUrl = saved)`, then call `await` again.
+
+```kotlin
+interface ResumableUpload {
+    val uploadUrl: String?
+    val progress: StateFlow<ResumableUploadProgress>
+    suspend fun await(): SupabaseResult<Unit>
+}
+```
+
+- `uploadUrl` — the TUS upload URL once the upload has been created (`null` beforehand). Persist this to resume later.
+- `progress` — a `StateFlow` of [`ResumableUploadProgress`](#resumableuploadprogress), updated after every chunk.
+- `await()` — runs (or resumes) the upload to completion; cancellable. **Returns** `SupabaseResult<Unit>` — `Success` when complete, `Failure` on error.
+
+```kotlin
+val handle = storage.createResumableUpload("videos", "clip.mp4", videoBytes)
+launch { handle.progress.collect { println(it.fraction) } }
+handle.await()
+```
+
+### ResumableUploadProgress
+
+Progress of a [`ResumableUpload`](#resumableupload).
+
+```kotlin
+data class ResumableUploadProgress(
+    val bytesUploaded: Long,
+    val totalBytes: Long,
+) {
+    val fraction: Float       // completion in 0f..1f
+    val isComplete: Boolean
+}
+```
+
+- `bytesUploaded` — bytes uploaded so far.
+- `totalBytes` — total bytes to upload.
+- `fraction` — completion fraction in `0f..1f` (`0f` when `totalBytes <= 0`).
+- `isComplete` — `true` once `bytesUploaded >= totalBytes` (and `totalBytes > 0`).
+
+### RESUMABLE_DEFAULT_CHUNK_SIZE
+
+The default and recommended chunk size for resumable uploads. Supabase requires
+6 MiB chunks for every part except the last.
+
+```kotlin
+const val RESUMABLE_DEFAULT_CHUNK_SIZE: Int = 6 * 1024 * 1024
+```
+
+---
+
+## Models
+
+### Bucket
+
+A storage bucket as returned by the bucket endpoints.
+
+```kotlin
+data class Bucket(
+    val id: String,
+    val name: String,
+    val public: Boolean = false,
+    val createdAt: String? = null,
+    val updatedAt: String? = null,
+    val fileSizeLimit: Long? = null,
+    val allowedMimeTypes: List<String>? = null,
+)
+```
+
+- `id` — the bucket's stable identifier and URL segment.
+- `name` — human-readable bucket name.
+- `public` — whether objects are readable via the public endpoint without a token.
+- `createdAt` / `updatedAt` — timestamps, when reported by the server.
+- `fileSizeLimit` — per-object size cap in bytes, when set.
+- `allowedMimeTypes` — whitelist of accepted content types, when set; `null` allows any.
+
+### FileObject
+
+A file or folder entry returned by the storage server. For folders, every field
+except `name` is typically `null`. The trailing fields (`size`, `contentType`,
+`etag`, `lastAccessedAt`, `cacheControl`) are populated by object-info and v2
+listing endpoints; older list responses omit them.
+
+```kotlin
+data class FileObject(
+    val name: String,
+    val id: String? = null,
+    val bucketId: String? = null,
+    val createdAt: String? = null,
+    val updatedAt: String? = null,
+    val metadata: JsonObject? = null,
+    val size: Long? = null,
+    val contentType: String? = null,
+    val etag: String? = null,
+    val lastAccessedAt: String? = null,
+    val cacheControl: String? = null,
+)
+```
+
+- `name` — the object name (or folder name).
+- `id` — the object id, when present.
+- `bucketId` — the id of the owning bucket, when present.
+- `createdAt` / `updatedAt` / `lastAccessedAt` — timestamps, when present.
+- `metadata` — free-form server metadata, when present.
+- `size` — the object size in bytes, when reported.
+- `contentType` — the stored MIME type, when reported.
+- `etag` — the entity tag, when reported.
+- `cacheControl` — the stored cache-control directive, when reported.
+
+### ObjectListV2Result
+
+Result of a cursor-paged v2 listing ([`listV2`](#listv2)), separating folders from
+objects and carrying continuation state.
+
+```kotlin
+data class ObjectListV2Result(
+    val hasNext: Boolean,
+    val folders: List<ObjectListV2Folder>,
+    val objects: List<ObjectListV2Object>,
+    val nextCursor: String? = null,
+)
+```
+
+- `hasNext` — whether more pages remain.
+- `folders` — the folder (common-prefix) entries in this page.
+- `objects` — the object entries in this page.
+- `nextCursor` — cursor to pass back for the next page, when `hasNext`.
+
+### ObjectListV2Object
+
+A single object entry in a v2 listing.
+
+```kotlin
+data class ObjectListV2Object(
+    val name: String,
+    val key: String? = null,
+    val id: String,
+    val updatedAt: String? = null,
+    val createdAt: String? = null,
+    val lastAccessedAt: String? = null,
+    val metadata: JsonObject? = null,
+)
+```
+
+- `name` — the object name within its folder.
+- `key` — the full object key, when reported.
+- `id` — the object id.
+- `updatedAt` / `createdAt` / `lastAccessedAt` — timestamps, when reported.
+- `metadata` — free-form server metadata, when present.
+
+### ObjectListV2Folder
+
+A folder (common-prefix) entry in a v2 listing.
+
+```kotlin
+data class ObjectListV2Folder(
+    val name: String,
+    val key: String? = null,
+)
+```
+
+- `name` — the folder name.
+- `key` — the full prefix, when reported.
+
+### AnalyticsBucket
+
+An analytics (Iceberg) bucket.
+
+```kotlin
+data class AnalyticsBucket(
+    val name: String,
+    val type: String,
+    val format: String,
+    val createdAt: String? = null,
+    val updatedAt: String? = null,
+)
+```
+
+- `name` — the analytics bucket name.
+- `type` — the server-reported bucket type.
+- `format` — the table data format (e.g. Iceberg).
+- `createdAt` / `updatedAt` — timestamps, when reported.
+
+### UploadSignedUrl
+
+A signed upload target returned by
+[`createUploadSignedUrlWithPath`](#createuploadsignedurlwithpath).
+
+```kotlin
+data class UploadSignedUrl(
+    val url: String,
+    val token: String,
+    val path: String? = null,
+)
+```
+
+- `url` — the absolute URL to upload to.
+- `token` — the signed token authorizing the upload.
+- `path` — the object path the server bound to this token, when returned.
+
+### ImageTransformOptions
+
+Server-side image transform options applied by the render endpoints and by
+signed/public render URLs. Each field maps to a render query param; `null` fields
+are omitted, leaving the server default.
+
+```kotlin
+data class ImageTransformOptions(
+    val width: Int? = null,
+    val height: Int? = null,
+    val resize: ResizeMode? = null,
+    val format: String? = null,
+    val quality: Int? = null,
+)
+```
+
+- `width` — target width in pixels.
+- `height` — target height in pixels.
+- `resize` — how the image is fitted to `width`/`height` (see [`ResizeMode`](#resizemode)).
+- `format` — output format (e.g. `origin`, `webp`); server-defined values.
+- `quality` — output quality, typically `1..100` for lossy formats.
+
+### ResizeMode
+
+How a transformed image is fitted to the requested width/height. `value` is the
+literal sent to the render endpoint.
+
+```kotlin
+enum class ResizeMode(val value: String) {
+    COVER("cover"),       // fill the box, cropping overflow (preserves aspect ratio)
+    CONTAIN("contain"),   // fit within the box, letterboxing (preserves aspect ratio)
+    FILL("fill"),         // stretch to the box, ignoring aspect ratio
+}
+```
+
+### SortOrder
+
+Sort direction for listing operations. `value` is the literal sent to the storage API.
+
+```kotlin
+enum class SortOrder(val value: String) {
+    ASC("asc"),
+    DESC("desc"),
+}
+```
+
+## Iceberg catalog models
+
+### IcebergCatalogConfig
+
+Iceberg catalog configuration (`GET /v1/config`). `overrides` take precedence over
+`defaults`; both may carry the route `prefix` the catalog client uses.
+
+```kotlin
+data class IcebergCatalogConfig(
+    val defaults: Map<String, String> = emptyMap(),
+    val overrides: Map<String, String> = emptyMap(),
+)
+```
+
+- `defaults` — default catalog properties.
+- `overrides` — overriding catalog properties (take precedence over `defaults`).
+
+### IcebergNamespaceListResponse
+
+Response listing Iceberg namespaces, each a multi-level path.
+
+```kotlin
+data class IcebergNamespaceListResponse(
+    val namespaces: List<List<String>> = emptyList(),
+    val nextPageToken: String? = null,            // "next-page-token"
+    val nextPageTokenCamelCase: String? = null,   // "nextPageToken"
+) {
+    val resolvedNextPageToken: String?
+}
+```
+
+- `namespaces` — the namespace paths.
+- `nextPageToken` / `nextPageTokenCamelCase` — the next-page token in either casing the server may return.
+- `resolvedNextPageToken` — the next-page token regardless of casing, or `null` if absent.
+
+### IcebergCreateNamespaceRequest
+
+Request body to create an Iceberg namespace with initial properties.
+
+```kotlin
+data class IcebergCreateNamespaceRequest(
+    val namespace: List<String>,
+    val properties: Map<String, String> = emptyMap(),
+)
+```
+
+- `namespace` — the namespace to create.
+- `properties` — initial namespace properties.
+
+### IcebergNamespaceMetadata
+
+An Iceberg namespace and its property map.
+
+```kotlin
+data class IcebergNamespaceMetadata(
+    val namespace: List<String> = emptyList(),
+    val properties: Map<String, String> = emptyMap(),
+)
+```
+
+- `namespace` — the namespace path.
+- `properties` — the namespace property map.
+
+### IcebergUpdateNamespacePropertiesRequest
+
+Request body to mutate namespace properties.
+
+```kotlin
+data class IcebergUpdateNamespacePropertiesRequest(
+    val removals: List<String>? = null,
+    val updates: Map<String, String>? = null,
+)
+```
+
+- `removals` — property keys to remove.
+- `updates` — property keys to set or overwrite.
+
+### IcebergUpdateNamespacePropertiesResponse
+
+Outcome of a namespace-properties update.
+
+```kotlin
+data class IcebergUpdateNamespacePropertiesResponse(
+    val removed: List<String> = emptyList(),
+    val updated: List<String> = emptyList(),
+    val missing: List<String> = emptyList(),
+)
+```
+
+- `removed` — keys removed.
+- `updated` — keys set/overwritten.
+- `missing` — keys requested but not found.
+
+### IcebergTableIdentifier
+
+Fully qualifies an Iceberg table by namespace and name.
+
+```kotlin
+data class IcebergTableIdentifier(
+    val namespace: List<String>,
+    val name: String,
+)
+```
+
+- `namespace` — the table's namespace path.
+- `name` — the table name.
+
+### IcebergTableListResponse
+
+Response listing the tables in a namespace by identifier.
+
+```kotlin
+data class IcebergTableListResponse(
+    val identifiers: List<IcebergTableIdentifier> = emptyList(),
+    val nextPageToken: String? = null,            // "next-page-token"
+    val nextPageTokenCamelCase: String? = null,   // "nextPageToken"
+) {
+    val resolvedNextPageToken: String?
+}
+```
+
+- `identifiers` — the table identifiers.
+- `nextPageToken` / `nextPageTokenCamelCase` — the next-page token in either casing.
+- `resolvedNextPageToken` — the next-page token regardless of casing, or `null`.
+
+### IcebergTableCreateRequest
+
+Request body to create an Iceberg table.
+
+```kotlin
+data class IcebergTableCreateRequest(
+    val name: String,
+    val schema: JsonObject,
+    val location: String? = null,
+    val partitionSpec: JsonObject? = null,
+    val writeOrder: JsonObject? = null,
+    val properties: Map<String, String> = emptyMap(),
+)
+```
+
+- `name` — the table name within the target namespace.
+- `schema` — the Iceberg schema as a raw JSON object.
+- `location` — optional explicit base location for the table's data.
+- `partitionSpec` — optional partition spec as a raw JSON object.
+- `writeOrder` — optional sort/write order as a raw JSON object.
+- `properties` — initial table properties.
+
+### IcebergTableCommitRequest
+
+Request body for an Iceberg table commit: requirements that must hold and metadata
+updates to apply atomically, each as raw JSON objects per the Iceberg spec.
+
+```kotlin
+data class IcebergTableCommitRequest(
+    val requirements: List<JsonObject> = emptyList(),
+    val updates: List<JsonObject> = emptyList(),
+)
+```
+
+- `requirements` — preconditions that must hold for the commit.
+- `updates` — metadata updates to apply.
+
+### IcebergTableRegisterRequest
+
+Request body to register an existing table.
+
+```kotlin
+data class IcebergTableRegisterRequest(
+    val name: String,
+    val metadataLocation: String,   // "metadata-location"
+)
+```
+
+- `name` — the table name.
+- `metadataLocation` — storage location of the existing metadata file.
+
+### IcebergTableMetadataResponse
+
+Response carrying an Iceberg table's metadata.
+
+```kotlin
+data class IcebergTableMetadataResponse(
+    val name: String? = null,
+    val metadata: JsonObject? = null,
+    val config: Map<String, String> = emptyMap(),
+    val metadataLocation: String? = null,   // "metadata-location"
+)
+```
+
+- `name` — the table name, when reported.
+- `metadata` — the table metadata document as a raw JSON object.
+- `config` — access/IO config the client should use for this table.
+- `metadataLocation` — storage location of the metadata file, when reported.
+
+## Vector models
+
+### VectorBucket
+
+An S3-Vectors bucket.
+
+```kotlin
+data class VectorBucket(
+    val vectorBucketName: String,
+    val creationTime: Long? = null,
+    val encryptionConfiguration: JsonObject? = null,
+)
+```
+
+- `vectorBucketName` — the bucket name.
+- `creationTime` — creation time as an epoch value, when reported.
+- `encryptionConfiguration` — server encryption config as a raw JSON object, when present.
+
+### VectorBucketResponse
+
+Envelope wrapping a single [`VectorBucket`](#vectorbucket) in the get-bucket response.
+
+```kotlin
+data class VectorBucketResponse(val vectorBucket: VectorBucket)
+```
+
+- `vectorBucket` — the wrapped bucket.
+
+### VectorBucketListItem
+
+One entry in a vector-bucket listing: just the bucket name.
+
+```kotlin
+data class VectorBucketListItem(val vectorBucketName: String)
+```
+
+- `vectorBucketName` — the bucket name.
+
+### VectorBucketListResponse
+
+Response listing vector buckets.
+
+```kotlin
+data class VectorBucketListResponse(
+    val vectorBuckets: List<VectorBucketListItem>,
+    val nextToken: String? = null,
+)
+```
+
+- `vectorBuckets` — the bucket entries.
+- `nextToken` — continuation token when more remain.
+
+### VectorIndex
+
+A vector index's definition.
+
+```kotlin
+data class VectorIndex(
+    val indexName: String,
+    val vectorBucketName: String,
+    val dataType: VectorDataType = VectorDataType.UNKNOWN,
+    val dimension: Int,
+    val distanceMetric: VectorDistanceMetric = VectorDistanceMetric.UNKNOWN,
+    val metadataConfiguration: VectorMetadataConfiguration? = null,
+    val creationTime: Long? = null,
+)
+```
+
+- `indexName` — the index name.
+- `vectorBucketName` — the owning bucket.
+- `dataType` — element type of stored vectors.
+- `dimension` — fixed dimensionality of stored vectors.
+- `distanceMetric` — similarity metric used for queries.
+- `metadataConfiguration` — non-filterable metadata declaration, when set.
+- `creationTime` — creation time as an epoch value, when reported.
+
+### VectorIndexResponse
+
+Envelope wrapping a single [`VectorIndex`](#vectorindex) in the get-index response.
+
+```kotlin
+data class VectorIndexResponse(val index: VectorIndex)
+```
+
+- `index` — the wrapped index.
+
+### VectorIndexListItem
+
+One entry in a vector-index listing: just the index name.
+
+```kotlin
+data class VectorIndexListItem(val indexName: String)
+```
+
+- `indexName` — the index name.
+
+### VectorIndexListResponse
+
+Response listing indexes.
+
+```kotlin
+data class VectorIndexListResponse(
+    val indexes: List<VectorIndexListItem>,
+    val nextToken: String? = null,
+)
+```
+
+- `indexes` — the index entries.
+- `nextToken` — continuation token when more remain.
+
+### VectorMetadataConfiguration
+
+Declares which metadata keys are non-filterable for an index, so queries cannot
+filter on them.
+
+```kotlin
+data class VectorMetadataConfiguration(
+    val nonFilterableMetadataKeys: List<String>? = null,
+)
+```
+
+- `nonFilterableMetadataKeys` — keys excluded from query filtering.
+
+### VectorData
+
+A vector value: its `float32` components. Length must match the index's dimension.
+
+```kotlin
+data class VectorData(val float32: List<Double>)
+```
+
+- `float32` — the vector components.
+
+### VectorObject
+
+A vector to store in an index.
+
+```kotlin
+data class VectorObject(
+    val key: String,
+    val data: VectorData,
+    val metadata: JsonObject? = null,
+)
+```
+
+- `key` — the unique key identifying this vector within the index.
+- `data` — the vector components.
+- `metadata` — optional metadata, used for filtering and retrieval.
+
+### VectorMatch
+
+A vector returned from a get/list/query, with optionally included data and metadata.
+
+```kotlin
+data class VectorMatch(
+    val key: String,
+    val data: VectorData? = null,
+    val metadata: JsonObject? = null,
+    val distance: Double? = null,
+)
+```
+
+- `key` — the vector's key.
+- `data` — the vector components, when requested via `returnData`.
+- `metadata` — the vector's metadata, when requested via `returnMetadata`.
+- `distance` — the distance/score to the query vector, populated by query results.
+
+### VectorListResponse
+
+Response listing vectors.
+
+```kotlin
+data class VectorListResponse(
+    val vectors: List<VectorMatch>,
+    val nextToken: String? = null,
+)
+```
+
+- `vectors` — the listed vectors.
+- `nextToken` — continuation token when more remain.
+
+### VectorQueryResponse
+
+Result of a vector query: the matching vectors ranked by similarity, plus the metric used.
+
+```kotlin
+data class VectorQueryResponse(
+    val vectors: List<VectorMatch>,
+    val distanceMetric: VectorDistanceMetric? = VectorDistanceMetric.UNKNOWN,
+)
+```
+
+- `vectors` — the matches ranked by similarity.
+- `distanceMetric` — the metric the index used, when reported.
+
+### VectorDataType
+
+Element type of stored vectors. Currently only single-precision floats are supported.
+
+```kotlin
+enum class VectorDataType { FLOAT32, UNKNOWN }
+```
+
+- `FLOAT32` — 32-bit IEEE float components.
+- `UNKNOWN` — fallback for a data type this client does not recognize.
+
+### VectorDistanceMetric
+
+Similarity metric a vector index uses to rank query matches.
+
+```kotlin
+enum class VectorDistanceMetric { COSINE, EUCLIDEAN, DOTPRODUCT, UNKNOWN }
+```
+
+- `COSINE` — cosine similarity (angle between vectors).
+- `EUCLIDEAN` — Euclidean (L2) distance.
+- `DOTPRODUCT` — dot-product (inner product) similarity.
+- `UNKNOWN` — fallback for a metric this client does not recognize.
