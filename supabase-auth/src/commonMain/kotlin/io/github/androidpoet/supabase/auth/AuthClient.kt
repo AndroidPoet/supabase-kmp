@@ -223,12 +223,14 @@ public interface AuthClient {
 
     /**
      * Verifies an OTP / magic-link code against `POST /verify`, completing a flow
-     * started by [signInWithOtp], a confirmation, or a recovery, and returning the
-     * resulting [Session]. Pass the same [email] or [phone] the code was sent to.
+     * started by [signInWithOtp], a confirmation, or a recovery. Pass the same
+     * [email] or [phone] the code was sent to.
      *
-     * Note: a code may verify without producing a session (e.g. some email-change
-     * confirmations); when you need to distinguish that, prefer
-     * [verifyOtpWithResult].
+     * Returns an [OtpVerifyResult] that distinguishes a verification which produced
+     * a session ([OtpVerifyResult.Authenticated], the common case) from one that
+     * succeeded without one ([OtpVerifyResult.VerifiedNoSession], e.g. some
+     * email-change confirmations), so a no-session success isn't reported as a
+     * failure. Reach the session via [OtpVerifyResult.Authenticated.session].
      *
      * @param type which OTP flow the [token] belongs to (signup, recovery, …).
      * @param captchaToken captcha response when bot protection is enabled.
@@ -241,41 +243,17 @@ public interface AuthClient {
         type: OtpType,
         captchaToken: String? = null,
         redirectTo: String? = null,
-    ): SupabaseResult<Session>
+    ): SupabaseResult<OtpVerifyResult>
 
     /**
      * Verifies an email-link confirmation by its `token_hash` (the value embedded in
      * a Supabase confirmation/recovery link) rather than a user-entered code, via
-     * `POST /verify`. Use this when handling a deep link the user clicked.
+     * `POST /verify`. Use this when handling a deep link the user clicked. Returns an
+     * [OtpVerifyResult] like [verifyOtp].
      *
      * @param captchaToken captcha response when bot protection is enabled.
      */
     public suspend fun verifyOtpWithTokenHash(
-        tokenHash: String,
-        type: OtpType,
-        captchaToken: String? = null,
-    ): SupabaseResult<Session>
-
-    /**
-     * Like [verifyOtp] but returns an [OtpVerifyResult] that distinguishes a
-     * verification which produced a session ([OtpVerifyResult.Authenticated]) from
-     * one that succeeded without one ([OtpVerifyResult.VerifiedNoSession]) — useful
-     * for email-change confirmations that don't mint a new session.
-     *
-     * @param captchaToken captcha response when bot protection is enabled.
-     * @param redirectTo post-verification redirect (`redirect_to`), used by link-style flows.
-     */
-    public suspend fun verifyOtpWithResult(
-        email: String? = null,
-        phone: String? = null,
-        token: String,
-        type: OtpType,
-        captchaToken: String? = null,
-        redirectTo: String? = null,
-    ): SupabaseResult<OtpVerifyResult>
-
-    /** Token-hash counterpart to [verifyOtpWithResult]; see [verifyOtpWithTokenHash]. */
-    public suspend fun verifyOtpWithTokenHashWithResult(
         tokenHash: String,
         type: OtpType,
         captchaToken: String? = null,

@@ -171,14 +171,14 @@ class AuthClientImplTest {
         }
 
     @Test
-    fun test_verifyOtpWithResult_returnsVerifiedNoSessionWhenNoAccessToken() =
+    fun test_verifyOtp_returnsVerifiedNoSessionWhenNoAccessToken() =
         runTest {
             val client = FakeSupabaseClient()
             client.verifyResponse = "{}"
             val sut = AuthClientImpl(client)
 
             val result =
-                sut.verifyOtpWithResult(
+                sut.verifyOtp(
                     email = "a@b.com",
                     token = "123456",
                     type = io.github.androidpoet.supabase.auth.models.OtpType.EMAIL,
@@ -208,13 +208,13 @@ class AuthClientImplTest {
         }
 
     @Test
-    fun test_verifyOtpWithTokenHashWithResult_returnsAuthenticatedWhenSessionPayloadPresent() =
+    fun test_verifyOtpWithTokenHash_returnsAuthenticatedWhenSessionPayloadPresent() =
         runTest {
             val client = FakeSupabaseClient()
             val sut = AuthClientImpl(client)
 
             val result =
-                sut.verifyOtpWithTokenHashWithResult(
+                sut.verifyOtpWithTokenHash(
                     tokenHash = "hash-123",
                     type = io.github.androidpoet.supabase.auth.models.OtpType.EMAIL,
                     captchaToken = null,

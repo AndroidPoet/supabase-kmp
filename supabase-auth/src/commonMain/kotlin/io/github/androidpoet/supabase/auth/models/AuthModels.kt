@@ -292,9 +292,9 @@ internal data class OtpVerifyRequest(
 }
 
 /**
- * Outcome of a result-returning OTP verification: either a new [Session] was
- * minted or the code verified without one (some confirmations, e.g. an email
- * change, don't issue a session). See `AuthClient.verifyOtpWithResult`.
+ * Outcome of an OTP verification: either a new [Session] was minted or the code
+ * verified without one (some confirmations, e.g. an email change, don't issue a
+ * session). See `AuthClient.verifyOtp`.
  */
 public sealed interface OtpVerifyResult {
     /** Verification succeeded and produced an authenticated [session]. */

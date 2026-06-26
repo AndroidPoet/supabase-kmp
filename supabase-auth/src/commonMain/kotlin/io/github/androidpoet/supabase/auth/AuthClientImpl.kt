@@ -264,44 +264,6 @@ internal class AuthClientImpl(
         type: OtpType,
         captchaToken: String?,
         redirectTo: String?,
-    ): SupabaseResult<Session> {
-        val body =
-            defaultJson.encodeToString(
-                OtpVerifyRequest(
-                    email = email,
-                    phone = phone,
-                    token = token,
-                    type = type,
-                    captchaToken = captchaToken,
-                    redirectTo = redirectTo,
-                ),
-            )
-        return verifyOtpSessionFromRawResponse(client.post(AuthPaths.VERIFY, body = body))
-    }
-
-    override suspend fun verifyOtpWithTokenHash(
-        tokenHash: String,
-        type: OtpType,
-        captchaToken: String?,
-    ): SupabaseResult<Session> {
-        val body =
-            defaultJson.encodeToString(
-                OtpVerifyRequest(
-                    tokenHash = tokenHash,
-                    type = type,
-                    captchaToken = captchaToken,
-                ),
-            )
-        return verifyOtpSessionFromRawResponse(client.post(AuthPaths.VERIFY, body = body))
-    }
-
-    override suspend fun verifyOtpWithResult(
-        email: String?,
-        phone: String?,
-        token: String,
-        type: OtpType,
-        captchaToken: String?,
-        redirectTo: String?,
     ): SupabaseResult<OtpVerifyResult> {
         val body =
             defaultJson.encodeToString(
@@ -317,7 +279,7 @@ internal class AuthClientImpl(
         return verifyOtpResultFromRawResponse(client.post(AuthPaths.VERIFY, body = body))
     }
 
-    override suspend fun verifyOtpWithTokenHashWithResult(
+    override suspend fun verifyOtpWithTokenHash(
         tokenHash: String,
         type: OtpType,
         captchaToken: String?,
@@ -1033,37 +995,6 @@ internal class AuthClientImpl(
                             "resend only supports signup, email_change, sms or phone_change; got $type",
                     ),
                 )
-        }
-
-    // The plain verifyOtp variants promise a Session, but some confirmations (e.g. email_change /
-    // phone_change) verify without minting one, so the body has no access_token. Detect that and
-    // return a clear failure pointing at verifyOtpWithResult rather than a confusing decode error.
-    private fun verifyOtpSessionFromRawResponse(response: SupabaseResult<String>): SupabaseResult<Session> =
-        when (response) {
-            is SupabaseResult.Failure -> SupabaseResult.Failure(response.error)
-            is SupabaseResult.Success -> {
-                val element =
-                    runCatching { defaultJson.parseToJsonElement(response.value) }.getOrElse {
-                        return SupabaseResult.Failure(SupabaseError(message = "Invalid verify response: ${it.message}"))
-                    }
-                val obj =
-                    element as? JsonObject
-                        ?: return SupabaseResult.Failure(SupabaseError(message = "Invalid verify response shape"))
-                if ("access_token" in obj) {
-                    runCatching { defaultJson.decodeFromJsonElement<Session>(obj) }.fold(
-                        onSuccess = { SupabaseResult.Success(it) },
-                        onFailure = {
-                            SupabaseResult.Failure(SupabaseError(message = "Invalid verify session payload: ${it.message}"))
-                        },
-                    )
-                } else {
-                    SupabaseResult.Failure(
-                        SupabaseError(
-                            message = "verification succeeded but produced no session; use verifyOtpWithResult",
-                        ),
-                    )
-                }
-            }
         }
 
     private fun verifyOtpResultFromRawResponse(response: SupabaseResult<String>): SupabaseResult<OtpVerifyResult> =
