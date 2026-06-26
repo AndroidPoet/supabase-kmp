@@ -54,8 +54,8 @@ class StorageE2eTest {
 
     /** Best-effort teardown: removes only the run-id bucket; warns instead of throwing. */
     private suspend fun cleanupBucket(bucketId: String) {
-        val emptied = createStorageClientForCleanup().emptyBucket(bucketId)
-        if (emptied is SupabaseResult.Failure) println("WARN e2e cleanup emptyBucket($bucketId): ${emptied.error}")
+        val emptied = createStorageClientForCleanup().clearBucket(bucketId)
+        if (emptied is SupabaseResult.Failure) println("WARN e2e cleanup clearBucket($bucketId): ${emptied.error}")
         val deleted = createStorageClientForCleanup().deleteBucket(bucketId)
         if (deleted is SupabaseResult.Failure) println("WARN e2e cleanup deleteBucket($bucketId): ${deleted.error}")
     }

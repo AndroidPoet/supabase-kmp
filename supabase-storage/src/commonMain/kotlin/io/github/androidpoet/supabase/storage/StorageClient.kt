@@ -52,13 +52,13 @@ public interface AnalyticsCatalogClient {
     /**
      * Loads the raw Iceberg catalog config (`GET /v1/config`) for this bucket as a
      * [JsonObject]. The config carries the `defaults`/`overrides` property maps, including the
-     * route `prefix` this client uses to address namespaces and tables. See [loadConfigTyped]
+     * route `prefix` this client uses to address namespaces and tables. See [getConfigTyped]
      * for the modeled form.
      */
-    public suspend fun loadConfig(): SupabaseResult<JsonObject>
+    public suspend fun getConfig(): SupabaseResult<JsonObject>
 
-    /** Typed counterpart of [loadConfig], decoding the response into [IcebergCatalogConfig]. */
-    public suspend fun loadConfigTyped(): SupabaseResult<IcebergCatalogConfig>
+    /** Typed counterpart of [getConfig], decoding the response into [IcebergCatalogConfig]. */
+    public suspend fun getConfigTyped(): SupabaseResult<IcebergCatalogConfig>
 
     /**
      * Lists namespaces under the catalog as a raw [JsonObject]. See [listNamespacesTyped] for
@@ -103,16 +103,16 @@ public interface AnalyticsCatalogClient {
      * Drops [namespace] from the catalog. Fails with [SupabaseResult.Failure] if the namespace
      * is missing or still contains tables.
      */
-    public suspend fun dropNamespace(namespace: List<String>): SupabaseResult<Unit>
+    public suspend fun deleteNamespace(namespace: List<String>): SupabaseResult<Unit>
 
     /**
      * Loads [namespace]'s metadata (its property map) as a raw [JsonObject]. See
-     * [loadNamespaceMetadataTyped] for the modeled form.
+     * [getNamespaceMetadataTyped] for the modeled form.
      */
-    public suspend fun loadNamespaceMetadata(namespace: List<String>): SupabaseResult<JsonObject>
+    public suspend fun getNamespaceMetadata(namespace: List<String>): SupabaseResult<JsonObject>
 
-    /** Typed counterpart of [loadNamespaceMetadata], decoding into [IcebergNamespaceMetadata]. */
-    public suspend fun loadNamespaceMetadataTyped(namespace: List<String>): SupabaseResult<IcebergNamespaceMetadata>
+    /** Typed counterpart of [getNamespaceMetadata], decoding into [IcebergNamespaceMetadata]. */
+    public suspend fun getNamespaceMetadataTyped(namespace: List<String>): SupabaseResult<IcebergNamespaceMetadata>
 
     /**
      * Adds/updates and/or removes properties on [namespace] in one call, returning the raw
@@ -175,9 +175,8 @@ public interface AnalyticsCatalogClient {
 
     /**
      * Commits requirements/updates to the table [name] in [namespace] from a raw [request] body,
-     * returning the server's raw [JsonObject]. This is the underlying table-commit operation;
-     * [commitTable] is a semantically named alias over it. Prefer [updateTableTyped]-style typed
-     * variants ([commitTableTyped]) for modeled requests.
+     * returning the server's raw [JsonObject] (the Iceberg commit-table endpoint). Prefer
+     * [updateTableTyped] for modeled requests.
      */
     public suspend fun updateTable(
         namespace: List<String>,
@@ -185,23 +184,12 @@ public interface AnalyticsCatalogClient {
         request: JsonObject,
     ): SupabaseResult<JsonObject>
 
-    /** Typed counterpart of [commitTable] taking [IcebergTableCommitRequest] (requirements + updates). */
-    public suspend fun commitTableTyped(
+    /** Typed counterpart of [updateTable] taking [IcebergTableCommitRequest] (requirements + updates). */
+    public suspend fun updateTableTyped(
         namespace: List<String>,
         name: String,
         request: IcebergTableCommitRequest,
     ): SupabaseResult<IcebergTableMetadataResponse>
-
-    /**
-     * Commits requirements/updates to the table [name] in [namespace] from a raw [request] body.
-     * A semantically named alias for [updateTable] (the Iceberg commit-table endpoint); see
-     * [commitTableTyped] for the modeled form.
-     */
-    public suspend fun commitTable(
-        namespace: List<String>,
-        name: String,
-        request: JsonObject,
-    ): SupabaseResult<JsonObject>
 
     /**
      * Drops the table [name] from [namespace].
@@ -209,7 +197,7 @@ public interface AnalyticsCatalogClient {
      * @param purge when true, asks the server to also delete the table's underlying data files
      *   (`purgeRequested=true`), not just the catalog entry.
      */
-    public suspend fun dropTable(
+    public suspend fun deleteTable(
         namespace: List<String>,
         name: String,
         purge: Boolean = false,
@@ -217,19 +205,19 @@ public interface AnalyticsCatalogClient {
 
     /**
      * Loads the table [name] in [namespace] as a raw [JsonObject] (its current metadata). See
-     * [loadTableTyped] for the modeled form.
+     * [getTableTyped] for the modeled form.
      *
      * @param snapshots optional snapshot-loading mode passed through to the server (e.g. to
      *   request all snapshots vs. only referenced ones).
      */
-    public suspend fun loadTable(
+    public suspend fun getTable(
         namespace: List<String>,
         name: String,
         snapshots: String? = null,
     ): SupabaseResult<JsonObject>
 
-    /** Typed counterpart of [loadTable], decoding into [IcebergTableMetadataResponse]. */
-    public suspend fun loadTableTyped(
+    /** Typed counterpart of [getTable], decoding into [IcebergTableMetadataResponse]. */
+    public suspend fun getTableTyped(
         namespace: List<String>,
         name: String,
         snapshots: String? = null,
@@ -332,11 +320,11 @@ public interface StorageClient {
         allowedMimeTypes: List<String>? = null,
     ): SupabaseResult<Bucket>
 
-    /** Deletes the bucket [id]. The bucket must be empty; see [emptyBucket] to clear it first. */
+    /** Deletes the bucket [id]. The bucket must be empty; see [clearBucket] to clear it first. */
     public suspend fun deleteBucket(id: String): SupabaseResult<Unit>
 
     /** Removes every object from the bucket [id] without deleting the bucket itself. */
-    public suspend fun emptyBucket(id: String): SupabaseResult<Unit>
+    public suspend fun clearBucket(id: String): SupabaseResult<Unit>
 
     /**
      * Uploads [data] to [path] in [bucket].
@@ -561,7 +549,7 @@ public interface StorageClient {
     ): SupabaseResult<Unit>
 
     /**
-     * Deletes a single object at [path] in [bucket]. For batch deletes prefer [remove], which
+     * Deletes a single object at [path] in [bucket]. For batch deletes prefer [deleteObjects], which
      * removes many paths in one request.
      */
     public suspend fun deleteObject(
@@ -585,16 +573,10 @@ public interface StorageClient {
     ): SupabaseResult<Unit>
 
     /**
-     * Deletes multiple objects by [paths] in one request. Use [removeWithResult] instead when you
-     * need the list of objects the server reports as removed.
+     * Deletes multiple objects by [paths] in one request and returns the [FileObject] entries the
+     * server reports as removed. Callers that don't need the removed set can ignore the value.
      */
-    public suspend fun remove(bucket: String, paths: List<String>): SupabaseResult<Unit>
-
-    /**
-     * Deletes multiple objects by [paths] and returns the [FileObject] entries the server reports
-     * as removed — the same operation as [remove] but surfacing the deleted set.
-     */
-    public suspend fun removeWithResult(bucket: String, paths: List<String>): SupabaseResult<List<FileObject>>
+    public suspend fun deleteObjects(bucket: String, paths: List<String>): SupabaseResult<List<FileObject>>
 
     /**
      * Creates a time-limited signed download URL for a private object (`POST /object/sign`),

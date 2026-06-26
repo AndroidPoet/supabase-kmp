@@ -1,14 +1,20 @@
 public abstract interface class io/github/androidpoet/supabase/storage/AnalyticsCatalogClient {
-	public abstract fun commitTable (Ljava/util/List;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun commitTableTyped (Ljava/util/List;Ljava/lang/String;Lio/github/androidpoet/supabase/storage/models/IcebergTableCommitRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun createNamespace (Ljava/util/List;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun createNamespace$default (Lio/github/androidpoet/supabase/storage/AnalyticsCatalogClient;Ljava/util/List;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun createNamespaceTyped (Lio/github/androidpoet/supabase/storage/models/IcebergCreateNamespaceRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun createTable (Ljava/util/List;Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun createTableTyped (Ljava/util/List;Lio/github/androidpoet/supabase/storage/models/IcebergTableCreateRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun dropNamespace (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun dropTable (Ljava/util/List;Ljava/lang/String;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun dropTable$default (Lio/github/androidpoet/supabase/storage/AnalyticsCatalogClient;Ljava/util/List;Ljava/lang/String;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun deleteNamespace (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun deleteTable (Ljava/util/List;Ljava/lang/String;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun deleteTable$default (Lio/github/androidpoet/supabase/storage/AnalyticsCatalogClient;Ljava/util/List;Ljava/lang/String;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun getConfig (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getConfigTyped (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getNamespaceMetadata (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getNamespaceMetadataTyped (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getTable (Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun getTable$default (Lio/github/androidpoet/supabase/storage/AnalyticsCatalogClient;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun getTableTyped (Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun getTableTyped$default (Lio/github/androidpoet/supabase/storage/AnalyticsCatalogClient;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun listNamespaces (Ljava/util/List;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun listNamespaces$default (Lio/github/androidpoet/supabase/storage/AnalyticsCatalogClient;Ljava/util/List;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun listNamespacesTyped (Ljava/util/List;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -17,14 +23,6 @@ public abstract interface class io/github/androidpoet/supabase/storage/Analytics
 	public static synthetic fun listTables$default (Lio/github/androidpoet/supabase/storage/AnalyticsCatalogClient;Ljava/util/List;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun listTablesTyped (Ljava/util/List;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun listTablesTyped$default (Lio/github/androidpoet/supabase/storage/AnalyticsCatalogClient;Ljava/util/List;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public abstract fun loadConfig (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun loadConfigTyped (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun loadNamespaceMetadata (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun loadNamespaceMetadataTyped (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun loadTable (Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun loadTable$default (Lio/github/androidpoet/supabase/storage/AnalyticsCatalogClient;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public abstract fun loadTableTyped (Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun loadTableTyped$default (Lio/github/androidpoet/supabase/storage/AnalyticsCatalogClient;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun registerTable (Ljava/util/List;Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun registerTableTyped (Ljava/util/List;Lio/github/androidpoet/supabase/storage/models/IcebergTableRegisterRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun renameTable (Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -33,17 +31,18 @@ public abstract interface class io/github/androidpoet/supabase/storage/Analytics
 	public static synthetic fun updateNamespaceProperties$default (Lio/github/androidpoet/supabase/storage/AnalyticsCatalogClient;Ljava/util/List;Ljava/util/List;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun updateNamespacePropertiesTyped (Ljava/util/List;Lio/github/androidpoet/supabase/storage/models/IcebergUpdateNamespacePropertiesRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun updateTable (Ljava/util/List;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun updateTableTyped (Ljava/util/List;Ljava/lang/String;Lio/github/androidpoet/supabase/storage/models/IcebergTableCommitRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class io/github/androidpoet/supabase/storage/AnalyticsCatalogClient$DefaultImpls {
 	public static synthetic fun createNamespace$default (Lio/github/androidpoet/supabase/storage/AnalyticsCatalogClient;Ljava/util/List;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static synthetic fun dropTable$default (Lio/github/androidpoet/supabase/storage/AnalyticsCatalogClient;Ljava/util/List;Ljava/lang/String;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun deleteTable$default (Lio/github/androidpoet/supabase/storage/AnalyticsCatalogClient;Ljava/util/List;Ljava/lang/String;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun getTable$default (Lio/github/androidpoet/supabase/storage/AnalyticsCatalogClient;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun getTableTyped$default (Lio/github/androidpoet/supabase/storage/AnalyticsCatalogClient;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun listNamespaces$default (Lio/github/androidpoet/supabase/storage/AnalyticsCatalogClient;Ljava/util/List;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun listNamespacesTyped$default (Lio/github/androidpoet/supabase/storage/AnalyticsCatalogClient;Ljava/util/List;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun listTables$default (Lio/github/androidpoet/supabase/storage/AnalyticsCatalogClient;Ljava/util/List;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun listTablesTyped$default (Lio/github/androidpoet/supabase/storage/AnalyticsCatalogClient;Ljava/util/List;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static synthetic fun loadTable$default (Lio/github/androidpoet/supabase/storage/AnalyticsCatalogClient;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static synthetic fun loadTableTyped$default (Lio/github/androidpoet/supabase/storage/AnalyticsCatalogClient;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun updateNamespaceProperties$default (Lio/github/androidpoet/supabase/storage/AnalyticsCatalogClient;Ljava/util/List;Ljava/util/List;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 }
 
@@ -118,6 +117,7 @@ public final class io/github/androidpoet/supabase/storage/StorageAccessorKt {
 
 public abstract interface class io/github/androidpoet/supabase/storage/StorageClient {
 	public abstract fun analyticsCatalog (Ljava/lang/String;)Lio/github/androidpoet/supabase/storage/AnalyticsCatalogClient;
+	public abstract fun clearBucket (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun copy$default (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun createAnalyticsBucket (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -139,6 +139,7 @@ public abstract interface class io/github/androidpoet/supabase/storage/StorageCl
 	public abstract fun deleteAnalyticsBucket (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun deleteBucket (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun deleteObject (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun deleteObjects (Ljava/lang/String;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun deleteVectorBucket (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun deleteVectorIndex (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun deleteVectors (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -156,7 +157,6 @@ public abstract interface class io/github/androidpoet/supabase/storage/StorageCl
 	public abstract fun downloadPublicBytes (Ljava/lang/String;Ljava/lang/String;ZLjava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun downloadPublicBytes$default (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/storage/ImageTransformOptions;ZLjava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun downloadPublicBytes$default (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;ZLjava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public abstract fun emptyBucket (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun exists (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun existsPublic (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getAuthenticatedRenderUrl (Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/storage/ImageTransformOptions;)Ljava/lang/String;
@@ -199,8 +199,6 @@ public abstract interface class io/github/androidpoet/supabase/storage/StorageCl
 	public abstract fun putVectors (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun queryVectors (Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/storage/models/VectorData;Ljava/lang/Integer;Lkotlinx/serialization/json/JsonObject;Ljava/lang/Boolean;Ljava/lang/Boolean;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun queryVectors$default (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/storage/models/VectorData;Ljava/lang/Integer;Lkotlinx/serialization/json/JsonObject;Ljava/lang/Boolean;Ljava/lang/Boolean;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public abstract fun remove (Ljava/lang/String;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun removeWithResult (Ljava/lang/String;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun update (Ljava/lang/String;Ljava/lang/String;[BLjava/lang/String;ZLjava/lang/Integer;Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun update$default (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;[BLjava/lang/String;ZLjava/lang/Integer;Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun updateBucket (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Long;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -267,6 +265,7 @@ public final class io/github/androidpoet/supabase/storage/StorageClientExtKt {
 	public static final fun createSignedRenderUrls (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/util/List;JLio/github/androidpoet/supabase/storage/ImageTransformOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun createSignedRenderUrlsByPath (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;JLio/github/androidpoet/supabase/storage/ImageTransformOptions;[Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun createSignedRenderUrlsByPath (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/util/List;JLio/github/androidpoet/supabase/storage/ImageTransformOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun deleteObjects (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;[Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun getAuthenticatedRenderUrls (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Lio/github/androidpoet/supabase/storage/ImageTransformOptions;[Ljava/lang/String;)Ljava/util/List;
 	public static final fun getAuthenticatedRenderUrls (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/util/List;Lio/github/androidpoet/supabase/storage/ImageTransformOptions;)Ljava/util/List;
 	public static synthetic fun getAuthenticatedRenderUrls$default (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Lio/github/androidpoet/supabase/storage/ImageTransformOptions;[Ljava/lang/String;ILjava/lang/Object;)Ljava/util/List;
@@ -303,8 +302,6 @@ public final class io/github/androidpoet/supabase/storage/StorageClientExtKt {
 	public static final fun getPublicUrlsByPath (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;[Ljava/lang/String;)Ljava/util/Map;
 	public static synthetic fun getPublicUrlsByPath$default (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/util/List;ZLjava/lang/String;Lio/github/androidpoet/supabase/storage/ImageTransformOptions;ILjava/lang/Object;)Ljava/util/Map;
 	public static synthetic fun getPublicUrlsByPath$default (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;ZLjava/lang/String;Lio/github/androidpoet/supabase/storage/ImageTransformOptions;[Ljava/lang/String;ILjava/lang/Object;)Ljava/util/Map;
-	public static final fun remove (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;[Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static final fun removeWithResult (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;[Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun uploadResumable (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;[BLjava/lang/String;ZLjava/lang/Integer;ILkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun uploadResumable$default (Lio/github/androidpoet/supabase/storage/StorageClient;Ljava/lang/String;Ljava/lang/String;[BLjava/lang/String;ZLjava/lang/Integer;ILkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun withCacheNonce (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;

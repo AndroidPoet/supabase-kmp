@@ -141,7 +141,7 @@ internal class StorageClientImpl(
     override suspend fun deleteBucket(id: String): SupabaseResult<Unit> =
         client.delete("${StoragePaths.BUCKET}/$id").map { }
 
-    override suspend fun emptyBucket(id: String): SupabaseResult<Unit> =
+    override suspend fun clearBucket(id: String): SupabaseResult<Unit> =
         client.post("${StoragePaths.BUCKET}/$id/empty").map { }
 
     override suspend fun upload(
@@ -427,9 +427,7 @@ internal class StorageClientImpl(
         return client.post(StoragePaths.OBJECT_COPY, body = body).map { }
     }
 
-    override suspend fun remove(bucket: String, paths: List<String>): SupabaseResult<Unit> = removeWithResult(bucket, paths).map { }
-
-    override suspend fun removeWithResult(
+    override suspend fun deleteObjects(
         bucket: String,
         paths: List<String>,
     ): SupabaseResult<List<FileObject>> {
@@ -1001,14 +999,14 @@ internal class AnalyticsCatalogClientImpl(
 ) : AnalyticsCatalogClient {
     private var resolvedPrefix: String? = null
 
-    override suspend fun loadConfig(): SupabaseResult<JsonObject> =
+    override suspend fun getConfig(): SupabaseResult<JsonObject> =
         client
             .get(
                 endpoint = "${StoragePaths.ICEBERG}/v1/config",
                 queryParams = listOf("warehouse" to bucketName),
             ).toJsonObject()
 
-    override suspend fun loadConfigTyped(): SupabaseResult<IcebergCatalogConfig> =
+    override suspend fun getConfigTyped(): SupabaseResult<IcebergCatalogConfig> =
         client
             .get(
                 endpoint = "${StoragePaths.ICEBERG}/v1/config",
@@ -1075,13 +1073,13 @@ internal class AnalyticsCatalogClientImpl(
                 body = defaultJson.encodeToString(request),
             ).deserialize()
 
-    override suspend fun dropNamespace(namespace: List<String>): SupabaseResult<Unit> =
+    override suspend fun deleteNamespace(namespace: List<String>): SupabaseResult<Unit> =
         client.delete("${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}").map { }
 
-    override suspend fun loadNamespaceMetadata(namespace: List<String>): SupabaseResult<JsonObject> =
+    override suspend fun getNamespaceMetadata(namespace: List<String>): SupabaseResult<JsonObject> =
         client.get("${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}").toJsonObject()
 
-    override suspend fun loadNamespaceMetadataTyped(namespace: List<String>): SupabaseResult<IcebergNamespaceMetadata> =
+    override suspend fun getNamespaceMetadataTyped(namespace: List<String>): SupabaseResult<IcebergNamespaceMetadata> =
         client.get("${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}").deserialize()
 
     override suspend fun updateNamespaceProperties(
@@ -1181,14 +1179,7 @@ internal class AnalyticsCatalogClientImpl(
                 body = defaultJson.encodeToString(request),
             ).toJsonObject()
 
-    override suspend fun commitTable(
-        namespace: List<String>,
-        name: String,
-        request: JsonObject,
-    ): SupabaseResult<JsonObject> =
-        updateTable(namespace = namespace, name = name, request = request)
-
-    override suspend fun commitTableTyped(
+    override suspend fun updateTableTyped(
         namespace: List<String>,
         name: String,
         request: IcebergTableCommitRequest,
@@ -1199,7 +1190,7 @@ internal class AnalyticsCatalogClientImpl(
                 body = defaultJson.encodeToString(request),
             ).deserialize()
 
-    override suspend fun dropTable(
+    override suspend fun deleteTable(
         namespace: List<String>,
         name: String,
         purge: Boolean,
@@ -1209,7 +1200,7 @@ internal class AnalyticsCatalogClientImpl(
                 endpoint = "${resolvePrefix()}/namespaces/${namespace.toIcebergPath()}/tables/${encodePathSegment(name)}?purgeRequested=$purge",
             ).map { }
 
-    override suspend fun loadTable(
+    override suspend fun getTable(
         namespace: List<String>,
         name: String,
         snapshots: String?,
@@ -1228,7 +1219,7 @@ internal class AnalyticsCatalogClientImpl(
             ).toJsonObject()
     }
 
-    override suspend fun loadTableTyped(
+    override suspend fun getTableTyped(
         namespace: List<String>,
         name: String,
         snapshots: String?,
@@ -1284,7 +1275,7 @@ internal class AnalyticsCatalogClientImpl(
     private suspend fun resolvePrefix(): String {
         resolvedPrefix?.let { return it }
         val prefix =
-            when (val config = loadConfig()) {
+            when (val config = getConfig()) {
                 is SupabaseResult.Success -> config.value.extractIcebergPrefix()
                 is SupabaseResult.Failure -> null
             } ?: bucketName
