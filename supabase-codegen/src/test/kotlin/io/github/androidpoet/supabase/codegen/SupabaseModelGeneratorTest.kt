@@ -106,6 +106,29 @@ class SupabaseModelGeneratorTest {
     }
 
     @Test
+    fun emits_column_tokens_in_a_companion_for_the_typed_filter_dsl() {
+        // Each data class carries a `companion object` of Column<T> tokens so `Todos.done`
+        // works with the typed `where { }` DSL without anyone hand-writing the tokens.
+        assertContains(generated, "import io.github.androidpoet.supabase.core.models.Column")
+        assertContains(generated, "companion object {")
+        assertContains(generated, "val done: Column<Boolean> = Column(\"done\")")
+        // Wire name (snake_case) is preserved in the token; the property is camelCase.
+        assertContains(generated, "val createdAt: Column<String> = Column(\"created_at\")")
+        // Enum-backed and collection columns keep their element types.
+        assertContains(generated, "val priority: Column<PriorityLevel> = Column(\"priority\")")
+        assertContains(generated, "val tags: Column<List<String>> = Column(\"tags\")")
+    }
+
+    @Test
+    fun column_tokens_drop_nullability_so_operators_take_a_bare_value() {
+        // `Column<T>.eq(value: T)` takes a bare T; isNull()/isNotNull() cover the null cases.
+        // A nullable column's token must therefore be `Column<Long>`, not `Column<Long?>`.
+        assertContains(generated, "val score: Column<Long> = Column(\"score\")")
+        assertFalse("Column<Long?>" in generated, "token type must drop nullability")
+        assertFalse("Column<String?>" in generated, "token type must drop nullability")
+    }
+
+    @Test
     fun maps_money_to_string_but_numeric_to_double() {
         // Postgres `money` (CASHOID) is NOT a JSONTYPE_NUMERIC type, so PostgREST emits it as a
         // locale-formatted string (e.g. "$1,234.56") — decoding it into Double throws on every row.
