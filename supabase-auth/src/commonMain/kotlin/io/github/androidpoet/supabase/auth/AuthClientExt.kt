@@ -9,6 +9,7 @@ import io.github.androidpoet.supabase.auth.models.JwtClaims
 import io.github.androidpoet.supabase.auth.models.JwtClaimsResult
 import io.github.androidpoet.supabase.auth.models.JwtHeader
 import io.github.androidpoet.supabase.auth.models.LinkIdentityResponse
+import io.github.androidpoet.supabase.auth.models.MessagingChannel
 import io.github.androidpoet.supabase.auth.models.MfaVerifyResponse
 import io.github.androidpoet.supabase.auth.models.OAuthProvider
 import io.github.androidpoet.supabase.auth.models.OtpType
@@ -67,11 +68,11 @@ public suspend fun AuthClient.sendOtp(email: String): SupabaseResult<Unit> =
 /**
  * Sends a phone OTP. Shorthand for [AuthClient.signInWithOtp] with just a phone.
  *
- * @param channel delivery channel: `"sms"` (server default) or `"whatsapp"`.
+ * @param channel delivery channel ([MessagingChannel.SMS] server default, or `WHATSAPP`).
  */
 public suspend fun AuthClient.sendPhoneOtp(
     phone: String,
-    channel: String? = null,
+    channel: MessagingChannel? = null,
 ): SupabaseResult<Unit> =
     signInWithOtp(phone = phone, channel = channel)
 

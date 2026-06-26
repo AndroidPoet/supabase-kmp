@@ -5,6 +5,7 @@ import io.github.androidpoet.supabase.auth.models.AuthSettings
 import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevel
 import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevels
 import io.github.androidpoet.supabase.auth.models.LinkIdentityResponse
+import io.github.androidpoet.supabase.auth.models.MessagingChannel
 import io.github.androidpoet.supabase.auth.models.MfaChallengeResponse
 import io.github.androidpoet.supabase.auth.models.MfaEnrollResponse
 import io.github.androidpoet.supabase.auth.models.MfaFactorType
@@ -1065,7 +1066,7 @@ private class FakeAuthClient : AuthClient {
         redirectTo: String?,
         captchaToken: String?,
         pkceParams: PkceParams?,
-        channel: String?,
+        channel: MessagingChannel?,
     ): SupabaseResult<Session> {
         lastPhoneSignUp = phone
         return SupabaseResult.Success(dummySession.copy(accessToken = "phone-sign-up-acc", refreshToken = "phone-sign-up-ref"))
@@ -1112,7 +1113,7 @@ private class FakeAuthClient : AuthClient {
         createUser: Boolean?,
         captchaToken: String?,
         emailRedirectTo: String?,
-        channel: String?,
+        channel: MessagingChannel?,
         data: JsonObject?,
         pkceParams: PkceParams?,
     ): SupabaseResult<Unit> = SupabaseResult.Failure(SupabaseError("not used"))
@@ -1299,7 +1300,7 @@ private class FakeAuthClient : AuthClient {
     override suspend fun mfaEnroll(factorType: MfaFactorType, friendlyName: String?, issuer: String?, phone: String?, accessToken: String): SupabaseResult<MfaEnrollResponse> =
         SupabaseResult.Failure(SupabaseError("not used"))
 
-    override suspend fun mfaChallenge(factorId: String, accessToken: String, channel: String?): SupabaseResult<MfaChallengeResponse> =
+    override suspend fun mfaChallenge(factorId: String, accessToken: String, channel: MessagingChannel?): SupabaseResult<MfaChallengeResponse> =
         SupabaseResult.Success(MfaChallengeResponse(id = "challenge-1", type = "totp")).also {
             lastMfaChallengeFactorId = factorId
         }

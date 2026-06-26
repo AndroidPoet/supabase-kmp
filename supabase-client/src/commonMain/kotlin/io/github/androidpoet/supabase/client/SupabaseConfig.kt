@@ -1,10 +1,24 @@
 package io.github.androidpoet.supabase.client
 import io.ktor.client.HttpClientConfig
-import io.ktor.client.plugins.logging.LogLevel
 
 /** [DslMarker] scoping the [SupabaseConfigBuilder] receiver so nested DSLs can't leak into it. */
 @DslMarker
 public annotation class SupabaseDsl
+
+/**
+ * How verbose the HTTP wire log is when [SupabaseConfigBuilder.logging] is on — an SDK-owned
+ * enum so the transport's logging library isn't part of the public surface.
+ *
+ * [NONE] logs nothing; [INFO] the request line and status; [HEADERS] adds request/response
+ * headers; [BODY] adds bodies; [ALL] is everything (the most verbose).
+ */
+public enum class HttpLogLevel {
+    NONE,
+    INFO,
+    HEADERS,
+    BODY,
+    ALL,
+}
 
 /**
  * Mutable builder for [SupabaseConfig], populated inside the client-creation DSL.
@@ -20,7 +34,7 @@ public class SupabaseConfigBuilder {
     public var logging: Boolean = false
 
     /** Verbosity of the wire log when [logging] is on. */
-    public var logLevel: LogLevel = LogLevel.NONE
+    public var logLevel: HttpLogLevel = HttpLogLevel.NONE
 
     /** Extra headers attached to every request, merged under any per-call headers. */
     public val headers: MutableMap<String, String> = mutableMapOf()
@@ -114,7 +128,7 @@ public class SupabaseConfig(
     /** Whether HTTP wire logging is enabled. See [SupabaseConfigBuilder.logging]. */
     public val logging: Boolean,
     /** Verbosity of the wire log. See [SupabaseConfigBuilder.logLevel]. */
-    public val logLevel: LogLevel,
+    public val logLevel: HttpLogLevel,
     /** Extra headers attached to every request. See [SupabaseConfigBuilder.headers]. */
     public val headers: Map<String, String>,
     /** Retry policy for transient failures. See [RetryConfig]. */

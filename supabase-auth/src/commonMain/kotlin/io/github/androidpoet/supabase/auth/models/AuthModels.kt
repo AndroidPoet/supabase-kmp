@@ -330,6 +330,19 @@ internal data class ResendOtpRequest(
     )
 }
 
+/**
+ * Delivery channel for a phone OTP or MFA challenge code, sent as the `channel` field.
+ *
+ * [SMS] is the GoTrue server default; [WHATSAPP] delivers the code over WhatsApp. Ignored for
+ * email OTP and for TOTP MFA factors.
+ */
+public enum class MessagingChannel(
+    internal val wireValue: String,
+) {
+    SMS("sms"),
+    WHATSAPP("whatsapp"),
+}
+
 /** The flow an OTP / email-link belongs to, selecting how GoTrue verifies it. */
 @Serializable
 public enum class OtpType {

@@ -11,6 +11,7 @@ import io.github.androidpoet.supabase.auth.models.Jwk
 import io.github.androidpoet.supabase.auth.models.JwkSet
 import io.github.androidpoet.supabase.auth.models.JwtClaims
 import io.github.androidpoet.supabase.auth.models.LinkIdentityResponse
+import io.github.androidpoet.supabase.auth.models.MessagingChannel
 import io.github.androidpoet.supabase.auth.models.MfaChallengeRequest
 import io.github.androidpoet.supabase.auth.models.MfaChallengeResponse
 import io.github.androidpoet.supabase.auth.models.MfaEnrollRequest
@@ -110,7 +111,7 @@ internal class AuthClientImpl(
         redirectTo: String?,
         captchaToken: String?,
         pkceParams: PkceParams?,
-        channel: String?,
+        channel: MessagingChannel?,
     ): SupabaseResult<Session> {
         if (phone.isBlank()) return SupabaseResult.Failure(SupabaseError("phone must not be blank"))
         val body =
@@ -122,7 +123,7 @@ internal class AuthClientImpl(
                     captchaToken = captchaToken,
                     codeChallenge = pkceParams?.codeChallenge,
                     codeChallengeMethod = pkceParams?.codeChallengeMethod,
-                    channel = channel,
+                    channel = channel?.wireValue,
                 ),
             )
         return client.post(signUpEndpoint(redirectTo), body = body).deserialize()
@@ -236,7 +237,7 @@ internal class AuthClientImpl(
         createUser: Boolean?,
         captchaToken: String?,
         emailRedirectTo: String?,
-        channel: String?,
+        channel: MessagingChannel?,
         data: JsonObject?,
         pkceParams: PkceParams?,
     ): SupabaseResult<Unit> {
@@ -246,7 +247,7 @@ internal class AuthClientImpl(
                     email = email,
                     phone = phone,
                     createUser = createUser,
-                    channel = channel,
+                    channel = channel?.wireValue,
                     data = data,
                     captchaToken = captchaToken,
                     codeChallenge = pkceParams?.codeChallenge,
@@ -744,12 +745,12 @@ internal class AuthClientImpl(
     override suspend fun mfaChallenge(
         factorId: String,
         accessToken: String,
-        channel: String?,
+        channel: MessagingChannel?,
     ): SupabaseResult<MfaChallengeResponse> =
         client
             .post(
                 endpoint = "${AuthPaths.FACTORS}/$factorId/challenge",
-                body = channel?.let { defaultJson.encodeToString(MfaChallengeRequest(channel = it)) },
+                body = channel?.let { defaultJson.encodeToString(MfaChallengeRequest(channel = it.wireValue)) },
                 headers = bearerHeaders(accessToken),
             ).deserialize()
 

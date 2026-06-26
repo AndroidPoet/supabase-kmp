@@ -1,5 +1,6 @@
 package io.github.androidpoet.supabase.client.transport
 
+import io.github.androidpoet.supabase.client.HttpLogLevel
 import io.github.androidpoet.supabase.client.RetryConfig
 import io.github.androidpoet.supabase.client.SupabaseConfig
 import io.github.androidpoet.supabase.client.SupabaseInterceptor
@@ -8,7 +9,6 @@ import io.github.androidpoet.supabase.client.SupabaseLogger
 import io.github.androidpoet.supabase.core.result.SupabaseError
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.respondError
-import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
@@ -44,7 +44,7 @@ private fun config(
     interceptor: SupabaseInterceptor? = null,
     logger: SupabaseLogger? = null,
     logging: Boolean = false,
-    logLevel: LogLevel = LogLevel.NONE,
+    logLevel: HttpLogLevel = HttpLogLevel.NONE,
 ) = SupabaseConfig(
     logging = logging,
     logLevel = logLevel,
@@ -167,7 +167,7 @@ class HttpTransportObservabilityTest {
                     }
                 }
             val transport =
-                transport(config(logger = sink, logging = true, logLevel = LogLevel.ALL)) {
+                transport(config(logger = sink, logging = true, logLevel = HttpLogLevel.ALL)) {
                     respond("{}", HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
                 }
 

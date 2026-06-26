@@ -1,3 +1,14 @@
+public final class io/github/androidpoet/supabase/client/HttpLogLevel : java/lang/Enum {
+	public static final field ALL Lio/github/androidpoet/supabase/client/HttpLogLevel;
+	public static final field BODY Lio/github/androidpoet/supabase/client/HttpLogLevel;
+	public static final field HEADERS Lio/github/androidpoet/supabase/client/HttpLogLevel;
+	public static final field INFO Lio/github/androidpoet/supabase/client/HttpLogLevel;
+	public static final field NONE Lio/github/androidpoet/supabase/client/HttpLogLevel;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/client/HttpLogLevel;
+	public static fun values ()[Lio/github/androidpoet/supabase/client/HttpLogLevel;
+}
+
 public final class io/github/androidpoet/supabase/client/RetryConfig {
 	public static final field Companion Lio/github/androidpoet/supabase/client/RetryConfig$Companion;
 	public static final field DEFAULT_BASE_DELAY_MILLIS J
@@ -80,14 +91,14 @@ public final class io/github/androidpoet/supabase/client/SupabaseClientExtKt {
 }
 
 public final class io/github/androidpoet/supabase/client/SupabaseConfig {
-	public fun <init> (ZLio/ktor/client/plugins/logging/LogLevel;Ljava/util/Map;Lio/github/androidpoet/supabase/client/RetryConfig;Lio/github/androidpoet/supabase/client/SupabaseLogger;Lio/github/androidpoet/supabase/client/SupabaseInterceptor;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Long;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
-	public synthetic fun <init> (ZLio/ktor/client/plugins/logging/LogLevel;Ljava/util/Map;Lio/github/androidpoet/supabase/client/RetryConfig;Lio/github/androidpoet/supabase/client/SupabaseLogger;Lio/github/androidpoet/supabase/client/SupabaseInterceptor;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Long;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (ZLio/github/androidpoet/supabase/client/HttpLogLevel;Ljava/util/Map;Lio/github/androidpoet/supabase/client/RetryConfig;Lio/github/androidpoet/supabase/client/SupabaseLogger;Lio/github/androidpoet/supabase/client/SupabaseInterceptor;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Long;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (ZLio/github/androidpoet/supabase/client/HttpLogLevel;Ljava/util/Map;Lio/github/androidpoet/supabase/client/RetryConfig;Lio/github/androidpoet/supabase/client/SupabaseLogger;Lio/github/androidpoet/supabase/client/SupabaseInterceptor;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Long;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getAccessTokenProvider ()Lkotlin/jvm/functions/Function1;
 	public final fun getConnectTimeoutMillis ()Ljava/lang/Long;
 	public final fun getHeaders ()Ljava/util/Map;
 	public final fun getHttpClientConfig ()Lkotlin/jvm/functions/Function1;
 	public final fun getInterceptor ()Lio/github/androidpoet/supabase/client/SupabaseInterceptor;
-	public final fun getLogLevel ()Lio/ktor/client/plugins/logging/LogLevel;
+	public final fun getLogLevel ()Lio/github/androidpoet/supabase/client/HttpLogLevel;
 	public final fun getLogger ()Lio/github/androidpoet/supabase/client/SupabaseLogger;
 	public final fun getLogging ()Z
 	public final fun getRequestTimeoutMillis ()Ljava/lang/Long;
@@ -102,7 +113,7 @@ public final class io/github/androidpoet/supabase/client/SupabaseConfigBuilder {
 	public final fun getHeaders ()Ljava/util/Map;
 	public final fun getHttpClientConfig ()Lkotlin/jvm/functions/Function1;
 	public final fun getInterceptor ()Lio/github/androidpoet/supabase/client/SupabaseInterceptor;
-	public final fun getLogLevel ()Lio/ktor/client/plugins/logging/LogLevel;
+	public final fun getLogLevel ()Lio/github/androidpoet/supabase/client/HttpLogLevel;
 	public final fun getLogger ()Lio/github/androidpoet/supabase/client/SupabaseLogger;
 	public final fun getLogging ()Z
 	public final fun getRequestTimeoutMillis ()Ljava/lang/Long;
@@ -112,7 +123,7 @@ public final class io/github/androidpoet/supabase/client/SupabaseConfigBuilder {
 	public final fun setConnectTimeoutMillis (Ljava/lang/Long;)V
 	public final fun setHttpClientConfig (Lkotlin/jvm/functions/Function1;)V
 	public final fun setInterceptor (Lio/github/androidpoet/supabase/client/SupabaseInterceptor;)V
-	public final fun setLogLevel (Lio/ktor/client/plugins/logging/LogLevel;)V
+	public final fun setLogLevel (Lio/github/androidpoet/supabase/client/HttpLogLevel;)V
 	public final fun setLogger (Lio/github/androidpoet/supabase/client/SupabaseLogger;)V
 	public final fun setLogging (Z)V
 	public final fun setRequestTimeoutMillis (Ljava/lang/Long;)V

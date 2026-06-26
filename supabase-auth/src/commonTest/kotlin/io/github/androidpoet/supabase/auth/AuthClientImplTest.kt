@@ -1,6 +1,7 @@
 package io.github.androidpoet.supabase.auth
 
 import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevel
+import io.github.androidpoet.supabase.auth.models.MessagingChannel
 import io.github.androidpoet.supabase.auth.models.OAuthProvider
 import io.github.androidpoet.supabase.auth.models.OtpVerifyResult
 import io.github.androidpoet.supabase.auth.models.PkceParams
@@ -24,7 +25,7 @@ class AuthClientImplTest {
             val client = FakeSupabaseClient()
             val sut = AuthClientImpl(client)
 
-            val result = sut.mfaChallenge(factorId = "factor-1", accessToken = "tok", channel = "whatsapp")
+            val result = sut.mfaChallenge(factorId = "factor-1", accessToken = "tok", channel = MessagingChannel.WHATSAPP)
 
             assertTrue(result is SupabaseResult.Success)
             assertEquals("/auth/v1/factors/factor-1/challenge", client.lastPostEndpoint)
@@ -156,7 +157,7 @@ class AuthClientImplTest {
                 phone = "+15555550100",
                 createUser = false,
                 captchaToken = "captcha-otp",
-                channel = "whatsapp",
+                channel = MessagingChannel.WHATSAPP,
             )
 
             assertEquals("/auth/v1/otp", client.lastPostEndpoint)
@@ -757,7 +758,7 @@ class AuthClientImplTest {
             val client = FakeSupabaseClient()
             val sut = AuthClientImpl(client)
 
-            sut.signUpWithPhone(phone = "+15555550100", password = "pw", channel = "whatsapp")
+            sut.signUpWithPhone(phone = "+15555550100", password = "pw", channel = MessagingChannel.WHATSAPP)
 
             assertEquals("/auth/v1/signup", client.lastPostEndpoint)
             assertTrue(client.lastPostBody?.contains("\"channel\":\"whatsapp\"") == true)

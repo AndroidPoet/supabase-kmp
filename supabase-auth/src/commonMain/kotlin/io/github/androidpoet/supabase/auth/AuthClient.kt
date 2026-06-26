@@ -5,6 +5,7 @@ import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevel
 import io.github.androidpoet.supabase.auth.models.AuthenticatorAssuranceLevels
 import io.github.androidpoet.supabase.auth.models.Jwk
 import io.github.androidpoet.supabase.auth.models.LinkIdentityResponse
+import io.github.androidpoet.supabase.auth.models.MessagingChannel
 import io.github.androidpoet.supabase.auth.models.MfaChallengeResponse
 import io.github.androidpoet.supabase.auth.models.MfaEnrollResponse
 import io.github.androidpoet.supabase.auth.models.MfaFactorType
@@ -81,7 +82,7 @@ public interface AuthClient {
      * @param pkceParams PKCE challenge to bind a PKCE-flow sign-up; pair with
      *   [generatePkceParams] and complete via [exchangeCodeForSession]. Null for the
      *   implicit flow.
-     * @param channel phone delivery channel: `"sms"` (server default) or `"whatsapp"`.
+     * @param channel phone delivery channel ([MessagingChannel.SMS] server default, or `WHATSAPP`).
      */
     public suspend fun signUpWithPhone(
         phone: String,
@@ -90,7 +91,7 @@ public interface AuthClient {
         redirectTo: String? = null,
         captchaToken: String? = null,
         pkceParams: PkceParams? = null,
-        channel: String? = null,
+        channel: MessagingChannel? = null,
     ): SupabaseResult<Session>
 
     /**
@@ -201,8 +202,8 @@ public interface AuthClient {
      *   (server default applies when null).
      * @param captchaToken captcha response when bot protection is enabled.
      * @param emailRedirectTo magic-link redirect for the email channel.
-     * @param channel phone delivery channel: `"sms"` (server default) or
-     *   `"whatsapp"`; ignored for email.
+     * @param channel phone delivery channel ([MessagingChannel.SMS] server default, or
+     *   `WHATSAPP`); ignored for email.
      * @param data optional `user_metadata` stored when the user is auto-created.
      * @param pkceParams PKCE challenge to bind a PKCE-flow magic link; pair with
      *   [generatePkceParams] and complete via [exchangeCodeForSession]. Null for the
@@ -214,8 +215,8 @@ public interface AuthClient {
         createUser: Boolean? = null,
         captchaToken: String? = null,
         emailRedirectTo: String? = null,
-        // Phone OTP delivery channel: "sms" (server default) or "whatsapp". Ignored for email OTP.
-        channel: String? = null,
+        // Phone OTP delivery channel; ignored for email OTP.
+        channel: MessagingChannel? = null,
         data: JsonObject? = null,
         pkceParams: PkceParams? = null,
     ): SupabaseResult<Unit>
@@ -549,12 +550,12 @@ public interface AuthClient {
      * returning a [MfaChallengeResponse] whose `id` is passed to [mfaVerify]. For a
      * phone factor this dispatches the code.
      *
-     * @param channel phone delivery channel (`"sms"`/`"whatsapp"`); ignored for TOTP.
+     * @param channel phone delivery channel ([MessagingChannel.SMS]/`WHATSAPP`); ignored for TOTP.
      */
     public suspend fun mfaChallenge(
         factorId: String,
         accessToken: String,
-        channel: String? = null,
+        channel: MessagingChannel? = null,
     ): SupabaseResult<MfaChallengeResponse>
 
     /**

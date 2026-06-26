@@ -17,7 +17,7 @@ private const val MODERN_PUBLISHABLE = "sb_publishable_abc123"
 private fun config(accessTokenProvider: (suspend () -> String?)? = null) =
     SupabaseConfig(
         logging = false,
-        logLevel = io.ktor.client.plugins.logging.LogLevel.NONE,
+        logLevel = io.github.androidpoet.supabase.client.HttpLogLevel.NONE,
         headers = emptyMap(),
         accessTokenProvider = accessTokenProvider,
     )
