@@ -34,6 +34,12 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(project(":supabase-core"))
+            // The key directory and EncryptedRoom store keys/ciphertext over the
+            // database and deliver live messages over realtime, so this opt-in
+            // module pairs the crypto with both (a Supabase chat app uses them
+            // anyway). The raw crypto API stays usable without touching either.
+            api(project(":supabase-database"))
+            api(project(":supabase-realtime"))
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.cryptography.random)

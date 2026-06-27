@@ -45,3 +45,78 @@ val session = (restored.deriveSelfSession() as SupabaseResult.Success).value  //
 **Targets:** Android, JVM, iOS, macOS, tvOS, watchOS, Linux, Windows, WasmJs.
 
 **Note:** `publicKey` is raw-encoded and safe to publish; the private key stays inside `E2eeKeyPair` — never upload it. P-256 (not X25519) is used so every provider, including browser WebCrypto, is supported.
+
+---
+
+## Verified encrypted chat: KeyDirectory + EncryptedRoom
+
+The crypto box above gives you encrypt/decrypt; this layer adds the plumbing for
+a real plug-and-play encrypted chat: publishing/fetching public keys,
+**verifying** them against tampering, and a live encrypted room over
+`supabase-realtime`.
+
+Apply the migration `supabase/migrations/20260628_add_e2ee_tables.sql`
+(`device_keys` + `e2ee_messages`, both RLS-guarded).
+
+```kotlin
+val room = openEncryptedRoom(
+    database = createDatabaseClient(supabase),
+    realtime = createRealtimeClient(supabase, RealtimeConfig()),
+    keyDirectory = SupabaseKeyDirectory(createDatabaseClient(supabase)),
+    myKeyPair = keyPair,
+    myUserId = myId,
+    peerUserId = peerId,
+    roomId = roomId,
+    // trustStore = persist your own for durable verifications
+    // requireVerified = true  (default — strict)
+).getOrThrow()
+
+// 1) Verify the peer OUT OF BAND (read the number aloud / compare a QR), then:
+val number = room.safetyNumber()      // identical on both devices
+if (userConfirmedItMatches) room.markVerified()
+
+// 2) Send — Failure(E2eeErrorCodes.UNVERIFIED) if not verified in strict mode.
+room.send("hello, end-to-end 🔐")
+
+// 3) Read — history() + live messages(), both decrypt automatically.
+val past = room.history().getOrThrow()
+room.messages().collect { msg -> println(msg.plaintext ?: "🔒 (cannot decrypt)") }
+```
+
+Because the shared key is symmetric, **both peers decrypt the same rows** —
+including their own sent messages (no encrypt-to-self workaround needed).
+
+### Security model
+
+The server is treated as **untrusted**. This module guarantees Supabase only
+ever stores ciphertext, and hardens the two classic weak points:
+
+- **MITM → safety numbers.** Key distribution flows through the server, so raw
+  ECDH alone is man-in-the-middle-able. `safetyNumber()` returns the *same*
+  number on both sides; comparing it out of band and calling `markVerified()` is
+  what authenticates the peer. Strict mode blocks `send` until then.
+- **Key-change rejection.** A peer's key changing after you trusted it (a
+  tampered directory) is rejected as `E2eeErrorCodes.IDENTITY_CHANGED` until you
+  re-verify (`TrustStore.remove` then re-open).
+
+#### ⚠️ Honest caveat — no forward secrecy
+
+The shared key is **static**. If a private key is ever extracted, an attacker
+can decrypt **all** past and future messages. That's sufficient for "the server
+can't read it" (the dominant commercial threat), but it is **not** Signal-grade
+— do **not** advertise forward secrecy. For a Double Ratchet you need a real
+libsignal binding (which is **AGPL**).
+
+### API surface (chat plumbing)
+
+| Symbol | Purpose |
+|---|---|
+| `safetyNumber(localPub, peerPub)` | out-of-band verification number (same on both sides) |
+| `TrustStore` / `InMemoryTrustStore` / `TrustLevel` / `TrustEntry` | per-peer trust ledger (BYO persistence) |
+| `KeyDirectory` / `SupabaseKeyDirectory` / `InMemoryKeyDirectory` | publish / fetch public keys |
+| `openEncryptedRoom(...)` → `EncryptedRoom` | verify-first encrypted chat room |
+| `EncryptedRoom.safetyNumber` / `markVerified` / `isVerified` / `send` / `history` / `messages` | room operations |
+| `DecryptedMessage` / `E2eeErrorCodes` | decrypted result / error codes |
+
+Bring your own persistence for `TrustStore` and key storage — this module never
+bundles a platform secure-storage dependency.
