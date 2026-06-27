@@ -1,3 +1,19 @@
+public final class io/github/androidpoet/supabase/e2ee/DecryptedMessage {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLjava/lang/String;)V
+	public final fun getCreatedAt ()Ljava/lang/String;
+	public final fun getDecryptFailed ()Z
+	public final fun getId ()Ljava/lang/String;
+	public final fun getPlaintext ()Ljava/lang/String;
+	public final fun getSenderId ()Ljava/lang/String;
+}
+
+public final class io/github/androidpoet/supabase/e2ee/E2eeErrorCodes {
+	public static final field IDENTITY_CHANGED Ljava/lang/String;
+	public static final field INSTANCE Lio/github/androidpoet/supabase/e2ee/E2eeErrorCodes;
+	public static final field MISSING_KEYS Ljava/lang/String;
+	public static final field UNVERIFIED Ljava/lang/String;
+}
+
 public final class io/github/androidpoet/supabase/e2ee/E2eeKeyPair {
 	public final fun getPublicKey ()[B
 }
@@ -15,5 +31,73 @@ public final class io/github/androidpoet/supabase/e2ee/E2eeSession {
 	public final fun decryptToString ([BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun encrypt (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun encrypt ([BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/github/androidpoet/supabase/e2ee/EncryptedRoom {
+	public final fun getMyUserId ()Ljava/lang/String;
+	public final fun getPeerUserId ()Ljava/lang/String;
+	public final fun getRoomId ()Ljava/lang/String;
+	public final fun history (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun isVerified (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun markVerified (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun messages ()Lkotlinx/coroutines/flow/Flow;
+	public final fun safetyNumber (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun send (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/github/androidpoet/supabase/e2ee/EncryptedRoomKt {
+	public static final fun openEncryptedRoom (Lio/github/androidpoet/supabase/database/DatabaseClient;Lio/github/androidpoet/supabase/realtime/RealtimeClient;Lio/github/androidpoet/supabase/e2ee/KeyDirectory;Lio/github/androidpoet/supabase/e2ee/E2eeKeyPair;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/e2ee/TrustStore;ZLjava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun openEncryptedRoom$default (Lio/github/androidpoet/supabase/database/DatabaseClient;Lio/github/androidpoet/supabase/realtime/RealtimeClient;Lio/github/androidpoet/supabase/e2ee/KeyDirectory;Lio/github/androidpoet/supabase/e2ee/E2eeKeyPair;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/androidpoet/supabase/e2ee/TrustStore;ZLjava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class io/github/androidpoet/supabase/e2ee/FingerprintKt {
+	public static final fun safetyNumber ([B[BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/github/androidpoet/supabase/e2ee/InMemoryKeyDirectory : io/github/androidpoet/supabase/e2ee/KeyDirectory {
+	public fun <init> ()V
+	public fun fetch (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun publish (Ljava/lang/String;[BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/github/androidpoet/supabase/e2ee/InMemoryTrustStore : io/github/androidpoet/supabase/e2ee/TrustStore {
+	public fun <init> ()V
+	public fun get (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun put (Ljava/lang/String;Lio/github/androidpoet/supabase/e2ee/TrustEntry;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun remove (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class io/github/androidpoet/supabase/e2ee/KeyDirectory {
+	public abstract fun fetch (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun publish (Ljava/lang/String;[BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/github/androidpoet/supabase/e2ee/SupabaseKeyDirectory : io/github/androidpoet/supabase/e2ee/KeyDirectory {
+	public fun <init> (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;)V
+	public synthetic fun <init> (Lio/github/androidpoet/supabase/database/DatabaseClient;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun fetch (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun publish (Ljava/lang/String;[BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/github/androidpoet/supabase/e2ee/TrustEntry {
+	public fun <init> ([BLio/github/androidpoet/supabase/e2ee/TrustLevel;)V
+	public final fun getLevel ()Lio/github/androidpoet/supabase/e2ee/TrustLevel;
+	public final fun getPublicKey ()[B
+	public final fun withLevel (Lio/github/androidpoet/supabase/e2ee/TrustLevel;)Lio/github/androidpoet/supabase/e2ee/TrustEntry;
+}
+
+public final class io/github/androidpoet/supabase/e2ee/TrustLevel : java/lang/Enum {
+	public static final field UNKNOWN Lio/github/androidpoet/supabase/e2ee/TrustLevel;
+	public static final field UNVERIFIED Lio/github/androidpoet/supabase/e2ee/TrustLevel;
+	public static final field VERIFIED Lio/github/androidpoet/supabase/e2ee/TrustLevel;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/androidpoet/supabase/e2ee/TrustLevel;
+	public static fun values ()[Lio/github/androidpoet/supabase/e2ee/TrustLevel;
+}
+
+public abstract interface class io/github/androidpoet/supabase/e2ee/TrustStore {
+	public abstract fun get (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun put (Ljava/lang/String;Lio/github/androidpoet/supabase/e2ee/TrustEntry;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun remove (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 

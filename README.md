@@ -28,7 +28,7 @@ Full guides for [Authentication](https://androidpoet.github.io/supabase-kmp/auth
 - **Session management** — Single-flight auto-refresh, pluggable persistence (`SessionStorage`), `SessionState` via `StateFlow`
 - **Realtime WebSocket** — Phoenix protocol with auto-reconnection, exponential backoff, presence, offline send buffering, binary broadcast (raw `ByteArray`)
 - **Secure by default** — Credential headers redacted from logs, smart retries (`429`/`5xx` + `Retry-After`)
-- **End-to-end encryption** — Optional `supabase-e2ee`: derive a shared AES-256-GCM key on-device (ECDH → HKDF) so Supabase only ever stores ciphertext
+- **End-to-end encryption** — Optional `supabase-e2ee`: derive a shared AES-256-GCM key on-device (ECDH → HKDF) so Supabase only ever stores ciphertext. Includes a `KeyDirectory` (publish/fetch public keys), out-of-band `safetyNumber()` verification (MITM protection), and `EncryptedRoom` — a verify-first encrypt-on-send / decrypt-on-receive chat room over `supabase-realtime`
 - **16 platform targets** — Android, iOS, macOS, tvOS, watchOS, JVM, Linux, Windows, and WasmJs
 
 ## Setup
@@ -143,7 +143,7 @@ Errors carry a `category` (`CONFLICT`, `NOT_FOUND`, `UNAUTHORIZED`, `RATE_LIMITE
 | **supabase-storage** | `io.github.androidpoet:supabase-storage` | Bucket CRUD, file upload/download, signed & public URLs |
 | **supabase-realtime** | `io.github.androidpoet:supabase-realtime` | WebSocket (Phoenix protocol), auto-reconnect, broadcast, presence |
 | **supabase-functions** | `io.github.androidpoet:supabase-functions` | Edge function invocation with typed responses |
-| **supabase-e2ee** | `io.github.androidpoet:supabase-e2ee` | Optional client-side E2E encryption (ECDH → HKDF → AES-256-GCM) |
+| **supabase-e2ee** | `io.github.androidpoet:supabase-e2ee` | Optional client-side E2E encryption (ECDH → HKDF → AES-256-GCM) + key directory, safety-number verification & `EncryptedRoom` over realtime |
 | **supabase-sync-core** | `io.github.androidpoet:supabase-sync-core` | Offline-first sync engine — pull/merge/push, conflict resolution, keyset cursor (transport-agnostic) |
 | **supabase-sync-sqldelight** | `io.github.androidpoet:supabase-sync-sqldelight` | On-device local store over SQLDelight — typed-table SSOT, outbox, cursor, pagination |
 | **supabase-sync** | `io.github.androidpoet:supabase-sync` | Supabase remote source — incremental pull/push over PostgREST + live Realtime deltas |

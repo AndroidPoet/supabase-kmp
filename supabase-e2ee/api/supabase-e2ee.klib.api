@@ -6,6 +6,44 @@
 // - Show declarations: true
 
 // Library unique name: <supabase-kmp:supabase-e2ee>
+final enum class io.github.androidpoet.supabase.e2ee/TrustLevel : kotlin/Enum<io.github.androidpoet.supabase.e2ee/TrustLevel> { // io.github.androidpoet.supabase.e2ee/TrustLevel|null[0]
+    enum entry UNKNOWN // io.github.androidpoet.supabase.e2ee/TrustLevel.UNKNOWN|null[0]
+    enum entry UNVERIFIED // io.github.androidpoet.supabase.e2ee/TrustLevel.UNVERIFIED|null[0]
+    enum entry VERIFIED // io.github.androidpoet.supabase.e2ee/TrustLevel.VERIFIED|null[0]
+
+    final val entries // io.github.androidpoet.supabase.e2ee/TrustLevel.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.androidpoet.supabase.e2ee/TrustLevel> // io.github.androidpoet.supabase.e2ee/TrustLevel.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.androidpoet.supabase.e2ee/TrustLevel // io.github.androidpoet.supabase.e2ee/TrustLevel.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.androidpoet.supabase.e2ee/TrustLevel> // io.github.androidpoet.supabase.e2ee/TrustLevel.values|values#static(){}[0]
+}
+
+abstract interface io.github.androidpoet.supabase.e2ee/KeyDirectory { // io.github.androidpoet.supabase.e2ee/KeyDirectory|null[0]
+    abstract suspend fun fetch(kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/ByteArray?> // io.github.androidpoet.supabase.e2ee/KeyDirectory.fetch|fetch(kotlin.String){}[0]
+    abstract suspend fun publish(kotlin/String, kotlin/ByteArray): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.e2ee/KeyDirectory.publish|publish(kotlin.String;kotlin.ByteArray){}[0]
+}
+
+abstract interface io.github.androidpoet.supabase.e2ee/TrustStore { // io.github.androidpoet.supabase.e2ee/TrustStore|null[0]
+    abstract suspend fun get(kotlin/String): io.github.androidpoet.supabase.e2ee/TrustEntry? // io.github.androidpoet.supabase.e2ee/TrustStore.get|get(kotlin.String){}[0]
+    abstract suspend fun put(kotlin/String, io.github.androidpoet.supabase.e2ee/TrustEntry) // io.github.androidpoet.supabase.e2ee/TrustStore.put|put(kotlin.String;io.github.androidpoet.supabase.e2ee.TrustEntry){}[0]
+    abstract suspend fun remove(kotlin/String) // io.github.androidpoet.supabase.e2ee/TrustStore.remove|remove(kotlin.String){}[0]
+}
+
+final class io.github.androidpoet.supabase.e2ee/DecryptedMessage { // io.github.androidpoet.supabase.e2ee/DecryptedMessage|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/String?, kotlin/Boolean, kotlin/String?) // io.github.androidpoet.supabase.e2ee/DecryptedMessage.<init>|<init>(kotlin.String;kotlin.String;kotlin.String?;kotlin.Boolean;kotlin.String?){}[0]
+
+    final val createdAt // io.github.androidpoet.supabase.e2ee/DecryptedMessage.createdAt|{}createdAt[0]
+        final fun <get-createdAt>(): kotlin/String? // io.github.androidpoet.supabase.e2ee/DecryptedMessage.createdAt.<get-createdAt>|<get-createdAt>(){}[0]
+    final val decryptFailed // io.github.androidpoet.supabase.e2ee/DecryptedMessage.decryptFailed|{}decryptFailed[0]
+        final fun <get-decryptFailed>(): kotlin/Boolean // io.github.androidpoet.supabase.e2ee/DecryptedMessage.decryptFailed.<get-decryptFailed>|<get-decryptFailed>(){}[0]
+    final val id // io.github.androidpoet.supabase.e2ee/DecryptedMessage.id|{}id[0]
+        final fun <get-id>(): kotlin/String // io.github.androidpoet.supabase.e2ee/DecryptedMessage.id.<get-id>|<get-id>(){}[0]
+    final val plaintext // io.github.androidpoet.supabase.e2ee/DecryptedMessage.plaintext|{}plaintext[0]
+        final fun <get-plaintext>(): kotlin/String? // io.github.androidpoet.supabase.e2ee/DecryptedMessage.plaintext.<get-plaintext>|<get-plaintext>(){}[0]
+    final val senderId // io.github.androidpoet.supabase.e2ee/DecryptedMessage.senderId|{}senderId[0]
+        final fun <get-senderId>(): kotlin/String // io.github.androidpoet.supabase.e2ee/DecryptedMessage.senderId.<get-senderId>|<get-senderId>(){}[0]
+}
+
 final class io.github.androidpoet.supabase.e2ee/E2eeKeyPair { // io.github.androidpoet.supabase.e2ee/E2eeKeyPair|null[0]
     final val publicKey // io.github.androidpoet.supabase.e2ee/E2eeKeyPair.publicKey|{}publicKey[0]
         final fun <get-publicKey>(): kotlin/ByteArray // io.github.androidpoet.supabase.e2ee/E2eeKeyPair.publicKey.<get-publicKey>|<get-publicKey>(){}[0]
@@ -18,10 +56,70 @@ final class io.github.androidpoet.supabase.e2ee/E2eeSession { // io.github.andro
     final suspend fun encrypt(kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/ByteArray> // io.github.androidpoet.supabase.e2ee/E2eeSession.encrypt|encrypt(kotlin.String){}[0]
 }
 
+final class io.github.androidpoet.supabase.e2ee/EncryptedRoom { // io.github.androidpoet.supabase.e2ee/EncryptedRoom|null[0]
+    final val myUserId // io.github.androidpoet.supabase.e2ee/EncryptedRoom.myUserId|{}myUserId[0]
+        final fun <get-myUserId>(): kotlin/String // io.github.androidpoet.supabase.e2ee/EncryptedRoom.myUserId.<get-myUserId>|<get-myUserId>(){}[0]
+    final val peerUserId // io.github.androidpoet.supabase.e2ee/EncryptedRoom.peerUserId|{}peerUserId[0]
+        final fun <get-peerUserId>(): kotlin/String // io.github.androidpoet.supabase.e2ee/EncryptedRoom.peerUserId.<get-peerUserId>|<get-peerUserId>(){}[0]
+    final val roomId // io.github.androidpoet.supabase.e2ee/EncryptedRoom.roomId|{}roomId[0]
+        final fun <get-roomId>(): kotlin/String // io.github.androidpoet.supabase.e2ee/EncryptedRoom.roomId.<get-roomId>|<get-roomId>(){}[0]
+
+    final fun messages(): kotlinx.coroutines.flow/Flow<io.github.androidpoet.supabase.e2ee/DecryptedMessage> // io.github.androidpoet.supabase.e2ee/EncryptedRoom.messages|messages(){}[0]
+    final suspend fun history(): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin.collections/List<io.github.androidpoet.supabase.e2ee/DecryptedMessage>> // io.github.androidpoet.supabase.e2ee/EncryptedRoom.history|history(){}[0]
+    final suspend fun isVerified(): kotlin/Boolean // io.github.androidpoet.supabase.e2ee/EncryptedRoom.isVerified|isVerified(){}[0]
+    final suspend fun markVerified() // io.github.androidpoet.supabase.e2ee/EncryptedRoom.markVerified|markVerified(){}[0]
+    final suspend fun safetyNumber(): kotlin/String // io.github.androidpoet.supabase.e2ee/EncryptedRoom.safetyNumber|safetyNumber(){}[0]
+    final suspend fun send(kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.e2ee/EncryptedRoom.send|send(kotlin.String){}[0]
+}
+
+final class io.github.androidpoet.supabase.e2ee/InMemoryKeyDirectory : io.github.androidpoet.supabase.e2ee/KeyDirectory { // io.github.androidpoet.supabase.e2ee/InMemoryKeyDirectory|null[0]
+    constructor <init>() // io.github.androidpoet.supabase.e2ee/InMemoryKeyDirectory.<init>|<init>(){}[0]
+
+    final suspend fun fetch(kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/ByteArray?> // io.github.androidpoet.supabase.e2ee/InMemoryKeyDirectory.fetch|fetch(kotlin.String){}[0]
+    final suspend fun publish(kotlin/String, kotlin/ByteArray): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.e2ee/InMemoryKeyDirectory.publish|publish(kotlin.String;kotlin.ByteArray){}[0]
+}
+
+final class io.github.androidpoet.supabase.e2ee/InMemoryTrustStore : io.github.androidpoet.supabase.e2ee/TrustStore { // io.github.androidpoet.supabase.e2ee/InMemoryTrustStore|null[0]
+    constructor <init>() // io.github.androidpoet.supabase.e2ee/InMemoryTrustStore.<init>|<init>(){}[0]
+
+    final suspend fun get(kotlin/String): io.github.androidpoet.supabase.e2ee/TrustEntry? // io.github.androidpoet.supabase.e2ee/InMemoryTrustStore.get|get(kotlin.String){}[0]
+    final suspend fun put(kotlin/String, io.github.androidpoet.supabase.e2ee/TrustEntry) // io.github.androidpoet.supabase.e2ee/InMemoryTrustStore.put|put(kotlin.String;io.github.androidpoet.supabase.e2ee.TrustEntry){}[0]
+    final suspend fun remove(kotlin/String) // io.github.androidpoet.supabase.e2ee/InMemoryTrustStore.remove|remove(kotlin.String){}[0]
+}
+
+final class io.github.androidpoet.supabase.e2ee/SupabaseKeyDirectory : io.github.androidpoet.supabase.e2ee/KeyDirectory { // io.github.androidpoet.supabase.e2ee/SupabaseKeyDirectory|null[0]
+    constructor <init>(io.github.androidpoet.supabase.database/DatabaseClient, kotlin/String = ...) // io.github.androidpoet.supabase.e2ee/SupabaseKeyDirectory.<init>|<init>(io.github.androidpoet.supabase.database.DatabaseClient;kotlin.String){}[0]
+
+    final suspend fun fetch(kotlin/String): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/ByteArray?> // io.github.androidpoet.supabase.e2ee/SupabaseKeyDirectory.fetch|fetch(kotlin.String){}[0]
+    final suspend fun publish(kotlin/String, kotlin/ByteArray): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/Unit> // io.github.androidpoet.supabase.e2ee/SupabaseKeyDirectory.publish|publish(kotlin.String;kotlin.ByteArray){}[0]
+}
+
+final class io.github.androidpoet.supabase.e2ee/TrustEntry { // io.github.androidpoet.supabase.e2ee/TrustEntry|null[0]
+    constructor <init>(kotlin/ByteArray, io.github.androidpoet.supabase.e2ee/TrustLevel) // io.github.androidpoet.supabase.e2ee/TrustEntry.<init>|<init>(kotlin.ByteArray;io.github.androidpoet.supabase.e2ee.TrustLevel){}[0]
+
+    final val level // io.github.androidpoet.supabase.e2ee/TrustEntry.level|{}level[0]
+        final fun <get-level>(): io.github.androidpoet.supabase.e2ee/TrustLevel // io.github.androidpoet.supabase.e2ee/TrustEntry.level.<get-level>|<get-level>(){}[0]
+    final val publicKey // io.github.androidpoet.supabase.e2ee/TrustEntry.publicKey|{}publicKey[0]
+        final fun <get-publicKey>(): kotlin/ByteArray // io.github.androidpoet.supabase.e2ee/TrustEntry.publicKey.<get-publicKey>|<get-publicKey>(){}[0]
+
+    final fun withLevel(io.github.androidpoet.supabase.e2ee/TrustLevel): io.github.androidpoet.supabase.e2ee/TrustEntry // io.github.androidpoet.supabase.e2ee/TrustEntry.withLevel|withLevel(io.github.androidpoet.supabase.e2ee.TrustLevel){}[0]
+}
+
+final object io.github.androidpoet.supabase.e2ee/E2eeErrorCodes { // io.github.androidpoet.supabase.e2ee/E2eeErrorCodes|null[0]
+    final const val IDENTITY_CHANGED // io.github.androidpoet.supabase.e2ee/E2eeErrorCodes.IDENTITY_CHANGED|{}IDENTITY_CHANGED[0]
+        final fun <get-IDENTITY_CHANGED>(): kotlin/String // io.github.androidpoet.supabase.e2ee/E2eeErrorCodes.IDENTITY_CHANGED.<get-IDENTITY_CHANGED>|<get-IDENTITY_CHANGED>(){}[0]
+    final const val MISSING_KEYS // io.github.androidpoet.supabase.e2ee/E2eeErrorCodes.MISSING_KEYS|{}MISSING_KEYS[0]
+        final fun <get-MISSING_KEYS>(): kotlin/String // io.github.androidpoet.supabase.e2ee/E2eeErrorCodes.MISSING_KEYS.<get-MISSING_KEYS>|<get-MISSING_KEYS>(){}[0]
+    final const val UNVERIFIED // io.github.androidpoet.supabase.e2ee/E2eeErrorCodes.UNVERIFIED|{}UNVERIFIED[0]
+        final fun <get-UNVERIFIED>(): kotlin/String // io.github.androidpoet.supabase.e2ee/E2eeErrorCodes.UNVERIFIED.<get-UNVERIFIED>|<get-UNVERIFIED>(){}[0]
+}
+
 final suspend fun (io.github.androidpoet.supabase.e2ee/E2eeKeyPair).io.github.androidpoet.supabase.e2ee/deriveSelfSession(): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.e2ee/E2eeSession> // io.github.androidpoet.supabase.e2ee/deriveSelfSession|deriveSelfSession@io.github.androidpoet.supabase.e2ee.E2eeKeyPair(){}[0]
 final suspend fun (io.github.androidpoet.supabase.e2ee/E2eeKeyPair).io.github.androidpoet.supabase.e2ee/deriveSession(kotlin/ByteArray): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.e2ee/E2eeSession> // io.github.androidpoet.supabase.e2ee/deriveSession|deriveSession@io.github.androidpoet.supabase.e2ee.E2eeKeyPair(kotlin.ByteArray){}[0]
 final suspend fun (io.github.androidpoet.supabase.e2ee/E2eeKeyPair).io.github.androidpoet.supabase.e2ee/exportPrivateKey(): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/ByteArray> // io.github.androidpoet.supabase.e2ee/exportPrivateKey|exportPrivateKey@io.github.androidpoet.supabase.e2ee.E2eeKeyPair(){}[0]
 final suspend fun io.github.androidpoet.supabase.e2ee/generateE2eeKeyPair(): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.e2ee/E2eeKeyPair> // io.github.androidpoet.supabase.e2ee/generateE2eeKeyPair|generateE2eeKeyPair(){}[0]
 final suspend fun io.github.androidpoet.supabase.e2ee/importE2eeKeyPair(kotlin/ByteArray, kotlin/ByteArray): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.e2ee/E2eeKeyPair> // io.github.androidpoet.supabase.e2ee/importE2eeKeyPair|importE2eeKeyPair(kotlin.ByteArray;kotlin.ByteArray){}[0]
+final suspend fun io.github.androidpoet.supabase.e2ee/openEncryptedRoom(io.github.androidpoet.supabase.database/DatabaseClient, io.github.androidpoet.supabase.realtime/RealtimeClient, io.github.androidpoet.supabase.e2ee/KeyDirectory, io.github.androidpoet.supabase.e2ee/E2eeKeyPair, kotlin/String, kotlin/String, kotlin/String, io.github.androidpoet.supabase.e2ee/TrustStore = ..., kotlin/Boolean = ..., kotlin/String = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<io.github.androidpoet.supabase.e2ee/EncryptedRoom> // io.github.androidpoet.supabase.e2ee/openEncryptedRoom|openEncryptedRoom(io.github.androidpoet.supabase.database.DatabaseClient;io.github.androidpoet.supabase.realtime.RealtimeClient;io.github.androidpoet.supabase.e2ee.KeyDirectory;io.github.androidpoet.supabase.e2ee.E2eeKeyPair;kotlin.String;kotlin.String;kotlin.String;io.github.androidpoet.supabase.e2ee.TrustStore;kotlin.Boolean;kotlin.String){}[0]
+final suspend fun io.github.androidpoet.supabase.e2ee/safetyNumber(kotlin/ByteArray, kotlin/ByteArray): kotlin/String // io.github.androidpoet.supabase.e2ee/safetyNumber|safetyNumber(kotlin.ByteArray;kotlin.ByteArray){}[0]
 final suspend inline fun <#A: reified kotlin/Any?> (io.github.androidpoet.supabase.e2ee/E2eeSession).io.github.androidpoet.supabase.e2ee/decryptValue(kotlin/ByteArray, kotlinx.serialization.json/Json = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<#A> // io.github.androidpoet.supabase.e2ee/decryptValue|decryptValue@io.github.androidpoet.supabase.e2ee.E2eeSession(kotlin.ByteArray;kotlinx.serialization.json.Json){0§<kotlin.Any?>}[0]
 final suspend inline fun <#A: reified kotlin/Any?> (io.github.androidpoet.supabase.e2ee/E2eeSession).io.github.androidpoet.supabase.e2ee/encryptValue(#A, kotlinx.serialization.json/Json = ...): io.github.androidpoet.supabase.core.result/SupabaseResult<kotlin/ByteArray> // io.github.androidpoet.supabase.e2ee/encryptValue|encryptValue@io.github.androidpoet.supabase.e2ee.E2eeSession(0:0;kotlinx.serialization.json.Json){0§<kotlin.Any?>}[0]
