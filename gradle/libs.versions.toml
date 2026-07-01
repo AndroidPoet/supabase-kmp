@@ -1,7 +1,7 @@
 [versions]
 kotlin = "2.4.0"
 agp = "8.7.3"
-ktor = "3.5.0"
+ktor = "3.5.1"
 coroutines = "1.11.0"
 serialization = "1.11.0"
 datetime = "0.8.0"
